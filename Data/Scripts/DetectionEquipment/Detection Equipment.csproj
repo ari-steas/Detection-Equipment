@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>DetectionEquipment</RootNamespace>
+    <TargetFramework>net48</TargetFramework>
+    <Platforms>x64</Platforms>
+    <LangVersion>6</LangVersion>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateNeutralResourcesLanguageAttribute>false</GenerateNeutralResourcesLanguageAttribute>
+    <BaseOutputPath>..\..\..\bin\</BaseOutputPath>
+	<BaseIntermediateOutputPath>..\..\..\obj\</BaseIntermediateOutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="Data\**" />
+    <EmbeddedResource Remove="Data\**" />
+    <None Remove="Data\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Mal.Mdk2.ModAnalyzers" Version="*" />
+    <PackageReference Include="Mal.Mdk2.References" Version="*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Client\" />
+  </ItemGroup>
+
+</Project>
