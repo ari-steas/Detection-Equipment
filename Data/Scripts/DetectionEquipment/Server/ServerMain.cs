@@ -1,8 +1,11 @@
-﻿using DetectionEquipment.Server.Sensors;
+﻿using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Runtime.Remoting;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -14,14 +17,19 @@ namespace DetectionEquipment.Server
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
     internal class ServerMain : MySessionComponentBase
     {
+        public static ServerMain I;
+
         public Dictionary<IMyEntity, ITrack> Tracks = new Dictionary<IMyEntity, ITrack>();
-        public VisualSensor TestSensor = new VisualSensor(true);
+        public Dictionary<IMyCubeGrid, GridSensorManager> GridSensorMangers = new Dictionary<IMyCubeGrid, GridSensorManager>();
+
+        public PassiveRadarSensor PRSensor = new PassiveRadarSensor(null);
 
         public override void LoadData()
         {
+            I = this;
+
             MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
             MyAPIGateway.Entities.OnEntityRemove += OnEntityRemove;
-            MyAPIGateway.Utilities.MessageEnteredSender += ChatHandler;
 
             MyAPIGateway.Entities.GetEntities(null, e =>
             {
@@ -30,20 +38,16 @@ namespace DetectionEquipment.Server
             });
         }
 
-        private void ChatHandler(ulong sender, string messageText, ref bool sendToOthers)
-        {
-            double value;
-            if (!double.TryParse(messageText, out value))
-                return;
-
-            TestSensor.Aperture = MathHelper.ToRadians(value);
-            sendToOthers = false;
-        }
-
         protected override void UnloadData()
         {
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
             MyAPIGateway.Entities.OnEntityRemove -= OnEntityRemove;
+
+            foreach (var manager in GridSensorMangers.Values)
+                manager.Close();
+            PRSensor.Close();
+
+            I = null;
         }
 
 
@@ -54,34 +58,35 @@ namespace DetectionEquipment.Server
             //if (_ticks++ % 60 != 0)
             //    return;
 
+            foreach (var manager in GridSensorMangers.Values)
+                manager.Update();
+
+
             foreach (var track in Tracks.Values)
             {
-                GridTrack gT = track as GridTrack;
-                if (gT != null)
+                var b = PRSensor.GetDetectionInfo(track);
+                if (b != null)
                 {
-                    double rcs, vcs;
-                    gT.CalculateRcs(Vector3D.Normalize(gT.Grid.WorldAABB.Center - MyAPIGateway.Session.Camera.Position), out rcs, out vcs);
+                    var info = b.Value;
 
-                    MyAPIGateway.Utilities.ShowNotification($"VCS: {rcs:N0} m^2", 1000/60);
-                    var a = TestSensor.GetDetectionInfo(gT, rcs);
-                    if (a == null)
-                        continue;
-                    var info = a.Value;
-
-                    var gps = MyAPIGateway.Session.GPS.Create("", "", info.Bearing * info.Range + MyAPIGateway.Session.Camera.Position, true, true);
-                    gps.GPSColor = Color.Ivory;
+                    var gps = MyAPIGateway.Session.GPS.Create("", "", info.Bearing * info.Range + PRSensor.Position, true, true);
+                    gps.GPSColor = Color.Red;
                     gps.DiscardAt = MyAPIGateway.Session.ElapsedPlayTime + TimeSpan.FromSeconds(1);
 
                     MyAPIGateway.Session.GPS.AddLocalGps(gps);
-                    MyAPIGateway.Utilities.ShowMessage("", info.ToString());
+                    //MyAPIGateway.Utilities.ShowMessage("", info.ToString());
                 }
             }
         }
 
         private void OnEntityAdd(IMyEntity obj)
         {
-            if (obj is IMyCubeGrid)
-                Tracks.Add(obj, new GridTrack((IMyCubeGrid)obj));
+            var grid = obj as IMyCubeGrid;
+            if (grid != null)
+            {
+                Tracks.Add(obj, new GridTrack(grid));
+                GridSensorMangers.Add(grid, new GridSensorManager(grid));
+            }
             else
                 Tracks.Add(obj, new EntityTrack((MyEntity)obj));
         }
@@ -89,6 +94,13 @@ namespace DetectionEquipment.Server
         private void OnEntityRemove(IMyEntity obj)
         {
             Tracks.Remove(obj);
+
+            var grid = obj as IMyCubeGrid;
+            if (grid != null)
+            {
+                GridSensorMangers[grid].Close();
+                GridSensorMangers.Remove(grid);
+            }
         }
     }
 }

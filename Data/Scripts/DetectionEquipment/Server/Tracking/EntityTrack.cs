@@ -8,6 +8,7 @@ namespace DetectionEquipment.Server.Tracking
     {
         public Vector3D Position => Entity.PositionComp.WorldAABB.Center;
         public BoundingBoxD BoundingBox => Entity.PositionComp.WorldAABB;
+        public long EntityId => Entity.EntityId;
 
         public readonly MyEntity Entity;
 
@@ -16,7 +17,8 @@ namespace DetectionEquipment.Server.Tracking
             Entity = entity;
         }
 
-        public virtual double ProjectedArea(Vector3D source, VisibilityType type) => Entity.PositionComp.LocalAABB.ProjectedArea(Vector3D.Transform(source, MatrixD.Invert(Entity.PositionComp.WorldMatrixRef)).Normalized());
+        // Multiplying the projected area by 2 because grids inherently have an absurdly high RCS
+        public virtual double ProjectedArea(Vector3D source, VisibilityType type) => 2 * Entity.PositionComp.LocalAABB.ProjectedArea(Vector3D.Transform(source, MatrixD.Invert(Entity.PositionComp.WorldMatrixRef)).Normalized());
 
         public virtual double InfraredVisibility(Vector3D source)
         {
@@ -27,12 +29,6 @@ namespace DetectionEquipment.Server.Tracking
         public virtual double OpticalVisibility(Vector3D source)
         {
             return ProjectedArea(source, VisibilityType.Optical);
-        }
-
-        public virtual double RadarPassiveVisibility(Vector3D source)
-        {
-            // No radar emissions, presumably
-            return 0;
         }
 
         public virtual double RadarVisibility(Vector3D source)

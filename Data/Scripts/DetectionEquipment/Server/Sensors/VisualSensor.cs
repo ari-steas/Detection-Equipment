@@ -2,23 +2,19 @@
 using DetectionEquipment.Shared;
 using Sandbox.ModAPI;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRageMath;
 
 namespace DetectionEquipment.Server.Sensors
 {
     internal class VisualSensor : ISensor
     {
-        public Vector3D Position => MyAPIGateway.Session.Camera.WorldMatrix.Translation;
-        public Vector3D Direction => MyAPIGateway.Session.Camera.WorldMatrix.Forward;
+        public Vector3D Position { get; set; } = Vector3D.Zero;
+        public Vector3D Direction { get; set; } = Vector3D.Forward;
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
 
         public bool IsInfrared = false;
-        public double BearingErrorModifier { get; } = 0.1;
-        public double RangeErrorModifier { get; } = 10;
+        public double BearingErrorModifier { get; set; } = 0.1;
+        public double RangeErrorModifier { get; set; } = 10;
         public double MinVisibility => 0.01;
 
         public VisualSensor(bool isInfrared)
@@ -33,6 +29,13 @@ namespace DetectionEquipment.Server.Sensors
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
+            double targetAngle = 0;
+            if (track.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
+                targetAngle = Vector3D.Angle(Direction, track.BoundingBox.ClosestCorner(Position) - Position);
+
+            if (targetAngle > Aperture)
+                return null;
+
             return GetDetectionInfo(track, IsInfrared ? track.InfraredVisibility(Position) : track.OpticalVisibility(Position));
         }
 

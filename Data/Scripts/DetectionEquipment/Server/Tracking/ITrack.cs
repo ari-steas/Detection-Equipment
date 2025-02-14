@@ -9,6 +9,7 @@ namespace DetectionEquipment.Server.Tracking
     {
         Vector3D Position { get; }
         BoundingBoxD BoundingBox { get; }
+        long EntityId { get; }
 
         /// <summary>
         /// Visibility to optical cameras.
@@ -28,14 +29,6 @@ namespace DetectionEquipment.Server.Tracking
         /// <param name="source">Position of the sensor</param>
         /// <returns></returns>
         double RadarVisibility(Vector3D source);
-        /// <summary>
-        /// Visibility to passive radars.
-        /// </summary>
-        /// <param name="source">Position of the sensor</param>
-        /// <returns></returns>
-        double RadarPassiveVisibility(Vector3D source);
-
-
     }
 
     public enum VisibilityType

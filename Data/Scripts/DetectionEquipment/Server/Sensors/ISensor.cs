@@ -1,9 +1,4 @@
 ﻿using DetectionEquipment.Server.Tracking;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRageMath;
 
 namespace DetectionEquipment.Server.Sensors
@@ -13,18 +8,18 @@ namespace DetectionEquipment.Server.Sensors
         /// <summary>
         /// Sensor position in global space
         /// </summary>
-        Vector3D Position { get; }
+        Vector3D Position { get; set; }
         /// <summary>
         /// Forward direction of sensor in global space
         /// </summary>
-        Vector3D Direction { get; }
+        Vector3D Direction { get; set; }
         /// <summary>
         /// Visibility cone radius in radians
         /// </summary>
         double Aperture { get; set; }
 
-        double BearingErrorModifier { get; }
-        double RangeErrorModifier { get; }
+        double BearingErrorModifier { get; set; }
+        double RangeErrorModifier { get; set; }
 
         DetectionInfo? GetDetectionInfo(ITrack track);
         DetectionInfo? GetDetectionInfo(ITrack track, double visibility);

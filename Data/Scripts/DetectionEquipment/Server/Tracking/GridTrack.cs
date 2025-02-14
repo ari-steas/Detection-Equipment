@@ -3,7 +3,6 @@ using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -71,12 +70,6 @@ namespace DetectionEquipment.Server.Tracking
         }
 
         // TODO: Scale visible and infrared visibility by thrust output.
-
-        public override double RadarPassiveVisibility(Vector3D source)
-        {
-            // TODO: Retrieve radar & EWAR emissions
-            return 0;
-        }
 
         /// <summary>
         /// Update a portion of the visibility caches.
