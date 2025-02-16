@@ -81,6 +81,9 @@ namespace DetectionEquipment.Server
 
         private void OnEntityAdd(IMyEntity obj)
         {
+            if (obj.Physics == null)
+                return;
+
             var grid = obj as IMyCubeGrid;
             if (grid != null)
             {
@@ -93,6 +96,9 @@ namespace DetectionEquipment.Server
 
         private void OnEntityRemove(IMyEntity obj)
         {
+            if (obj.Physics == null)
+                return;
+
             Tracks.Remove(obj);
 
             var grid = obj as IMyCubeGrid;

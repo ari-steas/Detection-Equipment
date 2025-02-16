@@ -5,6 +5,7 @@ using System;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI.Ingame;
 using VRageMath;
+using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
 namespace DetectionEquipment.Server.Sensors
 {
@@ -40,25 +41,23 @@ namespace DetectionEquipment.Server.Sensors
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
-            double targetAngle = 0;
-            if (track.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                targetAngle = Vector3D.Angle(Direction, track.BoundingBox.ClosestCorner(Position) - Position);
-
-            if (targetAngle > Aperture)
-                return null;
-
             return GetDetectionInfo(track, track.RadarVisibility(Position));
+        }
+
+        public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
+        {
+            return GetDetectionInfo(visibilitySet.Track, visibilitySet.RadarVisibility);
         }
 
         public DetectionInfo? GetDetectionInfo(ITrack track, double radarCrossSection)
         {
-            double targetDistanceSq = Vector3D.DistanceSquared(Position, track.Position);
             double targetAngle = 0;
             if (track.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
                 targetAngle = Vector3D.Angle(Direction, track.BoundingBox.ClosestCorner(Position) - Position);
 
             if (targetAngle > Aperture)
                 return null;
+            double targetDistanceSq = Vector3D.DistanceSquared(Position, track.Position);
 
             double signalToNoiseRatio;
             {

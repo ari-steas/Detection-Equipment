@@ -24,6 +24,13 @@ namespace DetectionEquipment.Server.Tracking
         /// <returns></returns>
         double InfraredVisibility(Vector3D source);
         /// <summary>
+        /// Visibility to infrared cameras.
+        /// </summary>
+        /// <param name="source">Position of the sensor</param>
+        /// <param name="opticalVisibility">Cached optical visibility</param>
+        /// <returns></returns>
+        double InfraredVisibility(Vector3D source, double opticalVisibility);
+        /// <summary>
         /// Visibility to active radars.
         /// </summary>
         /// <param name="source">Position of the sensor</param>

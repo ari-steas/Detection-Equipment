@@ -3,6 +3,7 @@ using DetectionEquipment.Shared;
 using Sandbox.ModAPI;
 using System;
 using VRageMath;
+using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
 namespace DetectionEquipment.Server.Sensors
 {
@@ -15,7 +16,7 @@ namespace DetectionEquipment.Server.Sensors
         public bool IsInfrared = false;
         public double BearingErrorModifier { get; set; } = 0.1;
         public double RangeErrorModifier { get; set; } = 10;
-        public double MinVisibility => 0.01;
+        public double MinVisibility => 0.001;
 
         public VisualSensor(bool isInfrared)
         {
@@ -29,23 +30,22 @@ namespace DetectionEquipment.Server.Sensors
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
-            double targetAngle = 0;
-            if (track.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                targetAngle = Vector3D.Angle(Direction, track.BoundingBox.ClosestCorner(Position) - Position);
-
-            if (targetAngle > Aperture)
-                return null;
-
             return GetDetectionInfo(track, IsInfrared ? track.InfraredVisibility(Position) : track.OpticalVisibility(Position));
+        }
+
+        public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
+        {
+            return GetDetectionInfo(visibilitySet.Track, IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility);
         }
 
         public DetectionInfo? GetDetectionInfo(ITrack track, double visibility)
         {
-            double range = Vector3D.Distance(track.Position, Position);
             double targetAngle = 0;
             if (track.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
                 targetAngle = Vector3D.Angle(Direction, track.BoundingBox.ClosestCorner(Position) - Position);
 
+            Vector3D bearing = track.Position - Position;
+            double range = bearing.Normalize();
             double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
@@ -55,7 +55,7 @@ namespace DetectionEquipment.Server.Sensors
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);
 
             double maxBearingError = Aperture/2 * BearingErrorModifier * errorScalar;
-            Vector3D bearing = MathUtils.RandomCone(Vector3D.Normalize(track.Position - Position), maxBearingError);
+            bearing = MathUtils.RandomCone(bearing, maxBearingError);
 
             double maxRangeError = Math.Sqrt(range) * RangeErrorModifier * errorScalar;
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;

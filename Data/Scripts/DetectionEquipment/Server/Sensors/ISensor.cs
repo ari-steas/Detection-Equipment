@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using VRageMath;
+using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
 namespace DetectionEquipment.Server.Sensors
 {
@@ -23,5 +24,6 @@ namespace DetectionEquipment.Server.Sensors
 
         DetectionInfo? GetDetectionInfo(ITrack track);
         DetectionInfo? GetDetectionInfo(ITrack track, double visibility);
+        DetectionInfo? GetDetectionInfo(VisibilitySet visibility);
     }
 }

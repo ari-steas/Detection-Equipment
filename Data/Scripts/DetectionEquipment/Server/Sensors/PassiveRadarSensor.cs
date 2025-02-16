@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using VRage.ModAPI;
 using VRageMath;
+using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
 namespace DetectionEquipment.Server.Sensors
 {
@@ -41,6 +42,11 @@ namespace DetectionEquipment.Server.Sensors
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
             return GetDetectionInfo(track, 0);
+        }
+
+        public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
+        {
+            return GetDetectionInfo(visibilitySet.Track, 0);
         }
 
         public DetectionInfo? GetDetectionInfo(ITrack track, double visibility)

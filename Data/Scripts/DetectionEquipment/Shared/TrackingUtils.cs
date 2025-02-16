@@ -1,5 +1,7 @@
-﻿using Sandbox.Game;
+﻿using DetectionEquipment.Server.Sensors;
+using Sandbox.Game;
 using System.Collections.Generic;
+using System.Linq;
 using VRageMath;
 
 namespace DetectionEquipment.Shared
@@ -70,6 +72,58 @@ namespace DetectionEquipment.Shared
             }
 
             return closest;
+        }
+
+        public static DetectionInfo AverageDetection(params DetectionInfo[] args)
+        {
+            double totalBearingError = args.Sum(info => info.BearingError);
+            double totalRangeError = args.Sum(info => info.RangeError);
+
+            Vector3D averageBearing = Vector3D.Zero;
+            double averageRange = 0;
+            foreach (var info in args)
+            {
+                averageBearing += info.Bearing * (info.BearingError/totalBearingError);
+                averageRange += info.Range * (info.RangeError/totalRangeError);
+            }
+
+            DetectionInfo result = new DetectionInfo()
+            {
+                Sensor = args[0].Sensor,
+                Track = args[0].Track,
+                Bearing = averageBearing.Normalized(),
+                BearingError = totalBearingError / args.Length,
+                Range = averageRange,
+                RangeError = totalRangeError / args.Length,
+            };
+
+            return result;
+        }
+
+        public static DetectionInfo AverageDetection(ICollection<DetectionInfo> args)
+        {
+            double totalBearingError = args.Sum(info => info.BearingError);
+            double totalRangeError = args.Sum(info => info.RangeError);
+
+            Vector3D averageBearing = Vector3D.Zero;
+            double averageRange = 0;
+            foreach (var info in args)
+            {
+                averageBearing += info.Bearing * (info.BearingError/totalBearingError);
+                averageRange += info.Range * (info.RangeError/totalRangeError);
+            }
+
+            DetectionInfo result = new DetectionInfo()
+            {
+                Sensor = args.First().Sensor,
+                Track = args.First().Track,
+                Bearing = averageBearing.Normalized(),
+                BearingError = totalBearingError / args.Count,
+                Range = averageRange,
+                RangeError = totalRangeError / args.Count,
+            };
+
+            return result;
         }
     }
 }
