@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -76,8 +77,10 @@ namespace DetectionEquipment.Server.SensorBlocks
                     TrackVisibility.Add(combineKvp.Value[0]);
             }
 
-            foreach (var sensor in Sensors)
+            MyAPIGateway.Parallel.ForEach(Sensors, sensor =>
+            {
                 sensor.Update(TrackVisibility);
+            });
         }
 
         public void Close()
@@ -95,14 +98,8 @@ namespace DetectionEquipment.Server.SensorBlocks
             var cubeBlock = obj.FatBlock;
             if (cubeBlock == null) return;
 
-            if (cubeBlock is IMyCameraBlock)
-            {
-                var sensor = new VisualSensor(false)
-                {
-                    Aperture = MathHelper.ToRadians(45),
-                };
-                Sensors.Add(new BlockSensor<VisualSensor>(sensor, cubeBlock));
-            }
+            foreach (var newSensor in DefinitionManager.TryCreateSensors(cubeBlock))
+                Sensors.Add(newSensor);
         }
 
         private void OnBlockRemoved(IMySlimBlock obj)

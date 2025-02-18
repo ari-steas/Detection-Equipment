@@ -21,8 +21,8 @@ namespace DetectionEquipment.Shared
         // i'm gonna kiss digi on the 
 
         public static DebugDraw I;
-        protected static readonly MyStringId MaterialDot = MyStringId.GetOrCompute("WhiteDot");
-        protected static readonly MyStringId MaterialSquare = MyStringId.GetOrCompute("Square");
+        public static readonly MyStringId MaterialDot = MyStringId.GetOrCompute("WhiteDot");
+        public static readonly MyStringId MaterialSquare = MyStringId.GetOrCompute("Square");
 
         private readonly Dictionary<Vector3I, MyTuple<long, Color, IMyCubeGrid>> _queuedGridPoints =
             new Dictionary<Vector3I, MyTuple<long, Color, IMyCubeGrid>>();

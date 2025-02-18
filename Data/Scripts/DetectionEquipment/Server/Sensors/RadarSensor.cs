@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Definitions;
 using Sandbox.ModAPI;
 using System;
 using VRage.Game.Entity;
@@ -15,18 +16,21 @@ namespace DetectionEquipment.Server.Sensors
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
 
-        public RadarSensor(long attachedEntityId)
+        public RadarSensor(long attachedEntityId, SensorDefinition definition)
         {
             AttachedEntityId = () => attachedEntityId;
+            Definition = definition;
         }
 
-        public RadarSensor(MyEntity entity)
+        public RadarSensor(IMyEntity entity, SensorDefinition definition)
         {
-            AttachedEntityId = () => entity.GetTopMostParent().EntityId;
+            AttachedEntityId = () => ((MyEntity)entity).GetTopMostParent().EntityId;
+            Definition = definition;
         }
 
         private RadarSensor() { }
 
+        public SensorDefinition Definition { get; private set; }
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
         public double Power = 14000000;
         public double RecieverArea = 4.9 * 2.7;

@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Definitions;
 using Sandbox.ModAPI;
 using System;
 using VRageMath;
@@ -9,6 +10,8 @@ namespace DetectionEquipment.Server.Sensors
 {
     internal class VisualSensor : ISensor
     {
+        public SensorDefinition Definition { get; private set; }
+
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
@@ -16,17 +19,15 @@ namespace DetectionEquipment.Server.Sensors
         public bool IsInfrared = false;
         public double BearingErrorModifier { get; set; } = 0.1;
         public double RangeErrorModifier { get; set; } = 10;
-        public double MinVisibility => 0.001;
+        public double MinVisibility = 0.001;
 
-        public VisualSensor(bool isInfrared)
+        public VisualSensor(SensorDefinition definition)
         {
-            IsInfrared = isInfrared;
+            IsInfrared = definition.Type == SensorDefinition.SensorType.Infrared;
+            Definition = definition;
         }
 
-        private VisualSensor()
-        {
-
-        }
+        private VisualSensor() { }
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {

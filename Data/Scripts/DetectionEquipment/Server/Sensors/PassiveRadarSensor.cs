@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -13,15 +14,17 @@ namespace DetectionEquipment.Server.Sensors
     internal class PassiveRadarSensor : ISensor
     {
         public readonly IMyEntity AttachedEntity;
+        public SensorDefinition Definition { get; private set; }
         public Vector3D Position { get; set; }
         public Vector3D Direction { get; set; }
 
         private Dictionary<long, DetectionInfo> _queuedRadarHits = new Dictionary<long, DetectionInfo>();
 
-        public PassiveRadarSensor(IMyEntity attachedEntity)
+        public PassiveRadarSensor(IMyEntity attachedEntity, SensorDefinition definition)
         {
             AttachedEntity = attachedEntity;
             Sensors.Add(this);
+            Definition = definition;
         }
 
         public void Close()
@@ -31,7 +34,7 @@ namespace DetectionEquipment.Server.Sensors
 
         private PassiveRadarSensor() { }
 
-        public double Aperture { get; set; } = 2 * Math.PI;
+        public double Aperture { get; set; } = Math.PI;
         public double RecieverArea { get; set; } = 2.5*2.5;
 
         public double BearingErrorModifier { get; set; } = 0.1;
@@ -57,7 +60,7 @@ namespace DetectionEquipment.Server.Sensors
             _queuedRadarHits.Remove(track.EntityId);
             data.Track = track;
 
-            MyAPIGateway.Utilities.ShowMessage($"{data.CrossSection:N0}", data.ToString());
+            //MyAPIGateway.Utilities.ShowMessage($"{data.CrossSection:N0}", data.ToString());
 
             return data;
         }
@@ -65,10 +68,16 @@ namespace DetectionEquipment.Server.Sensors
         private static readonly HashSet<PassiveRadarSensor> Sensors = new HashSet<PassiveRadarSensor>();
         public static void NotifyOnRadarHit(IMyEntity entity, RadarSensor sensor)
         {
-            foreach (var passiveSensor in Sensors.Where(s => s.AttachedEntity.GetTopMostParent() == entity.GetTopMostParent()))
+            foreach (var passiveSensor in Sensors)
             {
+                if (passiveSensor.AttachedEntity?.GetTopMostParent() != entity.GetTopMostParent())
+                    continue;
+
                 Vector3D bearing = sensor.Position - passiveSensor.Position;
                 double angleToTarget = Vector3D.Angle(passiveSensor.Direction, bearing);
+                if (angleToTarget > passiveSensor.Aperture)
+                    continue;
+
                 double signalToNoiseRatio = sensor.SignalRatioAtTarget(passiveSensor.Position, passiveSensor.Aperture < Math.PI ? passiveSensor.RecieverArea * Math.Cos(angleToTarget) : passiveSensor.RecieverArea);
 
                 double range = bearing.Normalize();

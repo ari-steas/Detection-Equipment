@@ -22,8 +22,6 @@ namespace DetectionEquipment.Server
         public Dictionary<IMyEntity, ITrack> Tracks = new Dictionary<IMyEntity, ITrack>();
         public Dictionary<IMyCubeGrid, GridSensorManager> GridSensorMangers = new Dictionary<IMyCubeGrid, GridSensorManager>();
 
-        public PassiveRadarSensor PRSensor = new PassiveRadarSensor(null);
-
         public override void LoadData()
         {
             I = this;
@@ -45,7 +43,6 @@ namespace DetectionEquipment.Server
 
             foreach (var manager in GridSensorMangers.Values)
                 manager.Close();
-            PRSensor.Close();
 
             I = null;
         }
@@ -60,23 +57,6 @@ namespace DetectionEquipment.Server
 
             foreach (var manager in GridSensorMangers.Values)
                 manager.Update();
-
-
-            foreach (var track in Tracks.Values)
-            {
-                var b = PRSensor.GetDetectionInfo(track);
-                if (b != null)
-                {
-                    var info = b.Value;
-
-                    var gps = MyAPIGateway.Session.GPS.Create("", "", info.Bearing * info.Range + PRSensor.Position, true, true);
-                    gps.GPSColor = Color.Red;
-                    gps.DiscardAt = MyAPIGateway.Session.ElapsedPlayTime + TimeSpan.FromSeconds(1);
-
-                    MyAPIGateway.Session.GPS.AddLocalGps(gps);
-                    //MyAPIGateway.Utilities.ShowMessage("", info.ToString());
-                }
-            }
         }
 
         private void OnEntityAdd(IMyEntity obj)

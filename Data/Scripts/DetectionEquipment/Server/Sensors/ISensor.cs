@@ -1,4 +1,5 @@
 ﻿using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared.Definitions;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
@@ -18,6 +19,7 @@ namespace DetectionEquipment.Server.Sensors
         /// Visibility cone radius in radians
         /// </summary>
         double Aperture { get; set; }
+        SensorDefinition Definition { get; }
 
         double BearingErrorModifier { get; set; }
         double RangeErrorModifier { get; set; }
