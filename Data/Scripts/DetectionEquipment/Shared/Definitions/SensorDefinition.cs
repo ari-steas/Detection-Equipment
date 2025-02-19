@@ -26,6 +26,9 @@ namespace DetectionEquipment.Shared.Definitions
             public double MaxElevation;
             public double AzimuthRate;
             public double ElevationRate;
+
+            public bool CanRotateFull => MaxAzimuth >= Math.PI && MinAzimuth <= -Math.PI;
+            public bool CanElevateFull => MaxElevation >= Math.PI && MinElevation <= -Math.PI;
         }
 
         public enum SensorType

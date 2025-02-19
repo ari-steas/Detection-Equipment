@@ -47,13 +47,13 @@ namespace DetectionEquipment.Shared.Definitions
                 Movement = new SensorMovementDefinition
                 {
                     AzimuthPart = "azimuth",
-                    AzimuthRate = 1,
+                    AzimuthRate = 4 * Math.PI / 60,
                     MaxAzimuth = Math.PI,
                     MinAzimuth = -Math.PI,
 
                     ElevationPart = "elevation",
-                    ElevationRate = 1,
-                    MaxElevation = Math.PI,
+                    ElevationRate = 2 * Math.PI,
+                    MaxElevation = Math.PI/2,
                     MinElevation = -Math.PI/8,
                 },
             },

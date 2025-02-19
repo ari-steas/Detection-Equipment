@@ -30,31 +30,30 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public HashSet<DetectionInfo> Detections = new HashSet<DetectionInfo>();
 
-        private float _azimuth = 0, _elevation = 0;
-        protected Matrix _rotationMatrix = Matrix.Identity;
-        public float Azimuth
+        public double Azimuth { get; private set;} = 0;
+        public double Elevation { get; private set; } = 0;
+
+        private double _desiredAzimuth = 0, _desiredElevation = 0;
+        public double DesiredAzimuth
         {
             get
             {
-                return _azimuth;
+                return _desiredAzimuth;
             }
             set
             {
-                _azimuth = value;
-                UpdateRotationMatrix();
+                _desiredAzimuth = MathUtils.NormalizeAngle(value);
             }
         }
-
-        public float Elevation
+        public double DesiredElevation
         {
             get
             {
-                return _elevation;
+                return _desiredElevation;
             }
             set
             {
-                _elevation = value;
-                UpdateRotationMatrix();
+                _desiredElevation = MathUtils.NormalizeAngle(value);
             }
         }
 
@@ -102,8 +101,18 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)
         {
-            if (Sensor is RadarSensor)
-                Azimuth += (float) (4 * Math.PI / 60 / 60);
+            if (Sensor is RadarSensor && _elevPart != null)
+            {
+                DesiredAzimuth += (float) (4 * Math.PI / 60 / 60);
+                if (Elevation >= Definition.Movement.Value.MaxElevation)
+                {
+                    DesiredElevation = Definition.Movement.Value.MinElevation;
+                }
+                else if (DesiredElevation == Elevation || Elevation <= Definition.Movement.Value.MinElevation)
+                {
+                    DesiredElevation = Definition.Movement.Value.MaxElevation;
+                }
+            }
 
             if (_aziPart != null)
                 SubpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
@@ -116,7 +125,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             else
             {
                 Sensor.Position = Block.WorldAABB.Center;
-                Sensor.Direction = (_rotationMatrix * Block.WorldMatrix).Forward;
+                Sensor.Direction = (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * Block.WorldMatrix).Forward;
             }
 
             if (!Block.IsWorking)
@@ -124,7 +133,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             {
                 var color = new Color(0, 0, 255, 100);
-                var matrix = _rotationMatrix * Block.WorldMatrix;
+                var matrix = MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * Block.WorldMatrix;
 
                 if (Sensor.Aperture < Math.PI)
                     MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(Sensor.Aperture) * MyAPIGateway.Session.SessionSettings.SyncDistance, MyAPIGateway.Session.SessionSettings.SyncDistance, ref color, 8, DebugDraw.MaterialSquare);
@@ -150,25 +159,28 @@ namespace DetectionEquipment.Server.SensorBlocks
             (Sensor as PassiveRadarSensor)?.Close();
         }
 
-        private void UpdateRotationMatrix()
-        {
-            _rotationMatrix = Matrix.CreateFromYawPitchRoll(_azimuth, _elevation, 0);
-        }
-
         private Matrix GetAzimuthMatrix(float delta)
         {
-            var _limitedAzimuth = MathUtils.LimitRotationSpeed(_azimuth, _azimuth, 1 * delta);
+            var _limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.Value.AzimuthRate * delta);
 
-            Azimuth = (float)MathUtils.NormalizeAngle(_limitedAzimuth); // Adjust rotation to (-180, 180), but don't have any limits
-            return Matrix.CreateFromYawPitchRoll(_azimuth, 0, 0);
+            if (!Definition.Movement.Value.CanElevateFull)
+                Azimuth = MathUtils.Clamp(_limitedAzimuth, Definition.Movement.Value.MinAzimuth, Definition.Movement.Value.MaxAzimuth);
+            else
+                Azimuth = MathUtils.NormalizeAngle(_limitedAzimuth);
+
+            return Matrix.CreateFromYawPitchRoll((float) Azimuth, 0, 0);
         }
 
         private Matrix GetElevationMatrix(float delta)
         {
-            var _limitedElevation = MathUtils.LimitRotationSpeed(_elevation, _elevation, 1 * delta);
+            var _limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.Value.ElevationRate * delta);
 
-            Elevation = (float)MathUtils.NormalizeAngle(_limitedElevation);
-            return Matrix.CreateFromYawPitchRoll(0, _elevation, 0);
+            if (!Definition.Movement.Value.CanElevateFull)
+                Elevation = MathUtils.Clamp(_limitedElevation, Definition.Movement.Value.MinElevation, Definition.Movement.Value.MaxElevation);
+            else
+                Elevation = MathUtils.NormalizeAngle(_limitedElevation);
+
+            return Matrix.CreateFromYawPitchRoll(0, (float) Elevation, 0);
         }
     }
 }

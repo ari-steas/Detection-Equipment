@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
+﻿using DetectionEquipment.Server.PBApi;
+using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
@@ -22,6 +23,8 @@ namespace DetectionEquipment.Server
         public Dictionary<IMyEntity, ITrack> Tracks = new Dictionary<IMyEntity, ITrack>();
         public Dictionary<IMyCubeGrid, GridSensorManager> GridSensorMangers = new Dictionary<IMyCubeGrid, GridSensorManager>();
 
+        private bool _doneTickInit = false;
+
         public override void LoadData()
         {
             I = this;
@@ -38,6 +41,8 @@ namespace DetectionEquipment.Server
 
         protected override void UnloadData()
         {
+            PbApiInitializer.Unload();
+
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
             MyAPIGateway.Entities.OnEntityRemove -= OnEntityRemove;
 
@@ -52,6 +57,12 @@ namespace DetectionEquipment.Server
         int _ticks = 0;
         public override void UpdateAfterSimulation()
         {
+            if (!_doneTickInit)
+            {
+                PbApiInitializer.Init();
+                _doneTickInit = true;
+            }
+
             //if (_ticks++ % 60 != 0)
             //    return;
 
