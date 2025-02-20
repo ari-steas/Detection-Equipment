@@ -1,20 +1,12 @@
 ﻿using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using Sandbox.ModAPI;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
-using VRage.Collections;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
@@ -23,7 +15,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 {
     internal class BlockSensor
     {
-        public IMyCubeBlock Block;
+        public IMyTerminalBlock Block;
         public ISensor Sensor;
         public SubpartManager SubpartManager;
         public readonly SensorDefinition Definition;
@@ -59,7 +51,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         private MyEntitySubpart _aziPart = null, _elevPart = null;
 
-        public BlockSensor(IMyCubeBlock block, SensorDefinition definition)
+        public BlockSensor(IMyTerminalBlock block, SensorDefinition definition)
         {
             Block = block;
             Definition = definition;
@@ -67,8 +59,8 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             if (Definition.Movement != null)
             {
-                _aziPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.Value.AzimuthPart);
-                _elevPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.Value.ElevationPart);
+                _aziPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
+                _elevPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
             }
 
             switch (definition.Type)
@@ -97,28 +89,18 @@ namespace DetectionEquipment.Server.SensorBlocks
                     };
                     break;
             }
+
+            ServerMain.I.BlockSensorIdMap[Sensor.Id] = this;
         }
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)
         {
-            if (Sensor is RadarSensor && _elevPart != null)
-            {
-                DesiredAzimuth += (float) (4 * Math.PI / 60 / 60);
-                if (Elevation >= Definition.Movement.Value.MaxElevation)
-                {
-                    DesiredElevation = Definition.Movement.Value.MinElevation;
-                }
-                else if (DesiredElevation == Elevation || Elevation <= Definition.Movement.Value.MinElevation)
-                {
-                    DesiredElevation = Definition.Movement.Value.MaxElevation;
-                }
-            }
-
-            if (_aziPart != null)
+            if (_aziPart != null && Azimuth != DesiredAzimuth)
                 SubpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
             if (_elevPart != null)
             {
-                SubpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
+                if (Elevation != DesiredElevation)
+                    SubpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
                 Sensor.Position = _elevPart.WorldMatrix.Translation;
                 Sensor.Direction = _elevPart.WorldMatrix.Forward;
             }
@@ -131,6 +113,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (!Block.IsWorking)
                 return;
 
+            if (Block.ShowOnHUD)
             {
                 var color = new Color(0, 0, 255, 100);
                 var matrix = MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * Block.WorldMatrix;
@@ -148,23 +131,27 @@ namespace DetectionEquipment.Server.SensorBlocks
                     Detections.Add(detection.Value);
             }
 
-            foreach (var detection in Detections)
+            if (Block.ShowOnHUD)
             {
-                DebugDraw.AddLine(Sensor.Position, Sensor.Position + detection.Bearing * detection.Range, Color.Red, 0);
+                foreach (var detection in Detections)
+                {
+                    DebugDraw.AddLine(Sensor.Position, Sensor.Position + detection.Bearing * detection.Range, Color.Red, 0);
+                }
             }
         }
 
         public virtual void Close()
         {
-            (Sensor as PassiveRadarSensor)?.Close();
+            ServerMain.I.BlockSensorIdMap.Remove(Sensor.Id);
+            Sensor.Close();
         }
 
         private Matrix GetAzimuthMatrix(float delta)
         {
-            var _limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.Value.AzimuthRate * delta);
+            var _limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.AzimuthRate * delta);
 
-            if (!Definition.Movement.Value.CanElevateFull)
-                Azimuth = MathUtils.Clamp(_limitedAzimuth, Definition.Movement.Value.MinAzimuth, Definition.Movement.Value.MaxAzimuth);
+            if (!Definition.Movement.CanElevateFull)
+                Azimuth = MathUtils.Clamp(_limitedAzimuth, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
             else
                 Azimuth = MathUtils.NormalizeAngle(_limitedAzimuth);
 
@@ -173,10 +160,10 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         private Matrix GetElevationMatrix(float delta)
         {
-            var _limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.Value.ElevationRate * delta);
+            var _limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.ElevationRate * delta);
 
-            if (!Definition.Movement.Value.CanElevateFull)
-                Elevation = MathUtils.Clamp(_limitedElevation, Definition.Movement.Value.MinElevation, Definition.Movement.Value.MaxElevation);
+            if (!Definition.Movement.CanElevateFull)
+                Elevation = MathUtils.Clamp(_limitedElevation, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
             else
                 Elevation = MathUtils.NormalizeAngle(_limitedElevation);
 

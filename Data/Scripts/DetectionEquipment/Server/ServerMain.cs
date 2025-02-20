@@ -2,16 +2,12 @@
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared;
 using Sandbox.ModAPI;
-using System;
 using System.Collections.Generic;
-using System.Runtime.Remoting;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
-using VRageMath;
 
 namespace DetectionEquipment.Server
 {
@@ -23,10 +19,17 @@ namespace DetectionEquipment.Server
         public Dictionary<IMyEntity, ITrack> Tracks = new Dictionary<IMyEntity, ITrack>();
         public Dictionary<IMyCubeGrid, GridSensorManager> GridSensorMangers = new Dictionary<IMyCubeGrid, GridSensorManager>();
 
+        public Dictionary<uint, ISensor> SensorIdMap = new Dictionary<uint, ISensor>();
+        public Dictionary<uint, BlockSensor> BlockSensorIdMap = new Dictionary<uint, BlockSensor>();
+        public uint HighestSensorId = 0;
+        
         private bool _doneTickInit = false;
 
         public override void LoadData()
         {
+            if (!MyAPIGateway.Session.IsServer)
+                return;
+
             I = this;
 
             MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
@@ -41,6 +44,9 @@ namespace DetectionEquipment.Server
 
         protected override void UnloadData()
         {
+            if (!MyAPIGateway.Session.IsServer)
+                return;
+
             PbApiInitializer.Unload();
 
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
@@ -54,17 +60,16 @@ namespace DetectionEquipment.Server
 
 
 
-        int _ticks = 0;
         public override void UpdateAfterSimulation()
         {
+            if (!MyAPIGateway.Session.IsServer)
+                return;
+
             if (!_doneTickInit)
             {
                 PbApiInitializer.Init();
                 _doneTickInit = true;
             }
-
-            //if (_ticks++ % 60 != 0)
-            //    return;
 
             foreach (var manager in GridSensorMangers.Values)
                 manager.Update();

@@ -1,11 +1,8 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Server.Sensors;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRage.Game.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
@@ -74,7 +71,7 @@ namespace DetectionEquipment.Shared.Definitions
             },
         };
 
-        public static List<BlockSensor> TryCreateSensors(IMyCubeBlock block)
+        public static List<BlockSensor> TryCreateSensors(IMyTerminalBlock block)
         {
             var sensors = new List<BlockSensor>();
             foreach (var definition in Definitions)

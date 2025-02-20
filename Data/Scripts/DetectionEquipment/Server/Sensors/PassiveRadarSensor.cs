@@ -1,10 +1,9 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
-using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using VRage;
 using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
@@ -13,8 +12,10 @@ namespace DetectionEquipment.Server.Sensors
 {
     internal class PassiveRadarSensor : ISensor
     {
+        public uint Id { get; private set; }
         public readonly IMyEntity AttachedEntity;
         public SensorDefinition Definition { get; private set; }
+        public Action<MyTuple<double, double, double, double, Vector3D>> OnDetection { get; set; } = null;
         public Vector3D Position { get; set; }
         public Vector3D Direction { get; set; }
 
@@ -22,14 +23,18 @@ namespace DetectionEquipment.Server.Sensors
 
         public PassiveRadarSensor(IMyEntity attachedEntity, SensorDefinition definition)
         {
+            Id = ServerMain.I.HighestSensorId++;
             AttachedEntity = attachedEntity;
             Sensors.Add(this);
             Definition = definition;
+
+            ServerMain.I.SensorIdMap[Id] = this;
         }
 
         public void Close()
         {
             Sensors.Remove(this);
+            ServerMain.I.SensorIdMap.Remove(Id);
         }
 
         private PassiveRadarSensor() { }
@@ -60,6 +65,7 @@ namespace DetectionEquipment.Server.Sensors
             _queuedRadarHits.Remove(track.EntityId);
             data.Track = track;
 
+            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D>(data.CrossSection, data.Range, data.RangeError, data.BearingError, data.Bearing));
             //MyAPIGateway.Utilities.ShowMessage($"{data.CrossSection:N0}", data.ToString());
 
             return data;

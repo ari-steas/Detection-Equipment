@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -12,11 +8,11 @@ namespace DetectionEquipment.Shared.Definitions
         public SensorType Type;
         public double MaxAperture;
         public double MinAperture;
-        public SensorMovementDefinition? Movement;
+        public SensorMovementDefinition Movement;
         public double DetectionThreshold;
         public double MaxPowerDraw;
 
-        public struct SensorMovementDefinition
+        public class SensorMovementDefinition
         {
             public string AzimuthPart;
             public string ElevationPart;

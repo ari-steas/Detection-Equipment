@@ -4,11 +4,10 @@ using System.Linq;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using VRage;
-using VRage.Game;
 using VRage.Game.ModAPI.Ingame;
 using VRageMath;
 
-namespace DetectionEquipment.Server.PBApi
+namespace IngameScript
 {
     /// <summary>
     /// Programmable Block interface for Aristeas's Detection Equipment mod.
@@ -31,14 +30,23 @@ namespace DetectionEquipment.Server.PBApi
 
             _methodMap = program.Me.GetProperty("DetectionPbApi")?.As<IReadOnlyDictionary<string, Delegate>>()?.GetValue(program.Me);
             if (_methodMap == null)
-                throw new Exception("Failed to get DetectionPbApi!");
+                throw new Exception("Failed to get DetectionPbApi!"); // This is expected to occur once on world load; Detection Equipment automatically recompiles affected programmable blocks.
             InitializeApi();
             _methodMap = null;
         }
 
         #region Public Methods
 
-        public PbSensor GetSensor(IMyCubeBlock block) => _hasSensor.Invoke(block) ? new PbSensor(block) : null;
+        public List<PbSensor> GetSensors(IMyCubeBlock block)
+        {
+            if (!_hasSensor.Invoke(block))
+                return new List<PbSensor>(0);
+
+            List<PbSensor> list = new List<PbSensor>();
+            foreach (uint id in _getSensorIds.Invoke(block))
+                list.Add(new PbSensor(block, id));
+            return list;
+        }
 
         public bool HasSensor(IMyCubeBlock block) => _hasSensor.Invoke(block);
 
@@ -46,19 +54,20 @@ namespace DetectionEquipment.Server.PBApi
 
         #region Delegates
 
+        private Func<IMyCubeBlock, uint[]> _getSensorIds;
         private Func<IMyCubeBlock, bool> _hasSensor;
-        private Func<IMyCubeBlock, Vector3D> _getSensorPosition;
-        private Func<IMyCubeBlock, Vector3D> _getSensorDirection;
-        private Func<IMyCubeBlock, double> _getSensorAperture;
-        private Action<IMyCubeBlock, double> _setSensorAperture;
-        private Func<IMyCubeBlock, double> _getSensorAzimuth;
-        private Action<IMyCubeBlock, double> _setSensorAzimuth;
-        private Func<IMyCubeBlock, double> _getSensorElevation;
-        private Action<IMyCubeBlock, double> _setSensorElevation;
-        private Func<string, MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double>> _getSensorDefinition;
-        private Func<IMyCubeBlock, List<MyTuple<double, double, double, double, Vector3D>>> _getSensorDetections;
-        private Action<IMyCubeBlock, Action<MyTuple<double, double, double, double, Vector3D>>> _registerInvokeOnDetection;
-        private Action<IMyCubeBlock, Action<MyTuple<double, double, double, double, Vector3D>>> _unregisterInvokeOnDetection;
+        private Func<uint, Vector3D> _getSensorPosition;
+        private Func<uint, Vector3D> _getSensorDirection;
+        private Func<uint, double> _getSensorAperture;
+        private Action<uint, double> _setSensorAperture;
+        private Func<uint, double> _getSensorAzimuth;
+        private Action<uint, double> _setSensorAzimuth;
+        private Func<uint, double> _getSensorElevation;
+        private Action<uint, double> _setSensorElevation;
+        private Func<uint, MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double>> _getSensorDefinition;
+        private Func<uint, MyTuple<double, double, double, double, Vector3D>[]> _getSensorDetections;
+        private Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>> _registerInvokeOnDetection;
+        private Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>> _unregisterInvokeOnDetection;
 
         #endregion
 
@@ -72,6 +81,7 @@ namespace DetectionEquipment.Server.PBApi
         {
             I = this;
 
+            SetApiMethod("GetSensorIds", ref _getSensorIds);
             SetApiMethod("HasSensor", ref _hasSensor);
             SetApiMethod("GetSensorPosition", ref _getSensorPosition);
             SetApiMethod("GetSensorDirection", ref _getSensorDirection);
@@ -122,16 +132,18 @@ namespace DetectionEquipment.Server.PBApi
         {
             public readonly PbSensorDefinition Definition;
             public readonly IMyCubeBlock Block;
+            public readonly uint Id;
             private Action<PbDetectionInfo> _onDetection = null;
 
             /// <summary>
             /// Constructor - equivalent to DetectionPbApi.GetSensor(block);
             /// </summary>
             /// <param name="block"></param>
-            public PbSensor(IMyCubeBlock block)
+            public PbSensor(IMyCubeBlock block, uint id)
             {
+                Id = id;
                 Block = block;
-                Definition = (PbSensorDefinition) I._getSensorDefinition.Invoke(Block.BlockDefinition.SubtypeName);
+                Definition = (PbSensorDefinition) I._getSensorDefinition.Invoke(Id);
 
                 if (Definition == null)
                     throw new Exception($"No sensor exists for block {block.DisplayName}!");
@@ -141,12 +153,12 @@ namespace DetectionEquipment.Server.PBApi
             /// Gets sensor detections made in the last tick.
             /// </summary>
             /// <returns></returns>
-            public List<PbDetectionInfo> GetDetections()
+            public PbDetectionInfo[] GetDetections()
             {
-                var tuples = I._getSensorDetections.Invoke(Block);
-                var detections = new List<PbDetectionInfo>(tuples.Count);
-                foreach (var detection in tuples)
-                    detections.Add((PbDetectionInfo) detection);
+                var tuples = I._getSensorDetections.Invoke(Id);
+                var detections = new PbDetectionInfo[tuples.Length];
+                for (int i = 0; i < tuples.Length; i++)
+                    detections[i] = (PbDetectionInfo) tuples[i];
                 return detections;
             }
 
@@ -163,9 +175,9 @@ namespace DetectionEquipment.Server.PBApi
                 {
                     // Only have an action registered if we need it - this avoids the mod profiler hit.
                     if (_onDetection == null && value != null)
-                        I._registerInvokeOnDetection.Invoke(Block, InvokeOnDetection);
+                        I._registerInvokeOnDetection.Invoke(Id, InvokeOnDetection);
                     else if (value == null)
-                        I._unregisterInvokeOnDetection.Invoke(Block, InvokeOnDetection);
+                        I._unregisterInvokeOnDetection.Invoke(Id, InvokeOnDetection);
                     _onDetection = value;
                 }
             }
@@ -173,11 +185,11 @@ namespace DetectionEquipment.Server.PBApi
             /// <summary>
             /// Global position of the sensor.
             /// </summary>
-            public Vector3D Position => I._getSensorPosition.Invoke(Block);
+            public Vector3D Position => I._getSensorPosition.Invoke(Id);
             /// <summary>
             /// Global forward direction of the sensor.
             /// </summary>
-            public Vector3D Direction => I._getSensorDirection.Invoke(Block);
+            public Vector3D Direction => I._getSensorDirection.Invoke(Id);
 
             /// <summary>
             /// The sensor's half field of view in radians.
@@ -186,11 +198,11 @@ namespace DetectionEquipment.Server.PBApi
             {
                 get
                 {
-                    return I._getSensorAperture.Invoke(Block);
+                    return I._getSensorAperture.Invoke(Id);
                 }
                 set
                 {
-                    I._setSensorAperture.Invoke(Block, value);
+                    I._setSensorAperture.Invoke(Id, value);
                 }
             }
 
@@ -201,11 +213,11 @@ namespace DetectionEquipment.Server.PBApi
             {
                 get
                 {
-                    return I._getSensorAzimuth.Invoke(Block);
+                    return I._getSensorAzimuth.Invoke(Id);
                 }
                 set
                 {
-                    I._setSensorAzimuth.Invoke(Block, value);
+                    I._setSensorAzimuth.Invoke(Id, value);
                 }
             }
 
@@ -216,11 +228,11 @@ namespace DetectionEquipment.Server.PBApi
             {
                 get
                 {
-                    return I._getSensorElevation.Invoke(Block);
+                    return I._getSensorElevation.Invoke(Id);
                 }
                 set
                 {
-                    I._setSensorElevation.Invoke(Block, value);
+                    I._setSensorElevation.Invoke(Id, value);
                 }
             }
 
@@ -329,6 +341,11 @@ namespace DetectionEquipment.Server.PBApi
                 BearingError = tuple.Item4,
                 Bearing = tuple.Item5,
             };
+
+            public override string ToString()
+            {
+                return $"Range: {Range:N0} +-{RangeError:N1}m\nBearing: {Bearing.ToString("N0")} +-{MathHelper.ToDegrees(BearingError):N1}°";
+            }
         }
 
         #endregion

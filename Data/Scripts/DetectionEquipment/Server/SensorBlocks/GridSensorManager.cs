@@ -1,16 +1,8 @@
-﻿using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared;
+﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.Definitions;
 using Sandbox.ModAPI;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
-using System.Threading.Tasks;
 using VRage.Game.ModAPI;
-using VRage.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Server.SensorBlocks
@@ -19,6 +11,7 @@ namespace DetectionEquipment.Server.SensorBlocks
     {
         public readonly IMyCubeGrid Grid;
         public HashSet<BlockSensor> Sensors = new HashSet<BlockSensor>();
+        public Dictionary<IMyCubeBlock, uint[]> BlockSensorIdMap = new Dictionary<IMyCubeBlock, uint[]>();
         public HashSet<VisibilitySet> TrackVisibility = new HashSet<VisibilitySet>();
         public bool HasRadar = false;
 
@@ -40,7 +33,6 @@ namespace DetectionEquipment.Server.SensorBlocks
         
         public void Update()
         {
-            MyAPIGateway.Utilities.ShowNotification("Sensors: " + Sensors.Count, 1000/60);
             TrackVisibility.Clear();
             _combineBuffer.Clear();
             if (Sensors.Count == 0)
@@ -95,18 +87,27 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         private void OnBlockAdded(IMySlimBlock obj)
         {
-            var cubeBlock = obj.FatBlock;
+            var cubeBlock = obj.FatBlock as IMyTerminalBlock;
             if (cubeBlock == null) return;
 
+            List<uint> ids = new List<uint>();
             foreach (var newSensor in DefinitionManager.TryCreateSensors(cubeBlock))
+            {
                 Sensors.Add(newSensor);
+                ids.Add(newSensor.Sensor.Id);
+            }
+
+            BlockSensorIdMap[cubeBlock] = ids.ToArray();
         }
 
         private void OnBlockRemoved(IMySlimBlock obj)
         {
             var cubeBlock = obj.FatBlock;
             if (cubeBlock != null)
+            {
                 Sensors.RemoveWhere(sensor => sensor.Block == cubeBlock);
+                BlockSensorIdMap.Remove(cubeBlock);
+            }
         }
 
         public struct VisibilitySet

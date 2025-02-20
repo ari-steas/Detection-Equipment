@@ -1,8 +1,8 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
-using Sandbox.ModAPI;
 using System;
+using VRage;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
@@ -10,7 +10,9 @@ namespace DetectionEquipment.Server.Sensors
 {
     internal class VisualSensor : ISensor
     {
+        public uint Id { get; private set; }
         public SensorDefinition Definition { get; private set; }
+        public Action<MyTuple<double, double, double, double, Vector3D>> OnDetection { get; set; } = null;
 
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
@@ -23,11 +25,19 @@ namespace DetectionEquipment.Server.Sensors
 
         public VisualSensor(SensorDefinition definition)
         {
+            Id = ServerMain.I.HighestSensorId++;
             IsInfrared = definition.Type == SensorDefinition.SensorType.Infrared;
             Definition = definition;
+            
+            ServerMain.I.SensorIdMap[Id] = this;
         }
 
         private VisualSensor() { }
+
+        public void Close()
+        {
+            ServerMain.I.SensorIdMap.Remove(Id);
+        }
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
@@ -60,6 +70,8 @@ namespace DetectionEquipment.Server.Sensors
 
             double maxRangeError = Math.Sqrt(range) * RangeErrorModifier * errorScalar;
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
+
+            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D>(visibility, range, maxRangeError, maxBearingError, bearing));
 
             return new DetectionInfo()
             {

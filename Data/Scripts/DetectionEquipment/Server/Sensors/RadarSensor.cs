@@ -1,8 +1,8 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
-using Sandbox.ModAPI;
 using System;
+using VRage;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI.Ingame;
 using VRageMath;
@@ -12,25 +12,39 @@ namespace DetectionEquipment.Server.Sensors
 {
     internal class RadarSensor : ISensor
     {
+        public uint Id { get; private set; }
         public readonly Func<long> AttachedEntityId;
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
 
         public RadarSensor(long attachedEntityId, SensorDefinition definition)
         {
+            Id = ServerMain.I.HighestSensorId++;
             AttachedEntityId = () => attachedEntityId;
             Definition = definition;
+            
+            ServerMain.I.SensorIdMap[Id] = this;
         }
 
         public RadarSensor(IMyEntity entity, SensorDefinition definition)
         {
+            Id = ServerMain.I.HighestSensorId++;
             AttachedEntityId = () => ((MyEntity)entity).GetTopMostParent().EntityId;
             Definition = definition;
+            
+            ServerMain.I.SensorIdMap[Id] = this;
         }
 
         private RadarSensor() { }
 
+        public void Close()
+        {
+            ServerMain.I.SensorIdMap.Remove(Id);
+        }
+
         public SensorDefinition Definition { get; private set; }
+        public Action<MyTuple<double, double, double, double, Vector3D>> OnDetection { get; set; } = null;
+
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
         public double Power = 14000000;
         public double RecieverArea = 4.9 * 2.7;
@@ -90,6 +104,8 @@ namespace DetectionEquipment.Server.Sensors
             double range = Math.Sqrt(targetDistanceSq);
             double maxRangeError = range * RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / MinStableSignal, 0, 1));
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
+
+            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D>(radarCrossSection, range, maxRangeError, maxBearingError, bearing));
 
             return new DetectionInfo()
             {
