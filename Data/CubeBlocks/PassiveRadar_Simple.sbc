@@ -1,9 +1,9 @@
 <?xml version="1.0" ?>
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<CubeBlocks>
-		<Definition>
+		<Definition xsi:type="MyObjectBuilder_CameraBlockDefinition">
 			<Id>
-				<TypeId>TerminalBlock</TypeId>
+				<TypeId>CameraBlock</TypeId>
 				<SubtypeId>PassiveRadar_Simple</SubtypeId>
 			</Id>
 			<DisplayName>{LOC:DisplayName_PassiveRadar_Simple}</DisplayName>
@@ -19,6 +19,10 @@
 			</Components>
 			<CriticalComponent Subtype="SteelPlate" Index="0"/>
 			<BlockPairName>PassiveRadar_Simple</BlockPairName>
+			<IsAirTight>false</IsAirTight>
+			<OverlayTexture></OverlayTexture>
+			<MinFov>0.1</MinFov>
+			<MaxFov>1.04719755</MaxFov>
 		</Definition>
 	</CubeBlocks>
 </Definitions>

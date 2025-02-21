@@ -87,7 +87,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         private void OnBlockAdded(IMySlimBlock obj)
         {
-            var cubeBlock = obj.FatBlock as IMyTerminalBlock;
+            var cubeBlock = obj.FatBlock as IMyFunctionalBlock;
             if (cubeBlock == null) return;
 
             List<uint> ids = new List<uint>();

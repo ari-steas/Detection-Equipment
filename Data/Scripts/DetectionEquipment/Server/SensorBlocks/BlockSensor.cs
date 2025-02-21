@@ -1,12 +1,17 @@
 ﻿using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
+using Sandbox.Game.Entities;
+using Sandbox.Game.Entities.Cube;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using VRage.Game;
+using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
+using VRage.Utils;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
@@ -15,12 +20,15 @@ namespace DetectionEquipment.Server.SensorBlocks
 {
     internal class BlockSensor
     {
-        public IMyTerminalBlock Block;
+        public IMyCameraBlock Block;
         public ISensor Sensor;
         public SubpartManager SubpartManager;
         public readonly SensorDefinition Definition;
 
         public HashSet<DetectionInfo> Detections = new HashSet<DetectionInfo>();
+
+        
+        MyDefinitionId ElectricityId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Electricity");
 
         public double Azimuth { get; private set;} = 0;
         public double Elevation { get; private set; } = 0;
@@ -50,10 +58,11 @@ namespace DetectionEquipment.Server.SensorBlocks
         }
 
         private MyEntitySubpart _aziPart = null, _elevPart = null;
+        private Matrix _baseLocalMatrix;
 
-        public BlockSensor(IMyTerminalBlock block, SensorDefinition definition)
+        public BlockSensor(IMyFunctionalBlock block, SensorDefinition definition)
         {
-            Block = block;
+            Block = (IMyCameraBlock) block;
             Definition = definition;
             SubpartManager = new SubpartManager();
 
@@ -61,6 +70,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 _aziPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
                 _elevPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
+                _baseLocalMatrix = Block.LocalMatrix;
             }
 
             switch (definition.Type)
@@ -91,6 +101,11 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
 
             ServerMain.I.BlockSensorIdMap[Sensor.Id] = this;
+
+            if (Definition.MaxPowerDraw > 0)
+            {
+                Block.ResourceSink.SetMaxRequiredInputByType(ElectricityId, (float) Definition.MaxPowerDraw);
+            }
         }
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)
@@ -103,6 +118,19 @@ namespace DetectionEquipment.Server.SensorBlocks
                     SubpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
                 Sensor.Position = _elevPart.WorldMatrix.Translation;
                 Sensor.Direction = _elevPart.WorldMatrix.Forward;
+
+                if (Block.IsActive)
+                {
+                    Block.Visible = false;
+                    Block.LocalMatrix = MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _baseLocalMatrix;
+
+                    Sensor.Direction = Block.WorldMatrix.Forward;
+                }
+                else if (!Block.Visible)
+                {
+                    Block.Visible = true;
+                    Block.LocalMatrix = _baseLocalMatrix;
+                }
             }
             else
             {
@@ -116,7 +144,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (Block.ShowOnHUD)
             {
                 var color = new Color(0, 0, 255, 100);
-                var matrix = MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * Block.WorldMatrix;
+                var matrix = MatrixD.CreateWorld(Sensor.Position, Sensor.Direction, Vector3D.CalculatePerpendicularVector(Sensor.Direction));
 
                 if (Sensor.Aperture < Math.PI)
                     MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(Sensor.Aperture) * MyAPIGateway.Session.SessionSettings.SyncDistance, MyAPIGateway.Session.SessionSettings.SyncDistance, ref color, 8, DebugDraw.MaterialSquare);

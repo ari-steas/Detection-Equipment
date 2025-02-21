@@ -71,7 +71,7 @@ namespace DetectionEquipment.Shared.Definitions
             },
         };
 
-        public static List<BlockSensor> TryCreateSensors(IMyTerminalBlock block)
+        public static List<BlockSensor> TryCreateSensors(IMyFunctionalBlock block)
         {
             var sensors = new List<BlockSensor>();
             foreach (var definition in Definitions)
