@@ -98,7 +98,7 @@ namespace DetectionEquipment.Server.Sensors
             if (signalToNoiseRatio < 0)
                 return null;
 
-            double maxBearingError = Aperture/2 + BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / MinStableSignal, 0, 1));
+            double maxBearingError = BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / MinStableSignal, 0, 1));
             Vector3D bearing = MathUtils.RandomCone(Vector3D.Normalize(track.Position - Position), maxBearingError);
 
             double range = Math.Sqrt(targetDistanceSq);

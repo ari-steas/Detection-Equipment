@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Server.Sensors;
 using Sandbox.Game;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using VRageMath;
@@ -74,56 +75,67 @@ namespace DetectionEquipment.Shared
             return closest;
         }
 
-        public static DetectionInfo AverageDetection(params DetectionInfo[] args)
-        {
-            double totalBearingError = args.Sum(info => info.BearingError);
-            double totalRangeError = args.Sum(info => info.RangeError);
-
-            Vector3D averageBearing = Vector3D.Zero;
-            double averageRange = 0;
-            foreach (var info in args)
-            {
-                averageBearing += info.Bearing * (info.BearingError/totalBearingError);
-                averageRange += info.Range * (info.RangeError/totalRangeError);
-            }
-
-            DetectionInfo result = new DetectionInfo()
-            {
-                Sensor = args[0].Sensor,
-                Track = args[0].Track,
-                Bearing = averageBearing.Normalized(),
-                BearingError = totalBearingError / args.Length,
-                Range = averageRange,
-                RangeError = totalRangeError / args.Length,
-            };
-
-            return result;
-        }
-
-        public static DetectionInfo AverageDetection(ICollection<DetectionInfo> args)
-        {
-            double totalBearingError = args.Sum(info => info.BearingError);
-            double totalRangeError = args.Sum(info => info.RangeError);
-
-            Vector3D averageBearing = Vector3D.Zero;
-            double averageRange = 0;
-            foreach (var info in args)
-            {
-                averageBearing += info.Bearing * (info.BearingError/totalBearingError);
-                averageRange += info.Range * (info.RangeError/totalRangeError);
-            }
-
-            DetectionInfo result = new DetectionInfo()
-            {
-                Sensor = args.First().Sensor,
-                Track = args.First().Track,
-                Bearing = averageBearing.Normalized(),
-                BearingError = totalBearingError / args.Count,
-                Range = averageRange,
-                RangeError = totalRangeError / args.Count,
-            };
-
-            return result;
-        }
+        //public static DetectionInfo AverageDetection(params DetectionInfo[] args)
+        //{
+        //    double totalBearingError = args.Sum(info => info.BearingError);
+        //    double totalRangeError = args.Sum(info => info.RangeError);
+        //
+        //    Vector3D averageBearing = Vector3D.Zero;
+        //    double averageRange = 0;
+        //    foreach (var info in args)
+        //    {
+        //        averageBearing += info.Bearing * (info.BearingError/totalBearingError);
+        //        averageRange += info.Range * (info.RangeError/totalRangeError);
+        //    }
+        //
+        //    DetectionInfo result = new DetectionInfo()
+        //    {
+        //        Sensor = args[0].Sensor,
+        //        Track = args[0].Track,
+        //        Bearing = averageBearing.Normalized(),
+        //        BearingError = totalBearingError / args.Length,
+        //        Range = averageRange,
+        //        RangeError = totalRangeError / args.Length,
+        //    };
+        //
+        //    return result;
+        //}
+        //
+        //public static DetectionInfo AverageDetection(ICollection<DetectionInfo> args)
+        //{
+        //    if (args.Count == 0)
+        //        throw new Exception("No detection infos provided!");
+        //
+        //    double totalBearingError = 0;
+        //    double totalRangeError = 0;
+        //
+        //    foreach (var info in args)
+        //    {
+        //        totalBearingError += info.BearingError;
+        //        totalRangeError += info.RangeError;
+        //    }
+        //
+        //    Vector3D averageBearing = Vector3D.Zero;
+        //    double averageRange = 0;
+        //    double totalCrossSecton = 0;
+        //    foreach (var info in args)
+        //    {
+        //        averageBearing += info.Bearing * (info.BearingError/totalBearingError);
+        //        averageRange += info.Range * (info.RangeError/totalRangeError);
+        //    }
+        //
+        //    DetectionInfo result = new DetectionInfo()
+        //    {
+        //        Sensor = args.First().Sensor,
+        //        Track = args.First().Track,
+        //        Bearing = averageBearing.Normalized(),
+        //        BearingError = totalBearingError / args.Count,
+        //        Range = averageRange,
+        //        RangeError = totalRangeError / args.Count,
+        //        CrossSection = totalCrossSecton / args.Count,
+        //    };
+        //
+        //    return result;
+        //}
     }
 }

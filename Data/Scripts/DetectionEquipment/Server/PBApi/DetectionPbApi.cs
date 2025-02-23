@@ -7,7 +7,7 @@ using VRage;
 using VRage.Game.ModAPI.Ingame;
 using VRageMath;
 
-namespace IngameScript
+namespace DetectionEquipment.Server.PBApi
 {
     /// <summary>
     /// Programmable Block interface for Aristeas's Detection Equipment mod.
@@ -21,7 +21,7 @@ namespace IngameScript
         /// Instantiates the PBApi.
         /// </summary>
         /// <param name="program">Use 'this' (this program instance)</param>
-        public DetectionPbApi(Sandbox.ModAPI.Ingame.MyGridProgram program)
+        public DetectionPbApi(MyGridProgram program)
         {
             // Shamelessly adapted from the WcPbAPI
             Program = program;
@@ -143,7 +143,7 @@ namespace IngameScript
             {
                 Id = id;
                 Block = block;
-                Definition = (PbSensorDefinition) I._getSensorDefinition.Invoke(Id);
+                Definition = (PbSensorDefinition)I._getSensorDefinition.Invoke(Id);
 
                 if (Definition == null)
                     throw new Exception($"No sensor exists for block {block.DisplayName}!");
@@ -158,7 +158,7 @@ namespace IngameScript
                 var tuples = I._getSensorDetections.Invoke(Id);
                 var detections = new PbDetectionInfo[tuples.Length];
                 for (int i = 0; i < tuples.Length; i++)
-                    detections[i] = (PbDetectionInfo) tuples[i];
+                    detections[i] = (PbDetectionInfo)tuples[i];
                 return detections;
             }
 
@@ -240,7 +240,7 @@ namespace IngameScript
             /// Converts tuple data into a pb-usable format.
             /// </summary>
             /// <param name="tuple"></param>
-            private void InvokeOnDetection(MyTuple<double, double, double, double, Vector3D> tuple) => _onDetection?.Invoke((PbDetectionInfo) tuple);
+            private void InvokeOnDetection(MyTuple<double, double, double, double, Vector3D> tuple) => _onDetection?.Invoke((PbDetectionInfo)tuple);
         }
 
         /// <summary>
@@ -254,7 +254,7 @@ namespace IngameScript
             public SensorMovementDefinition Movement;
             public double DetectionThreshold;
             public double MaxPowerDraw;
-            
+
             public class SensorMovementDefinition
             {
                 public double MinAzimuth;
@@ -263,11 +263,11 @@ namespace IngameScript
                 public double MaxElevation;
                 public double AzimuthRate;
                 public double ElevationRate;
-            
+
                 public bool CanRotateFull => MaxAzimuth >= Math.PI && MinAzimuth <= -Math.PI;
                 public bool CanElevateFull => MaxElevation >= Math.PI && MinElevation <= -Math.PI;
             }
-            
+
             public enum SensorType
             {
                 Radar = 0,
@@ -278,7 +278,7 @@ namespace IngameScript
 
             public static explicit operator PbSensorDefinition(MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double> tuple) => new PbSensorDefinition()
             {
-                Type = (SensorType) tuple.Item1,
+                Type = (SensorType)tuple.Item1,
                 MaxAperture = tuple.Item2,
                 MinAperture = tuple.Item3,
                 Movement = tuple.Item4 == null ? null : new SensorMovementDefinition()
@@ -318,8 +318,8 @@ namespace IngameScript
                 double averageRange = 0;
                 foreach (var info in args)
                 {
-                    averageBearing += info.Bearing * (info.BearingError/totalBearingError);
-                    averageRange += info.Range * (info.RangeError/totalRangeError);
+                    averageBearing += info.Bearing * (info.BearingError / totalBearingError);
+                    averageRange += info.Range * (info.RangeError / totalRangeError);
                 }
 
                 PbDetectionInfo result = new PbDetectionInfo()

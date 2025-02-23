@@ -20,7 +20,7 @@ namespace DetectionEquipment.Server.Sensors
 
         public bool IsInfrared = false;
         public double BearingErrorModifier { get; set; } = 0.1;
-        public double RangeErrorModifier { get; set; } = 10;
+        public double RangeErrorModifier { get; set; } = 5;
         public double MinVisibility = 0.001;
 
         public VisualSensor(SensorDefinition definition)

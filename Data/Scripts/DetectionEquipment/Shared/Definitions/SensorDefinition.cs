@@ -29,10 +29,11 @@ namespace DetectionEquipment.Shared.Definitions
 
         public enum SensorType
         {
-            Radar = 0,
-            PassiveRadar = 1,
-            Optical = 2,
-            Infrared = 3,
+            None = 0,
+            Radar = 1,
+            PassiveRadar = 2,
+            Optical = 3,
+            Infrared = 4,
         }
     }
 }
