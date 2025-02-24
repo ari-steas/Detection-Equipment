@@ -10,6 +10,12 @@ namespace DetectionEquipment.Shared
         private List<TKey> _keys;
         private List<TValue> _values;
 
+        public OrderedDictionary()
+        {
+            _keys = new List<TKey>();
+            _values = new List<TValue>();
+        }
+
         public OrderedDictionary(Dictionary<TKey, TValue> dictionary)
         {
             _keys = dictionary.Keys.ToList();
@@ -80,10 +86,10 @@ namespace DetectionEquipment.Shared
 
         public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
         {
-            KeyValuePair<TKey, TValue>[] enumerator = new KeyValuePair<TKey, TValue>[_keys.Count];
+            var dict = new Dictionary<TKey, TValue>(_keys.Count);
             for (int i = 0; i < _keys.Count; i++)
-                enumerator[i] = new KeyValuePair<TKey, TValue>(_keys[i], _values[i]);
-            return (IEnumerator<KeyValuePair<TKey, TValue>>)enumerator.GetEnumerator();
+                dict.Add(_keys[i], _values[i]);
+            return dict.GetEnumerator();
         }
 
         public bool Remove(TKey key)

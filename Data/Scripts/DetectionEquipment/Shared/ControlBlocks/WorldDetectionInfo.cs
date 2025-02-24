@@ -69,18 +69,23 @@ namespace DetectionEquipment.Shared.ControlBlocks
             if (totalError <= 0)
                 averagePos /= args.Count;
 
+            double avgDiff = 0;
+            foreach (var info in args)
+                avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
+            avgDiff = Math.Sqrt(avgDiff)/args.Count;
+
             WorldDetectionInfo result = new WorldDetectionInfo()
             {
                 CrossSection = totalCrossSection / args.Count,
                 Position = averagePos,
-                Error = totalError / args.Count,
+                Error = avgDiff,
                 DetectionType = 0,
             };
 
             return result;
         }
 
-        public static WorldDetectionInfo AverageWeighted(Dictionary<WorldDetectionInfo, int> args)
+        public static WorldDetectionInfo AverageWeighted(ICollection<KeyValuePair<WorldDetectionInfo, int>> args)
         {
             if (args.Count == 0)
                 throw new Exception("No detection infos provided!");
@@ -108,23 +113,16 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 avgCrossSection += info.Key.CrossSection * infoWeightPct;
             }
 
-            double highestDiff = 0;
-            Vector3D highestDiffPos = Vector3D.Zero;
+            double avgDiff = 0;
             foreach (var info in args)
-            {
-                double dist = Vector3D.DistanceSquared(averagePos, info.Key.Position);
-                if (dist > highestDiff)
-                {
-                    highestDiff = dist;
-                    highestDiffPos = info.Key.Position;
-                }
-            }
+                avgDiff += Vector3D.Distance(info.Key.Position, averagePos);
+            avgDiff /= args.Count;
 
             WorldDetectionInfo result = new WorldDetectionInfo()
             {
                 CrossSection = avgCrossSection,
                 Position = averagePos,
-                Error = Math.Abs(highestError - Math.Sqrt(highestDiff)),
+                Error = avgDiff,
                 DetectionType = 0,
             };
 

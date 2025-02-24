@@ -17,8 +17,9 @@ namespace DetectionEquipment.Shared.ControlBlocks
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock")]
     internal class AggregatorBlock : ControlBlockBase
     {
-        public float AggregationTime = 1;
+        public float AggregationTime = 1f;
         public float DistanceThreshold = 2f;
+        public float VelocityErrorThreshold = 32f; // Standard Deviation at which to ignore velocity estimation
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
         public float RCSThreshold = 1f;
@@ -28,6 +29,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
             Dictionary<WorldDetectionInfo, int> weightedInfos = new Dictionary<WorldDetectionInfo, int>();
+            HashSet<WorldDetectionInfo> combined = new HashSet<WorldDetectionInfo>();
 
             int weight = 1;
             foreach (var set in DetectionCache)
@@ -39,60 +41,73 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 }
             }
 
-            var uncombinableInfos = new HashSet<WorldDetectionInfo>();
-            var alreadyChecked = new HashSet<WorldDetectionInfo>();
-            var toCombine = new Dictionary<WorldDetectionInfo, int>();
-            while (true)
+            var latestSet = DetectionCache.Peek();
+            List<WorldDetectionInfo> toCombine = new List<WorldDetectionInfo>();
+            foreach (var info in latestSet)
             {
-                int prevCount = weightedInfos.Count;
-                foreach (var info in weightedInfos.Keys.ToArray())
+                foreach (var set in DetectionCache)
                 {
-                    if (alreadyChecked.Contains(info))
+                    if (set == latestSet)
                         continue;
-                    alreadyChecked.Add(info);
-
-                    int totalWeight = weightedInfos[info];
-                    foreach (var subDetection in weightedInfos.Keys)
+                    
+                    foreach (var member in set)
                     {
-                        if (subDetection.Equals(info) || uncombinableInfos.Contains(subDetection) || alreadyChecked.Contains(subDetection))
+                        bool typesMatch = member.DetectionType == info.DetectionType;
+                        bool crossSectionsMatch = Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold;
+                        double maxPositionDiff = Math.Max(member.Error, info.Error) * DistanceThreshold + MaxVelocity;
+                        bool positionsMatch = Vector3D.DistanceSquared(member.Position, info.Position) <= maxPositionDiff * maxPositionDiff;
+
+                        // Cross-section doesn't have to match if the sensors are different types.
+                        if (!typesMatch || !crossSectionsMatch || !positionsMatch)
                             continue;
 
-                        var maxDistanceError = MathHelper.Max(info.Error, subDetection.Error) * DistanceThreshold + MaxVelocity;
-
-                        if (Math.Abs(subDetection.CrossSection - info.CrossSection)/info.CrossSection <= RCSThreshold && Vector3D.DistanceSquared(info.Position, subDetection.Position) < maxDistanceError * maxDistanceError)
-                        {
-                            toCombine.Add(subDetection, weightedInfos[subDetection]);
-                            alreadyChecked.Add(subDetection);
-                            totalWeight += weightedInfos[subDetection];
-
-                            DebugDraw.AddLine(info.Position, subDetection.Position, Color.Blue * (weightedInfos[subDetection]/(float) DetectionCache.Count), 0);
-                        }
-                    }
-
-                    if (toCombine.Count > 0)
-                    {
-                        toCombine.Add(info, weightedInfos[info]);
-
-                        foreach (var subDetection in toCombine.Keys)
-                            weightedInfos.Remove(subDetection);
-
-                        weightedInfos.Add(WorldDetectionInfo.AverageWeighted(toCombine), totalWeight);
-                    }
-                    else
-                    {
-                        weightedInfos.Remove(info);
-                        uncombinableInfos.Add(info);
+                        toCombine.Add(member);
+                        break; // TODO calculate velocity from average position delta
                     }
                 }
 
-                toCombine.Clear();
-                alreadyChecked.Clear();
+                Vector3D averageVelocity = Vector3D.Zero;
+                double velVariation = 0;
 
-                if (prevCount == weightedInfos.Count)
-                    break;
+                if (toCombine.Count == 0)
+                {
+                    combined.Add(info);
+                    continue;
+                }
+
+                if (toCombine.Count > 1)
+                {
+                    var velocities = new Vector3D[toCombine.Count - 1];
+                    for (int i = 0; i < velocities.Length; i++)
+                    {
+                        DebugDraw.AddLine(toCombine[i].Position, toCombine[i+1].Position, Color.White * ((float)i/velocities.Length), 0);
+                        velocities[i] = (toCombine[i+1].Position - toCombine[i].Position) * 60;
+                        averageVelocity += velocities[i];
+                    }
+                    averageVelocity /= velocities.Length;
+                    double averageSpeed = averageVelocity.Length();
+
+                    foreach (var velocity in velocities)
+                    {
+                        var len = velocity.Length();
+                        velVariation += (len - averageSpeed) * (len - averageSpeed);
+                    }
+
+                    velVariation = velVariation/velocities.Length;
+                }
+
+                var averagedInfo = WorldDetectionInfo.Average(toCombine);
+                if (velVariation <= VelocityErrorThreshold * VelocityErrorThreshold)
+                    averagedInfo.Position += averageVelocity * AggregationTime/2;
+
+                MyAPIGateway.Utilities.ShowNotification($"Vel: {averageVelocity.Length():N1} m/s (R={Math.Sqrt(velVariation)})", 1000/60);
+                DebugDraw.AddLine(averagedInfo.Position, averagedInfo.Position + averageVelocity, Color.Blue, 0);
+                
+                combined.Add(averagedInfo);
+                toCombine.Clear();
             }
 
-            return uncombinableInfos;
+            return combined;
         }
 
         public override void UpdateAfterSimulation()
@@ -103,7 +118,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 foreach (var sensorDetection in sensor.Detections)
                 {
                     var detection = new WorldDetectionInfo(sensorDetection);
-                    DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
+                    //DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
                     infos.Add(detection);
                 }
             }
