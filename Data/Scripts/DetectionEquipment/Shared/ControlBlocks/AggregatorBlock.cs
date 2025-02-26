@@ -4,12 +4,7 @@ using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRage.Game.Components;
-using VRage.ModAPI;
-using VRage.ObjectBuilders;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.ControlBlocks
@@ -20,16 +15,17 @@ namespace DetectionEquipment.Shared.ControlBlocks
         public float AggregationTime = 1f;
         public float DistanceThreshold = 2f;
         public float VelocityErrorThreshold = 32f; // Standard Deviation at which to ignore velocity estimation
+        public float RCSThreshold = 1f;
+        public bool AggregateTypes = true;
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
-        public float RCSThreshold = 1f;
 
         internal Queue<WorldDetectionInfo[]> DetectionCache = new Queue<WorldDetectionInfo[]>();
 
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
             Dictionary<WorldDetectionInfo, int> weightedInfos = new Dictionary<WorldDetectionInfo, int>();
-            HashSet<WorldDetectionInfo> combined = new HashSet<WorldDetectionInfo>();
+            var aggregatedDetections = new HashSet<WorldDetectionInfo>();
 
             int weight = 1;
             foreach (var set in DetectionCache)
@@ -52,8 +48,8 @@ namespace DetectionEquipment.Shared.ControlBlocks
                     
                     foreach (var member in set)
                     {
-                        bool typesMatch = member.DetectionType == info.DetectionType;
-                        bool crossSectionsMatch = Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold;
+                        bool typesMatch = AggregateTypes || member.DetectionType == info.DetectionType;
+                        bool crossSectionsMatch = member.DetectionType != info.DetectionType || Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold;
                         double maxPositionDiff = Math.Max(member.Error, info.Error) * DistanceThreshold + MaxVelocity;
                         bool positionsMatch = Vector3D.DistanceSquared(member.Position, info.Position) <= maxPositionDiff * maxPositionDiff;
 
@@ -62,7 +58,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                             continue;
 
                         toCombine.Add(member);
-                        break; // TODO calculate velocity from average position delta
+                        break;
                     }
                 }
 
@@ -71,7 +67,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
 
                 if (toCombine.Count == 0)
                 {
-                    combined.Add(info);
+                    aggregatedDetections.Add(info);
                     continue;
                 }
 
@@ -80,7 +76,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                     var velocities = new Vector3D[toCombine.Count - 1];
                     for (int i = 0; i < velocities.Length; i++)
                     {
-                        DebugDraw.AddLine(toCombine[i].Position, toCombine[i+1].Position, Color.White * ((float)i/velocities.Length), 0);
+                        //DebugDraw.AddLine(toCombine[i].Position, toCombine[i+1].Position, Color.White * ((float)i/velocities.Length), 0); // Position delta indicator
                         velocities[i] = (toCombine[i+1].Position - toCombine[i].Position) * 60;
                         averageVelocity += velocities[i];
                     }
@@ -100,14 +96,17 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 if (velVariation <= VelocityErrorThreshold * VelocityErrorThreshold)
                     averagedInfo.Position += averageVelocity * AggregationTime/2;
 
-                MyAPIGateway.Utilities.ShowNotification($"Vel: {averageVelocity.Length():N1} m/s (R={Math.Sqrt(velVariation)})", 1000/60);
-                DebugDraw.AddLine(averagedInfo.Position, averagedInfo.Position + averageVelocity, Color.Blue, 0);
+                averagedInfo.Velocity = averageVelocity;
+                averagedInfo.VelocityVariance = velVariation;
+
+                //MyAPIGateway.Utilities.ShowNotification($"Vel: {averageVelocity.Length():N1} m/s (R={Math.Sqrt(velVariation)})", 1000/60);
+                //DebugDraw.AddLine(averagedInfo.Position, averagedInfo.Position + averageVelocity, Color.Blue, 0);
                 
-                combined.Add(averagedInfo);
+                aggregatedDetections.Add(averagedInfo);
                 toCombine.Clear();
             }
 
-            return combined;
+            return aggregatedDetections;
         }
 
         public override void UpdateAfterSimulation()
@@ -127,15 +126,15 @@ namespace DetectionEquipment.Shared.ControlBlocks
             while (DetectionCache.Count > AggregationTime * 60)
                 DetectionCache.Dequeue();
 
-
             // testing //
-            var dets = GetAggregatedDetections();
-            MyAPIGateway.Utilities.ShowNotification($"Det: {dets.Count} Cache: {DetectionCache.Count}", 1000/60);
-            foreach (var detection in dets)
-            {
-                MyAPIGateway.Utilities.ShowMessage("", detection.ToString());
-                DebugDraw.AddLine(Block.GetPosition(), detection.Position, Color.Green, 0);
-            }
+            //MyAPIGateway.Utilities.ShowNotification($"Det: {AggregatedDetections.Count} Cache: {DetectionCache.Count}", 1000/60);
+            //foreach (var detection in AggregatedDetections)
+            //{
+            //    MyAPIGateway.Utilities.ShowMessage("", detection.ToString());
+            //    DebugDraw.AddLine(Block.GetPosition(), detection.Position, Color.Green, 0);
+            //    if (detection.Velocity != null)
+            //        DebugDraw.AddLine(detection.Position, detection.Position + detection.Velocity.Value, Color.Blue, 0);
+            //}
         }
 
         private WorldDetectionInfo[] AggregateInfos(ICollection<WorldDetectionInfo> infos)
@@ -146,7 +145,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
             {
                 aggregated[i] = WorldDetectionInfo.Average(groups[i]);
             }
-            MyAPIGateway.Utilities.ShowNotification($"Aggregated {infos.Count} -> {aggregated.Length}", 1000/60);
+
             return aggregated;
         }
 
@@ -166,8 +165,8 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 {
                     foreach (var member in group)
                     {
-                        bool typesMatch = member.DetectionType == info.DetectionType;
-                        bool crossSectionsMatch = Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold;
+                        bool typesMatch = AggregateTypes || member.DetectionType == info.DetectionType;
+                        bool crossSectionsMatch = member.DetectionType != info.DetectionType || Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold;
                         double maxPositionDiff = Math.Max(member.Error, info.Error) * DistanceThreshold;
                         bool positionsMatch = Vector3D.DistanceSquared(member.Position, info.Position) <= maxPositionDiff * maxPositionDiff;
 

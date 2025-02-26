@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.ControlBlocks.Controls;
+using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -39,8 +40,15 @@ namespace DetectionEquipment.Shared.ControlBlocks
             if (!MyAPIGateway.Session.IsServer)
                 return;
 
+            ControlBlockManager.I.Blocks.Add((MyCubeBlock) Block, this);
             GridSensors = ServerMain.I.GridSensorMangers[Block.CubeGrid];
             NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
+        }
+
+        public override void MarkForClose()
+        {
+            base.MarkForClose();
+            ControlBlockManager.I.Blocks.Remove((MyCubeBlock) Block);
         }
     }
 }

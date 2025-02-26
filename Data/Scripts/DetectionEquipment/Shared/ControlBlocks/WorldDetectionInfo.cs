@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VRage;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.ControlBlocks
@@ -22,10 +23,15 @@ namespace DetectionEquipment.Shared.ControlBlocks
             Error = Math.Sqrt(Error);
 
             DetectionType = info.Sensor?.Definition.Type ?? 0;
+
+            Velocity = null;
+            VelocityVariance = null;
         }
 
         public double CrossSection, Error;
         public Vector3D Position;
+        public Vector3D? Velocity;
+        public double? VelocityVariance;
         public SensorDefinition.SensorType DetectionType;
 
         public override string ToString()
@@ -41,7 +47,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
         //    return CrossSection == i.CrossSection && Error == i.Error && Position == i.Position;
         //}
 
-        
+        public MyTuple<int, double, double, Vector3D, Vector3D?, double?> Tuple => new MyTuple<int, double, double, Vector3D, Vector3D?, double?>((int) DetectionType, CrossSection, Error, Position, Velocity, VelocityVariance);
 
         public static WorldDetectionInfo Average(ICollection<WorldDetectionInfo> args)
         {

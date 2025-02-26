@@ -7,7 +7,7 @@ using VRage;
 using VRage.Game.ModAPI.Ingame;
 using VRageMath;
 
-namespace DetectionEquipment.Server.PBApi
+namespace IngameScript
 {
     /// <summary>
     /// Programmable Block interface for Aristeas's Detection Equipment mod.
@@ -23,6 +23,9 @@ namespace DetectionEquipment.Server.PBApi
         /// <param name="program">Use 'this' (this program instance)</param>
         public DetectionPbApi(MyGridProgram program)
         {
+            if (I != null)
+                throw new Exception("Only one DetectionPbApi should be active at at time!");
+
             // Shamelessly adapted from the WcPbAPI
             Program = program;
             if (Program == null)
@@ -37,23 +40,34 @@ namespace DetectionEquipment.Server.PBApi
 
         #region Public Methods
 
-        public List<PbSensor> GetSensors(IMyCubeBlock block)
+        public List<PbSensorBlock> GetSensors(IMyCubeBlock block)
         {
             if (!_hasSensor.Invoke(block))
-                return new List<PbSensor>(0);
+                return new List<PbSensorBlock>(0);
 
-            List<PbSensor> list = new List<PbSensor>();
+            List<PbSensorBlock> list = new List<PbSensorBlock>();
             foreach (uint id in _getSensorIds.Invoke(block))
-                list.Add(new PbSensor(block, id));
+                list.Add(new PbSensorBlock(block, id));
             return list;
         }
 
         public bool HasSensor(IMyCubeBlock block) => _hasSensor.Invoke(block);
 
+        public PbAggregatorBlock GetAggregator(IMyCubeBlock block)
+        {
+            if (!_hasAggregator.Invoke(block))
+                return null;
+
+            return new PbAggregatorBlock(block);
+        }
+
+        public bool HasAggregator(IMyCubeBlock block) => _hasAggregator.Invoke(block);
+
         #endregion
 
         #region Delegates
 
+        // Sensors
         private Func<IMyCubeBlock, uint[]> _getSensorIds;
         private Func<IMyCubeBlock, bool> _hasSensor;
         private Func<uint, Vector3D> _getSensorPosition;
@@ -69,13 +83,27 @@ namespace DetectionEquipment.Server.PBApi
         private Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>> _registerInvokeOnDetection;
         private Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>> _unregisterInvokeOnDetection;
 
+        // Aggregator
+        private Func<IMyCubeBlock, bool> _hasAggregator;
+        private Func<IMyCubeBlock, float> _getAggregatorTime;
+        private Action<IMyCubeBlock, float> _setAggregatorTime;
+        private Func<IMyCubeBlock, float> _getAggregatorDistance;
+        private Action<IMyCubeBlock, float> _setAggregatorDistance;
+        private Func<IMyCubeBlock, float> _getAggregatorVelocity;
+        private Action<IMyCubeBlock, float> _setAggregatorVelocity;
+        private Func<IMyCubeBlock, float> _getAggregatorRcs;
+        private Action<IMyCubeBlock, float> _setAggregatorRcs;
+        private Func<IMyCubeBlock, bool> _getAggregatorTypes;
+        private Action<IMyCubeBlock, bool> _setAggregatorTypes;
+        private Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, Vector3D?, double?>[]> _getAggregatorInfo;
+
         #endregion
 
         #region API Internals
 
         private MyGridProgram Program;
         private IReadOnlyDictionary<string, Delegate> _methodMap;
-        private static DetectionPbApi I;
+        public static DetectionPbApi I { get; private set; }
 
         private void InitializeApi()
         {
@@ -95,6 +123,19 @@ namespace DetectionEquipment.Server.PBApi
             SetApiMethod("GetSensorDetections", ref _getSensorDetections);
             SetApiMethod("RegisterInvokeOnDetection", ref _registerInvokeOnDetection);
             SetApiMethod("UnregisterInvokeOnDetection", ref _unregisterInvokeOnDetection);
+
+            SetApiMethod("HasAggregator", ref _hasAggregator);
+            SetApiMethod("GetAggregatorTime", ref _getAggregatorTime);
+            SetApiMethod("SetAggregatorTime", ref _setAggregatorTime);
+            SetApiMethod("GetAggregatorDistance", ref _getAggregatorDistance);
+            SetApiMethod("SetAggregatorDistance", ref _setAggregatorDistance);
+            SetApiMethod("GetAggregatorVelocity", ref _getAggregatorVelocity);
+            SetApiMethod("SetAggregatorVelocity", ref _setAggregatorVelocity);
+            SetApiMethod("GetAggregatorRcs", ref _getAggregatorRcs);
+            SetApiMethod("SetAggregatorRcs", ref _setAggregatorRcs);
+            SetApiMethod("GetAggregatorTypes", ref _getAggregatorTypes);
+            SetApiMethod("SetAggregatorTypes", ref _setAggregatorTypes);
+            SetApiMethod("GetAggregatorInfo", ref _getAggregatorInfo);
         }
 
         /// <summary>
@@ -128,7 +169,7 @@ namespace DetectionEquipment.Server.PBApi
         /// <summary>
         /// Interface class for Detection Equipment sensors.
         /// </summary>
-        public class PbSensor
+        public class PbSensorBlock
         {
             public readonly PbSensorDefinition Definition;
             public readonly IMyCubeBlock Block;
@@ -139,7 +180,7 @@ namespace DetectionEquipment.Server.PBApi
             /// Constructor - equivalent to DetectionPbApi.GetSensor(block);
             /// </summary>
             /// <param name="block"></param>
-            public PbSensor(IMyCubeBlock block, uint id)
+            public PbSensorBlock(IMyCubeBlock block, uint id)
             {
                 Id = id;
                 Block = block;
@@ -296,9 +337,9 @@ namespace DetectionEquipment.Server.PBApi
         }
 
         /// <summary>
-        /// Generic single-target detection information.
+        /// Generic single-target detection information, raw from a sensor.
         /// </summary>
-        public class PbDetectionInfo
+        public struct PbDetectionInfo
         {
             public double CrossSection, Range, RangeError, BearingError;
             public Vector3D Bearing;
@@ -345,6 +386,245 @@ namespace DetectionEquipment.Server.PBApi
             public override string ToString()
             {
                 return $"Range: {Range:N0} +-{RangeError:N1}m\nBearing: {Bearing.ToString("N0")} +-{MathHelper.ToDegrees(BearingError):N1}°";
+            }
+        }
+
+        /// <summary>
+        /// Generic single-target detection information, processed by a controller block.
+        /// </summary>
+        public struct PbWorldDetectionInfo
+        {
+            public PbWorldDetectionInfo(PbDetectionInfo info, PbSensorBlock sensor)
+            {
+                CrossSection = info.CrossSection;
+                Position = sensor.Position + info.Bearing * info.Range;
+
+                Error = Math.Tan(info.BearingError) * info.Range; // planar error; base width of right triangle
+                Error *= Error;
+                Error += info.RangeError * info.RangeError; // normal error
+                Error = Math.Sqrt(Error);
+
+                DetectionType = sensor.Definition.Type;
+
+                Velocity = null;
+                VelocityVariance = null;
+            }
+
+            public PbWorldDetectionInfo(MyTuple<int, double, double, Vector3D, Vector3D?, double?> tuple)
+            {
+                DetectionType = (PbSensorDefinition.SensorType) tuple.Item1;
+                CrossSection = tuple.Item2;
+                Error = tuple.Item3;
+                Position = tuple.Item4;
+                Velocity = tuple.Item5;
+                VelocityVariance = tuple.Item6;
+            }
+
+            public double CrossSection, Error;
+            public Vector3D Position;
+            public Vector3D? Velocity;
+            public double? VelocityVariance;
+            public PbSensorDefinition.SensorType DetectionType;
+
+            public override string ToString()
+            {
+                return $"Position: {Position.ToString("N0")} +- {Error:N1}m\nVelocity: {Velocity:N0} R^2={VelocityVariance:F1}";
+            }
+
+            public static PbWorldDetectionInfo Average(ICollection<PbWorldDetectionInfo> args)
+            {
+                if (args.Count == 0)
+                    throw new Exception("No detection infos provided!");
+
+                double totalError = 0;
+
+                foreach (var info in args)
+                {
+                    totalError += info.Error;
+                }
+
+                Vector3D averagePos = Vector3D.Zero;
+                double totalCrossSection = 0;
+                foreach (var info in args)
+                {
+                    if (totalError > 0)
+                        averagePos += info.Position * (info.Error/totalError);
+                    else
+                        averagePos += info.Position;
+                    totalCrossSection += info.CrossSection;
+                }
+
+                if (totalError <= 0)
+                    averagePos /= args.Count;
+
+                double avgDiff = 0;
+                foreach (var info in args)
+                    avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
+                avgDiff = Math.Sqrt(avgDiff)/args.Count;
+
+                PbWorldDetectionInfo result = new PbWorldDetectionInfo()
+                {
+                    CrossSection = totalCrossSection / args.Count,
+                    Position = averagePos,
+                    Error = avgDiff,
+                    DetectionType = 0,
+                };
+
+                return result;
+            }
+
+            public static PbWorldDetectionInfo AverageWeighted(ICollection<KeyValuePair<PbWorldDetectionInfo, int>> args)
+            {
+                if (args.Count == 0)
+                    throw new Exception("No detection infos provided!");
+
+                double totalError = 0;
+                double totalWeight = 0;
+                double highestError = 0;
+
+                foreach (var info in args)
+                {
+                    totalError += info.Key.Error;
+                    totalWeight += info.Value;
+                    if (info.Key.Error > highestError)
+                        highestError = info.Key.Error;
+                }
+
+                Vector3D averagePos = Vector3D.Zero;
+                double avgCrossSection = 0;
+                foreach (var info in args)
+                {
+                    double infoWeightPct = info.Value / totalWeight;
+
+                    averagePos += info.Key.Position * infoWeightPct;
+
+                    avgCrossSection += info.Key.CrossSection * infoWeightPct;
+                }
+
+                double avgDiff = 0;
+                foreach (var info in args)
+                    avgDiff += Vector3D.Distance(info.Key.Position, averagePos);
+                avgDiff /= args.Count;
+
+                PbWorldDetectionInfo result = new PbWorldDetectionInfo()
+                {
+                    CrossSection = avgCrossSection,
+                    Position = averagePos,
+                    Error = avgDiff,
+                    DetectionType = 0,
+                };
+
+                return result;
+            }
+        }
+
+        public class PbAggregatorBlock
+        {
+            public readonly IMyCubeBlock Block;
+
+            public PbAggregatorBlock(IMyCubeBlock block)
+            {
+                Block = block;
+            }
+
+            /// <summary>
+            /// Amount of time, in seconds, the aggregator block stores data.
+            /// </summary>
+            public float AggregationTime
+            {
+                get
+                {
+                    return I._getAggregatorTime.Invoke(Block);
+                }
+                set
+                {
+                    I._setAggregatorTime.Invoke(Block, value);
+                }
+            }
+
+            /// <summary>
+            /// Scalar for position error over which to combine detections.
+            /// <para>
+            ///     Ex: Error of 5m and DistanceThreshold of 2 means detections within 10m are combined.
+            /// </para>
+            /// </summary>
+            public float DistanceThreshold
+            {
+                get
+                {
+                    return I._getAggregatorDistance.Invoke(Block);
+                }
+                set
+                {
+                    I._setAggregatorDistance.Invoke(Block, value);
+                }
+            }
+
+            /// <summary>
+            /// Maximum velocity variation at which to incorporate into position estimate.
+            /// <seealso cref="PbWorldDetectionInfo.VelocityVariance"/>
+            /// <para>
+            ///     The aggregator block will use velocity to provide a more accurate position estimate with high aggregation times, but when the detection info is inaccurate the velocity can be wildly inaccurate.
+            /// </para>
+            /// </summary>
+            public float VelocityErrorThreshold
+            {
+                get
+                {
+                    return I._getAggregatorVelocity.Invoke(Block);
+                }
+                set
+                {
+                    I._setAggregatorVelocity.Invoke(Block, value);
+                }
+            }
+
+            /// <summary>
+            /// Scalar for RCS difference at which to combine detections.
+            /// <para>
+            ///     Ex: RCS_1 of 10m^2 and RCS_2 of 12m^2 has an "error" of |10-12|/Max(10, 12) = 1/6. As such, the RcsThreshold must be above 1/6 for these detection infos to be combined.
+            /// </para>
+            /// </summary>
+            public float RcsThreshold
+            {
+                get
+                {
+                    return I._getAggregatorRcs.Invoke(Block);
+                }
+                set
+                {
+                    I._setAggregatorRcs.Invoke(Block, value);
+                }
+            }
+
+            /// <summary>
+            /// Whether the aggregator should combine info from different sensor types.
+            /// </summary>
+            public bool AggregateTypes
+            {
+                get
+                {
+                    return I._getAggregatorTypes.Invoke(Block);
+                }
+                set
+                {
+                    I._setAggregatorTypes.Invoke(Block, value);
+                }
+            }
+
+            /// <summary>
+            /// Retreieve aggregated detection info from a block.
+            /// </summary>
+            /// <returns></returns>
+            public PbWorldDetectionInfo[] GetAggregatedInfo()
+            {
+                var tupleSet = I._getAggregatorInfo.Invoke(Block);
+                var toReturn = new PbWorldDetectionInfo[tupleSet.Length];
+                for (int i = 0; i < toReturn.Length; i++)
+                {
+                    toReturn[i] = new PbWorldDetectionInfo(tupleSet[i]);
+                }
+                return toReturn;
             }
         }
 

@@ -1,4 +1,5 @@
-﻿using Sandbox.Game.Entities;
+﻿using DetectionEquipment.Shared.ControlBlocks;
+using Sandbox.Game.Entities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -14,6 +15,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static Dictionary<string, Delegate> _methods = new Dictionary<string, Delegate>()
         {
+            // Sensors
             ["GetSensorIds"] = new Func<IMyCubeBlock, uint[]>(GetSensorIds),
             ["HasSensor"] = new Func<IMyCubeBlock, bool>(HasSensor),
             ["GetSensorPosition"] = new Func<uint, Vector3D>(GetSensorPosition),
@@ -28,8 +30,23 @@ namespace DetectionEquipment.Server.PBApi
             ["GetSensorDetections"] = new Func<uint, MyTuple<double, double, double, double, Vector3D>[]>(GetSensorDetections),
             ["RegisterInvokeOnDetection"] = new Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>>(RegisterInvokeOnDetection),
             ["UnregisterInvokeOnDetection"] = new Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>>(UnregisterInvokeOnDetection),
+
+            // Aggregator
+            ["HasAggregator"] = new Func<IMyCubeBlock, bool>(HasAggregator),
+            ["GetAggregatorTime"] = new Func<IMyCubeBlock, float>(GetAggregatorTime),
+            ["SetAggregatorTime"] = new Action<IMyCubeBlock, float>(SetAggregatorTime),
+            ["GetAggregatorDistance"] = new Func<IMyCubeBlock, float>(GetAggregatorDistance),
+            ["SetAggregatorDistance"] = new Action<IMyCubeBlock, float>(SetAggregatorDistance),
+            ["GetAggregatorVelocity"] = new Func<IMyCubeBlock, float>(GetAggregatorVelocity),
+            ["SetAggregatorVelocity"] = new Action<IMyCubeBlock, float>(SetAggregatorVelocity),
+            ["GetAggregatorRcs"] = new Func<IMyCubeBlock, float>(GetAggregatorRcs),
+            ["SetAggregatorRcs"] = new Action<IMyCubeBlock, float>(SetAggregatorRcs),
+            ["GetAggregatorTypes"] = new Func<IMyCubeBlock, bool>(GetAggregatorTypes),
+            ["SetAggregatorTypes"] = new Action<IMyCubeBlock, bool>(SetAggregatorTypes),
+            ["GetAggregatorInfo"] = new Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, Vector3D?, double?>[]>(GetAggregatorInfo),
         };
 
+        #region Sensors
         private static uint[] GetSensorIds(IMyCubeBlock block)
         {
             return ServerMain.I.GridSensorMangers[(MyCubeGrid) block.CubeGrid].BlockSensorIdMap[(MyCubeBlock) block];
@@ -122,6 +139,103 @@ namespace DetectionEquipment.Server.PBApi
         {
             ServerMain.I.SensorIdMap[id].OnDetection -= action;
         }
+        #endregion
 
+        #region Aggregator
+
+        private static bool HasAggregator(IMyCubeBlock block)
+        {
+            return ControlBlockManager.I.Blocks.ContainsKey((MyCubeBlock) block);
+        }
+        private static float GetAggregatorTime(IMyCubeBlock block)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor))
+                return -1;
+            return (sensor as AggregatorBlock)?.AggregationTime ?? -1;
+        }
+        private static void SetAggregatorTime(IMyCubeBlock block, float value)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor) || !(sensor is AggregatorBlock))
+                return;
+            (sensor as AggregatorBlock).AggregationTime = value;
+        }
+        private static float GetAggregatorDistance(IMyCubeBlock block)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor))
+                return -1;
+            return (sensor as AggregatorBlock)?.DistanceThreshold ?? -1;
+        }
+        private static void SetAggregatorDistance(IMyCubeBlock block, float value)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor) || !(sensor is AggregatorBlock))
+                return;
+            (sensor as AggregatorBlock).DistanceThreshold = value;
+        }
+        private static float GetAggregatorVelocity(IMyCubeBlock block)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor))
+                return -1;
+            return (sensor as AggregatorBlock)?.VelocityErrorThreshold ?? -1;
+        }
+        private static void SetAggregatorVelocity(IMyCubeBlock block, float value)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor) || !(sensor is AggregatorBlock))
+                return;
+            (sensor as AggregatorBlock).VelocityErrorThreshold = value;
+        }
+        private static float GetAggregatorRcs(IMyCubeBlock block)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor))
+                return -1;
+            return (sensor as AggregatorBlock)?.RCSThreshold ?? -1;
+        }
+        private static void SetAggregatorRcs(IMyCubeBlock block, float value)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor) || !(sensor is AggregatorBlock))
+                return;
+            (sensor as AggregatorBlock).RCSThreshold = value;
+        }
+        private static bool GetAggregatorTypes(IMyCubeBlock block)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor))
+                return false;
+            return (sensor as AggregatorBlock)?.AggregateTypes ?? false;
+        }
+        private static void SetAggregatorTypes(IMyCubeBlock block, bool value)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor) || !(sensor is AggregatorBlock))
+                return;
+            (sensor as AggregatorBlock).AggregateTypes = value;
+        }
+        private static MyTuple<int, double, double, Vector3D, Vector3D?, double?>[] GetAggregatorInfo(IMyCubeBlock block)
+        {
+            ControlBlockBase sensor;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out sensor) || !(sensor is AggregatorBlock))
+                return null;
+
+            var set = (sensor as AggregatorBlock).GetAggregatedDetections();
+            var toReturn = new MyTuple<int, double, double, Vector3D, Vector3D?, double?>[set.Count];
+
+            int i = 0;
+            foreach (var value in set)
+            {
+                toReturn[i] = value.Tuple;
+                i++;
+            }
+
+            return toReturn;
+        }
+
+        #endregion
     }
 }
