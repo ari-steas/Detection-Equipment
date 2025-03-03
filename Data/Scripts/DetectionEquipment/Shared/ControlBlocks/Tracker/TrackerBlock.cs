@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.ControlBlocks.Aggregator;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
@@ -10,7 +11,7 @@ using System.Text;
 using System.Threading.Tasks;
 using VRage.Game.Components;
 
-namespace DetectionEquipment.Shared.ControlBlocks
+namespace DetectionEquipment.Shared.ControlBlocks.Tracker
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionTrackerBlock")]
     internal class TrackerBlock : ControlBlockBase
@@ -28,7 +29,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            SourceAggregator = (AggregatorBlock) ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.Block.CubeGrid == Block.CubeGrid);
+            SourceAggregator = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.Block.CubeGrid == Block.CubeGrid);
             ControlledSensors = ServerMain.I.GridSensorMangers[(MyCubeGrid)Block.CubeGrid].Sensors.ToList();
             foreach (var sensor in ControlledSensors)
             {
@@ -57,7 +58,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                     }
                     else
                     {
-                        _lockDecay[sensor] -= 1/60f;
+                        _lockDecay[sensor] -= 1 / 60f;
                     }
                     continue;
                 }
@@ -84,7 +85,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 if (numLocks == 0)
                     break;
             }
-            
+
             return bestTarget;
         }
     }

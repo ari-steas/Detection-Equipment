@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using VRage.Game.Components;
 using VRageMath;
 
-namespace DetectionEquipment.Shared.ControlBlocks
+namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock")]
     internal class AggregatorBlock : ControlBlockBase
@@ -51,7 +51,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 {
                     if (set == latestSet)
                         continue;
-                    
+
                     foreach (var member in set)
                     {
                         bool typesMatch = AggregateTypes || member.DetectionType == info.DetectionType;
@@ -83,7 +83,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                     for (int i = 0; i < velocities.Length; i++)
                     {
                         //DebugDraw.AddLine(toCombine[i].Position, toCombine[i+1].Position, Color.White * ((float)i/velocities.Length), 0); // Position delta indicator
-                        velocities[i] = (toCombine[i+1].Position - toCombine[i].Position) * 60;
+                        velocities[i] = (toCombine[i + 1].Position - toCombine[i].Position) * 60;
                         averageVelocity += velocities[i];
                     }
                     averageVelocity /= velocities.Length;
@@ -95,19 +95,19 @@ namespace DetectionEquipment.Shared.ControlBlocks
                         velVariation += (len - averageSpeed) * (len - averageSpeed);
                     }
 
-                    velVariation = velVariation/velocities.Length;
+                    velVariation = velVariation / velocities.Length;
                 }
 
                 var averagedInfo = WorldDetectionInfo.Average(toCombine);
                 if (velVariation <= VelocityErrorThreshold * VelocityErrorThreshold)
-                    averagedInfo.Position += averageVelocity * AggregationTime/2;
+                    averagedInfo.Position += averageVelocity * AggregationTime / 2;
 
                 averagedInfo.Velocity = averageVelocity;
                 averagedInfo.VelocityVariance = velVariation;
 
                 //MyAPIGateway.Utilities.ShowNotification($"Vel: {averageVelocity.Length():N1} m/s (R={Math.Sqrt(velVariation)})", 1000/60);
                 //DebugDraw.AddLine(averagedInfo.Position, averagedInfo.Position + averageVelocity, Color.Blue, 0);
-                
+
                 aggregatedDetections.Add(averagedInfo);
                 toCombine.Clear();
             }

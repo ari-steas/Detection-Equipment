@@ -1,4 +1,5 @@
 ﻿using DetectionEquipment.Shared.ControlBlocks;
+using DetectionEquipment.Shared.ControlBlocks.Aggregator;
 using Sandbox.Game.Entities;
 using System;
 using System.Collections.Generic;

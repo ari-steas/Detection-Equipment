@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using VRage.Game.Components;
 using VRageMath;
 
-namespace DetectionEquipment.Shared.ControlBlocks
+namespace DetectionEquipment.Shared.ControlBlocks.Search
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionSearchBlock")]
     internal class SearchBlock : ControlBlockBase
@@ -28,7 +28,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            ControlledSensors = ServerMain.I.GridSensorMangers[(MyCubeGrid) Block.CubeGrid].Sensors.ToList();
+            ControlledSensors = ServerMain.I.GridSensorMangers[(MyCubeGrid)Block.CubeGrid].Sensors.ToList();
             foreach (var sensor in ControlledSensors)
             {
                 DirectionSigns[sensor] = Vector2I.One;
@@ -47,21 +47,21 @@ namespace DetectionEquipment.Shared.ControlBlocks
 
                 bool aziFaster = moveDef.AzimuthRate > moveDef.ElevationRate;
                 float aziDirection = moveDef.CanRotateFull ? 1 : DirectionSigns[sensor].X;
-                float elevDirection = moveDef.CanElevateFull ? 1 : DirectionSigns[sensor].Y; 
+                float elevDirection = moveDef.CanElevateFull ? 1 : DirectionSigns[sensor].Y;
 
                 double maxAziRate = moveDef.AzimuthRate * ((moveDef.MaxElevation - moveDef.MinElevation) / moveDef.ElevationRate);
                 double maxElevRate = moveDef.ElevationRate * ((moveDef.MaxAzimuth - moveDef.MinAzimuth) / moveDef.AzimuthRate);
 
                 if (aziFaster)
                 {
-                    if (Math.Abs(sensor.Azimuth - sensor.DesiredAzimuth) <= moveDef.AzimuthRate/60)
+                    if (Math.Abs(sensor.Azimuth - sensor.DesiredAzimuth) <= moveDef.AzimuthRate / 60)
                     {
-                        sensor.DesiredAzimuth += MathUtils.ClampAbs(aziDirection * sensor.Sensor.Aperture/2, moveDef.AzimuthRate);
+                        sensor.DesiredAzimuth += MathUtils.ClampAbs(aziDirection * sensor.Sensor.Aperture / 2, moveDef.AzimuthRate);
                         if (!moveDef.CanRotateFull && (sensor.DesiredAzimuth <= moveDef.MinAzimuth || sensor.DesiredAzimuth >= moveDef.MaxAzimuth))
                         {
                             DirectionSigns[sensor] *= InvAzi;
 
-                            sensor.DesiredElevation += MathUtils.ClampAbs(elevDirection * sensor.Sensor.Aperture/2, maxElevRate);
+                            sensor.DesiredElevation += MathUtils.ClampAbs(elevDirection * sensor.Sensor.Aperture / 2, maxElevRate);
                             if (!moveDef.CanElevateFull && (sensor.DesiredElevation <= moveDef.MinElevation || sensor.DesiredElevation >= moveDef.MaxElevation))
                                 DirectionSigns[sensor] *= InvElev;
                         }
@@ -69,14 +69,14 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 }
                 else
                 {
-                    if (Math.Abs(sensor.Elevation - sensor.DesiredElevation) <= moveDef.ElevationRate/60)
+                    if (Math.Abs(sensor.Elevation - sensor.DesiredElevation) <= moveDef.ElevationRate / 60)
                     {
-                        sensor.DesiredElevation += MathUtils.ClampAbs(elevDirection * sensor.Sensor.Aperture/2, moveDef.ElevationRate);
+                        sensor.DesiredElevation += MathUtils.ClampAbs(elevDirection * sensor.Sensor.Aperture / 2, moveDef.ElevationRate);
                         if (!moveDef.CanElevateFull && (sensor.DesiredElevation <= moveDef.MinElevation || sensor.DesiredElevation >= moveDef.MaxElevation))
                         {
                             DirectionSigns[sensor] *= InvElev;
-                            
-                            sensor.DesiredAzimuth += MathUtils.ClampAbs(aziDirection * sensor.Sensor.Aperture/2, maxAziRate);
+
+                            sensor.DesiredAzimuth += MathUtils.ClampAbs(aziDirection * sensor.Sensor.Aperture / 2, maxAziRate);
                             if (!moveDef.CanRotateFull && (sensor.DesiredAzimuth <= moveDef.MinAzimuth || sensor.DesiredAzimuth >= moveDef.MaxAzimuth))
                                 DirectionSigns[sensor] *= InvAzi;
                         }
@@ -102,7 +102,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 if (numLocks == 0)
                     break;
             }
-            
+
             return bestTarget;
         }
     }
