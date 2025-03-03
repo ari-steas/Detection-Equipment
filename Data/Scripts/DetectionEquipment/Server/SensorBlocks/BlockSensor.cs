@@ -174,6 +174,26 @@ namespace DetectionEquipment.Server.SensorBlocks
             Sensor.Close();
         }
 
+        public bool CanAimAt(Vector3D position)
+        {
+            if (Definition.Movement == null)
+                return false;
+
+            var angle = GetAngleToTarget(position);
+            return angle.X <= Definition.Movement.MaxAzimuth && angle.X >= Definition.Movement.MinAzimuth && angle.Y <= Definition.Movement.MaxElevation && angle.Y >= Definition.Movement.MinElevation;
+        }
+
+        public void AimAt(Vector3D position)
+        {
+            if (Definition.Movement == null)
+                return;
+
+            var angle = GetAngleToTarget(position);
+
+            DesiredAzimuth = MathHelper.Clamp(angle.X, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
+            DesiredElevation = MathHelper.Clamp(angle.Y, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
+        }
+
         private Matrix GetAzimuthMatrix(float delta)
         {
             var _limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.AzimuthRate * delta);
@@ -196,6 +216,26 @@ namespace DetectionEquipment.Server.SensorBlocks
                 Elevation = MathUtils.NormalizeAngle(_limitedElevation);
 
             return Matrix.CreateFromYawPitchRoll(0, (float) Elevation, 0);
+        }
+
+        private Vector2D GetAngleToTarget(Vector3D? targetPos)
+        {
+            if (targetPos == null)
+                return Vector2D.Zero;
+        
+            Vector3D vecFromTarget = Block.WorldMatrix.Translation - targetPos.Value;
+        
+            vecFromTarget = Vector3D.Rotate(vecFromTarget.Normalized(), MatrixD.Invert(Block.WorldMatrix));
+        
+            double desiredAzimuth = Math.Atan2(vecFromTarget.X, vecFromTarget.Z);
+            if (double.IsNaN(desiredAzimuth))
+                desiredAzimuth = Math.PI;
+        
+            double desiredElevation = Math.Asin(-vecFromTarget.Y);
+            if (double.IsNaN(desiredElevation))
+                desiredElevation = Math.PI;
+        
+            return new Vector2D(desiredAzimuth, desiredElevation);
         }
     }
 }

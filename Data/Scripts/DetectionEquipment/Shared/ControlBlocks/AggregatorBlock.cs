@@ -22,8 +22,14 @@ namespace DetectionEquipment.Shared.ControlBlocks
 
         internal Queue<WorldDetectionInfo[]> DetectionCache = new Queue<WorldDetectionInfo[]>();
 
+        private bool _isBufferValid = false;
+        private HashSet<WorldDetectionInfo> _bufferDetections = new HashSet<WorldDetectionInfo>();
+
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
+            if (_isBufferValid)
+                return _bufferDetections;
+
             Dictionary<WorldDetectionInfo, int> weightedInfos = new Dictionary<WorldDetectionInfo, int>();
             var aggregatedDetections = new HashSet<WorldDetectionInfo>();
 
@@ -106,11 +112,16 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 toCombine.Clear();
             }
 
+            _isBufferValid = true;
+            _bufferDetections = aggregatedDetections;
             return aggregatedDetections;
         }
 
         public override void UpdateAfterSimulation()
         {
+            _isBufferValid = false;
+            _bufferDetections.Clear();
+
             HashSet<WorldDetectionInfo> infos = new HashSet<WorldDetectionInfo>();
             foreach (var sensor in GridSensors.Sensors)
             {

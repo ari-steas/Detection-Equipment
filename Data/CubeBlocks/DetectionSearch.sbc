@@ -1,0 +1,54 @@
+<?xml version="1.0" ?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<CubeBlocks>
+		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
+            <Id>
+                <TypeId>ConveyorSorter</TypeId>
+                <SubtypeId>DetectionSearchBlock</SubtypeId>
+            </Id>
+            <DisplayName>Detection Searcher</DisplayName>
+            <Icon>Textures\GUI\Icons\Cubes\ProgrammingBlock.dds</Icon>
+            <Description>Description_ProgrammableBlock</Description>
+            <CubeSize>Large</CubeSize>
+            <BlockTopology>TriangleMesh</BlockTopology>
+            <Size x="1" y="1" z="1" />
+            <ModelOffset x="0" y="0" z="0" />
+            <Model>Models\Cubes\Large\ProgrammingBlock.mwm</Model>
+            <Components>
+                <Component Subtype="SteelPlate" Count="11" />
+                <Component Subtype="Construction" Count="4" />
+                <Component Subtype="LargeTube" Count="2" />
+                <Component Subtype="Motor" Count="1" />
+                <Component Subtype="Display" Count="1" />
+                <Component Subtype="Computer" Count="2" />
+                <Component Subtype="SteelPlate" Count="10" />
+            </Components>
+            <CriticalComponent Subtype="Computer" Index="0" />
+            <BuildProgressModels>
+                <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\ProgrammingBlockConstruction_1.mwm" />
+                <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\ProgrammingBlockConstruction_2.mwm" />
+                <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\ProgrammingBlockConstruction_3.mwm" />
+            </BuildProgressModels>
+            <ScreenAreas>
+                <ScreenArea Name="CockpitScreen_02" DisplayName="DisplayName_Screen_Large" TextureResolution="512" ScreenWidth="16" ScreenHeight="10" />
+                <ScreenArea Name="CockpitScreen_01" DisplayName="DisplayName_Screen_Keyboard" TextureResolution="256" ScreenWidth="5" ScreenHeight="2" />
+            </ScreenAreas>
+            <BlockPairName>DetectionSearchBlock</BlockPairName>
+            <MirroringY>Z</MirroringY>
+            <MirroringZ>Y</MirroringZ>
+            <EdgeType>Light</EdgeType>
+            <BuildTimeSeconds>20</BuildTimeSeconds>
+            <MountPoints>
+                <MountPoint Side="Bottom" StartX="0.0" StartY="0" EndX="1.0" EndY="1.0" />
+            </MountPoints>
+            <ResourceSinkGroup>Utility</ResourceSinkGroup>
+            <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
+            <DamagedSound>ParticleElectrical</DamagedSound>
+            <EmissiveColorPreset>Default</EmissiveColorPreset>
+            <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+            <DestroySound>WepSmallWarheadExpl</DestroySound>
+            <PCU>100</PCU>
+            <IsAirTight>false</IsAirTight>
+        </Definition>
+	</CubeBlocks>
+</Definitions>

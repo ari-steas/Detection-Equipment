@@ -41,8 +41,8 @@ namespace DetectionEquipment.Shared
             var diff = NormalizeAngle(targetAngle - currentAngle);
 
             // clamp rotations by speed:
-            if (diff < -maxRotationSpeed) return currentAngle - maxRotationSpeed;
-            if (diff > maxRotationSpeed) return currentAngle + maxRotationSpeed;
+            if (diff < -maxRotationSpeed) return NormalizeAngle(currentAngle - maxRotationSpeed);
+            if (diff > maxRotationSpeed) return NormalizeAngle(currentAngle + maxRotationSpeed);
             // if difference within speed, rotation's done:
             return targetAngle;
         }

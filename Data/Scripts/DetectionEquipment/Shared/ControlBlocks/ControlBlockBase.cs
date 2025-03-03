@@ -16,7 +16,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
 {
     internal abstract class ControlBlockBase : MyGameLogicComponent
     {
-        protected IMyConveyorSorter Block;
+        public IMyConveyorSorter Block;
         protected GridSensorManager GridSensors;
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
@@ -32,7 +32,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
         {
             base.UpdateOnceBeforeFrame();
 
-            if(Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
             HideSorterControls.DoOnce();
