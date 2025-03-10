@@ -1,15 +1,15 @@
 ﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.ControlBlocks.Tracker;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Game.Entities;
-using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRage.Game.Components;
+using VRage.Game.ModAPI.Network;
+using VRage.Sync;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.ControlBlocks.Search
@@ -17,6 +17,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Search
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionSearchBlock")]
     internal class SearchBlock : ControlBlockBase
     {
+        public MySync<long[], SyncDirection.BothWays> ActiveSensors;
         internal List<BlockSensor> ControlledSensors = new List<BlockSensor>();
         internal Dictionary<BlockSensor, Vector2> DirectionSigns = new Dictionary<BlockSensor, Vector2>();
 
@@ -28,11 +29,25 @@ namespace DetectionEquipment.Shared.ControlBlocks.Search
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            ControlledSensors = ServerMain.I.GridSensorMangers[(MyCubeGrid)Block.CubeGrid].Sensors.ToList();
-            foreach (var sensor in ControlledSensors)
+            ActiveSensors.Value = Array.Empty<long>();
+            ActiveSensors.ValueChanged += sync =>
             {
-                DirectionSigns[sensor] = Vector2I.One;
-            }
+                ControlledSensors.Clear();
+                DirectionSigns.Clear();
+                foreach (var sensor in GridSensors.Sensors)
+                {
+                    for (int i = 0; i < sync.Value.Length; i++)
+                    {
+                        if (sensor.Block.EntityId != sync.Value[i])
+                            continue;
+                        ControlledSensors.Add(sensor);
+                        DirectionSigns[sensor] = Vector2I.One;
+                        break;
+                    }
+                };
+            };
+
+            new SearchControls().DoOnce();
         }
 
         public override void UpdateAfterSimulation()
@@ -42,7 +57,6 @@ namespace DetectionEquipment.Shared.ControlBlocks.Search
                 if (sensor?.Definition.Movement == null)
                     continue;
 
-                MyAPIGateway.Utilities.ShowMessage(sensor.Block.DisplayNameText, $"A: {MathHelper.ToDegrees(sensor.DesiredAzimuth):F1} |  E: {MathHelper.ToDegrees(sensor.DesiredElevation):F1}");
                 var moveDef = sensor.Definition.Movement;
 
                 bool aziFaster = moveDef.AzimuthRate > moveDef.ElevationRate;
@@ -83,27 +97,6 @@ namespace DetectionEquipment.Shared.ControlBlocks.Search
                     }
                 }
             }
-        }
-
-        private WorldDetectionInfo? GetFirstTarget(BlockSensor sensor, Dictionary<WorldDetectionInfo, int> targetDict)
-        {
-            int numLocks = int.MaxValue;
-            WorldDetectionInfo? bestTarget = null;
-            foreach (var target in targetDict)
-            {
-                if (!sensor.CanAimAt(target.Key.Position))
-                    continue;
-
-                if (target.Value < numLocks)
-                {
-                    numLocks = target.Value;
-                    bestTarget = target.Key;
-                }
-                if (numLocks == 0)
-                    break;
-            }
-
-            return bestTarget;
         }
     }
 }

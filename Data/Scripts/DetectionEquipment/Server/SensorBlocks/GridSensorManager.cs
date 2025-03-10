@@ -29,7 +29,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 return false;
             });
         }
-
+        // TODO: Combine GridSensorManagers on subgrids.
         
         public void Update()
         {

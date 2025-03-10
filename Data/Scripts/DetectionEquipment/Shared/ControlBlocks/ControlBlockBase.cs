@@ -10,14 +10,15 @@ using System.Text;
 using System.Threading.Tasks;
 using VRage.Game.Components;
 using VRage.ModAPI;
+using VRage.Network;
 using VRage.ObjectBuilders;
 
 namespace DetectionEquipment.Shared.ControlBlocks
 {
-    internal abstract class ControlBlockBase : MyGameLogicComponent
+    internal abstract class ControlBlockBase : MyGameLogicComponent, IMyEventProxy
     {
         public IMyConveyorSorter Block;
-        protected GridSensorManager GridSensors;
+        public GridSensorManager GridSensors { get; private set; }
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {

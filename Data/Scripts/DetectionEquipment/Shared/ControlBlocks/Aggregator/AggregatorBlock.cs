@@ -1,10 +1,15 @@
-﻿using DetectionEquipment.Server.Sensors;
+﻿using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared.ControlBlocks.GenericControls;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game.Components;
+using VRage.Game.ModAPI.Network;
+using VRage.Sync;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
@@ -12,11 +17,13 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock")]
     internal class AggregatorBlock : ControlBlockBase
     {
-        public float AggregationTime = 1f;
-        public float DistanceThreshold = 2f;
-        public float VelocityErrorThreshold = 32f; // Standard Deviation at which to ignore velocity estimation
-        public float RCSThreshold = 1f;
-        public bool AggregateTypes = true;
+        public MySync<float, SyncDirection.BothWays> AggregationTime;
+        public MySync<float, SyncDirection.BothWays> DistanceThreshold;
+        public MySync<float, SyncDirection.BothWays> VelocityErrorThreshold; // Standard Deviation at which to ignore velocity estimation
+        public MySync<float, SyncDirection.BothWays> RCSThreshold;
+        public MySync<bool, SyncDirection.BothWays> AggregateTypes;
+        public MySync<bool, SyncDirection.BothWays> UseAllSensors;
+        public MySync<long[], SyncDirection.BothWays> ActiveSensors;
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
 
@@ -24,6 +31,39 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
 
         private bool _isBufferValid = false;
         private HashSet<WorldDetectionInfo> _bufferDetections = new HashSet<WorldDetectionInfo>();
+        
+        internal HashSet<BlockSensor> ActiveSensorBlocks = new HashSet<BlockSensor>();
+
+        public override void UpdateOnceBeforeFrame()
+        {
+            base.UpdateOnceBeforeFrame();
+            if (Block?.CubeGrid?.Physics == null || !MyAPIGateway.Session.IsServer) // ignore projected and other non-physical grids
+                return;
+
+            AggregationTime.Value = 1f;
+            DistanceThreshold.Value = 2f;
+            VelocityErrorThreshold.Value = 32f;
+            RCSThreshold.Value = 1f;
+            AggregateTypes.Value = true;
+            UseAllSensors.Value = true;
+            ActiveSensors.Value = Array.Empty<long>();
+            ActiveSensors.ValueChanged += sync =>
+            {
+                ActiveSensorBlocks.Clear();
+                foreach (var sensor in GridSensors.Sensors)
+                {
+                    for (int i = 0; i < sync.Value.Length; i++)
+                    {
+                        if (sensor.Block.EntityId != sync.Value[i])
+                            continue;
+                        ActiveSensorBlocks.Add(sensor);
+                        break;
+                    }
+                };
+            };
+
+            new AggregatorControls().DoOnce();
+        }
 
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
@@ -95,7 +135,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
                         velVariation += (len - averageSpeed) * (len - averageSpeed);
                     }
 
-                    velVariation = velVariation / velocities.Length;
+                    velVariation /= velocities.Length;
                 }
 
                 var averagedInfo = WorldDetectionInfo.Average(toCombine);
@@ -123,7 +163,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
             _bufferDetections.Clear();
 
             HashSet<WorldDetectionInfo> infos = new HashSet<WorldDetectionInfo>();
-            foreach (var sensor in GridSensors.Sensors)
+            foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensorBlocks)
             {
                 foreach (var sensorDetection in sensor.Detections)
                 {

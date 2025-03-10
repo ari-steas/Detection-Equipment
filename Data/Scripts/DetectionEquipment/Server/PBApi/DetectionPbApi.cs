@@ -96,6 +96,10 @@ namespace IngameScript
         private Func<IMyCubeBlock, bool> _getAggregatorTypes;
         private Action<IMyCubeBlock, bool> _setAggregatorTypes;
         private Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, Vector3D?, double?>[]> _getAggregatorInfo;
+        private Func<IMyCubeBlock, bool> _getAggregatorUseAllSensors;
+        private Action<IMyCubeBlock, bool> _setAggregatorUseAllSensors;
+        private Func<IMyCubeBlock, List<IMyTerminalBlock>> _getAggregatorActiveSensors;
+        private Action<IMyCubeBlock, List<IMyTerminalBlock>> _setAggregatorActiveSensors;
 
         #endregion
 
@@ -136,6 +140,10 @@ namespace IngameScript
             SetApiMethod("GetAggregatorTypes", ref _getAggregatorTypes);
             SetApiMethod("SetAggregatorTypes", ref _setAggregatorTypes);
             SetApiMethod("GetAggregatorInfo", ref _getAggregatorInfo);
+            SetApiMethod("GetAggregatorUseAllSensors", ref _getAggregatorUseAllSensors);
+            SetApiMethod("SetAggregatorUseAllSensors", ref _setAggregatorUseAllSensors);
+            SetApiMethod("GetAggregatorActiveSensors", ref _getAggregatorActiveSensors);
+            SetApiMethod("SetAggregatorActiveSensors", ref _setAggregatorActiveSensors);
         }
 
         /// <summary>
@@ -609,6 +617,36 @@ namespace IngameScript
                 set
                 {
                     I._setAggregatorTypes.Invoke(Block, value);
+                }
+            }
+
+            /// <summary>
+            /// Whether the aggregator should use data from all sensors on the grid.
+            /// </summary>
+            public bool UseAllGridSensors
+            {
+                get
+                {
+                    return I._getAggregatorUseAllSensors.Invoke(Block);
+                }
+                set
+                {
+                    I._setAggregatorUseAllSensors.Invoke(Block, value);
+                }
+            }
+
+            /// <summary>
+            /// Sensors being used by the aggregator. Ignored if <see cref="UseAllGridSensors"/> is true.
+            /// </summary>
+            public List<IMyTerminalBlock> ActiveSensors
+            {
+                get
+                {
+                    return I._getAggregatorActiveSensors.Invoke(Block);
+                }
+                set
+                {
+                    I._setAggregatorActiveSensors.Invoke(Block, value);
                 }
             }
 
