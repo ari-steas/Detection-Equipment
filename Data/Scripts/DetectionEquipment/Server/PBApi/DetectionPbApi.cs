@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Sandbox.Game.Entities.Character;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using VRage;
@@ -9,14 +10,28 @@ using VRageMath;
 
 namespace IngameScript
 {
+    #region mdk preserve
     /// <summary>
     /// Programmable Block interface for Aristeas's Detection Equipment mod.
     /// <para>
-    ///     To use, copy this class into your script and instantiate it.
+    ///     To use, copy this class into your script and instantiate it. See <see href="https://github.com/ari-steas/Detection-Equipment"/> for detailed instructions.
     /// </para>
     /// </summary>
+    #endregion
     public class DetectionPbApi
     {
+        /*
+         * Modify this class at your own risk, but have fun if you do!
+         * 
+         * Minimizing is *highly* recommended; the DetectionPbApi is very large and will take a significant portion of your character budget.
+         *     Even if you have room to spare, minimizing will decrease the network & storage load of your ships (always a good thing).
+         * 
+         * If you have any questions or would like to see something added, feel free to message [@aristeas.] on Discord.
+         *     Feedback is always welcome (she'll probably still call you a nerd).
+         * 
+         * Best of luck, scripter!
+         */
+
         /// <summary>
         /// Instantiates the PBApi.
         /// </summary>
@@ -40,6 +55,14 @@ namespace IngameScript
 
         #region Public Methods
 
+        /// <summary>
+        /// Retrieves a list of all sensors on a given block.
+        /// <para>
+        ///     Blocks can have multiple sensors! They are delineated by unique id.
+        /// </para>
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
         public List<PbSensorBlock> GetSensors(IMyCubeBlock block)
         {
             if (!_hasSensor.Invoke(block))
@@ -51,8 +74,18 @@ namespace IngameScript
             return list;
         }
 
+        /// <summary>
+        /// Does this block have a sensor on it?
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
         public bool HasSensor(IMyCubeBlock block) => _hasSensor.Invoke(block);
 
+        /// <summary>
+        /// Retrieve a block's aggregator, if present.
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
         public PbAggregatorBlock GetAggregator(IMyCubeBlock block)
         {
             if (!_hasAggregator.Invoke(block))
@@ -61,7 +94,32 @@ namespace IngameScript
             return new PbAggregatorBlock(block);
         }
 
+        /// <summary>
+        /// Does this block have an aggregator on it?
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
         public bool HasAggregator(IMyCubeBlock block) => _hasAggregator.Invoke(block);
+
+        /// <summary>
+        /// Retrieve a block's IFF reflector, if present.
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
+        public PbIffReflectorBlock GetIffReflector(IMyCubeBlock block)
+        {
+            if (!_hasReflector.Invoke(block))
+                return null;
+
+            return new PbIffReflectorBlock(block);
+        }
+
+        /// <summary>
+        /// Does this block have an IFF reflector on it?
+        /// </summary>
+        /// <param name="block"></param>
+        /// <returns></returns>
+        public bool HasIffReflector(IMyCubeBlock block) => _hasReflector.Invoke(block);
 
         #endregion
 
@@ -79,9 +137,9 @@ namespace IngameScript
         private Func<uint, double> _getSensorElevation;
         private Action<uint, double> _setSensorElevation;
         private Func<uint, MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double>> _getSensorDefinition;
-        private Func<uint, MyTuple<double, double, double, double, Vector3D>[]> _getSensorDetections;
-        private Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>> _registerInvokeOnDetection;
-        private Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>> _unregisterInvokeOnDetection;
+        private Func<uint, MyTuple<double, double, double, double, Vector3D, string[]>[]> _getSensorDetections;
+        private Action<uint, Action<MyTuple<double, double, double, double, Vector3D, string[]>>> _registerInvokeOnDetection;
+        private Action<uint, Action<MyTuple<double, double, double, double, Vector3D, string[]>>> _unregisterInvokeOnDetection;
 
         // Aggregator
         private Func<IMyCubeBlock, bool> _hasAggregator;
@@ -95,11 +153,18 @@ namespace IngameScript
         private Action<IMyCubeBlock, float> _setAggregatorRcs;
         private Func<IMyCubeBlock, bool> _getAggregatorTypes;
         private Action<IMyCubeBlock, bool> _setAggregatorTypes;
-        private Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, Vector3D?, double?>[]> _getAggregatorInfo;
+        private Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[]> _getAggregatorInfo;
         private Func<IMyCubeBlock, bool> _getAggregatorUseAllSensors;
         private Action<IMyCubeBlock, bool> _setAggregatorUseAllSensors;
         private Func<IMyCubeBlock, List<IMyTerminalBlock>> _getAggregatorActiveSensors;
         private Action<IMyCubeBlock, List<IMyTerminalBlock>> _setAggregatorActiveSensors;
+
+        // Iff Reflector
+        private Func<IMyCubeBlock, bool> _hasReflector;
+        private Func<IMyCubeBlock, string> _getIffCode;
+        private Action<IMyCubeBlock, string> _setIffCode;
+        private Func<IMyCubeBlock, bool> _getIffReturnHashed;
+        private Action<IMyCubeBlock, bool> _setIffReturnHashed;
 
         #endregion
 
@@ -289,7 +354,7 @@ namespace IngameScript
             /// Converts tuple data into a pb-usable format.
             /// </summary>
             /// <param name="tuple"></param>
-            private void InvokeOnDetection(MyTuple<double, double, double, double, Vector3D> tuple) => _onDetection?.Invoke((PbDetectionInfo)tuple);
+            private void InvokeOnDetection(MyTuple<double, double, double, double, Vector3D, string[]> tuple) => _onDetection?.Invoke((PbDetectionInfo)tuple);
         }
 
         /// <summary>
@@ -352,6 +417,7 @@ namespace IngameScript
             public double CrossSection, Range, RangeError, BearingError;
             public Vector3D Bearing;
             public Vector3D Position => Bearing * Range;
+            public string[] IffCodes;
 
             /// <summary>
             /// Averages out a set of detection infos.
@@ -382,18 +448,19 @@ namespace IngameScript
                 return result;
             }
 
-            public static explicit operator PbDetectionInfo(MyTuple<double, double, double, double, Vector3D> tuple) => new PbDetectionInfo()
+            public static explicit operator PbDetectionInfo(MyTuple<double, double, double, double, Vector3D, string[]> tuple) => new PbDetectionInfo()
             {
                 CrossSection = tuple.Item1,
                 Range = tuple.Item2,
                 RangeError = tuple.Item3,
                 BearingError = tuple.Item4,
                 Bearing = tuple.Item5,
+                IffCodes = tuple.Item6,
             };
 
             public override string ToString()
             {
-                return $"Range: {Range:N0} +-{RangeError:N1}m\nBearing: {Bearing.ToString("N0")} +-{MathHelper.ToDegrees(BearingError):N1}°";
+                return $"Range: {Range:N0} +-{RangeError:N1}m\nBearing: {Bearing.ToString("N0")} +-{MathHelper.ToDegrees(BearingError):N1}°\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
             }
         }
 
@@ -416,16 +483,18 @@ namespace IngameScript
 
                 Velocity = null;
                 VelocityVariance = null;
+                IffCodes = info.IffCodes;
             }
 
-            public PbWorldDetectionInfo(MyTuple<int, double, double, Vector3D, Vector3D?, double?> tuple)
+            public PbWorldDetectionInfo(MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]> tuple)
             {
                 DetectionType = (PbSensorDefinition.SensorType) tuple.Item1;
                 CrossSection = tuple.Item2;
                 Error = tuple.Item3;
                 Position = tuple.Item4;
-                Velocity = tuple.Item5;
-                VelocityVariance = tuple.Item6;
+                Velocity = tuple.Item5?.Item1;
+                VelocityVariance = tuple.Item5?.Item2;
+                IffCodes = tuple.Item6;
             }
 
             public double CrossSection, Error;
@@ -433,10 +502,11 @@ namespace IngameScript
             public Vector3D? Velocity;
             public double? VelocityVariance;
             public PbSensorDefinition.SensorType DetectionType;
+            public string[] IffCodes;
 
             public override string ToString()
             {
-                return $"Position: {Position.ToString("N0")} +- {Error:N1}m\nVelocity: {Velocity:N0} R^2={VelocityVariance:F1}";
+                return $"Position: {Position.ToString("N0")} +- {Error:N1}m\nVelocity: {Velocity:N0} R^2={VelocityVariance:F1}\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
             }
 
             public static PbWorldDetectionInfo Average(ICollection<PbWorldDetectionInfo> args)
@@ -664,6 +734,42 @@ namespace IngameScript
                 }
                 return toReturn;
             }
+        }
+
+        public class PbIffReflectorBlock
+        {
+            public readonly IMyCubeBlock Block;
+
+            public PbIffReflectorBlock(IMyCubeBlock block)
+            {
+                Block = block;
+            }
+
+            public string IffCode
+            {
+                get
+                {
+                    return I._getIffCode(Block);
+                }
+                set
+                {
+                    I._setIffCode.Invoke(Block, value);
+                }
+            }
+
+            public bool ReturnHash
+            {
+                get
+                {
+                    return I._getIffReturnHashed(Block);
+                }
+                set
+                {
+                    I._setIffReturnHashed(Block, value);
+                }
+            }
+
+            public string GetActualIffString() => ReturnHash ? "H" + IffCode.GetHashCode() : "S" + IffCode;
         }
 
         #endregion

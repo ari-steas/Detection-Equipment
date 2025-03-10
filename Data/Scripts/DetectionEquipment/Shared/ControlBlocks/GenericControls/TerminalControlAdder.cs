@@ -35,7 +35,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
 
         protected IMyTerminalControlOnOffSwitch CreateToggle(string id, string displayName, string toolTip, Func<IMyTerminalBlock, bool> getter, Action<IMyTerminalBlock, bool> setter)
         {
-            var toggle = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlOnOffSwitch, IMyConveyorSorter>(IdPrefix + id);
+            var toggle = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlOnOffSwitch, BlockType>(IdPrefix + id);
             toggle.Title = MyStringId.GetOrCompute(displayName);
             toggle.Tooltip = MyStringId.GetOrCompute(toolTip);
             toggle.SupportsMultipleBlocks = true; // wether this control should be visible when multiple blocks are selected (as long as they all have this control).
@@ -49,14 +49,14 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             toggle.Getter = getter;  // Getting the value
             toggle.Setter = setter; // Setting the value
 
-            MyAPIGateway.TerminalControls.AddControl<IMyConveyorSorter>(toggle);
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(toggle);
 
             return toggle;
         }
 
         protected IMyTerminalControlSlider CreateSlider(string id, string displayName, string toolTip, float min, float max, Func<IMyTerminalBlock, float> getter, Action<IMyTerminalBlock, float> setter, Action<IMyTerminalBlock, StringBuilder> writer)
         {
-            var slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, IMyConveyorSorter>(IdPrefix + id);
+            var slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, BlockType>(IdPrefix + id);
             slider.Title = MyStringId.GetOrCompute(displayName);
             slider.Tooltip = MyStringId.GetOrCompute(toolTip);
             slider.SetLimits(min, max); // Set the minimum and maximum values for the slider
@@ -68,13 +68,13 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             slider.Enabled = (b) => true; // or your custom condition
             slider.SupportsMultipleBlocks = true;
 
-            MyAPIGateway.TerminalControls.AddControl<IMyConveyorSorter>(slider);
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(slider);
             return slider;
         }
 
         protected IMyTerminalControlButton CreateButton(string id, string displayName, string toolTip, Action<IMyTerminalBlock> action)
         {
-            var button = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlButton, IMyConveyorSorter>(IdPrefix + id);
+            var button = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlButton, BlockType>(IdPrefix + id);
             button.Title = MyStringId.GetOrCompute(displayName);
             button.Tooltip = MyStringId.GetOrCompute(toolTip);
             button.SupportsMultipleBlocks = true;
@@ -82,14 +82,14 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             button.Visible = VisibleFunc;
             button.Action = action;
 
-            MyAPIGateway.TerminalControls.AddControl<IMyConveyorSorter>(button);
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(button);
 
             return button;
         }
 
         protected IMyTerminalControlCheckbox CreateCheckbox(string id, string displayName, string toolTip, Func<IMyTerminalBlock, bool> getter, Action<IMyTerminalBlock, bool> setter)
         {
-            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCheckbox, IMyConveyorSorter>(IdPrefix + id);
+            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCheckbox, BlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
             box.Tooltip = MyStringId.GetOrCompute(toolTip);
             box.SupportsMultipleBlocks = true;
@@ -98,13 +98,13 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             box.Getter = getter;
             box.Setter = setter;
 
-            MyAPIGateway.TerminalControls.AddControl<IMyConveyorSorter>(box);
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
             return box;
         }
 
         protected IMyTerminalControlCombobox CreateCombobox(string id, string displayName, string toolTip, Action<List<MyTerminalControlComboBoxItem>> content, Func<IMyTerminalBlock, long> getter, Action<IMyTerminalBlock, long> setter)
         {
-            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCombobox, IMyConveyorSorter>(IdPrefix + id);
+            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCombobox, BlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
             box.Tooltip = MyStringId.GetOrCompute(toolTip);
             box.SupportsMultipleBlocks = true;
@@ -114,13 +114,13 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             box.Getter = getter;
             box.Setter = setter;
             
-            MyAPIGateway.TerminalControls.AddControl<IMyConveyorSorter>(box);
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
             return box;
         }
 
         protected IMyTerminalControlListbox CreateListbox(string id, string displayName, string toolTip, bool multiSelect, Action<IMyTerminalBlock, List<MyTerminalControlListBoxItem>, List<MyTerminalControlListBoxItem>> content, Action<IMyTerminalBlock, List<MyTerminalControlListBoxItem>> itemSelected)
         {
-            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlListbox, IMyConveyorSorter>(IdPrefix + id);
+            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlListbox, BlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
             box.Tooltip = MyStringId.GetOrCompute(toolTip);
             box.SupportsMultipleBlocks = true;
@@ -131,7 +131,22 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             box.ItemSelected = itemSelected;
             box.VisibleRowsCount = 10;
             
-            MyAPIGateway.TerminalControls.AddControl<IMyConveyorSorter>(box);
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
+            return box;
+        }
+
+        protected IMyTerminalControlTextbox CreateTextbox(string id, string displayName, string toolTip, Func<IMyTerminalBlock, StringBuilder> getter, Action<IMyTerminalBlock, StringBuilder> setter)
+        {
+            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlTextbox, BlockType>(IdPrefix + id);
+            box.Title = MyStringId.GetOrCompute(displayName);
+            box.Tooltip = MyStringId.GetOrCompute(toolTip);
+            box.SupportsMultipleBlocks = true;
+
+            box.Visible = VisibleFunc;
+            box.Getter = getter;
+            box.Setter = setter;
+
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
             return box;
         }
 
@@ -146,7 +161,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
         /// <returns></returns>
         protected IMyTerminalAction CreateAction(string id, string displayName, Action<IMyTerminalBlock> action, Action<IMyTerminalBlock, StringBuilder> writer, string icon)
         {
-            var act = MyAPIGateway.TerminalControls.CreateAction<IMyConveyorSorter>(IdPrefix + id);
+            var act = MyAPIGateway.TerminalControls.CreateAction<BlockType>(IdPrefix + id);
             act.Name = new StringBuilder(displayName);
             act.Action = action;
             act.Writer = writer;
@@ -154,7 +169,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             act.ValidForGroups = true;
 
             act.Enabled = VisibleFunc;
-            MyAPIGateway.TerminalControls.AddAction<IMyConveyorSorter>(act);
+            MyAPIGateway.TerminalControls.AddAction<BlockType>(act);
 
             return act;
         }
@@ -169,13 +184,13 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
         /// <returns></returns>
         protected IMyTerminalControlProperty<TValue> CreateProperty<TValue>(string id, Func<IMyTerminalBlock, TValue> getter, Action<IMyTerminalBlock, TValue> setter)
         {
-            var prop = MyAPIGateway.TerminalControls.CreateProperty<TValue, IMyConveyorSorter>(IdPrefix + id);
+            var prop = MyAPIGateway.TerminalControls.CreateProperty<TValue, BlockType>(IdPrefix + id);
             prop.SupportsMultipleBlocks = true;
 
             prop.Getter = getter;
             prop.Setter = setter;
             
-            MyAPIGateway.TerminalControls.AddControl<IMyConveyorSorter>(prop);
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(prop);
             return prop;
         }
     }

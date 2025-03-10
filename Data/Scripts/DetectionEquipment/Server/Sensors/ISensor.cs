@@ -28,7 +28,7 @@ namespace DetectionEquipment.Server.Sensors
         double BearingErrorModifier { get; set; }
         double RangeErrorModifier { get; set; }
 
-        Action<MyTuple<double, double, double, double, Vector3D>> OnDetection { get; set; }
+        Action<MyTuple<double, double, double, double, Vector3D, string[]>> OnDetection { get; set; }
 
         DetectionInfo? GetDetectionInfo(ITrack track);
         DetectionInfo? GetDetectionInfo(ITrack track, double visibility);

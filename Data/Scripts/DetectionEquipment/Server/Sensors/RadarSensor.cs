@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.ControlBlocks.IffReflector;
 using DetectionEquipment.Shared.Definitions;
 using System;
 using VRage;
@@ -43,7 +44,7 @@ namespace DetectionEquipment.Server.Sensors
         }
 
         public SensorDefinition Definition { get; private set; }
-        public Action<MyTuple<double, double, double, double, Vector3D>> OnDetection { get; set; } = null;
+        public Action<MyTuple<double, double, double, double, Vector3D, string[]>> OnDetection { get; set; } = null;
 
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
         public double Power = 14000000;
@@ -105,7 +106,9 @@ namespace DetectionEquipment.Server.Sensors
             double maxRangeError = range * RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / MinStableSignal, 0, 1));
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D>(radarCrossSection, range, maxRangeError, maxBearingError, bearing));
+            var iffCodes = track is GridTrack ? IffReflectorBlock.GetIffCodes(((GridTrack)track).Grid) : Array.Empty<string>();
+
+            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(radarCrossSection, range, maxRangeError, maxBearingError, bearing, iffCodes));
 
             return new DetectionInfo()
             {
@@ -116,6 +119,7 @@ namespace DetectionEquipment.Server.Sensors
                 BearingError = maxBearingError,
                 Range = range,
                 RangeError = maxRangeError,
+                IffCodes = iffCodes
             };
         }
 

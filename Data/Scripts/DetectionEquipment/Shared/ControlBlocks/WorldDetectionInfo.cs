@@ -26,6 +26,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
 
             Velocity = null;
             VelocityVariance = null;
+            IffCodes = info.IffCodes;
         }
 
         public double CrossSection, Error;
@@ -33,10 +34,11 @@ namespace DetectionEquipment.Shared.ControlBlocks
         public Vector3D? Velocity;
         public double? VelocityVariance;
         public SensorDefinition.SensorType DetectionType;
+        public string[] IffCodes;
 
         public override string ToString()
         {
-            return $"Position: {Position.ToString("N0")} +-{Error:N1}m";
+            return $"Position: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
         }
 
         //public override bool Equals(object obj)
@@ -47,7 +49,14 @@ namespace DetectionEquipment.Shared.ControlBlocks
         //    return CrossSection == i.CrossSection && Error == i.Error && Position == i.Position;
         //}
 
-        public MyTuple<int, double, double, Vector3D, Vector3D?, double?> Tuple => new MyTuple<int, double, double, Vector3D, Vector3D?, double?>((int) DetectionType, CrossSection, Error, Position, Velocity, VelocityVariance);
+        public MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]> Tuple => new MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>(
+            (int) DetectionType, 
+            CrossSection, 
+            Error, 
+            Position, 
+            Velocity == null ? null : new MyTuple<Vector3D, double>?(new MyTuple<Vector3D, double>(Velocity.Value, VelocityVariance.Value)), 
+            IffCodes
+            );
 
         public static WorldDetectionInfo Average(ICollection<WorldDetectionInfo> args)
         {
@@ -55,10 +64,12 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 throw new Exception("No detection infos provided!");
 
             double totalError = 0;
-
+            HashSet<string> allCodes = new HashSet<string>();
             foreach (var info in args)
             {
                 totalError += info.Error;
+                foreach (var code in info.IffCodes)
+                    allCodes.Add(code);
             }
 
             Vector3D averagePos = Vector3D.Zero;
@@ -86,6 +97,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 Position = averagePos,
                 Error = avgDiff,
                 DetectionType = 0,
+                IffCodes = allCodes.ToArray()
             };
 
             return result;
@@ -100,12 +112,15 @@ namespace DetectionEquipment.Shared.ControlBlocks
             double totalWeight = 0;
             double highestError = 0;
 
+            HashSet<string> allCodes = new HashSet<string>();
             foreach (var info in args)
             {
                 totalError += info.Key.Error;
                 totalWeight += info.Value;
                 if (info.Key.Error > highestError)
                     highestError = info.Key.Error;
+                foreach (var code in info.Key.IffCodes)
+                    allCodes.Add(code);
             }
 
             Vector3D averagePos = Vector3D.Zero;
@@ -130,6 +145,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
                 Position = averagePos,
                 Error = avgDiff,
                 DetectionType = 0,
+                IffCodes = allCodes.ToArray()
             };
 
             return result;

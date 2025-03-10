@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.ControlBlocks;
 using DetectionEquipment.Shared.ControlBlocks.Aggregator;
+using DetectionEquipment.Shared.ControlBlocks.IffReflector;
 using Sandbox.Game.Entities;
 using Sandbox.Game.Entities.Cube;
 using Sandbox.ModAPI.Ingame;
@@ -31,9 +32,9 @@ namespace DetectionEquipment.Server.PBApi
             ["GetSensorElevation"] = new Func<uint, double>(GetSensorElevation),
             ["SetSensorElevation"] = new Action<uint, double>(SetSensorElevation),
             ["GetSensorDefinition"] = new Func<uint, MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double>>(GetSensorDefinition),
-            ["GetSensorDetections"] = new Func<uint, MyTuple<double, double, double, double, Vector3D>[]>(GetSensorDetections),
-            ["RegisterInvokeOnDetection"] = new Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>>(RegisterInvokeOnDetection),
-            ["UnregisterInvokeOnDetection"] = new Action<uint, Action<MyTuple<double, double, double, double, Vector3D>>>(UnregisterInvokeOnDetection),
+            ["GetSensorDetections"] = new Func<uint, MyTuple<double, double, double, double, Vector3D, string[]>[]>(GetSensorDetections),
+            ["RegisterInvokeOnDetection"] = new Action<uint, Action<MyTuple<double, double, double, double, Vector3D, string[]>>>(RegisterInvokeOnDetection),
+            ["UnregisterInvokeOnDetection"] = new Action<uint, Action<MyTuple<double, double, double, double, Vector3D, string[]>>>(UnregisterInvokeOnDetection),
 
             // Aggregator
             ["HasAggregator"] = new Func<IMyCubeBlock, bool>(HasAggregator),
@@ -47,11 +48,18 @@ namespace DetectionEquipment.Server.PBApi
             ["SetAggregatorRcs"] = new Action<IMyCubeBlock, float>(SetAggregatorRcs),
             ["GetAggregatorTypes"] = new Func<IMyCubeBlock, bool>(GetAggregatorTypes),
             ["SetAggregatorTypes"] = new Action<IMyCubeBlock, bool>(SetAggregatorTypes),
-            ["GetAggregatorInfo"] = new Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, Vector3D?, double?>[]>(GetAggregatorInfo),
+            ["GetAggregatorInfo"] = new Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[]>(GetAggregatorInfo),
             ["GetAggregatorUseAllSensors"] = new Func<IMyCubeBlock, bool>(GetAggregatorUseAllSensors),
             ["SetAggregatorUseAllSensors"] = new Action<IMyCubeBlock, bool>(SetAggregatorUseAllSensors),
             ["GetAggregatorActiveSensors"] = new Func<IMyCubeBlock, List<IMyTerminalBlock>>(GetAggregatorActiveSensors),
             ["SetAggregatorActiveSensors"] = new Action<IMyCubeBlock, List<IMyTerminalBlock>>(SetAggregatorActiveSensors),
+
+            // IFF Reflector
+            ["HasReflector"] = new Func<IMyCubeBlock, bool>(HasReflector),
+            ["GetIffCode"] = new Func<IMyCubeBlock, string>(GetIffCode),
+            ["SetIffCode"] = new Action<IMyCubeBlock, string>(SetIffCode),
+            ["GetIffReturnHashed"] = new Func<IMyCubeBlock, bool>(GetIffReturnHashed),
+            ["SetIffReturnHashed"] = new Action<IMyCubeBlock, bool>(SetIffReturnHashed),
         };
 
         #region Sensors
@@ -125,25 +133,25 @@ namespace DetectionEquipment.Server.PBApi
                 );
         }
 
-        private static MyTuple<double, double, double, double, Vector3D>[] GetSensorDetections(uint id)
+        private static MyTuple<double, double, double, double, Vector3D, string[]>[] GetSensorDetections(uint id)
         {
             var detections = ServerMain.I.BlockSensorIdMap[id].Detections;
-            MyTuple<double, double, double, double, Vector3D>[] tupleSet = new MyTuple<double, double, double, double, Vector3D>[detections.Count];
+            var tupleSet = new MyTuple<double, double, double, double, Vector3D, string[]>[detections.Count];
             int i = 0;
             foreach (var detection in detections)
             {
-                tupleSet[i] = new MyTuple<double, double, double, double, Vector3D>(detection.CrossSection, detection.Range, detection.RangeError, detection.BearingError, detection.Bearing);
+                tupleSet[i] = new MyTuple<double, double, double, double, Vector3D, string[]>(detection.CrossSection, detection.Range, detection.RangeError, detection.BearingError, detection.Bearing, detection.IffCodes);
                 i++;
             }
             return tupleSet;
         }
 
-        private static void RegisterInvokeOnDetection(uint id, Action<MyTuple<double, double, double, double, Vector3D>> action)
+        private static void RegisterInvokeOnDetection(uint id, Action<MyTuple<double, double, double, double, Vector3D, string[]>> action)
         {
             ServerMain.I.SensorIdMap[id].OnDetection += action;
         }
 
-        private static void UnregisterInvokeOnDetection(uint id, Action<MyTuple<double, double, double, double, Vector3D>> action)
+        private static void UnregisterInvokeOnDetection(uint id, Action<MyTuple<double, double, double, double, Vector3D, string[]>> action)
         {
             ServerMain.I.SensorIdMap[id].OnDetection -= action;
         }
@@ -225,14 +233,14 @@ namespace DetectionEquipment.Server.PBApi
                 return;
             (control as AggregatorBlock).AggregateTypes.Value = value;
         }
-        private static MyTuple<int, double, double, Vector3D, Vector3D?, double?>[] GetAggregatorInfo(IMyCubeBlock block)
+        private static MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[] GetAggregatorInfo(IMyCubeBlock block)
         {
             ControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return null;
 
             var set = (control as AggregatorBlock).GetAggregatedDetections();
-            var toReturn = new MyTuple<int, double, double, Vector3D, Vector3D?, double?>[set.Count];
+            var toReturn = new MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[set.Count];
 
             int i = 0;
             foreach (var value in set)
@@ -300,6 +308,50 @@ namespace DetectionEquipment.Server.PBApi
             }
 
             (control as AggregatorBlock).ActiveSensors.Value = valid.ToArray();
+        }
+
+        #endregion
+
+        #region Iff Reflector
+
+        private static bool HasReflector(IMyCubeBlock block)
+        {
+            ControlBlockBase control;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
+                return false;
+            return true;
+        }
+        private static string GetIffCode(IMyCubeBlock block)
+        {
+            ControlBlockBase control;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
+                return null;
+            IffReflectorBlock reflector = control as IffReflectorBlock;
+            return reflector.IffCode;
+        }
+        private static void SetIffCode(IMyCubeBlock block, string value)
+        {
+            ControlBlockBase control;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
+                return;
+            IffReflectorBlock reflector = control as IffReflectorBlock;
+            reflector.IffCode.Value = value;
+        }
+        private static bool GetIffReturnHashed(IMyCubeBlock block)
+        {
+            ControlBlockBase control;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
+                return false;
+            IffReflectorBlock reflector = control as IffReflectorBlock;
+            return reflector.ReturnHash;
+        }
+        private static void SetIffReturnHashed(IMyCubeBlock block, bool value)
+        {
+            ControlBlockBase control;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
+                return;
+            IffReflectorBlock reflector = control as IffReflectorBlock;
+            reflector.ReturnHash.Value = value;
         }
 
         #endregion
