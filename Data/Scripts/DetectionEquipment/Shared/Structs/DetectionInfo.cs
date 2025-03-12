@@ -1,7 +1,10 @@
-﻿using DetectionEquipment.Server.Tracking;
+﻿using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Server.Tracking;
 using VRageMath;
 
-namespace DetectionEquipment.Server.Sensors
+using LocalDetTuple = VRage.MyTuple<double, double, double, double, VRageMath.Vector3D, string[]>;
+
+namespace DetectionEquipment.Shared.Structs
 {
     internal struct DetectionInfo
     {
@@ -10,6 +13,8 @@ namespace DetectionEquipment.Server.Sensors
         public double CrossSection, Range, RangeError, BearingError;
         public Vector3D Bearing;
         public string[] IffCodes;
+
+        public LocalDetTuple Tuple => new LocalDetTuple(CrossSection, Range, RangeError, BearingError, Bearing, IffCodes);
 
         public override string ToString()
         {

@@ -1,4 +1,6 @@
 ﻿using System;
+using VRage;
+using SensorDefTuple = VRage.MyTuple<int, double, double, VRage.MyTuple<double, double, double, double, double, double>?, double, double>;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -35,5 +37,21 @@ namespace DetectionEquipment.Shared.Definitions
             Optical = 3,
             Infrared = 4,
         }
+
+        public static explicit operator SensorDefTuple(SensorDefinition d) => new MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double>(
+                (int) d.Type,
+                d.MaxAperture,
+                d.MinAperture,
+                d.Movement == null ? null : new MyTuple<double, double, double, double, double, double>?(new MyTuple<double, double, double, double, double, double>(
+                    d.Movement.MinAzimuth,
+                    d.Movement.MaxAzimuth,
+                    d.Movement.MinElevation,
+                    d.Movement.MaxElevation,
+                    d.Movement.AzimuthRate,
+                    d.Movement.ElevationRate
+                    )),
+                d.DetectionThreshold,
+                d.MaxPowerDraw
+                );
     }
 }

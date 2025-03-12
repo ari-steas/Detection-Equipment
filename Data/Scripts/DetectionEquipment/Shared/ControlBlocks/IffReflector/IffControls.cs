@@ -1,11 +1,6 @@
 ﻿using DetectionEquipment.Shared.ControlBlocks.GenericControls;
-using DetectionEquipment.Shared.ControlBlocks.Tracker;
 using Sandbox.ModAPI;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace DetectionEquipment.Shared.ControlBlocks.IffReflector
 {

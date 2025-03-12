@@ -3,7 +3,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using VRage.Game.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
 

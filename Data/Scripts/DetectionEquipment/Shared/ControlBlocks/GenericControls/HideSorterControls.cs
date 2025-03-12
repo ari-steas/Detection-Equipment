@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using DetectionEquipment.Shared.ControlBlocks;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 

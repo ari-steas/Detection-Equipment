@@ -7,7 +7,6 @@ using VRage.Utils;
 using VRage.Game.Components;
 using System.Collections.Generic;
 using VRage.ModAPI;
-using Sandbox.Game.Gui;
 
 namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
 {

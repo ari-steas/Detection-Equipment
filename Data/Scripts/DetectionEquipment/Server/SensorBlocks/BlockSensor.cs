@@ -1,17 +1,12 @@
 ﻿using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
-using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Cube;
-using Sandbox.Game.EntityComponents;
+using DetectionEquipment.Shared.Structs;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using VRage.Game;
-using VRage.Game.Components;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI;
-using VRage.Utils;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;

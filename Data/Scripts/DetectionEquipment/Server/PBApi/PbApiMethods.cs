@@ -1,16 +1,17 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Shared.ControlBlocks;
+﻿using DetectionEquipment.Shared.ControlBlocks;
 using DetectionEquipment.Shared.ControlBlocks.Aggregator;
 using DetectionEquipment.Shared.ControlBlocks.IffReflector;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Cube;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using VRage;
 using VRage.Game.ModAPI.Ingame;
 using VRageMath;
+
+using SensorDefTuple = VRage.MyTuple<int, double, double, VRage.MyTuple<double, double, double, double, double, double>?, double, double>;
+using WorldDetTuple = VRage.MyTuple<int, double, double, VRageMath.Vector3D, VRage.MyTuple<VRageMath.Vector3D, double>?, string[]>;
+using LocalDetTuple = VRage.MyTuple<double, double, double, double, VRageMath.Vector3D, string[]>;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -31,10 +32,10 @@ namespace DetectionEquipment.Server.PBApi
             ["SetSensorAzimuth"] = new Action<uint, double>(SetSensorAzimuth),
             ["GetSensorElevation"] = new Func<uint, double>(GetSensorElevation),
             ["SetSensorElevation"] = new Action<uint, double>(SetSensorElevation),
-            ["GetSensorDefinition"] = new Func<uint, MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double>>(GetSensorDefinition),
-            ["GetSensorDetections"] = new Func<uint, MyTuple<double, double, double, double, Vector3D, string[]>[]>(GetSensorDetections),
-            ["RegisterInvokeOnDetection"] = new Action<uint, Action<MyTuple<double, double, double, double, Vector3D, string[]>>>(RegisterInvokeOnDetection),
-            ["UnregisterInvokeOnDetection"] = new Action<uint, Action<MyTuple<double, double, double, double, Vector3D, string[]>>>(UnregisterInvokeOnDetection),
+            ["GetSensorDefinition"] = new Func<uint, SensorDefTuple>(GetSensorDefinition),
+            ["GetSensorDetections"] = new Func<uint, LocalDetTuple[]>(GetSensorDetections),
+            ["RegisterInvokeOnDetection"] = new Action<uint, Action<LocalDetTuple>>(RegisterInvokeOnDetection),
+            ["UnregisterInvokeOnDetection"] = new Action<uint, Action<LocalDetTuple>>(UnregisterInvokeOnDetection),
 
             // Aggregator
             ["HasAggregator"] = new Func<IMyCubeBlock, bool>(HasAggregator),
@@ -48,7 +49,7 @@ namespace DetectionEquipment.Server.PBApi
             ["SetAggregatorRcs"] = new Action<IMyCubeBlock, float>(SetAggregatorRcs),
             ["GetAggregatorTypes"] = new Func<IMyCubeBlock, bool>(GetAggregatorTypes),
             ["SetAggregatorTypes"] = new Action<IMyCubeBlock, bool>(SetAggregatorTypes),
-            ["GetAggregatorInfo"] = new Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[]>(GetAggregatorInfo),
+            ["GetAggregatorInfo"] = new Func<IMyCubeBlock, WorldDetTuple[]>(GetAggregatorInfo),
             ["GetAggregatorUseAllSensors"] = new Func<IMyCubeBlock, bool>(GetAggregatorUseAllSensors),
             ["SetAggregatorUseAllSensors"] = new Action<IMyCubeBlock, bool>(SetAggregatorUseAllSensors),
             ["GetAggregatorActiveSensors"] = new Func<IMyCubeBlock, List<IMyTerminalBlock>>(GetAggregatorActiveSensors),
@@ -113,45 +114,30 @@ namespace DetectionEquipment.Server.PBApi
             ServerMain.I.BlockSensorIdMap[id].DesiredElevation = value;
         }
 
-        private static MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double> GetSensorDefinition(uint id)
+        private static SensorDefTuple GetSensorDefinition(uint id)
         {
-            var d = ServerMain.I.SensorIdMap[id].Definition;
-            return new MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double>(
-                (int) d.Type,
-                d.MaxAperture,
-                d.MinAperture,
-                d.Movement == null ? null : new MyTuple<double, double, double, double, double, double>?(new MyTuple<double, double, double, double, double, double>(
-                    d.Movement.MinAzimuth,
-                    d.Movement.MaxAzimuth,
-                    d.Movement.MinElevation,
-                    d.Movement.MaxElevation,
-                    d.Movement.AzimuthRate,
-                    d.Movement.ElevationRate
-                    )),
-                d.DetectionThreshold,
-                d.MaxPowerDraw
-                );
+            return (SensorDefTuple) ServerMain.I.SensorIdMap[id].Definition;
         }
 
-        private static MyTuple<double, double, double, double, Vector3D, string[]>[] GetSensorDetections(uint id)
+        private static LocalDetTuple[] GetSensorDetections(uint id)
         {
             var detections = ServerMain.I.BlockSensorIdMap[id].Detections;
-            var tupleSet = new MyTuple<double, double, double, double, Vector3D, string[]>[detections.Count];
+            var tupleSet = new LocalDetTuple[detections.Count];
             int i = 0;
             foreach (var detection in detections)
             {
-                tupleSet[i] = new MyTuple<double, double, double, double, Vector3D, string[]>(detection.CrossSection, detection.Range, detection.RangeError, detection.BearingError, detection.Bearing, detection.IffCodes);
+                tupleSet[i] = detection.Tuple;
                 i++;
             }
             return tupleSet;
         }
 
-        private static void RegisterInvokeOnDetection(uint id, Action<MyTuple<double, double, double, double, Vector3D, string[]>> action)
+        private static void RegisterInvokeOnDetection(uint id, Action<LocalDetTuple> action)
         {
             ServerMain.I.SensorIdMap[id].OnDetection += action;
         }
 
-        private static void UnregisterInvokeOnDetection(uint id, Action<MyTuple<double, double, double, double, Vector3D, string[]>> action)
+        private static void UnregisterInvokeOnDetection(uint id, Action<LocalDetTuple> action)
         {
             ServerMain.I.SensorIdMap[id].OnDetection -= action;
         }
@@ -233,14 +219,14 @@ namespace DetectionEquipment.Server.PBApi
                 return;
             (control as AggregatorBlock).AggregateTypes.Value = value;
         }
-        private static MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[] GetAggregatorInfo(IMyCubeBlock block)
+        private static WorldDetTuple[] GetAggregatorInfo(IMyCubeBlock block)
         {
             ControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return null;
 
             var set = (control as AggregatorBlock).GetAggregatedDetections();
-            var toReturn = new MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[set.Count];
+            var toReturn = new WorldDetTuple[set.Count];
 
             int i = 0;
             foreach (var value in set)

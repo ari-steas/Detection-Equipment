@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Structs;
 using System;
 using System.Collections.Generic;
 using VRage;

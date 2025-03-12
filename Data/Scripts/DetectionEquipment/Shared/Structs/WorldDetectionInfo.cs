@@ -1,14 +1,13 @@
-﻿using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Shared.Definitions;
+﻿using DetectionEquipment.Shared.Definitions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRage;
 using VRageMath;
 
-namespace DetectionEquipment.Shared.ControlBlocks
+using WorldDetTuple = VRage.MyTuple<int, double, double, VRageMath.Vector3D, VRage.MyTuple<VRageMath.Vector3D, double>?, string[]>;
+
+namespace DetectionEquipment.Shared.Structs
 {
     internal struct WorldDetectionInfo
     {
@@ -49,12 +48,12 @@ namespace DetectionEquipment.Shared.ControlBlocks
         //    return CrossSection == i.CrossSection && Error == i.Error && Position == i.Position;
         //}
 
-        public MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]> Tuple => new MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>(
-            (int) DetectionType, 
-            CrossSection, 
-            Error, 
-            Position, 
-            Velocity == null ? null : new MyTuple<Vector3D, double>?(new MyTuple<Vector3D, double>(Velocity.Value, VelocityVariance.Value)), 
+        public WorldDetTuple Tuple => new WorldDetTuple(
+            (int)DetectionType,
+            CrossSection,
+            Error,
+            Position,
+            Velocity == null ? null : new MyTuple<Vector3D, double>?(new MyTuple<Vector3D, double>(Velocity.Value, VelocityVariance.Value)),
             IffCodes
             );
 
@@ -77,7 +76,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
             foreach (var info in args)
             {
                 if (totalError > 0)
-                    averagePos += info.Position * (info.Error/totalError);
+                    averagePos += info.Position * (info.Error / totalError);
                 else
                     averagePos += info.Position;
                 totalCrossSection += info.CrossSection;
@@ -89,7 +88,7 @@ namespace DetectionEquipment.Shared.ControlBlocks
             double avgDiff = 0;
             foreach (var info in args)
                 avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
-            avgDiff = Math.Sqrt(avgDiff)/args.Count;
+            avgDiff = Math.Sqrt(avgDiff) / args.Count;
 
             WorldDetectionInfo result = new WorldDetectionInfo()
             {

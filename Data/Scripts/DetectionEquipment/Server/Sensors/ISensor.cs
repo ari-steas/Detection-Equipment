@@ -1,9 +1,11 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Structs;
 using System;
-using VRage;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
+using LocalDetTuple = VRage.MyTuple<double, double, double, double, VRageMath.Vector3D, string[]>;
+
 
 namespace DetectionEquipment.Server.Sensors
 {
@@ -28,7 +30,7 @@ namespace DetectionEquipment.Server.Sensors
         double BearingErrorModifier { get; set; }
         double RangeErrorModifier { get; set; }
 
-        Action<MyTuple<double, double, double, double, Vector3D, string[]>> OnDetection { get; set; }
+        Action<LocalDetTuple> OnDetection { get; set; }
 
         DetectionInfo? GetDetectionInfo(ITrack track);
         DetectionInfo? GetDetectionInfo(ITrack track, double visibility);

@@ -2,6 +2,7 @@
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.ControlBlocks.IffReflector;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Structs;
 using System;
 using VRage;
 using VRage.Game.Entity;

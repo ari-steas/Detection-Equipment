@@ -1,14 +1,10 @@
-﻿using DetectionEquipment.Server;
-using DetectionEquipment.Server.SensorBlocks;
+﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.ControlBlocks.Aggregator;
+using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
-using Sandbox.Game.Entities;
-using Sandbox.Game.EntityComponents;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;

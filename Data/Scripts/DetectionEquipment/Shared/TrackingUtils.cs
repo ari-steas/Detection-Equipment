@@ -1,8 +1,5 @@
-﻿using DetectionEquipment.Server.Sensors;
-using Sandbox.Game;
-using System;
+﻿using Sandbox.Game;
 using System.Collections.Generic;
-using System.Linq;
 using VRageMath;
 
 namespace DetectionEquipment.Shared

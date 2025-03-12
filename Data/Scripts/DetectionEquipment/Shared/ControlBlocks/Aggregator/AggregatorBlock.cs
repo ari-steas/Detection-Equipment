@@ -1,12 +1,10 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Shared.ControlBlocks.GenericControls;
+using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
