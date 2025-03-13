@@ -16,12 +16,11 @@ namespace DetectionEquipment.Shared.ControlBlocks.Controls
 
             EditControls();
             EditActions();
+
+            Log.Info("HideSorterControls", "Removed sorter controls.");
         }
 
-        static bool AppendedCondition(IMyTerminalBlock block)
-        {
-            return block?.GameLogic?.GetAs<ControlBlockBase>() == null;
-        }
+        static bool AppendedCondition(IMyTerminalBlock block) => block?.GameLogic?.GetAs<ControlBlockBase>() == null;
 
         static void EditControls()
         {

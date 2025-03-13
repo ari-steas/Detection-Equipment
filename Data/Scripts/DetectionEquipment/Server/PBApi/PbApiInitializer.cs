@@ -1,4 +1,5 @@
-﻿using Sandbox.ModAPI;
+﻿using DetectionEquipment.Shared;
+using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using VRage.Game.ModAPI;
@@ -13,6 +14,7 @@ namespace DetectionEquipment.Server.PBApi
             property.Getter = b => PbApiMethods.SafeMethods;
             MyAPIGateway.TerminalControls.AddControl<IMyProgrammableBlock>(property);
 
+            int recompileCount = 0;
             MyAPIGateway.Entities.GetEntities(null, ent =>
             {
                 var grid = ent as IMyCubeGrid;
@@ -23,10 +25,14 @@ namespace DetectionEquipment.Server.PBApi
                 foreach (var pb in grid.GetFatBlocks<IMyProgrammableBlock>())
                 {
                     if (!pb.IsRunning && pb.ProgramData.Contains("DetectionPbApi"))
+                    {
+                        recompileCount++;
                         pb.Recompile();
+                    }
                 }
                 return false;
             });
+            Log.Info("PbApiInitializer", $"Packaged PbAPI methods and recompiled {recompileCount} failed script(s).");
         }
 
         public static void Unload()

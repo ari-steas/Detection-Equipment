@@ -2,6 +2,7 @@
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using VRage.Game.Components;
@@ -40,6 +41,8 @@ namespace DetectionEquipment.Server
                 OnEntityAdd(e);
                 return false;
             });
+
+            Log.Info("ServerMain", "Initialized.");
         }
 
         protected override void UnloadData()
@@ -56,6 +59,7 @@ namespace DetectionEquipment.Server
                 manager.Close();
 
             I = null;
+            Log.Info("ServerMain", "Unloaded.");
         }
 
 

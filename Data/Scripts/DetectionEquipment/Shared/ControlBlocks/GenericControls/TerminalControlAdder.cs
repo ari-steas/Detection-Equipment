@@ -27,6 +27,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             CreateTerminalProperties();
 
             _isDone = true;
+            Log.Info(GetType().Name, $"Created terminal actions and properties for {typeof(BlockType).Name}/{typeof(LogicType).Name}.");
         }
 
         protected abstract void CreateTerminalActions();
