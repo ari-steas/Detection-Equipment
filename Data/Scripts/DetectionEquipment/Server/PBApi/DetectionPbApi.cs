@@ -487,7 +487,7 @@ namespace IngameScript
 
             public PbWorldDetectionInfo(MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]> tuple)
             {
-                DetectionType = (PbSensorDefinition.SensorType) tuple.Item1;
+                DetectionType = (PbSensorDefinition.SensorType)tuple.Item1;
                 CrossSection = tuple.Item2;
                 Error = tuple.Item3;
                 Position = tuple.Item4;
@@ -525,7 +525,7 @@ namespace IngameScript
                 foreach (var info in args)
                 {
                     if (totalError > 0)
-                        averagePos += info.Position * (info.Error/totalError);
+                        averagePos += info.Position * (info.Error / totalError);
                     else
                         averagePos += info.Position;
                     totalCrossSection += info.CrossSection;
@@ -537,7 +537,7 @@ namespace IngameScript
                 double avgDiff = 0;
                 foreach (var info in args)
                     avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
-                avgDiff = Math.Sqrt(avgDiff)/args.Count;
+                avgDiff = Math.Sqrt(avgDiff) / args.Count;
 
                 PbWorldDetectionInfo result = new PbWorldDetectionInfo()
                 {

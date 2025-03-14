@@ -1,7 +1,8 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Shared.ControlBlocks.Aggregator;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,10 +11,10 @@ using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 using VRageMath;
 
-namespace DetectionEquipment.Shared.ControlBlocks.Tracker
+namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionTrackerBlock")]
-    internal class TrackerBlock : ControlBlockBase
+    internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>
     {
         internal AggregatorBlock SourceAggregator = null;
         internal List<BlockSensor> ControlledSensors = new List<BlockSensor>();
@@ -56,10 +57,10 @@ namespace DetectionEquipment.Shared.ControlBlocks.Tracker
                     SourceAggregator = null;
                     return;
                 }
-                SourceAggregator = ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b.Block.EntityId == sync.Value) as AggregatorBlock;
+                SourceAggregator = ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b.CubeBlock.EntityId == sync.Value) as AggregatorBlock;
             };
 
-            SourceAggregator = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.Block.CubeGrid == Block.CubeGrid);
+            SourceAggregator = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.CubeBlock.CubeGrid == Block.CubeGrid);
 
             new TrackerControls().DoOnce();
         }

@@ -1,8 +1,8 @@
-﻿using DetectionEquipment.Shared.ControlBlocks.GenericControls;
+﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using System.Text;
 
-namespace DetectionEquipment.Shared.ControlBlocks.IffReflector
+namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
     internal class IffControls : TerminalControlAdder<IffReflectorBlock, IMyConveyorSorter>
     {
@@ -26,7 +26,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.IffReflector
 
         protected override void CreateTerminalProperties()
         {
-            
+
         }
     }
 }

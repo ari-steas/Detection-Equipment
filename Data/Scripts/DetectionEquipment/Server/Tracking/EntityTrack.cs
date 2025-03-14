@@ -1,4 +1,4 @@
-﻿using DetectionEquipment.Shared;
+﻿using DetectionEquipment.Shared.Utils;
 using VRage.Game.Entity;
 using VRageMath;
 

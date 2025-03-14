@@ -6,6 +6,7 @@ namespace DetectionEquipment.Shared.Definitions
 {
     public struct SensorDefinition
     {
+        public int Id; // DO NOT NETWORK THIS!!!
         public string[] BlockSubtypes;
         public SensorType Type;
         public double MaxAperture;

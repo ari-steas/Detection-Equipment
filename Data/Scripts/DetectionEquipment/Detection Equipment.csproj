@@ -24,7 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Client\" />
     <Folder Include="Server\SensorBlocks\Definitions\" />
   </ItemGroup>
 

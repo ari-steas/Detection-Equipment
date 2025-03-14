@@ -1,4 +1,5 @@
 ﻿using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;

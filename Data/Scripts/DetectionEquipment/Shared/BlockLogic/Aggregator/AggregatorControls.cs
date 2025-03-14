@@ -1,10 +1,10 @@
-﻿using DetectionEquipment.Shared.ControlBlocks.GenericControls;
+﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using System;
 using System.Linq;
 using VRage.Utils;
 
-namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
+namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
     internal class AggregatorControls : TerminalControlAdder<AggregatorBlock, IMyConveyorSorter>
     {
@@ -28,7 +28,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
                 10,
                 b => b.GameLogic.GetAs<AggregatorBlock>()?.DistanceThreshold,
                 (b, v) => b.GameLogic.GetAs<AggregatorBlock>().DistanceThreshold.Value = v,
-                (b, sb) => sb.Append((100*b.GameLogic.GetAs<AggregatorBlock>().DistanceThreshold.Value).ToString("F1") + "%")
+                (b, sb) => sb.Append((100 * b.GameLogic.GetAs<AggregatorBlock>().DistanceThreshold.Value).ToString("F1") + "%")
                 );
             CreateSlider(
                 "VelocityError",
@@ -48,7 +48,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
                 10,
                 b => b.GameLogic.GetAs<AggregatorBlock>()?.RCSThreshold,
                 (b, v) => b.GameLogic.GetAs<AggregatorBlock>().RCSThreshold.Value = v,
-                (b, sb) => sb.Append((100*b.GameLogic.GetAs<AggregatorBlock>().RCSThreshold.Value).ToString("F1") + "%")
+                (b, sb) => sb.Append((100 * b.GameLogic.GetAs<AggregatorBlock>().RCSThreshold.Value).ToString("F1") + "%")
                 );
             CreateToggle(
                 "AggregateTypes",
@@ -90,7 +90,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
                         return;
                     var array = new long[selected.Count];
                     for (int i = 0; i < array.Length; i++)
-                        array[i] = (long) selected[i].UserData;
+                        array[i] = (long)selected[i].UserData;
                     logic.ActiveSensors.Value = array;
                 }
                 ).Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllSensors ?? true);
@@ -98,7 +98,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
 
         protected override void CreateTerminalProperties()
         {
-            
+
         }
     }
 }

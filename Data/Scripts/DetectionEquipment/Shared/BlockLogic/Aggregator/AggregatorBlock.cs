@@ -10,10 +10,10 @@ using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 using VRageMath;
 
-namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
+namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock")]
-    internal class AggregatorBlock : ControlBlockBase
+    internal class AggregatorBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public MySync<float, SyncDirection.BothWays> AggregationTime;
         public MySync<float, SyncDirection.BothWays> DistanceThreshold;
@@ -29,7 +29,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Aggregator
 
         private bool _isBufferValid = false;
         private HashSet<WorldDetectionInfo> _bufferDetections = new HashSet<WorldDetectionInfo>();
-        
+
         internal HashSet<BlockSensor> ActiveSensorBlocks = new HashSet<BlockSensor>();
 
         public override void UpdateOnceBeforeFrame()

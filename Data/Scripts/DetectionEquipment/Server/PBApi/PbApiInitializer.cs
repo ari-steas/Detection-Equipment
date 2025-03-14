@@ -1,4 +1,4 @@
-﻿using DetectionEquipment.Shared;
+﻿using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;

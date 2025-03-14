@@ -1,10 +1,10 @@
-﻿using DetectionEquipment.Shared.ControlBlocks.GenericControls;
+﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using System;
 using System.Linq;
 using VRage.Utils;
 
-namespace DetectionEquipment.Shared.ControlBlocks.Search
+namespace DetectionEquipment.Shared.BlockLogic.Search
 {
     internal class SearchControls : TerminalControlAdder<SearchBlock, IMyConveyorSorter>
     {
@@ -38,7 +38,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Search
                         return;
                     var array = new long[selected.Count];
                     for (int i = 0; i < array.Length; i++)
-                        array[i] = (long) selected[i].UserData;
+                        array[i] = (long)selected[i].UserData;
                     logic.ActiveSensors.Value = array;
                 }
                 );
@@ -46,7 +46,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Search
 
         protected override void CreateTerminalProperties()
         {
-            
+
         }
     }
 }

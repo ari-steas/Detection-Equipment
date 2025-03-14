@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using VRageMath;
 
-namespace DetectionEquipment.Shared
+namespace DetectionEquipment.Shared.Utils
 {
     internal static class TrackingUtils
     {

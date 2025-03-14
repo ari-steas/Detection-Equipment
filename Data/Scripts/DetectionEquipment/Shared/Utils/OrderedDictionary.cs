@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace DetectionEquipment.Shared
+namespace DetectionEquipment.Shared.Utils
 {
     public class OrderedDictionary<TKey, TValue> : IDictionary<TKey, TValue>
     {

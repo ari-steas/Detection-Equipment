@@ -3,11 +3,12 @@ using System;
 using System.IO;
 using VRage.Utils;
 
-namespace DetectionEquipment.Shared
+namespace DetectionEquipment.Shared.Utils
 {
     public class Log
     {
         private static TextWriter _writer;
+        private static string _indent = "";
 
         public static void Init()
         {
@@ -20,7 +21,7 @@ namespace DetectionEquipment.Shared
             _writer.WriteLine($"Space Engineers v{MyAPIGateway.Session.Version}");
             _writer.WriteLine($"Server: {MyAPIGateway.Session.IsServer} | Client: {!MyAPIGateway.Utilities.IsDedicated}");
             _writer.WriteLine($"Session: {MyAPIGateway.Session.Name ?? "NoSession"} | Client Info: {MyAPIGateway.Multiplayer.MyName ?? "NoClient"}::{MyAPIGateway.Multiplayer.MyId}");
-            _writer.WriteLine( "=================================================");
+            _writer.WriteLine("=================================================");
             _writer.Flush();
 
             MyLog.Default.WriteLineAndConsole("[DetectionEquipment] - Debug log can be found in %AppData%\\Roaming\\SpaceEngineers\\Storage\\DetectionEquipment.log");
@@ -29,24 +30,35 @@ namespace DetectionEquipment.Shared
         public static void Close()
         {
             Info("Log", "Unloaded.");
-            _writer.Close();
+            _writer?.Close();
             _writer = null;
         }
 
         public static void Info(string source, string text)
         {
-            _writer.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t[INFO]\t{source}\t{text}");
-            _writer.Flush();
+            _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[INFO]\t{source}\t{text}");
+            _writer?.Flush();
             if (MyAPIGateway.Utilities.IsDedicated)
-                MyLog.Default.WriteLineToConsole($"[INFO]\t{source}\t{text}");
+                MyLog.Default.WriteLineToConsole($"{_indent}[INFO]\t{source}\t{text}");
         }
 
         public static void Exception(string source, Exception exception)
         {
-            _writer.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t[EXCEPTION]\t{source}\n{exception}");
-            _writer.Flush();
+            _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[EXCEPTION]\t{source}\n{exception}");
+            _writer?.Flush();
             if (MyAPIGateway.Utilities.IsDedicated)
-                MyLog.Default.WriteLineToConsole($"[EXCEPTION]\t{source}\n{exception}");
+                MyLog.Default.WriteLineToConsole($"{_indent}[EXCEPTION]\t{source}\n{exception}");
+        }
+
+        public static void IncreaseIndent()
+        {
+            _indent += '\t';
+        }
+
+        public static void DecreaseIndent()
+        {
+            if (_indent.Length > 0)
+                _indent = _indent.Remove(_indent.Length - 1);
         }
     }
 }

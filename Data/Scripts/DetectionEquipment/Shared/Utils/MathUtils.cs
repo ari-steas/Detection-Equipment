@@ -1,7 +1,7 @@
 ﻿using System;
 using VRageMath;
 
-namespace DetectionEquipment.Shared
+namespace DetectionEquipment.Shared.Utils
 {
     public static class MathUtils
     {
@@ -104,7 +104,27 @@ namespace DetectionEquipment.Shared
 
         public static double FromDecibels(double dB, double reference = 1)
         {
-            return Math.Pow(10, dB/10) * reference;
+            return Math.Pow(10, dB / 10) * reference;
+        }
+
+        public static Vector2D GetAngleTo(MatrixD matrix, Vector3D? targetPos)
+        {
+            if (targetPos == null)
+                return Vector2D.Zero;
+        
+            Vector3D vecFromTarget = matrix.Translation - targetPos.Value;
+        
+            vecFromTarget = Vector3D.Rotate(vecFromTarget.Normalized(), MatrixD.Invert(matrix));
+        
+            double desiredAzimuth = Math.Atan2(vecFromTarget.X, vecFromTarget.Z);
+            if (double.IsNaN(desiredAzimuth))
+                desiredAzimuth = Math.PI;
+        
+            double desiredElevation = Math.Asin(-vecFromTarget.Y);
+            if (double.IsNaN(desiredElevation))
+                desiredElevation = Math.PI;
+        
+            return new Vector2D(desiredAzimuth, desiredElevation);
         }
     }
 }

@@ -1,8 +1,9 @@
-﻿using DetectionEquipment.Server.PBApi;
+﻿using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Server.PBApi;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using VRage.Game.Components;
@@ -30,6 +31,8 @@ namespace DetectionEquipment.Server
         {
             if (!MyAPIGateway.Session.IsServer)
                 return;
+            Log.Info("ServerMain", "Start initialize...");
+            Log.IncreaseIndent();
 
             I = this;
 
@@ -42,6 +45,9 @@ namespace DetectionEquipment.Server
                 return false;
             });
 
+            new ServerNetwork().LoadData();
+
+            Log.DecreaseIndent();
             Log.Info("ServerMain", "Initialized.");
         }
 
@@ -49,6 +55,10 @@ namespace DetectionEquipment.Server
         {
             if (!MyAPIGateway.Session.IsServer)
                 return;
+            Log.Info("ServerMain", "Start unload...");
+            Log.IncreaseIndent();
+
+            ServerNetwork.I.UnloadData();
 
             PbApiInitializer.Unload();
 
@@ -59,6 +69,7 @@ namespace DetectionEquipment.Server
                 manager.Close();
 
             I = null;
+            Log.DecreaseIndent();
             Log.Info("ServerMain", "Unloaded.");
         }
 
@@ -77,6 +88,8 @@ namespace DetectionEquipment.Server
 
             foreach (var manager in GridSensorMangers.Values)
                 manager.Update();
+
+            ServerNetwork.I.Update();
         }
 
         private void OnEntityAdd(IMyEntity obj)

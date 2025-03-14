@@ -3,6 +3,7 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using VRage.Game.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
 
@@ -15,6 +16,7 @@ namespace DetectionEquipment.Shared.Definitions
             // Vanilla Camera
             new SensorDefinition
             {
+                Id = 0,
                 BlockSubtypes = new[]
                 {
                     "LargeCameraBlock",
@@ -31,6 +33,7 @@ namespace DetectionEquipment.Shared.Definitions
             // SimpleActiveRadar
             new SensorDefinition
             {
+                Id = 1,
                 BlockSubtypes = new[]
                 {
                     "ActiveRadar_Simple",
@@ -57,6 +60,7 @@ namespace DetectionEquipment.Shared.Definitions
             // SimplePassiveRadar
             new SensorDefinition
             {
+                Id = 2,
                 BlockSubtypes = new[]
                 {
                     "PassiveRadar_Simple",
@@ -80,6 +84,23 @@ namespace DetectionEquipment.Shared.Definitions
                 sensors.Add(new BlockSensor(block, definition));
             }
             return sensors;
+        }
+
+        public static List<SensorDefinition> GetDefinitions(IMyCubeBlock block)
+        {
+            var defs = new List<SensorDefinition>();
+            foreach (var definition in Definitions)
+            {
+                if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
+                    continue;
+                defs.Add(definition);
+            }
+            return defs;
+        }
+
+        public static SensorDefinition GetDefinition(int id)
+        {
+            return Definitions[id];
         }
     }
 }

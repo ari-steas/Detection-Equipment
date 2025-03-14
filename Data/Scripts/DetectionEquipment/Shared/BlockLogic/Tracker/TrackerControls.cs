@@ -1,11 +1,11 @@
-﻿using DetectionEquipment.Shared.ControlBlocks.Aggregator;
-using DetectionEquipment.Shared.ControlBlocks.GenericControls;
+﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using System;
 using System.Linq;
 using VRage.Utils;
 
-namespace DetectionEquipment.Shared.ControlBlocks.Tracker
+namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
     internal class TrackerControls : TerminalControlAdder<TrackerBlock, IMyConveyorSorter>
     {
@@ -34,12 +34,12 @@ namespace DetectionEquipment.Shared.ControlBlocks.Tracker
 
                     foreach (var control in ControlBlockManager.I.Blocks.Values)
                     {
-                        if (!(control is AggregatorBlock) || control.Block.CubeGrid != block.CubeGrid)
+                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != block.CubeGrid)
                             continue;
 
-                        var item = new VRage.ModAPI.MyTerminalControlListBoxItem(MyStringId.GetOrCompute(control.Block.DisplayNameText), MyStringId.GetOrCompute(""), control.Block.EntityId);
+                        var item = new VRage.ModAPI.MyTerminalControlListBoxItem(MyStringId.GetOrCompute(control.CubeBlock.DisplayNameText), MyStringId.GetOrCompute(""), control.CubeBlock.EntityId);
                         content.Add(item);
-                        if (logic.ActiveAggregator.Value == control.Block.EntityId)
+                        if (logic.ActiveAggregator.Value == control.CubeBlock.EntityId)
                             selected.Add(item);
                     }
                 },
@@ -48,7 +48,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Tracker
                     var logic = block.GameLogic.GetAs<TrackerBlock>();
                     if (logic == null)
                         return;
-                    logic.ActiveAggregator.Value = selected.Count == 0 ? -1 : (long) selected[0].UserData;
+                    logic.ActiveAggregator.Value = selected.Count == 0 ? -1 : (long)selected[0].UserData;
                 }
                 ).VisibleRowsCount = 5;
             CreateListbox(
@@ -79,7 +79,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Tracker
                         return;
                     var array = new long[selected.Count];
                     for (int i = 0; i < array.Length; i++)
-                        array[i] = (long) selected[i].UserData;
+                        array[i] = (long)selected[i].UserData;
                     logic.ActiveSensors.Value = array;
                 }
                 );
@@ -87,7 +87,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.Tracker
 
         protected override void CreateTerminalProperties()
         {
-            
+
         }
     }
 }

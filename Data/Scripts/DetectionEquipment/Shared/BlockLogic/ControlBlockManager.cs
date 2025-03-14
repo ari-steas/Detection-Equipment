@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using VRage.Game.Components;
 
-namespace DetectionEquipment.Shared.ControlBlocks
+namespace DetectionEquipment.Shared.BlockLogic
 {
     [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
     internal class ControlBlockManager : MySessionComponentBase
     {
         public static ControlBlockManager I;
-        public Dictionary<MyCubeBlock, ControlBlockBase> Blocks = new Dictionary<MyCubeBlock, ControlBlockBase>();
+        public Dictionary<MyCubeBlock, IControlBlockBase> Blocks = new Dictionary<MyCubeBlock, IControlBlockBase>();
 
 
         public override void LoadData()

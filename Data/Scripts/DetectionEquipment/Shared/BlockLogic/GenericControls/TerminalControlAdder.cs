@@ -7,8 +7,9 @@ using VRage.Utils;
 using VRage.Game.Components;
 using System.Collections.Generic;
 using VRage.ModAPI;
+using DetectionEquipment.Shared.Utils;
 
-namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
+namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
     internal abstract class TerminalControlAdder<LogicType, BlockType>
         where LogicType : MyGameLogicComponent
@@ -39,8 +40,8 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             toggle.Title = MyStringId.GetOrCompute(displayName);
             toggle.Tooltip = MyStringId.GetOrCompute(toolTip);
             toggle.SupportsMultipleBlocks = true; // wether this control should be visible when multiple blocks are selected (as long as they all have this control).
-                                                       // callbacks to determine if the control should be visible or not-grayed-out(Enabled) depending on whatever custom condition you want, given a block instance.
-                                                       // optional, they both default to true.
+                                                  // callbacks to determine if the control should be visible or not-grayed-out(Enabled) depending on whatever custom condition you want, given a block instance.
+                                                  // optional, they both default to true.
             toggle.Visible = VisibleFunc;
             //c.Enabled = CustomVisibleCondition;
             toggle.OnText = MySpaceTexts.SwitchText_On;
@@ -113,7 +114,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             box.ComboBoxContent = content;
             box.Getter = getter;
             box.Setter = setter;
-            
+
             MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
             return box;
         }
@@ -130,7 +131,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
             box.Multiselect = multiSelect;
             box.ItemSelected = itemSelected;
             box.VisibleRowsCount = 10;
-            
+
             MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
             return box;
         }
@@ -189,7 +190,7 @@ namespace DetectionEquipment.Shared.ControlBlocks.GenericControls
 
             prop.Getter = getter;
             prop.Setter = setter;
-            
+
             MyAPIGateway.TerminalControls.AddControl<BlockType>(prop);
             return prop;
         }

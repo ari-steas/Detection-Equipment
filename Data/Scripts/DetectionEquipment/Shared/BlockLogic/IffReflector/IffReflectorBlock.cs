@@ -1,4 +1,5 @@
 ﻿using Sandbox.Common.ObjectBuilders;
+using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using VRage.Game.Components;
@@ -6,10 +7,10 @@ using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 
-namespace DetectionEquipment.Shared.ControlBlocks.IffReflector
+namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector")]
-    internal class IffReflectorBlock : ControlBlockBase
+    internal class IffReflectorBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public MySync<string, SyncDirection.BothWays> IffCode;
         public MySync<bool, SyncDirection.BothWays> ReturnHash;

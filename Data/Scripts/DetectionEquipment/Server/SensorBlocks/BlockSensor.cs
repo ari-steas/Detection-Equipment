@@ -1,7 +1,10 @@
-﻿using DetectionEquipment.Server.Sensors;
+﻿using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Structs;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -38,6 +41,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             set
             {
                 _desiredAzimuth = MathUtils.NormalizeAngle(value);
+                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
             }
         }
         public double DesiredElevation
@@ -49,11 +53,30 @@ namespace DetectionEquipment.Server.SensorBlocks
             set
             {
                 _desiredElevation = MathUtils.NormalizeAngle(value);
+                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
+            }
+        }
+        public double Aperture
+        {
+            get
+            {
+                return Sensor.Aperture;
+            }
+            set
+            {
+                Sensor.Aperture = MathHelper.Clamp(value, Definition.MinAperture, Definition.MaxAperture);
+                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
             }
         }
 
+        public void UpdateFromPacket(SensorUpdatePacket packet)
+        {
+            _desiredAzimuth = packet.Azimuth;
+            _desiredElevation = packet.Elevation;
+            Sensor.Aperture = packet.Aperture;
+        }
+
         private MyEntitySubpart _aziPart = null, _elevPart = null;
-        private Matrix _baseLocalMatrix;
 
         public BlockSensor(IMyFunctionalBlock block, SensorDefinition definition)
         {
@@ -65,7 +88,6 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 _aziPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
                 _elevPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
-                _baseLocalMatrix = Block.LocalMatrix;
             }
 
             switch (definition.Type)
@@ -101,6 +123,8 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 Block.ResourceSink.SetMaxRequiredInputByType(ElectricityId, (float) Definition.MaxPowerDraw);
             }
+
+            ServerNetwork.SendToEveryoneInSync(new SensorInitPacket(this), Block.GetPosition());
         }
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)
@@ -113,19 +137,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                     SubpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
                 Sensor.Position = _elevPart.WorldMatrix.Translation;
                 Sensor.Direction = _elevPart.WorldMatrix.Forward;
-
-                if (Block.IsActive)
-                {
-                    Block.Visible = false;
-                    Block.LocalMatrix = MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _baseLocalMatrix;
-
-                    Sensor.Direction = Block.WorldMatrix.Forward;
-                }
-                else if (!Block.Visible)
-                {
-                    Block.Visible = true;
-                    Block.LocalMatrix = _baseLocalMatrix;
-                }
             }
             else
             {
@@ -174,7 +185,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (Definition.Movement == null)
                 return false;
 
-            var angle = GetAngleToTarget(position);
+            var angle = MathUtils.GetAngleTo(Block.WorldMatrix, position);
             return angle.X <= Definition.Movement.MaxAzimuth && angle.X >= Definition.Movement.MinAzimuth && angle.Y <= Definition.Movement.MaxElevation && angle.Y >= Definition.Movement.MinElevation;
         }
 
@@ -183,7 +194,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (Definition.Movement == null)
                 return;
 
-            var angle = GetAngleToTarget(position);
+            var angle = MathUtils.GetAngleTo(Block.WorldMatrix, position);
 
             DesiredAzimuth = MathHelper.Clamp(angle.X, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
             DesiredElevation = MathHelper.Clamp(angle.Y, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
@@ -211,26 +222,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                 Elevation = MathUtils.NormalizeAngle(_limitedElevation);
 
             return Matrix.CreateFromYawPitchRoll(0, (float) Elevation, 0);
-        }
-
-        private Vector2D GetAngleToTarget(Vector3D? targetPos)
-        {
-            if (targetPos == null)
-                return Vector2D.Zero;
-        
-            Vector3D vecFromTarget = Block.WorldMatrix.Translation - targetPos.Value;
-        
-            vecFromTarget = Vector3D.Rotate(vecFromTarget.Normalized(), MatrixD.Invert(Block.WorldMatrix));
-        
-            double desiredAzimuth = Math.Atan2(vecFromTarget.X, vecFromTarget.Z);
-            if (double.IsNaN(desiredAzimuth))
-                desiredAzimuth = Math.PI;
-        
-            double desiredElevation = Math.Asin(-vecFromTarget.Y);
-            if (double.IsNaN(desiredElevation))
-                desiredElevation = Math.PI;
-        
-            return new Vector2D(desiredAzimuth, desiredElevation);
         }
     }
 }

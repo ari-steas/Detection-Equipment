@@ -1,7 +1,4 @@
-﻿using DetectionEquipment.Shared.ControlBlocks;
-using DetectionEquipment.Shared.ControlBlocks.Aggregator;
-using DetectionEquipment.Shared.ControlBlocks.IffReflector;
-using Sandbox.Game.Entities;
+﻿using Sandbox.Game.Entities;
 using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
@@ -12,6 +9,9 @@ using VRageMath;
 using SensorDefTuple = VRage.MyTuple<int, double, double, VRage.MyTuple<double, double, double, double, double, double>?, double, double>;
 using WorldDetTuple = VRage.MyTuple<int, double, double, VRageMath.Vector3D, VRage.MyTuple<VRageMath.Vector3D, double>?, string[]>;
 using LocalDetTuple = VRage.MyTuple<double, double, double, double, VRageMath.Vector3D, string[]>;
+using DetectionEquipment.Shared.BlockLogic.IffReflector;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.BlockLogic;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -151,77 +151,77 @@ namespace DetectionEquipment.Server.PBApi
         }
         private static float GetAggregatorTime(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
                 return -1;
             return (control as AggregatorBlock)?.AggregationTime.Value ?? -1;
         }
         private static void SetAggregatorTime(IMyCubeBlock block, float value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
             (control as AggregatorBlock).AggregationTime.Value = value;
         }
         private static float GetAggregatorDistance(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
                 return -1;
             return (control as AggregatorBlock)?.DistanceThreshold.Value ?? -1;
         }
         private static void SetAggregatorDistance(IMyCubeBlock block, float value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
             (control as AggregatorBlock).DistanceThreshold.Value = value;
         }
         private static float GetAggregatorVelocity(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
                 return -1;
             return (control as AggregatorBlock)?.VelocityErrorThreshold.Value ?? -1;
         }
         private static void SetAggregatorVelocity(IMyCubeBlock block, float value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
             (control as AggregatorBlock).VelocityErrorThreshold.Value = value;
         }
         private static float GetAggregatorRcs(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
                 return -1;
             return (control as AggregatorBlock)?.RCSThreshold.Value ?? -1;
         }
         private static void SetAggregatorRcs(IMyCubeBlock block, float value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
             (control as AggregatorBlock).RCSThreshold.Value = value;
         }
         private static bool GetAggregatorTypes(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
                 return false;
             return (control as AggregatorBlock)?.AggregateTypes ?? false;
         }
         private static void SetAggregatorTypes(IMyCubeBlock block, bool value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
             (control as AggregatorBlock).AggregateTypes.Value = value;
         }
         private static WorldDetTuple[] GetAggregatorInfo(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return null;
 
@@ -240,7 +240,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static bool GetAggregatorUseAllSensors(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
                 return false;
             return (control as AggregatorBlock)?.UseAllSensors ?? false;
@@ -248,7 +248,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static void SetAggregatorUseAllSensors(IMyCubeBlock block, bool value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
             (control as AggregatorBlock).UseAllSensors.Value = value;
@@ -256,7 +256,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static List<IMyTerminalBlock> GetAggregatorActiveSensors(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
                 return null;
             AggregatorBlock aggregator = control as AggregatorBlock;
@@ -272,7 +272,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static void SetAggregatorActiveSensors(IMyCubeBlock block, List<IMyTerminalBlock> value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
             AggregatorBlock aggregator = control as AggregatorBlock;
@@ -302,14 +302,14 @@ namespace DetectionEquipment.Server.PBApi
 
         private static bool HasReflector(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return false;
             return true;
         }
         private static string GetIffCode(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return null;
             IffReflectorBlock reflector = control as IffReflectorBlock;
@@ -317,7 +317,7 @@ namespace DetectionEquipment.Server.PBApi
         }
         private static void SetIffCode(IMyCubeBlock block, string value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return;
             IffReflectorBlock reflector = control as IffReflectorBlock;
@@ -325,7 +325,7 @@ namespace DetectionEquipment.Server.PBApi
         }
         private static bool GetIffReturnHashed(IMyCubeBlock block)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return false;
             IffReflectorBlock reflector = control as IffReflectorBlock;
@@ -333,7 +333,7 @@ namespace DetectionEquipment.Server.PBApi
         }
         private static void SetIffReturnHashed(IMyCubeBlock block, bool value)
         {
-            ControlBlockBase control;
+            IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return;
             IffReflectorBlock reflector = control as IffReflectorBlock;

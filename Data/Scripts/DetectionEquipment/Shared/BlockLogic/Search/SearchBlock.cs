@@ -1,5 +1,7 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.Common.ObjectBuilders;
+using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using VRage.Game.Components;
@@ -7,10 +9,10 @@ using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 using VRageMath;
 
-namespace DetectionEquipment.Shared.ControlBlocks.Search
+namespace DetectionEquipment.Shared.BlockLogic.Search
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionSearchBlock")]
-    internal class SearchBlock : ControlBlockBase
+    internal class SearchBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public MySync<long[], SyncDirection.BothWays> ActiveSensors;
         internal List<BlockSensor> ControlledSensors = new List<BlockSensor>();

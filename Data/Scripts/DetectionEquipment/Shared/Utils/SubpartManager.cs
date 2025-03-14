@@ -4,7 +4,7 @@ using VRage.Game.Entity;
 using VRage.ModAPI;
 using VRageMath;
 
-namespace DetectionEquipment.Shared
+namespace DetectionEquipment.Shared.Utils
 {
     public class SubpartManager
     {
