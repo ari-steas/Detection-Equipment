@@ -2,6 +2,8 @@
 using DetectionEquipment.Client.Sensors;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Client.Networking;
+using Sandbox.ModAPI;
+using DetectionEquipment.Shared.BlockLogic;
 
 namespace DetectionEquipment.Client
 {
@@ -23,6 +25,7 @@ namespace DetectionEquipment.Client
         public override void UpdateAfterSimulation()
         {
             ClientNetwork.I.Update();
+            SensorBlockManager.Update();
         }
 
         protected override void UnloadData()

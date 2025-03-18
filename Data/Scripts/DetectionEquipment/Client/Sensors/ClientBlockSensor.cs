@@ -58,6 +58,8 @@ namespace DetectionEquipment.Client.Sensors
         {
             get
             {
+                if (CurrentSensorId == uint.MaxValue)
+                    throw new Exception("CurrentSensorId is invalid - have any sensors been inited?");
                 return Sensors[CurrentSensorId].Definition;
             }
         }
@@ -84,7 +86,6 @@ namespace DetectionEquipment.Client.Sensors
         {
             if (!Block.IsWorking)
                 return;
-
             foreach (var sensor in Sensors.Values)
             {
                 sensor.Update(Block, sensor.Id == CurrentSensorId);
@@ -135,6 +136,7 @@ namespace DetectionEquipment.Client.Sensors
                     _aziPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
                     _elevPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
                     _baseLocalMatrix = block.LocalMatrix;
+                    Log.Info("ClientBlockSensor", "Inited subparts for " + block.BlockDefinition.SubtypeName);
                 }
 
                 // Sensor Movement
@@ -149,7 +151,7 @@ namespace DetectionEquipment.Client.Sensors
                     Position = _elevPart.WorldMatrix.Translation;
                     Direction = _elevPart.WorldMatrix.Forward;
 
-                    // Hide/show block based on whether a player is in the camera.
+                    // Hide/show & rotate block based on whether a player is in the camera. TODO: This doesn't quite work.
                     if (isPrimarySensor)
                     {
                         if (block.IsActive)

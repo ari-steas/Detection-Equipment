@@ -1,5 +1,7 @@
 ﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
+using Sandbox.ModAPI.Interfaces.Terminal;
+using System.Linq;
 using VRage.Utils;
 using VRageMath;
 
@@ -9,6 +11,8 @@ namespace DetectionEquipment.Client.Sensors
     {
         protected override void CreateTerminalActions()
         {
+            IMyTerminalControlSlider apeSlider = null, aziSlider = null, eleSlider = null;
+
             var currentSensorSet = CreateListbox(
                 "CurrentSensor",
                 "Current Sensor",
@@ -33,12 +37,19 @@ namespace DetectionEquipment.Client.Sensors
                     var logic = block.GameLogic.GetAs<ClientBlockSensor>();
                     if (logic == null)
                         return;
-                    logic.CurrentSensorId = (uint) selected[0].UserData;
+                    uint selectedId = (uint) selected[0].UserData;
+                    if (logic.Sensors.Values.Any(b => b.Id == selectedId))
+                        logic.CurrentSensorId = selectedId;
+                    apeSlider.UpdateVisual();
+                    aziSlider.UpdateVisual();
+                    eleSlider.UpdateVisual();
                 }
                 );
-            currentSensorSet.VisibleRowsCount = 0;
+            currentSensorSet.VisibleRowsCount = 4;
             currentSensorSet.Visible = b => b.GameLogic.GetAs<ClientBlockSensor>().Sensors.Count > 1;
-            CreateSlider(
+            currentSensorSet.SupportsMultipleBlocks = false;
+
+            apeSlider = CreateSlider(
                 "Aperture",
                 "Aperture",
                 "Sensor aperture in degrees",
@@ -51,12 +62,13 @@ namespace DetectionEquipment.Client.Sensors
                     logic.CurrentAperture = (float)MathHelper.Clamp(MathHelper.ToRadians(v), logic.CurrentDefinition.MinAperture, logic.CurrentDefinition.MaxAperture);
                 },
                 (b, sb) => sb.Append(MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentAperture).ToString("F1") + "°")
-                ).SetLimits(
+                );
+            apeSlider.SetLimits(
                     b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.MinAperture),
                     b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.MaxAperture)
                 );
 
-            var aziSlider = CreateSlider(
+            aziSlider = CreateSlider(
                 "Azimuth",
                 "Desired Azimuth",
                 "Sensor azimuth in degrees",
@@ -66,17 +78,19 @@ namespace DetectionEquipment.Client.Sensors
                 (b, v) =>
                 {
                     var logic = b.GameLogic.GetAs<ClientBlockSensor>();
+                    if (logic.CurrentDefinition.Movement == null)
+                        return;
                     logic.CurrentDesiredAzimuth = (float)MathHelper.Clamp(MathHelper.ToRadians(v), logic.CurrentDefinition.Movement.MinAzimuth, logic.CurrentDefinition.Movement.MaxAzimuth);
                 },
                 (b, sb) => sb.Append(MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDesiredAzimuth).ToString("F1") + "°")
                 );
             aziSlider.SetLimits(
-                    b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement.MinAzimuth),
-                    b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement.MaxAzimuth)
+                    b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement?.MinAzimuth ?? 0),
+                    b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement?.MaxAzimuth ?? 0)
                 );
             aziSlider.Enabled = b => b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement != null;
 
-            var eleSlider = CreateSlider(
+            eleSlider = CreateSlider(
                 "Elevation",
                 "Desired Elevation",
                 "Sensor elevation in degrees",
@@ -86,13 +100,15 @@ namespace DetectionEquipment.Client.Sensors
                 (b, v) =>
                 {
                     var logic = b.GameLogic.GetAs<ClientBlockSensor>();
+                    if (logic.CurrentDefinition.Movement == null)
+                        return;
                     logic.CurrentDesiredElevation = (float)MathHelper.Clamp(MathHelper.ToRadians(v), logic.CurrentDefinition.Movement.MinElevation, logic.CurrentDefinition.Movement.MaxElevation);
                 },
                 (b, sb) => sb.Append(MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDesiredElevation).ToString("F1") + "°")
                 );
             eleSlider.SetLimits(
-                    b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement.MinElevation),
-                    b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement.MaxElevation)
+                    b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement?.MinElevation ?? 0),
+                    b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement?.MaxElevation ?? 0)
                 );
             eleSlider.Enabled = b => b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement != null;
         }

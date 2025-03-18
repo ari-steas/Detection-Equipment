@@ -4,8 +4,10 @@ using System.Linq;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using VRage;
-using VRage.Game.ModAPI.Ingame;
 using VRageMath;
+
+using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
+using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 
 namespace IngameScript
 {

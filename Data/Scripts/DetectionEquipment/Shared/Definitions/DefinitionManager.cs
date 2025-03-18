@@ -20,7 +20,8 @@ namespace DetectionEquipment.Shared.Definitions
                 BlockSubtypes = new[]
                 {
                     "LargeCameraBlock",
-                    "SmallCameraBlock"
+                    "SmallCameraBlock",
+                    "ActiveRadar_Simple",
                 },
                 Type = SensorType.Optical,
                 MaxAperture = Math.PI/4,

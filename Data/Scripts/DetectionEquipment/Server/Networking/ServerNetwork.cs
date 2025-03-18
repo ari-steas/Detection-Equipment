@@ -48,7 +48,7 @@ namespace DetectionEquipment.Server.Networking
             try
             {
                 foreach (var packet in MyAPIGateway.Utilities.SerializeFromBinary<PacketBase[]>(serialized))
-                    packet.Received(senderSteamId, true);
+                    packet.Received(senderSteamId, false);
             }
             catch (Exception ex)
             {

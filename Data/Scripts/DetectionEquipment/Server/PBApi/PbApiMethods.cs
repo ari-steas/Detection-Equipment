@@ -1,9 +1,7 @@
 ﻿using Sandbox.Game.Entities;
-using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using VRage.Game.ModAPI.Ingame;
 using VRageMath;
 
 using SensorDefTuple = VRage.MyTuple<int, double, double, VRage.MyTuple<double, double, double, double, double, double>?, double, double>;
@@ -12,6 +10,9 @@ using LocalDetTuple = VRage.MyTuple<double, double, double, double, VRageMath.Ve
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic;
+
+using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
+using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 
 namespace DetectionEquipment.Server.PBApi
 {

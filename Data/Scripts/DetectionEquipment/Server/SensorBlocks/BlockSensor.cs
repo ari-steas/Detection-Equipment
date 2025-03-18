@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Structs;
@@ -146,15 +147,6 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             if (!Block.IsWorking)
                 return;
-
-            if (Block.ShowOnHUD)
-            {
-                var color = new Color(0, 0, 255, 100);
-                var matrix = MatrixD.CreateWorld(Sensor.Position, Sensor.Direction, Vector3D.CalculatePerpendicularVector(Sensor.Direction));
-
-                if (Sensor.Aperture < Math.PI)
-                    MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(Sensor.Aperture) * MyAPIGateway.Session.SessionSettings.SyncDistance, MyAPIGateway.Session.SessionSettings.SyncDistance, ref color, 8, DebugDraw.MaterialSquare);
-            }
 
             Detections.Clear();
 

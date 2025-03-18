@@ -26,6 +26,12 @@ namespace DetectionEquipment.Client.Sensors
             Log.Info("SensorBlockManager", "Initialized.");
         }
 
+        public static void Update()
+        {
+            foreach (var sensor in BlockSensorIdMap.Values)
+                sensor.UpdateAfterSimulation(); // we're not properly registering the gamelogic so methods must be called manually
+        }
+
         public static void Unload()
         {
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;

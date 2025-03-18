@@ -27,4 +27,8 @@
     <Folder Include="Server\SensorBlocks\Definitions\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="Server\PBApi\DetectionPbApi.cs" />
+  </ItemGroup>
+
 </Project>

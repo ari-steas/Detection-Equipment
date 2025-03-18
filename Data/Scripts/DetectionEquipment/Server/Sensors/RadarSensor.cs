@@ -6,7 +6,7 @@ using DetectionEquipment.Shared.Utils;
 using System;
 using VRage;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI.Ingame;
+using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
