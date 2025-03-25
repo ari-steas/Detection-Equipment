@@ -1,4 +1,5 @@
-﻿using Sandbox.Game.Entities;
+﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using Sandbox.Game.Entities;
 using System.Collections.Generic;
 using VRage.Game.Components;
 
@@ -9,7 +10,7 @@ namespace DetectionEquipment.Shared.BlockLogic
     {
         public static ControlBlockManager I;
         public Dictionary<MyCubeBlock, IControlBlockBase> Blocks = new Dictionary<MyCubeBlock, IControlBlockBase>();
-
+        public Dictionary<string, IBlockSelectControl> BlockControls = new Dictionary<string, IBlockSelectControl>();
 
         public override void LoadData()
         {

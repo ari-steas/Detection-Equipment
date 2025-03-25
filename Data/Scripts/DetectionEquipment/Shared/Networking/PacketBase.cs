@@ -1,9 +1,11 @@
-﻿using ProtoBuf;
+﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Networking
 {
     [ProtoInclude(100, typeof(SensorUpdatePacket))]
     [ProtoInclude(101, typeof(SensorInitPacket))]
+    [ProtoInclude(102, typeof(BlockSelectControlPacket))]
     [ProtoContract(UseProtoMembersOnly = true)]
     public abstract class PacketBase
     {
