@@ -6,8 +6,6 @@ using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using System;
-using System.Linq;
-using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.Networking
 {

@@ -5,8 +5,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using VRage.Game.Components;
-using VRage.Game.ModAPI.Network;
-using VRage.Sync;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Search

@@ -12,12 +12,14 @@ using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 namespace IngameScript
 {
     #region mdk preserve
+
     /// <summary>
     /// Programmable Block interface for Aristeas's Detection Equipment mod.
     /// <para>
     ///     To use, copy this class into your script and instantiate it. See <see href="https://github.com/ari-steas/Detection-Equipment"/> for detailed instructions.
     /// </para>
     /// </summary>
+
     #endregion
     public class DetectionPbApi
     {
@@ -507,7 +509,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"Position: {Position.ToString("N0")} +- {Error:N1}m\nVelocity: {Velocity:N0} R^2={VelocityVariance:F1}\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
+                return $"Position: {Position.ToString("N0")} +- {Error:N1}m\nVelocity: {Velocity?.ToString("N0")} R^2={VelocityVariance:F1}\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
             }
 
             public static PbWorldDetectionInfo Average(ICollection<PbWorldDetectionInfo> args)

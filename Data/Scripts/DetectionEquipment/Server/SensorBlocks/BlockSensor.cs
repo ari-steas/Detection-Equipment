@@ -1,13 +1,11 @@
 ﻿using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
-using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
-using System;
 using System.Collections.Generic;
 using VRage.Game;
 using VRage.Game.Entity;

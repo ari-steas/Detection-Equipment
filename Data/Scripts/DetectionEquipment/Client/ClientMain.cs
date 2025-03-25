@@ -2,8 +2,6 @@
 using DetectionEquipment.Client.Sensors;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Client.Networking;
-using Sandbox.ModAPI;
-using DetectionEquipment.Shared.BlockLogic;
 
 namespace DetectionEquipment.Client
 {

@@ -31,7 +31,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
                 IffCodeCache = sync.Value ? "H" + IffCode.Value.GetHashCode().ToString() : "S" + IffCode.Value;
             };
 
-            IffCode.Value = "";
+            IffCode.Value = Block.GetOwnerFactionTag();
             ReturnHash.Value = true;
             new IffControls().DoOnce(this);
 

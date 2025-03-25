@@ -1,13 +1,9 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.Search;
-using Sandbox.Game.Gui;
 using Sandbox.ModAPI;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using VRage.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {

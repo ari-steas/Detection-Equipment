@@ -1,5 +1,4 @@
-﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using DetectionEquipment.Shared.BlockLogic.GenericControls;
+﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using System;
@@ -9,7 +8,6 @@ using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
-using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic
 {
