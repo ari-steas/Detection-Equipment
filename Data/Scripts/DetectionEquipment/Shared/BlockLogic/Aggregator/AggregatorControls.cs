@@ -13,6 +13,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         protected static BlockSelectControl<AggregatorBlock, IMyConveyorSorter> ActiveSensorSelect;
         public static Dictionary<AggregatorBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<AggregatorBlock, HashSet<BlockSensor>>();
 
+        public override void DoOnce(AggregatorBlock thisLogic)
+        {
+            base.DoOnce(thisLogic);
+            ActiveSensors[thisLogic] = new HashSet<BlockSensor>();
+        }
+
         protected override void CreateTerminalActions()
         {
             CreateSlider(
@@ -78,10 +84,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 logic => logic.GridSensors.BlockSensorIdMap.Keys,
                 (logic, selected) =>
                 {
-                    if (!ActiveSensors.ContainsKey(logic))
-                        ActiveSensors[logic] = new HashSet<BlockSensor>();
-                    else
-                        ActiveSensors[logic].Clear();
+                    ActiveSensors[logic].Clear();
                     foreach (var sensor in logic.GridSensors.Sensors)
                     {
                         for (int i = 0; i < selected.Length; i++)

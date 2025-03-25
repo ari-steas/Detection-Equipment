@@ -14,8 +14,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionSearchBlock")]
     internal class SearchBlock : ControlBlockBase<IMyConveyorSorter>
     {
-        public MySync<long[], SyncDirection.BothWays> ActiveSensors;
-        internal List<BlockSensor> ControlledSensors = new List<BlockSensor>();
+        internal HashSet<BlockSensor> ControlledSensors => SearchControls.ActiveSensors[this];
         internal Dictionary<BlockSensor, Vector2> DirectionSigns = new Dictionary<BlockSensor, Vector2>();
 
         private static readonly Vector2 InvAzi = new Vector2(-1, 1), InvElev = new Vector2(1, -1);
@@ -26,25 +25,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            ActiveSensors.Value = Array.Empty<long>();
-            ActiveSensors.ValueChanged += sync =>
-            {
-                ControlledSensors.Clear();
-                DirectionSigns.Clear();
-                foreach (var sensor in GridSensors.Sensors)
-                {
-                    for (int i = 0; i < sync.Value.Length; i++)
-                    {
-                        if (sensor.Block.EntityId != sync.Value[i])
-                            continue;
-                        ControlledSensors.Add(sensor);
-                        DirectionSigns[sensor] = Vector2I.One;
-                        break;
-                    }
-                };
-            };
-
-            new SearchControls().DoOnce();
+            new SearchControls().DoOnce(this);
         }
 
         public override void UpdateAfterSimulation()

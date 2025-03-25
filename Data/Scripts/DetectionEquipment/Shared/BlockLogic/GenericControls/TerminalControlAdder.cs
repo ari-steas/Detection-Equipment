@@ -12,14 +12,14 @@ using DetectionEquipment.Shared.Utils;
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
     internal abstract class TerminalControlAdder<LogicType, BlockType> : ITerminalControlAdder
-        where LogicType : MyGameLogicComponent
+        where LogicType : MyGameLogicComponent, IControlBlockBase
         where BlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
         private static bool _isDone = false;
         protected static Func<IMyTerminalBlock, bool> VisibleFunc = (block) => block.GameLogic.GetAs<LogicType>() != null;
         protected static string IdPrefix = nameof(LogicType) + "_";
 
-        public virtual void DoOnce()
+        public virtual void DoOnce(LogicType thisLogic)
         {
             if (_isDone) return;
 
@@ -197,8 +197,11 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         }
     }
 
+    /// <summary>
+    /// Mildly useless interface to ensure that ControlBlockBase can statically store its controls.
+    /// </summary>
     public interface ITerminalControlAdder
     {
-        void DoOnce();
+
     }
 }

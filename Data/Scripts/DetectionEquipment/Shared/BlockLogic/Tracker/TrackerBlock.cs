@@ -31,9 +31,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
             ResetAngleTime.Value = 4;
 
-            //SourceAggregator = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.CubeBlock.CubeGrid == Block.CubeGrid);
-
-            new TrackerControls().DoOnce();
+            new TrackerControls().DoOnce(this);
         }
 
         public override void UpdateAfterSimulation()

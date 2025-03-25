@@ -19,6 +19,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         protected static BlockSelectControl<TrackerBlock, IMyConveyorSorter> ActiveAggregatorSelect;
         public static Dictionary<TrackerBlock, AggregatorBlock> ActiveAggregators = new Dictionary<TrackerBlock, AggregatorBlock>();
 
+        public override void DoOnce(TrackerBlock thisLogic)
+        {
+            base.DoOnce(thisLogic);
+
+            ActiveAggregators[thisLogic] = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.CubeBlock.CubeGrid == thisLogic.Block.CubeGrid);
+            ActiveSensors[thisLogic] = new HashSet<BlockSensor>();
+        }
+
         protected override void CreateTerminalActions()
         {
             CreateSlider(
@@ -40,10 +48,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 logic => logic.GridSensors.BlockSensorIdMap.Keys,
                 (logic, selected) =>
                 {
-                    if (!ActiveSensors.ContainsKey(logic))
-                        ActiveSensors[logic] = new HashSet<BlockSensor>();
-                    else
-                        ActiveSensors[logic].Clear();
+                    ActiveSensors[logic].Clear();
                     logic.LockDecay.Clear();
                     foreach (var sensor in logic.GridSensors.Sensors)
                     {
@@ -67,8 +72,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 logic => ControlBlockManager.I.Blocks.Values.Where(control => control is AggregatorBlock && control.CubeBlock.CubeGrid == logic.Block.CubeGrid).Select(c => c.CubeBlock),
                 (logic, selected) =>
                 {
-                    if (!ActiveAggregators.ContainsKey(logic))
-                        ActiveAggregators[logic] = null;
                     foreach (var control in ControlBlockManager.I.Blocks.Values)
                     {
                         if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid)

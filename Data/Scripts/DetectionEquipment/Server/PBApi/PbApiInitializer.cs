@@ -24,7 +24,8 @@ namespace DetectionEquipment.Server.PBApi
                 // Workaround for scripts crashing when loading before the API is ready (i.e. on world load)
                 foreach (var pb in grid.GetFatBlocks<IMyProgrammableBlock>())
                 {
-                    if (!pb.IsRunning && pb.ProgramData.Contains("DetectionPbApi"))
+                    if (pb == null) continue;
+                    if (!pb.IsRunning && (pb.ProgramData?.Contains("DetectionPbApi") ?? false))
                     {
                         recompileCount++;
                         pb.Recompile();

@@ -27,7 +27,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         internal Queue<WorldDetectionInfo[]> DetectionCache = new Queue<WorldDetectionInfo[]>();
 
-        private bool _isBufferValid = false;
         private HashSet<WorldDetectionInfo> _bufferDetections = new HashSet<WorldDetectionInfo>();
 
         internal HashSet<BlockSensor> ActiveSensorBlocks => AggregatorControls.ActiveSensors[this];
@@ -45,19 +44,27 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AggregateTypes.Value = true;
             UseAllSensors.Value = true;
 
-            new AggregatorControls().DoOnce();
+            new AggregatorControls().DoOnce(this);
         }
 
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
-            if (_isBufferValid)
-                return _bufferDetections;
+            return _bufferDetections;
+        }
 
+        private void CalculateDetections(Queue<WorldDetectionInfo[]> cache) // TODO: Improve performance of this method
+        {
             Dictionary<WorldDetectionInfo, int> weightedInfos = new Dictionary<WorldDetectionInfo, int>();
             var aggregatedDetections = new HashSet<WorldDetectionInfo>();
 
+            if (cache.Count == 0)
+            {
+                _bufferDetections.Clear();
+                return;
+            }
+
             int weight = 1;
-            foreach (var set in DetectionCache)
+            foreach (var set in cache)
             {
                 weight++;
                 foreach (var detection in set)
@@ -66,11 +73,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 }
             }
 
-            var latestSet = DetectionCache.Peek();
+            var latestSet = cache.Peek();
             List<WorldDetectionInfo> toCombine = new List<WorldDetectionInfo>();
             foreach (var info in latestSet)
             {
-                foreach (var set in DetectionCache)
+                foreach (var set in cache)
                 {
                     if (set == latestSet)
                         continue;
@@ -135,15 +142,22 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 toCombine.Clear();
             }
 
-            _isBufferValid = true;
             _bufferDetections = aggregatedDetections;
-            return aggregatedDetections;
         }
 
+        private bool _isProcessing = false;
         public override void UpdateAfterSimulation()
         {
-            _isBufferValid = false;
-            _bufferDetections.Clear();
+            if (!_isProcessing)
+            {
+                _isProcessing = true;
+                var parallelCache = new Queue<WorldDetectionInfo[]>(DetectionCache);
+                MyAPIGateway.Parallel.Start(() =>
+                {
+                    CalculateDetections(parallelCache);
+                    _isProcessing = false;
+                });
+            }
 
             HashSet<WorldDetectionInfo> infos = new HashSet<WorldDetectionInfo>();
             foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensorBlocks)

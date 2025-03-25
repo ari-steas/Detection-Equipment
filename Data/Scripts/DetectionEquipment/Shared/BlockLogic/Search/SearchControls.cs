@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using VRage.Utils;
+using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Search
 {
@@ -13,6 +14,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
     {
         protected static BlockSelectControl<SearchBlock, IMyConveyorSorter> ActiveSensorSelect;
         public static Dictionary<SearchBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<SearchBlock, HashSet<BlockSensor>>();
+
+        public override void DoOnce(SearchBlock thisLogic)
+        {
+            base.DoOnce(thisLogic);
+            ActiveSensors[thisLogic] = new HashSet<BlockSensor>();
+        }
 
         protected override void CreateTerminalActions()
         {
@@ -24,10 +31,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 logic => logic.GridSensors.BlockSensorIdMap.Keys,
                 (logic, selected) =>
                 {
-                    if (!ActiveSensors.ContainsKey(logic))
-                        ActiveSensors[logic] = new HashSet<BlockSensor>();
-                    else
-                        ActiveSensors[logic].Clear();
+                    ActiveSensors[logic].Clear();
                     foreach (var sensor in logic.GridSensors.Sensors)
                     {
                         for (int i = 0; i < selected.Length; i++)
@@ -35,6 +39,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                             if (sensor.Block.EntityId != selected[i])
                                 continue;
                             ActiveSensors[logic].Add(sensor);
+                            logic.DirectionSigns[sensor] = Vector2I.One;
                             break;
                         }
                     };

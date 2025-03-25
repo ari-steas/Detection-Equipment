@@ -33,7 +33,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
             IffCode.Value = "";
             ReturnHash.Value = true;
-            new IffControls().DoOnce();
+            new IffControls().DoOnce(this);
 
             if (!IffMap.ContainsKey(Block.CubeGrid))
                 IffMap.Add(Block.CubeGrid, new HashSet<IffReflectorBlock>());

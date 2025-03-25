@@ -79,7 +79,7 @@ namespace DetectionEquipment.Client.Sensors
                 ClientNetwork.SendToServer(new SensorInitPacket(Block.EntityId));
             }
 
-            new SensorControls().DoOnce();
+            new SensorControls().DoOnce(this);
         }
 
         public override void UpdateAfterSimulation()
