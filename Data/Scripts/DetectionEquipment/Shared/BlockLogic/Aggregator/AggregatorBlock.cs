@@ -30,7 +30,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         private bool _isBufferValid = false;
         private HashSet<WorldDetectionInfo> _bufferDetections = new HashSet<WorldDetectionInfo>();
 
-        internal HashSet<BlockSensor> ActiveSensorBlocks = new HashSet<BlockSensor>();
+        internal HashSet<BlockSensor> ActiveSensorBlocks => AggregatorControls.ActiveSensors[this];
 
         public override void UpdateOnceBeforeFrame()
         {
@@ -44,21 +44,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             RCSThreshold.Value = 1f;
             AggregateTypes.Value = true;
             UseAllSensors.Value = true;
-            ActiveSensors.Value = Array.Empty<long>();
-            ActiveSensors.ValueChanged += sync =>
-            {
-                ActiveSensorBlocks.Clear();
-                foreach (var sensor in GridSensors.Sensors)
-                {
-                    for (int i = 0; i < sync.Value.Length; i++)
-                    {
-                        if (sensor.Block.EntityId != sync.Value[i])
-                            continue;
-                        ActiveSensorBlocks.Add(sensor);
-                        break;
-                    }
-                };
-            };
 
             new AggregatorControls().DoOnce();
         }

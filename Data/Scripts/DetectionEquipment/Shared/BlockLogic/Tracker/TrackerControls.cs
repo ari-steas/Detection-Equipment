@@ -1,7 +1,11 @@
-﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
+﻿using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.BlockLogic.Search;
+using Sandbox.Game.Gui;
 using Sandbox.ModAPI;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using VRage.Utils;
 
@@ -9,6 +13,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
     internal class TrackerControls : TerminalControlAdder<TrackerBlock, IMyConveyorSorter>
     {
+        protected static BlockSelectControl<TrackerBlock, IMyConveyorSorter> ActiveSensorSelect;
+        public static Dictionary<TrackerBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<TrackerBlock, HashSet<BlockSensor>>();
+
+        protected static BlockSelectControl<TrackerBlock, IMyConveyorSorter> ActiveAggregatorSelect;
+        public static Dictionary<TrackerBlock, AggregatorBlock> ActiveAggregators = new Dictionary<TrackerBlock, AggregatorBlock>();
+
         protected override void CreateTerminalActions()
         {
             CreateSlider(
@@ -21,68 +31,53 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 (b, v) => b.GameLogic.GetAs<TrackerBlock>().ResetAngleTime.Value = v,
                 (b, sb) => sb.Append(b.GameLogic.GetAs<TrackerBlock>().ResetAngleTime.Value.ToString("F1") + "s")
                 );
-            CreateListbox(
+
+            ActiveSensorSelect = new BlockSelectControl<TrackerBlock, IMyConveyorSorter>(
+                "ActiveSensors",
+                "Active Sensors",
+                "Sensors this block should direct. Ctrl+Click to select multiple.",
+                true,
+                logic => logic.GridSensors.BlockSensorIdMap.Keys,
+                (logic, selected) =>
+                {
+                    if (!ActiveSensors.ContainsKey(logic))
+                        ActiveSensors[logic] = new HashSet<BlockSensor>();
+                    else
+                        ActiveSensors[logic].Clear();
+                    logic.LockDecay.Clear();
+                    foreach (var sensor in logic.GridSensors.Sensors)
+                    {
+                        for (int i = 0; i < selected.Length; i++)
+                        {
+                            if (sensor.Block.EntityId != selected[i])
+                                continue;
+                            ActiveSensors[logic].Add(sensor);
+                            logic.LockDecay[sensor] = 0;
+                            break;
+                        }
+                    };
+                }
+                );
+            ActiveAggregatorSelect = new BlockSelectControl<TrackerBlock, IMyConveyorSorter>(
                 "SourceAggregator",
                 "Source Aggregator",
                 "Aggregator this block should use to direct sensors.",
                 false,
-                (block, content, selected) =>
+                // TODO convert this into a yield action
+                logic => ControlBlockManager.I.Blocks.Values.Where(control => control is AggregatorBlock && control.CubeBlock.CubeGrid == logic.Block.CubeGrid).Select(c => c.CubeBlock),
+                (logic, selected) =>
                 {
-                    var logic = block.GameLogic.GetAs<TrackerBlock>();
-                    if (logic == null)
-                        return;
-
+                    if (!ActiveAggregators.ContainsKey(logic))
+                        ActiveAggregators[logic] = null;
                     foreach (var control in ControlBlockManager.I.Blocks.Values)
                     {
-                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != block.CubeGrid)
+                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid)
                             continue;
-
-                        var item = new VRage.ModAPI.MyTerminalControlListBoxItem(MyStringId.GetOrCompute(control.CubeBlock.DisplayNameText), MyStringId.GetOrCompute(""), control.CubeBlock.EntityId);
-                        content.Add(item);
-                        if (logic.ActiveAggregator.Value == control.CubeBlock.EntityId)
-                            selected.Add(item);
+                        ActiveAggregators[logic] = (AggregatorBlock) control;
                     }
-                },
-                (block, selected) =>
-                {
-                    var logic = block.GameLogic.GetAs<TrackerBlock>();
-                    if (logic == null)
-                        return;
-                    logic.ActiveAggregator.Value = selected.Count == 0 ? -1 : (long)selected[0].UserData;
-                }
-                ).VisibleRowsCount = 5;
-            CreateListbox(
-                "ActiveSensors",
-                "Active Sensors",
-                "Sensors this tracker should direct. Ctrl+Click to select multiple.",
-                true,
-                (block, content, selected) =>
-                {
-                    var logic = block.GameLogic.GetAs<TrackerBlock>();
-                    if (logic == null)
-                        return;
-
-                    foreach (var sensor in logic.GridSensors.Sensors)
-                    {
-                        if (sensor.Definition.Movement == null)
-                            continue;
-                        var item = new VRage.ModAPI.MyTerminalControlListBoxItem(MyStringId.GetOrCompute(sensor.Block.DisplayNameText), MyStringId.GetOrCompute(sensor.Definition.Type.ToString()), sensor.Block.EntityId);
-                        content.Add(item);
-                        if (logic.ActiveSensors.Value.Contains(sensor.Block.EntityId))
-                            selected.Add(item);
-                    }
-                },
-                (block, selected) =>
-                {
-                    var logic = block.GameLogic.GetAs<TrackerBlock>();
-                    if (logic == null)
-                        return;
-                    var array = new long[selected.Count];
-                    for (int i = 0; i < array.Length; i++)
-                        array[i] = (long)selected[i].UserData;
-                    logic.ActiveSensors.Value = array;
                 }
                 );
+            ActiveAggregatorSelect.ListBox.VisibleRowsCount = 5;
         }
 
         protected override void CreateTerminalProperties()

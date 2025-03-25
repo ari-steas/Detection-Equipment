@@ -97,7 +97,8 @@ namespace DetectionEquipment.Server.SensorBlocks
                 ids.Add(newSensor.Sensor.Id);
             }
 
-            BlockSensorIdMap[cubeBlock] = ids.ToArray();
+            if (ids.Count > 0)
+                BlockSensorIdMap[cubeBlock] = ids.ToArray();
         }
 
         private void OnBlockRemoved(IMySlimBlock obj)

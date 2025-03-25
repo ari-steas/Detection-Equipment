@@ -11,18 +11,19 @@ using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
-    internal abstract class TerminalControlAdder<LogicType, BlockType>
+    internal abstract class TerminalControlAdder<LogicType, BlockType> : ITerminalControlAdder
         where LogicType : MyGameLogicComponent
-        where BlockType : IMyTerminalBlock
+        where BlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
         private static bool _isDone = false;
-        protected Func<IMyTerminalBlock, bool> VisibleFunc = (block) => block.GameLogic.GetAs<LogicType>() != null;
-        protected string IdPrefix { get; private set; }
+        protected static Func<IMyTerminalBlock, bool> VisibleFunc = (block) => block.GameLogic.GetAs<LogicType>() != null;
+        protected static string IdPrefix = nameof(LogicType) + "_";
 
         public virtual void DoOnce()
         {
             if (_isDone) return;
-            IdPrefix = nameof(LogicType) + "_";
+
+            ControlBlockBase<BlockType>.Controls = this;
 
             CreateTerminalActions();
             CreateTerminalProperties();
@@ -34,7 +35,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         protected abstract void CreateTerminalActions();
         protected abstract void CreateTerminalProperties();
 
-        protected IMyTerminalControlOnOffSwitch CreateToggle(string id, string displayName, string toolTip, Func<IMyTerminalBlock, bool> getter, Action<IMyTerminalBlock, bool> setter)
+        public static IMyTerminalControlOnOffSwitch CreateToggle(string id, string displayName, string toolTip, Func<IMyTerminalBlock, bool> getter, Action<IMyTerminalBlock, bool> setter)
         {
             var toggle = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlOnOffSwitch, BlockType>(IdPrefix + id);
             toggle.Title = MyStringId.GetOrCompute(displayName);
@@ -55,7 +56,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             return toggle;
         }
 
-        protected IMyTerminalControlSlider CreateSlider(string id, string displayName, string toolTip, float min, float max, Func<IMyTerminalBlock, float> getter, Action<IMyTerminalBlock, float> setter, Action<IMyTerminalBlock, StringBuilder> writer)
+        public static IMyTerminalControlSlider CreateSlider(string id, string displayName, string toolTip, float min, float max, Func<IMyTerminalBlock, float> getter, Action<IMyTerminalBlock, float> setter, Action<IMyTerminalBlock, StringBuilder> writer)
         {
             var slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, BlockType>(IdPrefix + id);
             slider.Title = MyStringId.GetOrCompute(displayName);
@@ -73,7 +74,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             return slider;
         }
 
-        protected IMyTerminalControlButton CreateButton(string id, string displayName, string toolTip, Action<IMyTerminalBlock> action)
+        public static IMyTerminalControlButton CreateButton(string id, string displayName, string toolTip, Action<IMyTerminalBlock> action)
         {
             var button = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlButton, BlockType>(IdPrefix + id);
             button.Title = MyStringId.GetOrCompute(displayName);
@@ -88,7 +89,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             return button;
         }
 
-        protected IMyTerminalControlCheckbox CreateCheckbox(string id, string displayName, string toolTip, Func<IMyTerminalBlock, bool> getter, Action<IMyTerminalBlock, bool> setter)
+        public static IMyTerminalControlCheckbox CreateCheckbox(string id, string displayName, string toolTip, Func<IMyTerminalBlock, bool> getter, Action<IMyTerminalBlock, bool> setter)
         {
             var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCheckbox, BlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
@@ -103,7 +104,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             return box;
         }
 
-        protected IMyTerminalControlCombobox CreateCombobox(string id, string displayName, string toolTip, Action<List<MyTerminalControlComboBoxItem>> content, Func<IMyTerminalBlock, long> getter, Action<IMyTerminalBlock, long> setter)
+        public static IMyTerminalControlCombobox CreateCombobox(string id, string displayName, string toolTip, Action<List<MyTerminalControlComboBoxItem>> content, Func<IMyTerminalBlock, long> getter, Action<IMyTerminalBlock, long> setter)
         {
             var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCombobox, BlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
@@ -119,7 +120,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             return box;
         }
 
-        protected IMyTerminalControlListbox CreateListbox(string id, string displayName, string toolTip, bool multiSelect, Action<IMyTerminalBlock, List<MyTerminalControlListBoxItem>, List<MyTerminalControlListBoxItem>> content, Action<IMyTerminalBlock, List<MyTerminalControlListBoxItem>> itemSelected)
+        public static IMyTerminalControlListbox CreateListbox(string id, string displayName, string toolTip, bool multiSelect, Action<IMyTerminalBlock, List<MyTerminalControlListBoxItem>, List<MyTerminalControlListBoxItem>> content, Action<IMyTerminalBlock, List<MyTerminalControlListBoxItem>> itemSelected)
         {
             var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlListbox, BlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
@@ -136,7 +137,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             return box;
         }
 
-        protected IMyTerminalControlTextbox CreateTextbox(string id, string displayName, string toolTip, Func<IMyTerminalBlock, StringBuilder> getter, Action<IMyTerminalBlock, StringBuilder> setter)
+        public static IMyTerminalControlTextbox CreateTextbox(string id, string displayName, string toolTip, Func<IMyTerminalBlock, StringBuilder> getter, Action<IMyTerminalBlock, StringBuilder> setter)
         {
             var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlTextbox, BlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
@@ -160,7 +161,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         /// <param name="writer"></param>
         /// <param name="icon"></param>
         /// <returns></returns>
-        protected IMyTerminalAction CreateAction(string id, string displayName, Action<IMyTerminalBlock> action, Action<IMyTerminalBlock, StringBuilder> writer, string icon)
+        public static IMyTerminalAction CreateAction(string id, string displayName, Action<IMyTerminalBlock> action, Action<IMyTerminalBlock, StringBuilder> writer, string icon)
         {
             var act = MyAPIGateway.TerminalControls.CreateAction<BlockType>(IdPrefix + id);
             act.Name = new StringBuilder(displayName);
@@ -183,7 +184,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         /// <param name="getter"></param>
         /// <param name="setter"></param>
         /// <returns></returns>
-        protected IMyTerminalControlProperty<TValue> CreateProperty<TValue>(string id, Func<IMyTerminalBlock, TValue> getter, Action<IMyTerminalBlock, TValue> setter)
+        public static IMyTerminalControlProperty<TValue> CreateProperty<TValue>(string id, Func<IMyTerminalBlock, TValue> getter, Action<IMyTerminalBlock, TValue> setter)
         {
             var prop = MyAPIGateway.TerminalControls.CreateProperty<TValue, BlockType>(IdPrefix + id);
             prop.SupportsMultipleBlocks = true;
@@ -194,5 +195,10 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             MyAPIGateway.TerminalControls.AddControl<BlockType>(prop);
             return prop;
         }
+    }
+
+    public interface ITerminalControlAdder
+    {
+        void DoOnce();
     }
 }

@@ -3,6 +3,7 @@ using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using System;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -11,11 +12,14 @@ using VRage.ObjectBuilders;
 
 namespace DetectionEquipment.Shared.BlockLogic
 {
-    internal abstract class ControlBlockBase<TBlock> : MyGameLogicComponent, IMyEventProxy, IControlBlockBase where TBlock : IMyTerminalBlock, IMyFunctionalBlock
+    internal abstract class ControlBlockBase<TBlock> : MyGameLogicComponent, IMyEventProxy, IControlBlockBase
+        where TBlock : IMyTerminalBlock, IMyFunctionalBlock
     {
         public TBlock Block;
         public IMyCubeBlock CubeBlock => Block;
         public GridSensorManager GridSensors { get; private set; }
+        public static ITerminalControlAdder Controls { get; internal set; } = null;
+        public Action OnClose { get; set; }
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
@@ -47,6 +51,7 @@ namespace DetectionEquipment.Shared.BlockLogic
         {
             base.MarkForClose();
             ControlBlockManager.I.Blocks.Remove(Block as MyCubeBlock);
+            OnClose?.Invoke();
         }
     }
 }

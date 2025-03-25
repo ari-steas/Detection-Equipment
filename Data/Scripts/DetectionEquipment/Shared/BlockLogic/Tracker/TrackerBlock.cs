@@ -16,14 +16,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionTrackerBlock")]
     internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>
     {
-        internal AggregatorBlock SourceAggregator = null;
-        internal List<BlockSensor> ControlledSensors = new List<BlockSensor>();
+        internal AggregatorBlock SourceAggregator => TrackerControls.ActiveAggregators[this];
+        internal HashSet<BlockSensor> ControlledSensors => TrackerControls.ActiveSensors[this];
         public MySync<float, SyncDirection.BothWays> ResetAngleTime;
-        public MySync<long[], SyncDirection.BothWays> ActiveSensors;
-        public MySync<long, SyncDirection.BothWays> ActiveAggregator;
 
         private Dictionary<WorldDetectionInfo, int> _detectionTrackDict = new Dictionary<WorldDetectionInfo, int>();
-        private Dictionary<BlockSensor, float> _lockDecay = new Dictionary<BlockSensor, float>();
+        public Dictionary<BlockSensor, float> LockDecay = new Dictionary<BlockSensor, float>();
 
         public override void UpdateOnceBeforeFrame()
         {
@@ -32,35 +30,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 return;
 
             ResetAngleTime.Value = 4;
-            ActiveSensors.Value = Array.Empty<long>();
-            ActiveSensors.ValueChanged += sync =>
-            {
-                ControlledSensors.Clear();
-                _lockDecay.Clear();
-                foreach (var sensor in GridSensors.Sensors)
-                {
-                    for (int i = 0; i < sync.Value.Length; i++)
-                    {
-                        if (sensor.Block.EntityId != sync.Value[i])
-                            continue;
-                        ControlledSensors.Add(sensor);
-                        _lockDecay[sensor] = 0;
-                        break;
-                    }
-                };
-            };
-            ActiveAggregator.Value = -1;
-            ActiveAggregator.ValueChanged += sync =>
-            {
-                if (sync.Value == -1)
-                {
-                    SourceAggregator = null;
-                    return;
-                }
-                SourceAggregator = ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b.CubeBlock.EntityId == sync.Value) as AggregatorBlock;
-            };
 
-            SourceAggregator = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.CubeBlock.CubeGrid == Block.CubeGrid);
+            //SourceAggregator = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.CubeBlock.CubeGrid == Block.CubeGrid);
 
             new TrackerControls().DoOnce();
         }
@@ -79,20 +50,20 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 var target = GetFirstTarget(sensor, _detectionTrackDict);
                 if (target == null)
                 {
-                    if (_lockDecay[sensor] <= 0)
+                    if (LockDecay[sensor] <= 0)
                     {
                         sensor.DesiredAzimuth = 0;
                         sensor.DesiredElevation = 0;
                     }
                     else
                     {
-                        _lockDecay[sensor] -= 1 / 60f;
+                        LockDecay[sensor] -= 1 / 60f;
                     }
                     continue;
                 }
                 _detectionTrackDict[target.Value]++;
                 sensor.AimAt(target.Value.Position);
-                _lockDecay[sensor] = ResetAngleTime;
+                LockDecay[sensor] = ResetAngleTime;
             }
         }
 
