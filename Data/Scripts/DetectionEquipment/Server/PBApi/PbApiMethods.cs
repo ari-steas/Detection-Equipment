@@ -13,6 +13,7 @@ using DetectionEquipment.Shared.BlockLogic;
 
 using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
+using System.Linq;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -264,8 +265,8 @@ namespace DetectionEquipment.Server.PBApi
             if (aggregator == null)
                 return null;
 
-            List<IMyTerminalBlock> active = new List<IMyTerminalBlock>(aggregator.ActiveSensorBlocks.Count);
-            foreach (var sensor in aggregator.ActiveSensorBlocks)
+            List<IMyTerminalBlock> active = new List<IMyTerminalBlock>(aggregator.ActiveSensors.Count);
+            foreach (var sensor in aggregator.ActiveSensors)
                 active.Add(sensor.Block);
 
             return active;
@@ -294,7 +295,7 @@ namespace DetectionEquipment.Server.PBApi
                 }
             }
 
-            (control as AggregatorBlock).ActiveSensors.Value = valid.ToArray();
+            AggregatorControls.ActiveSensorSelect.UpdateSelected(control, valid.ToArray(), false);
         }
 
         #endregion

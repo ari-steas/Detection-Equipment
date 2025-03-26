@@ -9,6 +9,7 @@ namespace DetectionEquipment.Client.Sensors
     internal static class SensorBlockManager
     {
         public static Dictionary<uint, ClientBlockSensor> BlockSensorIdMap;
+        public static Dictionary<IMyCubeGrid, HashSet<IMyCubeBlock>> GridBlockSensorsMap;
 
         public static void Init()
         {
@@ -19,6 +20,7 @@ namespace DetectionEquipment.Client.Sensors
                 return false;
             });
             BlockSensorIdMap = new Dictionary<uint, ClientBlockSensor>();
+            GridBlockSensorsMap = new Dictionary<IMyCubeGrid, HashSet<IMyCubeBlock>>();
             Log.Info("SensorBlockManager", "Initialized.");
         }
 
@@ -32,6 +34,7 @@ namespace DetectionEquipment.Client.Sensors
         {
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
             BlockSensorIdMap = null;
+            GridBlockSensorsMap = null;
             Log.Info("SensorBlockManager", "Unloaded.");
         }
 
@@ -55,6 +58,12 @@ namespace DetectionEquipment.Client.Sensors
 
             var logic = new ClientBlockSensor(fatblock);
             MyAPIGateway.Utilities.InvokeOnGameThread(logic.UpdateOnceBeforeFrame);
+            
+            if (GridBlockSensorsMap.ContainsKey(block.CubeGrid))
+                GridBlockSensorsMap[block.CubeGrid].Add(fatblock);
+            else
+                GridBlockSensorsMap[block.CubeGrid] = new HashSet<IMyCubeBlock>() { fatblock };
+            logic.OnClose += () => GridBlockSensorsMap[block.CubeGrid].Remove(fatblock);
         }
     }
 }

@@ -27,7 +27,7 @@ namespace DetectionEquipment.Shared.Networking
             Elevation = (float) sensor.DesiredElevation;
             Aperture = (float) sensor.Sensor.Aperture;
 
-            Log.Info("SensorUpdatePacket", "Prepping server SensorUpdatePacket");
+            //Log.Info("SensorUpdatePacket", "Prepping server SensorUpdatePacket");
         }
 
         public SensorUpdatePacket(ClientBlockSensor.ClientSensorData sensor)
@@ -37,14 +37,14 @@ namespace DetectionEquipment.Shared.Networking
             Elevation = sensor.DesiredElevation;
             Aperture = sensor.Aperture;
 
-            Log.Info("SensorUpdatePacket", "Prepping client SensorUpdatePacket");
+            //Log.Info("SensorUpdatePacket", "Prepping client SensorUpdatePacket");
         }
 
         private SensorUpdatePacket() { }
 
         public override void Received(ulong senderSteamId, bool fromServer)
         {
-            Log.Info("SensorUpdatePacket", "Recieved SensorUpdatePacket");
+            //Log.Info("SensorUpdatePacket", "Recieved SensorUpdatePacket");
             if (!fromServer)
             {
                 BlockSensor blockSensor;
@@ -74,7 +74,7 @@ namespace DetectionEquipment.Shared.Networking
             Id = sensor.Sensor.Id;
             AttachedBlockId = sensor.Block.EntityId;
             DefinitionId = sensor.Definition.Id;
-            Log.Info("SensorInitPacket", "Prepping server SensorInitPacket");
+            //Log.Info("SensorInitPacket", "Prepping server SensorInitPacket");
         }
 
         /// <summary>
@@ -84,14 +84,14 @@ namespace DetectionEquipment.Shared.Networking
         public SensorInitPacket(long blockId)
         {
             AttachedBlockId = blockId;
-            Log.Info("SensorInitPacket", "Prepping client SensorInitPacket request");
+            //Log.Info("SensorInitPacket", "Prepping client SensorInitPacket request");
         }
 
         private SensorInitPacket() { }
 
         public override void Received(ulong senderSteamId, bool fromServer)
         {
-            Log.Info("SensorInitPacket", "Recieved SensorInitPacket from " + (fromServer ? "server" : "client"));
+            //Log.Info("SensorInitPacket", "Recieved SensorInitPacket from " + (fromServer ? "server" : "client"));
             var block = MyAPIGateway.Entities.GetEntityById(AttachedBlockId) as IMyCameraBlock;
             if (block == null)
             {
@@ -113,7 +113,7 @@ namespace DetectionEquipment.Shared.Networking
                     MyAPIGateway.Utilities.InvokeOnGameThread(() => ServerNetwork.SendToPlayer(new SensorUpdatePacket(sensor), senderSteamId)); // Wait a tick before sending update packet to ensure it arrives after
                 }
                     
-                Log.Info("SensorInitPacket", "Sent requested init packets to " + senderSteamId);
+                //Log.Info("SensorInitPacket", "Sent requested init packets to " + senderSteamId);
             }
         }
     }

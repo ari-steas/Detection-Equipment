@@ -2,6 +2,8 @@
 using DetectionEquipment.Client.Sensors;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Client.Networking;
+using Sandbox.Definitions;
+using System.Collections.Generic;
 
 namespace DetectionEquipment.Client
 {

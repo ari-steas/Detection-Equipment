@@ -4,6 +4,7 @@ using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
@@ -14,8 +15,29 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionTrackerBlock")]
     internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>
     {
-        internal AggregatorBlock SourceAggregator => TrackerControls.ActiveAggregators[this];
-        internal HashSet<BlockSensor> ControlledSensors => TrackerControls.ActiveSensors[this];
+        internal AggregatorBlock SourceAggregator
+        {
+            get
+            {
+                return TrackerControls.ActiveAggregators[this];
+            }
+            set
+            {
+                TrackerControls.ActiveAggregatorSelect.UpdateSelected(this, new long[] { value.Block.EntityId });
+            }
+        }
+
+        internal HashSet<BlockSensor> ControlledSensors
+        {
+            get
+            {
+                return TrackerControls.ActiveSensors[this];
+            }
+            set
+            {
+                TrackerControls.ActiveSensorSelect.UpdateSelected(this, value.Select(sensor => sensor.Block.EntityId).ToArray());
+            }
+        }
         public MySync<float, SyncDirection.BothWays> ResetAngleTime;
 
         private Dictionary<WorldDetectionInfo, int> _detectionTrackDict = new Dictionary<WorldDetectionInfo, int>();
@@ -34,6 +56,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
         public override void UpdateAfterSimulation()
         {
+            if (!MyAPIGateway.Session.IsServer)
+                return;
+
             if (SourceAggregator == null)
                 return;
 

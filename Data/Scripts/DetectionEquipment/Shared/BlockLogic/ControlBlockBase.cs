@@ -38,11 +38,11 @@ namespace DetectionEquipment.Shared.BlockLogic
                 return;
 
             HideSorterControls.DoOnce();
+            ControlBlockManager.I.Blocks.Add(Block as MyCubeBlock, this);
 
             if (!MyAPIGateway.Session.IsServer)
                 return;
 
-            ControlBlockManager.I.Blocks.Add(Block as MyCubeBlock, this);
             GridSensors = ServerMain.I.GridSensorMangers[Block.CubeGrid];
             NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
         }

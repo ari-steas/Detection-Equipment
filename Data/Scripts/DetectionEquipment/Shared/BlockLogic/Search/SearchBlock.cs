@@ -28,6 +28,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
         public override void UpdateAfterSimulation()
         {
+            if (!MyAPIGateway.Session.IsServer)
+                return;
+
             foreach (var sensor in ControlledSensors)
             {
                 if (sensor?.Definition.Movement == null)

@@ -1,4 +1,5 @@
 ﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
 using VRage.Game.Components;
@@ -15,12 +16,14 @@ namespace DetectionEquipment.Shared.BlockLogic
         public override void LoadData()
         {
             I = this;
+            Log.Info("ControlBlockManager", "Ready.");
         }
 
         protected override void UnloadData()
         {
             Blocks = null;
             I = null;
+            Log.Info("ControlBlockManager", "Unloaded.");
         }
     }
 }

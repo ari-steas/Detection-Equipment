@@ -2,6 +2,7 @@
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
 using ProtoBuf;
+using Sandbox.Definitions;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
@@ -12,12 +13,13 @@ using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
+using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
     internal interface IBlockSelectControl
     {
-        void UpdateSelected(IControlBlockBase logic, long[] selected);
+        void UpdateSelected(IControlBlockBase logic, long[] selected, bool fromNetwork = false);
     }
 
     /// <summary>
@@ -25,8 +27,9 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
     /// </summary>
     /// <typeparam name="LogicType"></typeparam>
     /// <typeparam name="BlockType"></typeparam>
-    internal class BlockSelectControl<LogicType, BlockType> : IBlockSelectControl where LogicType : MyGameLogicComponent, IControlBlockBase
-            where BlockType : IMyTerminalBlock, IMyFunctionalBlock
+    internal class BlockSelectControl<LogicType, BlockType> : IBlockSelectControl
+        where LogicType : MyGameLogicComponent, IControlBlockBase
+        where BlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
         public Dictionary<LogicType, long[]> SelectedBlocks = new Dictionary<LogicType, long[]>();
         public IMyTerminalControlListbox ListBox;
@@ -52,7 +55,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             ControlBlockManager.I.BlockControls[Id] = this;
         }
 
-        public void UpdateSelected(IControlBlockBase logic, long[] selected)
+        public void UpdateSelected(IControlBlockBase logic, long[] selected, bool fromNetwork = false)
         {
             var thisLogic = logic as LogicType;
             if (thisLogic == null)
@@ -60,6 +63,28 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
             SelectedBlocks[thisLogic] = selected;
             OnListChanged?.Invoke(thisLogic, selected);
+
+            if (!fromNetwork)
+            {
+                if (MyAPIGateway.Session.IsServer)
+                {
+                    ServerNetwork.SendToEveryoneInSync(new BlockSelectControlPacket()
+                    {
+                        BlockId = logic.CubeBlock.EntityId,
+                        ControlId = Id,
+                        Selected = selected
+                    }, logic.CubeBlock.GetPosition());
+                }
+                else
+                {
+                    ClientNetwork.SendToServer(new BlockSelectControlPacket()
+                    {
+                        BlockId = logic.CubeBlock.EntityId,
+                        ControlId = Id,
+                        Selected = selected
+                    });
+                }
+            }
         }
 
         private void Content(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> content, List<MyTerminalControlListBoxItem> selected)
@@ -92,27 +117,8 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             var array = new long[selected.Count];
             for (int i = 0; i < array.Length; i++)
                 array[i] = (long)selected[i].UserData;
-            SelectedBlocks[logic] = array;
-            OnListChanged?.Invoke(logic, array); // TODO networking
-
-            if (MyAPIGateway.Session.IsServer)
-            {
-                ServerNetwork.SendToEveryoneInSync(new BlockSelectControlPacket()
-                {
-                    BlockId = logic.CubeBlock.EntityId,
-                    ControlId = Id,
-                    Selected = array
-                }, block.GetPosition());
-            }
-            else
-            {
-                ClientNetwork.SendToServer(new BlockSelectControlPacket()
-                {
-                    BlockId = logic.CubeBlock.EntityId,
-                    ControlId = Id,
-                    Selected = array
-                });
-            }
+            
+            UpdateSelected(logic, array, false);
         }
     }
 
@@ -129,7 +135,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             IControlBlockBase controller;
             IBlockSelectControl control;
             if (block == null || !ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock)block, out controller) || !ControlBlockManager.I.BlockControls.TryGetValue(ControlId, out control)) return;
-            control.UpdateSelected(controller, Selected);
+            control.UpdateSelected(controller, Selected, true);
 
             if (!fromServer)
                 ServerNetwork.SendToEveryoneInSync(this, block.GetPosition());

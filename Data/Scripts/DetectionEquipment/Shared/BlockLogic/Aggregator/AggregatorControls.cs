@@ -1,13 +1,15 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
+﻿using DetectionEquipment.Client.Sensors;
+using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
+using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
     internal class AggregatorControls : TerminalControlAdder<AggregatorBlock, IMyConveyorSorter>
     {
-        protected static BlockSelectControl<AggregatorBlock, IMyConveyorSorter> ActiveSensorSelect;
+        public static BlockSelectControl<AggregatorBlock, IMyConveyorSorter> ActiveSensorSelect;
         public static Dictionary<AggregatorBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<AggregatorBlock, HashSet<BlockSensor>>();
 
         public override void DoOnce(AggregatorBlock thisLogic)
@@ -78,9 +80,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Active Sensors",
                 "Sensors this aggregator should use data from. Ctrl+Click to select multiple.",
                 true,
-                logic => logic.GridSensors.BlockSensorIdMap.Keys,
+                logic => MyAPIGateway.Session.IsServer ?
+                         logic.GridSensors.BlockSensorIdMap.Keys :
+                         (IEnumerable<IMyCubeBlock>) SensorBlockManager.GridBlockSensorsMap[logic.CubeBlock.CubeGrid],
                 (logic, selected) =>
                 {
+                    if (!MyAPIGateway.Session.IsServer)
+                        return;
+
                     ActiveSensors[logic].Clear();
                     foreach (var sensor in logic.GridSensors.Sensors)
                     {

@@ -1,7 +1,10 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
+﻿using DetectionEquipment.Client.Sensors;
+using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
+using System.Linq;
+using VRage.Game.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Search
@@ -24,10 +27,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 "Active Sensors",
                 "Sensors this block should direct. Ctrl+Click to select multiple.",
                 true,
-                logic => logic.GridSensors.BlockSensorIdMap.Keys,
+                logic => MyAPIGateway.Session.IsServer ?
+                         logic.GridSensors.BlockSensorIdMap.Keys :
+                         (IEnumerable<IMyCubeBlock>) SensorBlockManager.GridBlockSensorsMap[logic.CubeBlock.CubeGrid],
                 (logic, selected) =>
                 {
+                    if (!MyAPIGateway.Session.IsServer)
+                        return;
+
                     ActiveSensors[logic].Clear();
+                    logic.DirectionSigns.Clear();
                     foreach (var sensor in logic.GridSensors.Sensors)
                     {
                         for (int i = 0; i < selected.Length; i++)

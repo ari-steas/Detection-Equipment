@@ -1,10 +1,12 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.BlockLogic.Tracker;
 using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
@@ -21,7 +23,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public MySync<float, SyncDirection.BothWays> RCSThreshold;
         public MySync<bool, SyncDirection.BothWays> AggregateTypes;
         public MySync<bool, SyncDirection.BothWays> UseAllSensors;
-        public MySync<long[], SyncDirection.BothWays> ActiveSensors;
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
 
@@ -29,12 +30,22 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         private HashSet<WorldDetectionInfo> _bufferDetections = new HashSet<WorldDetectionInfo>();
 
-        internal HashSet<BlockSensor> ActiveSensorBlocks => AggregatorControls.ActiveSensors[this];
+        internal HashSet<BlockSensor> ActiveSensors
+        {
+            get
+            {
+                return AggregatorControls.ActiveSensors[this];
+            }
+            set
+            {
+                AggregatorControls.ActiveSensorSelect.UpdateSelected(this, value.Select(sensor => sensor.Block.EntityId).ToArray());
+            }
+        }
 
         public override void UpdateOnceBeforeFrame()
         {
             base.UpdateOnceBeforeFrame();
-            if (Block?.CubeGrid?.Physics == null || !MyAPIGateway.Session.IsServer) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
             AggregationTime.Value = 1f;
@@ -148,6 +159,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         private bool _isProcessing = false;
         public override void UpdateAfterSimulation()
         {
+            if (!MyAPIGateway.Session.IsServer)
+                return;
+
             if (!_isProcessing)
             {
                 _isProcessing = true;
@@ -160,7 +174,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             }
 
             HashSet<WorldDetectionInfo> infos = new HashSet<WorldDetectionInfo>();
-            foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensorBlocks)
+            foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensors)
             {
                 foreach (var sensorDetection in sensor.Detections)
                 {
