@@ -1,7 +1,12 @@
 ﻿using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Serialization;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
+using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using VRage.Game.ModAPI;
 using VRageMath;
 
@@ -91,11 +96,14 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (cubeBlock == null) return;
 
             List<uint> ids = new List<uint>();
-            foreach (var newSensor in DefinitionManager.TryCreateSensors(cubeBlock))
+            var sensors = DefinitionManager.TryCreateSensors(cubeBlock);
+            foreach (var newSensor in sensors)
             {
                 Sensors.Add(newSensor);
                 ids.Add(newSensor.Sensor.Id);
             }
+            BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
+            BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
 
             if (ids.Count > 0)
                 BlockSensorIdMap[cubeBlock] = ids.ToArray();

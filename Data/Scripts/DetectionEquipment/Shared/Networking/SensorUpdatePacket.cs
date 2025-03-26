@@ -45,19 +45,21 @@ namespace DetectionEquipment.Shared.Networking
         public override void Received(ulong senderSteamId, bool fromServer)
         {
             //Log.Info("SensorUpdatePacket", "Recieved SensorUpdatePacket");
-            if (!fromServer)
+            if (fromServer)
             {
-                BlockSensor blockSensor;
-                if (!ServerMain.I.BlockSensorIdMap.TryGetValue(Id, out blockSensor))
-                    return;
-                blockSensor.UpdateFromPacket(this);
-
-                ServerNetwork.SendToEveryoneInSync(this, blockSensor.Block.GetPosition());
+                SensorBlockManager.TryUpdateSensor(Id, this);
             }
             else
             {
-                var blockSensor = SensorBlockManager.BlockSensorIdMap[Id];
+                BlockSensor blockSensor;
+                if (!ServerMain.I.BlockSensorIdMap.TryGetValue(Id, out blockSensor))
+                {
+
+                    return;
+                }
                 blockSensor.UpdateFromPacket(this);
+
+                ServerNetwork.SendToEveryoneInSync(this, blockSensor.Block.GetPosition());
             }
         }
     }
@@ -101,10 +103,11 @@ namespace DetectionEquipment.Shared.Networking
 
             if (fromServer)
             {
-                block.GameLogic.GetAs<ClientBlockSensor>().RegisterSensor(this);
+                Client.Sensors.SensorBlockManager.TryRegisterSensor(block, this);
             }
             else
             {
+                // Init request packet
                 foreach (var sensor in ServerMain.I.GridSensorMangers[block.CubeGrid].Sensors)
                 {
                     if (sensor.Block != block)

@@ -59,7 +59,14 @@ namespace DetectionEquipment.Client.Networking
         {
             if (MyAPIGateway.Session.IsServer)
             {
-                packet.Received(0, false);
+                try
+                {
+                    packet.Received(0, false);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("ClientNetwork", ex);
+                }
                 return;
             }
 

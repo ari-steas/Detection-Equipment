@@ -3,6 +3,7 @@ using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
+using DetectionEquipment.Shared.Serialization;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
@@ -41,6 +42,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 _desiredAzimuth = MathUtils.NormalizeAngle(value);
                 ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
+                BlockSensorSettings.SaveBlockSettings(Block);
             }
         }
         public double DesiredElevation
@@ -53,6 +55,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 _desiredElevation = MathUtils.NormalizeAngle(value);
                 ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
+                BlockSensorSettings.SaveBlockSettings(Block);
             }
         }
         public double Aperture
@@ -65,6 +68,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 Sensor.Aperture = MathHelper.Clamp(value, Definition.MinAperture, Definition.MaxAperture);
                 ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
+                BlockSensorSettings.SaveBlockSettings(Block);
             }
         }
 
@@ -73,6 +77,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             _desiredAzimuth = packet.Azimuth;
             _desiredElevation = packet.Elevation;
             Sensor.Aperture = packet.Aperture;
+            BlockSensorSettings.SaveBlockSettings(Block);
         }
 
         private MyEntitySubpart _aziPart = null, _elevPart = null;

@@ -7,6 +7,7 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
@@ -136,7 +137,7 @@ namespace DetectionEquipment.Client.Sensors
                     _aziPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
                     _elevPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
                     _baseLocalMatrix = block.LocalMatrix;
-                    Log.Info("ClientBlockSensor", "Inited subparts for " + block.BlockDefinition.SubtypeName);
+                    //Log.Info("ClientBlockSensor", "Inited subparts for " + block.BlockDefinition.SubtypeName);
                 }
 
                 // Sensor Movement
@@ -177,7 +178,7 @@ namespace DetectionEquipment.Client.Sensors
                 // HUD
                 if (block.ShowOnHUD)
                 {
-                    var color = new Color((uint) ((50 + Id) * block.EntityId)).Alpha(100);
+                    var color = new Color((uint) ((50 + Id) * block.EntityId)).Alpha(0.39f);
                     var matrix = MatrixD.CreateWorld(Position, Direction, Vector3D.CalculatePerpendicularVector(Direction));
 
                     if (Aperture < Math.PI)

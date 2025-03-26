@@ -25,7 +25,7 @@ namespace DetectionEquipment.Shared.Structs
 
             Velocity = null;
             VelocityVariance = null;
-            IffCodes = info.IffCodes;
+            IffCodes = info.IffCodes ?? Array.Empty<string>();
         }
 
         public double CrossSection, Error;

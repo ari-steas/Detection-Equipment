@@ -74,7 +74,16 @@ namespace DetectionEquipment.Server.Networking
             if (playerSteamId == MyAPIGateway.Multiplayer.ServerId || playerSteamId == 0)
             {
                 if (!MyAPIGateway.Utilities.IsDedicated)
-                    packet.Received(0, true);
+                {
+                    try
+                    {
+                        packet.Received(0, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Exception("ServerNetwork", ex);
+                    }
+                }
                 return;
             }
 
@@ -91,7 +100,16 @@ namespace DetectionEquipment.Server.Networking
                 if (p.SteamUserId == MyAPIGateway.Multiplayer.ServerId || p.SteamUserId == 0)
                 {
                     if (!MyAPIGateway.Utilities.IsDedicated)
-                        packet.Received(0, true);
+                    {
+                        try
+                        {
+                            packet.Received(0, true);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Exception("ServerNetwork", ex);
+                        }
+                    }
                     continue;
                 }
 

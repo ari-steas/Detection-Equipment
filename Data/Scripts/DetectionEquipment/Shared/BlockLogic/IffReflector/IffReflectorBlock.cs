@@ -43,6 +43,9 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
         public override void MarkForClose()
         {
             base.MarkForClose();
+            if (!IffMap.ContainsKey(Block.CubeGrid))
+                return;
+
             IffMap[Block.CubeGrid].Remove(this);
             if (IffMap[Block.CubeGrid].Count == 0)
                 IffMap.Remove(Block.CubeGrid);
