@@ -11,7 +11,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 {
     internal class SearchControls : TerminalControlAdder<SearchBlock, IMyConveyorSorter>
     {
-        protected static BlockSelectControl<SearchBlock, IMyConveyorSorter> ActiveSensorSelect;
+        public static BlockSelectControl<SearchBlock, IMyConveyorSorter> ActiveSensorSelect;
         public static Dictionary<SearchBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<SearchBlock, HashSet<BlockSensor>>();
 
         public override void DoOnce(SearchBlock thisLogic)

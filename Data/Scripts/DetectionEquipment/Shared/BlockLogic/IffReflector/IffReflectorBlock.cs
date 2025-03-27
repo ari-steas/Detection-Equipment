@@ -1,4 +1,5 @@
-﻿using Sandbox.Common.ObjectBuilders;
+﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -15,12 +16,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
         public MySync<string, SyncDirection.BothWays> IffCode;
         public MySync<bool, SyncDirection.BothWays> ReturnHash;
         public string IffCodeCache = "";
+        protected override ControlBlockSettingsBase GetSettings => new IffReflectorSettings(this);
 
         public override void UpdateOnceBeforeFrame()
         {
-            base.UpdateOnceBeforeFrame();
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
+            new IffControls().DoOnce(this);
+            base.UpdateOnceBeforeFrame();
 
             IffCode.ValueChanged += sync =>
             {
@@ -30,10 +33,6 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             {
                 IffCodeCache = sync.Value ? "H" + IffCode.Value.GetHashCode().ToString() : "S" + IffCode.Value;
             };
-
-            IffCode.Value = Block.GetOwnerFactionTag();
-            ReturnHash.Value = true;
-            new IffControls().DoOnce(this);
 
             if (!IffMap.ContainsKey(Block.CubeGrid))
                 IffMap.Add(Block.CubeGrid, new HashSet<IffReflectorBlock>());

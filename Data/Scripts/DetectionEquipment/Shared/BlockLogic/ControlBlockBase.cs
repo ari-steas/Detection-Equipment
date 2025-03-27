@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;
@@ -20,6 +21,7 @@ namespace DetectionEquipment.Shared.BlockLogic
         public GridSensorManager GridSensors { get; private set; }
         public static ITerminalControlAdder Controls { get; internal set; } = null;
         public Action OnClose { get; set; }
+        protected abstract ControlBlockSettingsBase GetSettings { get; }
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
@@ -45,6 +47,14 @@ namespace DetectionEquipment.Shared.BlockLogic
 
             GridSensors = ServerMain.I.GridSensorMangers[Block.CubeGrid];
             NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
+
+            GetSettings?.LoadSettings();
+        }
+
+        public override bool IsSerialized()
+        {
+            GetSettings?.SaveBlockSettings();
+            return base.IsSerialized();
         }
 
         public override void MarkForClose()

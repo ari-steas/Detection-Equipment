@@ -6,7 +6,7 @@
 				<TypeId>CameraBlock</TypeId>
 				<SubtypeId>PassiveRadar_Simple</SubtypeId>
 			</Id>
-			<DisplayName>{LOC:DisplayName_PassiveRadar_Simple}</DisplayName>
+			<DisplayName>Simple Passive Radar</DisplayName>
 			<Description>{LOC:Description_PassiveRadar_Simple}</Description>
 			<Icon>Textures\GUI\Icons\AstronautBackpack.dds</Icon>
 			<CubeSize>Large</CubeSize>

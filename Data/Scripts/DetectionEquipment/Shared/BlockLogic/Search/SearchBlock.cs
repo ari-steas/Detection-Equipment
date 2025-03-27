@@ -1,4 +1,5 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
@@ -14,16 +15,15 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
     {
         internal HashSet<BlockSensor> ControlledSensors => SearchControls.ActiveSensors[this];
         internal Dictionary<BlockSensor, Vector2> DirectionSigns = new Dictionary<BlockSensor, Vector2>();
-
+        protected override ControlBlockSettingsBase GetSettings => new SearchSettings(this);
         private static readonly Vector2 InvAzi = new Vector2(-1, 1), InvElev = new Vector2(1, -1);
 
         public override void UpdateOnceBeforeFrame()
         {
-            base.UpdateOnceBeforeFrame();
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
-
             new SearchControls().DoOnce(this);
+            base.UpdateOnceBeforeFrame();
         }
 
         public override void UpdateAfterSimulation()

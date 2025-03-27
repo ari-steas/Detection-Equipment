@@ -102,11 +102,13 @@ namespace DetectionEquipment.Server.SensorBlocks
                 Sensors.Add(newSensor);
                 ids.Add(newSensor.Sensor.Id);
             }
-            BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
-            BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
 
             if (ids.Count > 0)
+            {
                 BlockSensorIdMap[cubeBlock] = ids.ToArray();
+                BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
+                BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
+            }
         }
 
         private void OnBlockRemoved(IMySlimBlock obj)

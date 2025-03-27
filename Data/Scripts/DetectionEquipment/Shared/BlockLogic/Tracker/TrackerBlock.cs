@@ -43,15 +43,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         private Dictionary<WorldDetectionInfo, int> _detectionTrackDict = new Dictionary<WorldDetectionInfo, int>();
         public Dictionary<BlockSensor, float> LockDecay = new Dictionary<BlockSensor, float>();
 
+        protected override ControlBlockSettingsBase GetSettings => new TrackerSettings(this);
+
         public override void UpdateOnceBeforeFrame()
         {
-            base.UpdateOnceBeforeFrame();
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
-
-            ResetAngleTime.Value = 4;
-
             new TrackerControls().DoOnce(this);
+            base.UpdateOnceBeforeFrame();
         }
 
         public override void UpdateAfterSimulation()

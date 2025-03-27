@@ -6,7 +6,7 @@
                 <TypeId>ConveyorSorter</TypeId>
 				<SubtypeId>IffReflector</SubtypeId>
 			</Id>
-			<DisplayName>{LOC:DisplayName_IffReflector}</DisplayName>
+			<DisplayName>IFF Reflector</DisplayName>
 			<Description>{LOC:Description_IffReflector}</Description>
 			<Icon>Textures\GUI\Icons\Cubes\IffReflector.dds</Icon>
 			<CubeSize>Large</CubeSize>

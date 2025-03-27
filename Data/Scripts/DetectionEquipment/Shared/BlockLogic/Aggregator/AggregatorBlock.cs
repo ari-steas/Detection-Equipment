@@ -1,6 +1,6 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Shared.BlockLogic.Tracker;
 using DetectionEquipment.Shared.Structs;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
 using Sandbox.ModAPI;
@@ -30,6 +30,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         private HashSet<WorldDetectionInfo> _bufferDetections = new HashSet<WorldDetectionInfo>();
 
+        protected override ControlBlockSettingsBase GetSettings => new AggregatorSettings(this);
+
         internal HashSet<BlockSensor> ActiveSensors
         {
             get
@@ -44,18 +46,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         public override void UpdateOnceBeforeFrame()
         {
-            base.UpdateOnceBeforeFrame();
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
-
-            AggregationTime.Value = 1f;
-            DistanceThreshold.Value = 2f;
-            VelocityErrorThreshold.Value = 32f;
-            RCSThreshold.Value = 1f;
-            AggregateTypes.Value = true;
-            UseAllSensors.Value = true;
-
             new AggregatorControls().DoOnce(this);
+            base.UpdateOnceBeforeFrame();
         }
 
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
@@ -258,11 +252,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             }
 
             return groups;
-        }
-
-        public override bool IsSerialized()
-        {
-            return base.IsSerialized();
         }
     }
 }

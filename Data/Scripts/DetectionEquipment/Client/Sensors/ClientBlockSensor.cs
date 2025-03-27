@@ -17,6 +17,7 @@ namespace DetectionEquipment.Client.Sensors
     internal class ClientBlockSensor : ControlBlockBase<IMyCameraBlock>
     {
         public readonly Dictionary<uint, ClientSensorData> Sensors = new Dictionary<uint, ClientSensorData>();
+        protected override ControlBlockSettingsBase GetSettings => null; // A seperate system is used for syncing sensor data.
 
         public uint CurrentSensorId = uint.MaxValue;
         public float CurrentAperture
