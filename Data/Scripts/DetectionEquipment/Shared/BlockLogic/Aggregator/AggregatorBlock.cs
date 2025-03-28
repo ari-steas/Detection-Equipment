@@ -52,7 +52,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             get
             {
                 // TODO
-                return new int[] { };
+                return new int[] { 0 };
             }
             set
             {
@@ -84,14 +84,30 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
         }
 
-        public HashSet<WorldDetectionInfo> GetAggregatedDetections()
+        public HashSet<WorldDetectionInfo> GetAggregatedDetections(bool useNetwork = true)
         {
-            return _bufferDetections;
+            var detectionSet = _bufferDetections;
+            if (useNetwork)
+            {
+                List<WorldDetectionInfo> fullSet = new List<WorldDetectionInfo>(detectionSet);
+
+                foreach (var channel in DatalinkManager.GetActiveDatalinkChannels(Block.CubeGrid, Block.OwnerId))
+                {
+                    if (!DatalinkInChannels.Contains(channel.Key))
+                        continue;
+                    foreach (var aggregator in channel.Value)
+                        fullSet.AddRange(aggregator.GetAggregatedDetections(false));
+                }
+
+                detectionSet = AggregateInfos(fullSet).ToHashSet();
+            }
+
+            return detectionSet;
         }
 
         private void CalculateDetections(Queue<WorldDetectionInfo[]> cache) // TODO: Improve performance of this method
         {
-            Dictionary<WorldDetectionInfo, int> weightedInfos = new Dictionary<WorldDetectionInfo, int>();
+            //Dictionary<WorldDetectionInfo, int> weightedInfos = new Dictionary<WorldDetectionInfo, int>();
             var aggregatedDetections = new HashSet<WorldDetectionInfo>();
 
             if (cache.Count == 0)
@@ -100,15 +116,15 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 return;
             }
 
-            int weight = 1;
-            foreach (var set in cache)
-            {
-                weight++;
-                foreach (var detection in set)
-                {
-                    weightedInfos[detection] = weightedInfos.ContainsKey(detection) ? weightedInfos[detection] + weight : weight;
-                }
-            }
+            //int weight = 1;
+            //foreach (var set in cache)
+            //{
+            //    weight++;
+            //    foreach (var detection in set)
+            //    {
+            //        weightedInfos[detection] = weightedInfos.ContainsKey(detection) ? weightedInfos[detection] + weight : weight;
+            //    }
+            //}
 
             var latestSet = cache.Peek();
             List<WorldDetectionInfo> toCombine = new List<WorldDetectionInfo>();

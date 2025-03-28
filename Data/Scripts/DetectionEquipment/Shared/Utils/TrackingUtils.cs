@@ -125,7 +125,10 @@ namespace DetectionEquipment.Shared.Utils
                         )
                         continue;
 
-                    if (current.CanBeUsedByPlayer(identityId) && _broadcasters.Add(current) && current.Receiver != null)
+                    // Prevent neutrals from seeing all broadcasters
+                    bool canAccess = (identityId != 0 || current.Owner == 0) && current.CanBeUsedByPlayer(identityId);
+
+                    if (canAccess && _broadcasters.Add(current) && current.Receiver != null)
                         _broadcastToCheck.Enqueue(current.Receiver);
                 }
             }
