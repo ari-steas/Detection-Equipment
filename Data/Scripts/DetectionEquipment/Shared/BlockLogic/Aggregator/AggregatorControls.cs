@@ -109,16 +109,21 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             ActiveSensorSelect.ListBox.Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllSensors ?? true);
 
             CreateSeperator("DatalinkSeperator");
+            CreateLabel(
+                "DatalinkLabel",
+                "Antenna DataLink"
+                );
             CreateSlider(
                 "DatalinkChannel",
                 "Datalink Channel",
                 "Datalink channel ID this aggregator should broadcast on. Set to -1 to disable.",
                 -1,
-                16,
+                8,
                 b => b.GameLogic.GetAs<AggregatorBlock>()?.DatalinkOutChannel,
                 (b, v) => b.GameLogic.GetAs<AggregatorBlock>().DatalinkOutChannel.Value = (int) v,
                 (b, sb) => sb.Append("ID: " + b.GameLogic.GetAs<AggregatorBlock>().DatalinkOutChannel.Value.ToString("N0"))
                 );
+
             CreateListbox(
                 "DatalinkSources",
                 "Datalink Sources",
@@ -127,25 +132,32 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 (block, content, selected) =>
                 {
                     var logic = block.GameLogic.GetAs<AggregatorBlock>();
+                    var activeChannels = DatalinkManager.GetActiveDatalinkChannels(block.CubeGrid, block.OwnerId);
 
-                    foreach (var channel in DatalinkManager.GetActiveDatalinkChannels(block.CubeGrid, block.OwnerId))
+                    var nullItem = new MyTerminalControlListBoxItem(MyStringId.NullOrEmpty, MyStringId.NullOrEmpty, null);
+                    content.Add(nullItem);
+                    if (logic.DatalinkInChannels.Length == 0)
+                        selected.Add(nullItem);
+
+                    // Display all channels because clients won't always have sources loaded.
+                    for (int id = 0; id <= 8; id++)
                     {
+                        int count = activeChannels.ContainsKey(id) ? activeChannels[id].Count : 0;
+
                         var item = new MyTerminalControlListBoxItem(
-                            MyStringId.GetOrCompute($"ID {channel.Key}: {channel.Value.Count} source" + (channel.Value.Count > 1 ? "s" : "")),
+                            MyStringId.GetOrCompute($"ID {id}: {count} known source" + (count == 1 ? "" : "s")),
                             MyStringId.NullOrEmpty,
-                            channel.Key);
+                            id);
                         content.Add(item);
-                        if (logic.DatalinkInChannels.Contains(channel.Key))
+                        if (logic.DatalinkInChannels.Contains(id))
                             selected.Add(item);
                     }
-
-                    content.Sort((item1, item2) => (int) item1.UserData - (int) item2.UserData);
                 },
                 (block, selected) =>
                 {
                     var logic = block.GameLogic.GetAs<AggregatorBlock>();
 
-                    logic.DatalinkInChannels = selected.Select(item => (int) item.UserData).ToArray();
+                    logic.DatalinkInChannels = selected.Where(item => item.UserData != null).Select(item => (int) item.UserData).ToArray();
                 }
                 );
         }

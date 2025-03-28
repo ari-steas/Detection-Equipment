@@ -52,7 +52,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             get
             {
                 // TODO
-                return new int[] { 0 };
+                return new int[] { };
             }
             set
             {

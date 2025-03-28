@@ -43,12 +43,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
 
             var fullSet = new Dictionary<int, HashSet<AggregatorBlock>>();
             
-            Log.Info("DatalinkManager", "CHK " + grid.CustomName);
-            Log.IncreaseIndent();
+            //Log.Info("DatalinkManager", "CHK " + grid.CustomName);
+            //Log.IncreaseIndent();
 
             foreach (var connectedGrid in connectedGrids)
             {
-                Log.Info("GRID", connectedGrid.CustomName);
+                //Log.Info("GRID", connectedGrid.CustomName);
                 Dictionary<int, HashSet<AggregatorBlock>> gridSet;
                 if (!ActiveDatalinkChannels.TryGetValue(connectedGrid, out gridSet))
                     continue;
@@ -64,7 +64,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
                 }
             }
 
-            Log.DecreaseIndent();
+            //Log.DecreaseIndent();
 
             return fullSet;
         }
@@ -85,7 +85,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
                     if (set.Count == 0)
                         ActiveDatalinkChannels.Remove(logic.Block.CubeGrid);
 
-                    Log.Info("DatalinkManager", "Unregistered aggregator with previous ID " + prevId);
+                    //Log.Info("DatalinkManager", "Unregistered aggregator with previous ID " + prevId);
                 }
             }
 
@@ -106,7 +106,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
                 }
                 subSet.Add(logic);
 
-                Log.Info("DatalinkManager", "Registered aggregator with ID " + id);
+                //Log.Info("DatalinkManager", "Registered aggregator with ID " + id);
             }
         }
     }
