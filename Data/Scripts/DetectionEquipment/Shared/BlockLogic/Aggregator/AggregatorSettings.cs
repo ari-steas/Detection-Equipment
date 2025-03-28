@@ -14,6 +14,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         [ProtoMember(5)] public bool AggregateTypes = true;
         [ProtoMember(6)] public bool UseAllSensors = true;
         [ProtoMember(7)] public long[] SelectedSensors = Array.Empty<long>();
+        [ProtoMember(8)] public int DatalinkOutChannel = 0;
+        [ProtoMember(9)] public int[] DatalinkInChannels = new int[] { 0 };
 
         [ProtoIgnore] public new AggregatorBlock AttachedLogic => (AggregatorBlock) base.AttachedLogic;
 
@@ -33,6 +35,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AttachedLogic.UseAllSensors.Value = UseAllSensors;
 
             AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, SelectedSensors ?? Array.Empty<long>(), false);
+
+            AttachedLogic.DatalinkOutChannel.Value = DatalinkOutChannel;
+            AttachedLogic.DatalinkInChannels = DatalinkInChannels;
         }
 
         protected override void RetrieveData()
@@ -46,6 +51,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             if (!AggregatorControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out SelectedSensors))
                 SelectedSensors = Array.Empty<long>();
+
+            DatalinkOutChannel = AttachedLogic.DatalinkOutChannel.Value;
+            DatalinkInChannels = AttachedLogic.DatalinkInChannels;
         }
     }
 }

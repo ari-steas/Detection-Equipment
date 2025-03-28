@@ -1,8 +1,9 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Structs;
-using DetectionEquipment.Shared.Utils;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
+using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -23,6 +24,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public MySync<float, SyncDirection.BothWays> RCSThreshold;
         public MySync<bool, SyncDirection.BothWays> AggregateTypes;
         public MySync<bool, SyncDirection.BothWays> UseAllSensors;
+        public MySync<int, SyncDirection.BothWays> DatalinkOutChannel;
+        private int _prevDatalinkOutChannel = -1;
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
 
@@ -44,12 +47,41 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             }
         }
 
+        public int[] DatalinkInChannels
+        {
+            get
+            {
+                // TODO
+                return new int[] { 0 };
+            }
+            set
+            {
+                // TODO
+            }
+        }
+
         public override void UpdateOnceBeforeFrame()
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
+
+            DatalinkOutChannel.ValueChanged += sync =>
+            {
+                DatalinkManager.RegisterAggregator(this, sync.Value, _prevDatalinkOutChannel);
+                _prevDatalinkOutChannel = sync.Value;
+            };
+
             new AggregatorControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
+
+            DatalinkManager.RegisterAggregator(this, DatalinkOutChannel.Value, _prevDatalinkOutChannel);
+            _prevDatalinkOutChannel = DatalinkOutChannel.Value;
+        }
+
+        public override void MarkForClose()
+        {
+            base.MarkForClose();
+            DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
         }
 
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()

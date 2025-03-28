@@ -1,9 +1,14 @@
 ﻿using DetectionEquipment.Client.Sensors;
 using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
+using VRage.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -102,6 +107,47 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 }
                 );
             ActiveSensorSelect.ListBox.Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllSensors ?? true);
+
+            CreateSeperator("DatalinkSeperator");
+            CreateSlider(
+                "DatalinkChannel",
+                "Datalink Channel",
+                "Datalink channel ID this aggregator should broadcast on. Set to -1 to disable.",
+                -1,
+                16,
+                b => b.GameLogic.GetAs<AggregatorBlock>()?.DatalinkOutChannel,
+                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().DatalinkOutChannel.Value = (int) v,
+                (b, sb) => sb.Append("ID: " + b.GameLogic.GetAs<AggregatorBlock>().DatalinkOutChannel.Value.ToString("N0"))
+                );
+            CreateListbox(
+                "DatalinkSources",
+                "Datalink Sources",
+                "Datalink channel IDs this aggregator should recieve from.",
+                true,
+                (block, content, selected) =>
+                {
+                    var logic = block.GameLogic.GetAs<AggregatorBlock>();
+
+                    foreach (var channel in DatalinkManager.GetActiveDatalinkChannels(block.CubeGrid, block.OwnerId))
+                    {
+                        var item = new MyTerminalControlListBoxItem(
+                            MyStringId.GetOrCompute($"ID {channel.Key}: {channel.Value.Count} source" + (channel.Value.Count > 1 ? "s" : "")),
+                            MyStringId.NullOrEmpty,
+                            channel.Key);
+                        content.Add(item);
+                        if (logic.DatalinkInChannels.Contains(channel.Key))
+                            selected.Add(item);
+                    }
+
+                    content.Sort((item1, item2) => (int) item1.UserData - (int) item2.UserData);
+                },
+                (block, selected) =>
+                {
+                    var logic = block.GameLogic.GetAs<AggregatorBlock>();
+
+                    logic.DatalinkInChannels = selected.Select(item => (int) item.UserData).ToArray();
+                }
+                );
         }
 
         protected override void CreateTerminalProperties()

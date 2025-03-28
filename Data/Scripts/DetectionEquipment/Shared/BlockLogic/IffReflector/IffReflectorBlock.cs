@@ -22,8 +22,6 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
-            new IffControls().DoOnce(this);
-            base.UpdateOnceBeforeFrame();
 
             IffCode.ValueChanged += sync =>
             {
@@ -33,6 +31,9 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             {
                 IffCodeCache = sync.Value ? "H" + IffCode.Value.GetHashCode().ToString() : "S" + IffCode.Value;
             };
+
+            new IffControls().DoOnce(this);
+            base.UpdateOnceBeforeFrame();
 
             if (!IffMap.ContainsKey(Block.CubeGrid))
                 IffMap.Add(Block.CubeGrid, new HashSet<IffReflectorBlock>());

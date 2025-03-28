@@ -13,7 +13,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
         public IffReflectorSettings(IffReflectorBlock logic) : base(logic)
         {
-            IffCode = logic.CubeBlock.GetOwnerFactionTag();
+            IffCode = logic.CubeBlock.CubeGrid.CustomName;
         }
 
         protected IffReflectorSettings() : base() { }

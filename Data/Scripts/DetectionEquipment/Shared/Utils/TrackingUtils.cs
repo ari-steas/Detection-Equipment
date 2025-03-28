@@ -1,5 +1,9 @@
 ﻿using Sandbox.Game;
+using Sandbox.Game.Entities;
+using Sandbox.ModAPI;
 using System.Collections.Generic;
+using System.Linq;
+using VRage.Game.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.Utils
@@ -70,6 +74,65 @@ namespace DetectionEquipment.Shared.Utils
             }
 
             return closest;
+        }
+
+        private static readonly HashSet<MyDataBroadcaster> _broadcasters = new HashSet<MyDataBroadcaster>();
+        private static readonly Queue<MyDataReceiver> _broadcastToCheck = new Queue<MyDataReceiver>();
+        public static List<MyDataBroadcaster> GetAllRelayedBroadcasters(MyDataReceiver receiver, long identityId, bool mutual)
+        {
+            _broadcastToCheck.Enqueue(receiver);
+            while (_broadcastToCheck.Count > 0)
+            {
+                var next = _broadcastToCheck.Dequeue();
+
+                foreach (MyDataBroadcaster current in next.BroadcastersInRange)
+                {
+                    if (current.Closed ||
+                        mutual &&
+                        (
+                            current.Receiver == null || 
+                            next.Broadcaster == null ||
+                            !current.Receiver.BroadcastersInRange.Contains(next.Broadcaster))
+                        )
+                        continue;
+
+                    if (current.Receiver != null && current.CanBeUsedByPlayer(identityId))
+                        _broadcasters.Add(current);
+                }
+            }
+
+            var list = _broadcasters.ToList();
+            _broadcasters.Clear();
+            return list;
+        }
+
+        public static List<MyDataBroadcaster> GetAllRelayedBroadcasters(IEnumerable<MyDataReceiver> receivers, long identityId, bool mutual)
+        {
+            foreach (var receiver in receivers)
+                _broadcastToCheck.Enqueue(receiver);
+            while (_broadcastToCheck.Count > 0)
+            {
+                var next = _broadcastToCheck.Dequeue();
+
+                foreach (MyDataBroadcaster current in next.BroadcastersInRange)
+                {
+                    if (current.Closed ||
+                        mutual &&
+                        (
+                            current.Receiver == null || 
+                            next.Broadcaster == null ||
+                            !current.Receiver.BroadcastersInRange.Contains(next.Broadcaster))
+                        )
+                        continue;
+
+                    if (current.CanBeUsedByPlayer(identityId) && _broadcasters.Add(current) && current.Receiver != null)
+                        _broadcastToCheck.Enqueue(current.Receiver);
+                }
+            }
+
+            var list = _broadcasters.ToList();
+            _broadcasters.Clear();
+            return list;
         }
 
         //public static DetectionInfo AverageDetection(params DetectionInfo[] args)

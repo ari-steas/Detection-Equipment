@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Shared.Utils;
+﻿using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
+using DetectionEquipment.Shared.Utils;
 using VRage.Game.Components;
 
 namespace DetectionEquipment.Shared
@@ -13,6 +14,7 @@ namespace DetectionEquipment.Shared
             Log.IncreaseIndent();
         
             GlobalData.Init();
+            DatalinkManager.Load();
 
             Log.DecreaseIndent();
             Log.Info("SharedMain", "Initialized.");
@@ -32,6 +34,7 @@ namespace DetectionEquipment.Shared
             Log.IncreaseIndent();
         
             GlobalData.Unload();
+            DatalinkManager.Unload();
 
             Log.DecreaseIndent();
             Log.Info("SharedMain", "Unloaded.");

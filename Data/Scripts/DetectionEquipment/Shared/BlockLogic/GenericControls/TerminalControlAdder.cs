@@ -152,6 +152,23 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             return box;
         }
 
+        public static IMyTerminalControlLabel CreateLabel(string id, string text)
+        {
+            var label = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlLabel, BlockType>(IdPrefix + id);
+            label.Label = MyStringId.GetOrCompute(text);
+
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(label);
+            return label;
+        }
+
+        public static IMyTerminalControlSeparator CreateSeperator(string id)
+        {
+            var seperator = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSeparator, BlockType>(IdPrefix + id);
+
+            MyAPIGateway.TerminalControls.AddControl<BlockType>(seperator);
+            return seperator;
+        }
+
         /// <summary>
         /// Adds a toolbar action to the block type.
         /// </summary>
