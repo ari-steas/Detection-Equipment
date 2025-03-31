@@ -238,9 +238,9 @@ namespace DetectionEquipment.Server.Tracking
             // Cast for occupied cells, if there's a hit then do a physics cast.
             HashSet<Vector3I> visited = new HashSet<Vector3I>();
             double maxCastLength = Grid.LocalAABB.HalfExtents.Length();
-            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize)
+            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize * 2) // Check every two blocks for performance's sake
             {
-                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize)
+                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize * 2) // Check every two blocks for performance's sake
                 {
                     var vecOffset = Vector3D.Rotate(new Vector3D(x, y, 0), rotationMatrix);
 

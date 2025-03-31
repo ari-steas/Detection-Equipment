@@ -14,9 +14,11 @@ namespace DetectionEquipment.Shared
         public static readonly double SyncRangeSq = MyAPIGateway.Session.SessionSettings.SyncDistance * MyAPIGateway.Session.SessionSettings.SyncDistance;
         public static readonly Guid SettingsGuid = new Guid("b4e33a2c-0406-4aea-bf0a-d1ad04266a14");
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
+        public static IMyModContext ModContext;
 
         internal static void Init()
         {
+            ModContext = SharedMain.I.ModContext;
             Log.Info("GlobalData", "Initial values set.");
         }
 

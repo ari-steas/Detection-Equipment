@@ -2,8 +2,7 @@
 using DetectionEquipment.Client.Sensors;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Client.Networking;
-using Sandbox.Definitions;
-using System.Collections.Generic;
+using DetectionEquipment.Client.Interface;
 
 namespace DetectionEquipment.Client
 {
@@ -17,6 +16,7 @@ namespace DetectionEquipment.Client
 
             SensorBlockManager.Init();
             new ClientNetwork().LoadData();
+            BlockCategoryManager.Init();
 
             Log.DecreaseIndent();
             Log.Info("ClientMain", "Initialized.");
@@ -33,6 +33,7 @@ namespace DetectionEquipment.Client
             Log.Info("ClientMain", "Start unload...");
             Log.IncreaseIndent();
 
+            BlockCategoryManager.Close();
             ClientNetwork.I.UnloadData();
             SensorBlockManager.Unload();
 

@@ -19,7 +19,7 @@ namespace DetectionEquipment.Client.Networking
             I = this;
             MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(GlobalData.ClientNetworkId, ReceivedPacket);
 
-            Log.Info("ClientNetwork", "Initialized.");
+            Log.Info("ClientNetwork", "Ready.");
         }
 
         public void UnloadData()

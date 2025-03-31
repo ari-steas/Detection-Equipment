@@ -257,9 +257,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         /// Groups detection info from a single moment in time.
         /// </summary>
         /// <param name="infos"></param>
-        private List<HashSet<WorldDetectionInfo>> GroupInfos(ICollection<WorldDetectionInfo> infos)
+        private List<List<WorldDetectionInfo>> GroupInfos(ICollection<WorldDetectionInfo> infos)
         {
-            var groups = new List<HashSet<WorldDetectionInfo>>();
+            var groups = new List<List<WorldDetectionInfo>>();
 
             foreach (var info in infos)
             {
@@ -292,7 +292,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 // Otherwise create new group
                 if (!didMatch)
                 {
-                    groups.Add(new HashSet<WorldDetectionInfo>()
+                    groups.Add(new List<WorldDetectionInfo>(UseAllSensors.Value ? GridSensors.Sensors.Count : ActiveSensors.Count)
                     {
                         info
                     });

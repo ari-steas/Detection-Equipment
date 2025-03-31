@@ -1,13 +1,13 @@
 ﻿using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Serialization;
-using DetectionEquipment.Shared.Utils;
+using ParallelTasks;
 using Sandbox.ModAPI;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Server.SensorBlocks
@@ -21,6 +21,7 @@ namespace DetectionEquipment.Server.SensorBlocks
         public bool HasRadar = false;
 
         private Dictionary<IMyGridGroupData, List<VisibilitySet>> _combineBuffer = new Dictionary<IMyGridGroupData, List<VisibilitySet>>();
+        private bool _isUpdateComplete = true;
 
         public GridSensorManager(IMyCubeGrid grid)
         {
@@ -38,40 +39,54 @@ namespace DetectionEquipment.Server.SensorBlocks
         
         public void Update()
         {
-            TrackVisibility.Clear();
-            _combineBuffer.Clear();
             if (Sensors.Count == 0)
                 return;
 
-            foreach (var track in ServerMain.I.Tracks.Values)
+            if (_isUpdateComplete)
             {
-                // 500km max track range if radar is present, 50km otherwise
-                if (Vector3D.DistanceSquared(track.Position, Grid.WorldAABB.Center) > (HasRadar ? 500000d * 500000d : 50000d * 50000d))
-                    continue;
-
-                GridTrack gT = track as GridTrack;
-                if (gT?.Grid?.GetTopMostParent() == Grid.GetTopMostParent())
-                    continue;
-
-                if (gT != null)
+                _isUpdateComplete = false;
+                var tracksBuffer = new Dictionary<IMyEntity, ITrack>(ServerMain.I.Tracks);
+                MyAPIGateway.Parallel.Start(() =>
                 {
-                    var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
-                    if (!_combineBuffer.ContainsKey(topmost))
-                        _combineBuffer[topmost] = new List<VisibilitySet>();
-                    _combineBuffer[topmost].Add(new VisibilitySet(Grid, track));
-                }
-                else
-                {
-                    TrackVisibility.Add(new VisibilitySet(Grid, track));
-                }
-            }
+                    var internalVisibility = new HashSet<VisibilitySet>(TrackVisibility.Count);
+                    foreach (var trackKvp in tracksBuffer)
+                    {
+                        // 500km max track range if radar is present, 50km otherwise
+                        if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (HasRadar ? 500000d * 500000d : 50000d * 50000d))
+                            continue;
 
-            foreach (var combineKvp in _combineBuffer)
-            {
-                if (combineKvp.Value.Count > 1)
-                    TrackVisibility.Add(new VisibilitySet(combineKvp.Value));
-                else
-                    TrackVisibility.Add(combineKvp.Value[0]);
+                        var gT = trackKvp.Value as GridTrack;
+                        if (gT?.Grid?.GetTopMostParent() == Grid.GetTopMostParent())
+                            continue;
+
+                        if (gT != null)
+                        {
+                            var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
+                            if (!_combineBuffer.ContainsKey(topmost))
+                                _combineBuffer[topmost] = new List<VisibilitySet>();
+                            _combineBuffer[topmost].Add(new VisibilitySet(Grid, trackKvp.Value));
+                        }
+                        else
+                        {
+                            internalVisibility.Add(new VisibilitySet(Grid, trackKvp.Value));
+                        }
+                    }
+
+                    foreach (var combineKvp in _combineBuffer)
+                    {
+                        if (combineKvp.Value.Count > 1)
+                            internalVisibility.Add(new VisibilitySet(combineKvp.Value));
+                        else
+                            internalVisibility.Add(combineKvp.Value[0]);
+                    }
+                    _combineBuffer.Clear();
+
+                    lock (TrackVisibility)
+                    {
+                        TrackVisibility = internalVisibility;
+                    }
+                    _isUpdateComplete = true;
+                });
             }
 
             MyAPIGateway.Parallel.ForEach(Sensors, sensor =>

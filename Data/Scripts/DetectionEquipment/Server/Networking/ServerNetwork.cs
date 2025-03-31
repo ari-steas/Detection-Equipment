@@ -21,7 +21,7 @@ namespace DetectionEquipment.Server.Networking
             I = this;
             MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(GlobalData.ServerNetworkId, ReceivedPacket);
 
-            Log.Info("ServerNetwork", "Initialized.");
+            Log.Info("ServerNetwork", "Ready.");
         }
 
         public void UnloadData()
