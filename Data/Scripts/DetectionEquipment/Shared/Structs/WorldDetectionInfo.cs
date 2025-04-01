@@ -9,7 +9,7 @@ using WorldDetTuple = VRage.MyTuple<int, double, double, VRageMath.Vector3D, VRa
 
 namespace DetectionEquipment.Shared.Structs
 {
-    internal struct WorldDetectionInfo
+    internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>
     {
         public WorldDetectionInfo(DetectionInfo info)
         {
@@ -148,6 +148,11 @@ namespace DetectionEquipment.Shared.Structs
             };
 
             return result;
+        }
+
+        public int CompareTo(WorldDetectionInfo other)
+        {
+            return other.CrossSection.CompareTo(this.CrossSection);
         }
     }
 }

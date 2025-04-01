@@ -1,11 +1,13 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Structs;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
 using VRage.Game.Components;
+using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 using VRageMath;
@@ -40,7 +42,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         }
         public MySync<float, SyncDirection.BothWays> ResetAngleTime;
 
-        private Dictionary<WorldDetectionInfo, int> _detectionTrackDict = new Dictionary<WorldDetectionInfo, int>();
+        private SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
         public Dictionary<BlockSensor, float> LockDecay = new Dictionary<BlockSensor, float>();
 
         protected override ControlBlockSettingsBase GetSettings => new TrackerSettings(this);
@@ -87,13 +89,19 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             }
         }
 
-        private WorldDetectionInfo? GetFirstTarget(BlockSensor sensor, Dictionary<WorldDetectionInfo, int> targetDict)
+        private WorldDetectionInfo? GetFirstTarget(BlockSensor sensor, IDictionary<WorldDetectionInfo, int> targetDict)
         {
             int numLocks = int.MaxValue;
             WorldDetectionInfo? bestTarget = null;
-            foreach (var target in targetDict)
+            var sensorGridSize = sensor.Block.CubeGrid.LocalAABB.Size.Length();
+            foreach (var target in targetDict.Reverse())
             {
                 if (!sensor.CanAimAt(target.Key.Position))
+                    continue;
+
+                var thisGridHit = sensor.Block.CubeGrid.RayCastBlocks(sensor.Sensor.Position + Vector3D.Normalize(target.Key.Position - sensor.Sensor.Position) * sensorGridSize, sensor.Sensor.Position);
+                DebugDraw.AddLine(sensor.Sensor.Position + Vector3D.Normalize(target.Key.Position - sensor.Sensor.Position) * sensorGridSize, sensor.Sensor.Position, Color.Blue, 4);
+                if (thisGridHit != sensor.Block.Position)
                     continue;
 
                 if (Vector3D.Angle(sensor.Sensor.Direction, target.Key.Position - sensor.Sensor.Position) < 0.5)
@@ -107,8 +115,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                     numLocks = target.Value;
                     bestTarget = target.Key;
                 }
-                if (numLocks == 0)
-                    break;
             }
 
             return bestTarget;

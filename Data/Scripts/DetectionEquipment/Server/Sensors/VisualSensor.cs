@@ -2,8 +2,10 @@
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
+using Sandbox.ModAPI;
 using System;
 using VRage;
+using VRage.Game.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
@@ -62,6 +64,11 @@ namespace DetectionEquipment.Server.Sensors
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
             if (targetAngle > Aperture || targetSizeRatio < MinVisibility)
+                return null;
+
+            IHitInfo hitInfo;
+            MyAPIGateway.Physics.CastLongRay(Position, track.Position, out hitInfo, false);
+            if (hitInfo != null && hitInfo.HitEntity.EntityId != track.EntityId)
                 return null;
 
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);

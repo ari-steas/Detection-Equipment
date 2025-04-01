@@ -3,9 +3,11 @@ using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
+using Sandbox.ModAPI;
 using System;
 using VRage;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
@@ -93,6 +95,11 @@ namespace DetectionEquipment.Server.Sensors
 
             //MyAPIGateway.Utilities.ShowNotification($"Power: {Power/1000000:N1}MW -> {signalToNoiseRatio:F} dB", 1000/60);
             //MyAPIGateway.Utilities.ShowNotification($"{(MathHelper.Clamp(signalToNoiseRatio / MinStableSignal, 0, 1)) * 100:N0}% track integrity ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
+
+            IHitInfo hitInfo;
+            MyAPIGateway.Physics.CastLongRay(Position, track.Position, out hitInfo, false);
+            if (hitInfo != null && hitInfo.HitEntity.EntityId != track.EntityId)
+                return null;
 
             if (track is EntityTrack)
                 PassiveRadarSensor.NotifyOnRadarHit(((EntityTrack)track).Entity, this);

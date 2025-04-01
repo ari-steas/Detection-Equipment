@@ -8,6 +8,7 @@ using VRage.Game.Components;
 using System.Collections.Generic;
 using VRage.ModAPI;
 using DetectionEquipment.Shared.Utils;
+using System.Reflection.Emit;
 
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
@@ -67,7 +68,6 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             slider.Writer = writer; // Replace with your property
 
             slider.Visible = VisibleFunc;
-            slider.Enabled = (b) => true; // or your custom condition
             slider.SupportsMultipleBlocks = true;
 
             MyAPIGateway.TerminalControls.AddControl<BlockType>(slider);
@@ -157,6 +157,8 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             var label = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlLabel, BlockType>(IdPrefix + id);
             label.Label = MyStringId.GetOrCompute(text);
 
+            label.Visible = VisibleFunc;
+
             MyAPIGateway.TerminalControls.AddControl<BlockType>(label);
             return label;
         }
@@ -164,6 +166,8 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         public static IMyTerminalControlSeparator CreateSeperator(string id)
         {
             var seperator = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSeparator, BlockType>(IdPrefix + id);
+
+            seperator.Visible = VisibleFunc;
 
             MyAPIGateway.TerminalControls.AddControl<BlockType>(seperator);
             return seperator;
