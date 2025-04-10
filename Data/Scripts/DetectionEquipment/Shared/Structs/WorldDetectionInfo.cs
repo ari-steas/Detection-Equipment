@@ -11,6 +11,13 @@ namespace DetectionEquipment.Shared.Structs
 {
     internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>
     {
+        public double CrossSection, Error;
+        public Vector3D Position;
+        public Vector3D? Velocity;
+        public double? VelocityVariance;
+        public SensorDefinition.SensorType DetectionType;
+        public string[] IffCodes;
+
         public WorldDetectionInfo(DetectionInfo info)
         {
             CrossSection = info.CrossSection;
@@ -27,13 +34,6 @@ namespace DetectionEquipment.Shared.Structs
             VelocityVariance = null;
             IffCodes = info.IffCodes ?? Array.Empty<string>();
         }
-
-        public double CrossSection, Error;
-        public Vector3D Position;
-        public Vector3D? Velocity;
-        public double? VelocityVariance;
-        public SensorDefinition.SensorType DetectionType;
-        public string[] IffCodes;
 
         public override string ToString()
         {

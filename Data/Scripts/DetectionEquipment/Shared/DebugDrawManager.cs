@@ -96,36 +96,28 @@ namespace DetectionEquipment.Shared
 
         public override void Draw()
         {
-            try
+            foreach (var pair in _queuedPoints.ToList())
             {
-                foreach (var pair in _queuedPoints.ToArray())
-                {
-                    DrawPoint0(pair.Key, pair.Value.Item2);
+                DrawPoint0(pair.Key, pair.Value.Item2);
 
-                    if (DateTime.UtcNow.Ticks > pair.Value.Item1)
-                        _queuedPoints.Remove(pair.Key);
-                }
-
-                foreach (var key in _queuedGridPoints.Keys.ToArray())
-                {
-                    DrawGridPoint0(key, _queuedGridPoints[key].Item3, _queuedGridPoints[key].Item2);
-
-                    if (DateTime.UtcNow.Ticks > _queuedGridPoints[key].Item1)
-                        _queuedGridPoints.Remove(key);
-                }
-
-                foreach (var key in _queuedLinePoints.Keys.ToArray())
-                {
-                    DrawLine0(key.Item1, key.Item2, _queuedLinePoints[key].Item2);
-
-                    if (DateTime.UtcNow.Ticks > _queuedLinePoints[key].Item1)
-                        _queuedLinePoints.Remove(key);
-                }
+                if (DateTime.UtcNow.Ticks > pair.Value.Item1)
+                    _queuedPoints.Remove(pair.Key);
             }
-            catch (Exception ex)
+
+            foreach (var kvp in _queuedGridPoints.ToList())
             {
-                //HeartLog.Exception(ex, typeof(DebugDraw));
-                MyLog.Default.WriteLineAndConsole(ex.ToString());
+                DrawGridPoint0(kvp.Key, kvp.Value.Item3, kvp.Value.Item2);
+
+                if (DateTime.UtcNow.Ticks > kvp.Value.Item1)
+                    _queuedGridPoints.Remove(kvp.Key);
+            }
+
+            foreach (var kvp in _queuedLinePoints.ToList())
+            {
+                DrawLine0(kvp.Key.Item1, kvp.Key.Item2, kvp.Value.Item2);
+
+                if (DateTime.UtcNow.Ticks > kvp.Value.Item1)
+                    _queuedLinePoints.Remove(kvp.Key);
             }
         }
 
