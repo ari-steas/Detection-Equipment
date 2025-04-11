@@ -50,15 +50,15 @@ namespace DetectionEquipment.Server.Sensors
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
-            return GetDetectionInfo(track, 0, Vector3D.Zero);
+            return GetDetectionInfo(track, 0);
         }
 
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
         {
-            return GetDetectionInfo(visibilitySet.Track, 0, Vector3D.Zero);
+            return GetDetectionInfo(visibilitySet.Track, 0);
         }
 
-        public DetectionInfo? GetDetectionInfo(ITrack track, double visibility, Vector3D closestCorner)
+        public DetectionInfo? GetDetectionInfo(ITrack track, double visibility)
         {
             if (!_queuedRadarHits.ContainsKey(track.EntityId))
                 return null;

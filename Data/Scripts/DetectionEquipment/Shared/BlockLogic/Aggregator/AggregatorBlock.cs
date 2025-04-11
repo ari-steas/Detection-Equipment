@@ -3,7 +3,6 @@ using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
-using Sandbox.Game.Multiplayer;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -15,12 +14,12 @@ using ProtoBuf;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
-using VRageMath;
+using VRage.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock")]
-    internal class AggregatorBlock : ControlBlockBase<IMyConveyorSorter>
+    internal partial class AggregatorBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public MySync<float, SyncDirection.BothWays> AggregationTime;
         public MySync<float, SyncDirection.BothWays> DistanceThreshold;
@@ -36,6 +35,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         internal Queue<WorldDetectionInfo[]> DetectionCache = new Queue<WorldDetectionInfo[]>();
 
         private HashSet<WorldDetectionInfo> _bufferDetections = new HashSet<WorldDetectionInfo>();
+
+        private Dictionary<int, HashSet<AggregatorBlock>> _bufferVisibleAggregators =
+            new Dictionary<int, HashSet<AggregatorBlock>>();
 
         protected override ControlBlockSettingsBase GetSettings => new AggregatorSettings(this);
 
@@ -81,6 +83,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             new AggregatorControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
+            NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
 
             DatalinkManager.RegisterAggregator(this, DatalinkOutChannel.Value, _prevDatalinkOutChannel);
             _prevDatalinkOutChannel = DatalinkOutChannel.Value;
@@ -92,121 +95,30 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
         }
 
-        public HashSet<WorldDetectionInfo> GetAggregatedDetections(bool useNetwork = true)
+        public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
-            var detectionSet = _bufferDetections;
-            if (useNetwork)
+            foreach (var info in _bufferDetections)
+                _infosCache.AddLast(info);
+
+            foreach (var channel in _bufferVisibleAggregators)
             {
-                List<WorldDetectionInfo> fullSet = new List<WorldDetectionInfo>(detectionSet);
-
-                foreach (var channel in DatalinkManager.GetActiveDatalinkChannels(Block.CubeGrid, Block.OwnerId))
-                {
-                    if (!DatalinkInChannels.Contains(channel.Key))
-                        continue;
-                    foreach (var aggregator in channel.Value)
-                        fullSet.AddRange(aggregator.GetAggregatedDetections(false));
-                }
-
-                detectionSet = AggregateInfos(fullSet).ToHashSet();
+                if (!DatalinkInChannels.Contains(channel.Key))
+                    continue;
+                foreach (var aggregator in channel.Value)
+                    if (aggregator != this)
+                        foreach (var info in aggregator._bufferDetections)
+                            _infosCache.AddLast(info);
             }
+
+            var detectionSet = AggregateInfos(_infosCache).ToHashSet();
+            _infosCache.Clear();
 
             return detectionSet;
         }
 
-        private void CalculateDetections(Queue<WorldDetectionInfo[]> cache) // TODO: Improve performance of this method
-        {
-            //Dictionary<WorldDetectionInfo, int> weightedInfos = new Dictionary<WorldDetectionInfo, int>();
-            var aggregatedDetections = new HashSet<WorldDetectionInfo>();
-
-            if (cache.Count == 0)
-            {
-                _bufferDetections.Clear();
-                return;
-            }
-
-            //int weight = 1;
-            //foreach (var set in cache)
-            //{
-            //    weight++;
-            //    foreach (var detection in set)
-            //    {
-            //        weightedInfos[detection] = weightedInfos.ContainsKey(detection) ? weightedInfos[detection] + weight : weight;
-            //    }
-            //}
-
-            var latestSet = cache.Peek();
-            List<WorldDetectionInfo> toCombine = new List<WorldDetectionInfo>();
-            foreach (var info in latestSet)
-            {
-                foreach (var set in cache)
-                {
-                    if (set == latestSet)
-                        continue;
-
-                    foreach (var member in set)
-                    {
-                        bool typesMatch = AggregateTypes || member.DetectionType == info.DetectionType;
-                        bool crossSectionsMatch = member.DetectionType != info.DetectionType || Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold;
-                        double maxPositionDiff = Math.Max(member.Error, info.Error) * DistanceThreshold + MaxVelocity;
-                        bool positionsMatch = Vector3D.DistanceSquared(member.Position, info.Position) <= maxPositionDiff * maxPositionDiff;
-
-                        // Cross-section doesn't have to match if the sensors are different types.
-                        if (!typesMatch || !crossSectionsMatch || !positionsMatch)
-                            continue;
-
-                        toCombine.Add(member);
-                        break;
-                    }
-                }
-
-                Vector3D averageVelocity = Vector3D.Zero;
-                double velVariation = 0;
-
-                if (toCombine.Count == 0)
-                {
-                    aggregatedDetections.Add(info);
-                    continue;
-                }
-
-                if (toCombine.Count > 1)
-                {
-                    var velocities = new Vector3D[toCombine.Count - 1];
-                    for (int i = 0; i < velocities.Length; i++)
-                    {
-                        //DebugDraw.AddLine(toCombine[i].Position, toCombine[i+1].Position, Color.White * ((float)i/velocities.Length), 0); // Position delta indicator
-                        velocities[i] = (toCombine[i + 1].Position - toCombine[i].Position) * 60;
-                        averageVelocity += velocities[i];
-                    }
-                    averageVelocity /= velocities.Length;
-                    double averageSpeed = averageVelocity.Length();
-
-                    foreach (var velocity in velocities)
-                    {
-                        var len = velocity.Length();
-                        velVariation += (len - averageSpeed) * (len - averageSpeed);
-                    }
-
-                    velVariation /= velocities.Length;
-                }
-
-                var averagedInfo = WorldDetectionInfo.Average(toCombine);
-                if (velVariation <= VelocityErrorThreshold * VelocityErrorThreshold)
-                    averagedInfo.Position += averageVelocity * AggregationTime / 2;
-
-                averagedInfo.Velocity = averageVelocity;
-                averagedInfo.VelocityVariance = velVariation;
-
-                //MyAPIGateway.Utilities.ShowNotification($"Vel: {averageVelocity.Length():N1} m/s (R={Math.Sqrt(velVariation)})", 1000/60);
-                //DebugDraw.AddLine(averagedInfo.Position, averagedInfo.Position + averageVelocity, Color.Blue, 0);
-
-                aggregatedDetections.Add(averagedInfo);
-                toCombine.Clear();
-            }
-
-            _bufferDetections = aggregatedDetections;
-        }
-
         private bool _isProcessing = false;
+        private readonly LinkedList<WorldDetectionInfo[]> _parallelCache = new LinkedList<WorldDetectionInfo[]>();
+        private readonly LinkedList<WorldDetectionInfo> _infosCache = new LinkedList<WorldDetectionInfo>();
         public override void UpdateAfterSimulation()
         {
             if (!MyAPIGateway.Session.IsServer)
@@ -215,26 +127,30 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             if (!_isProcessing)
             {
                 _isProcessing = true;
-                var parallelCache = new Queue<WorldDetectionInfo[]>(DetectionCache);
+
+                _parallelCache.Clear();
+                foreach (var item in DetectionCache)
+                    _parallelCache.AddLast(item);
+
                 MyAPIGateway.Parallel.Start(() =>
                 {
-                    CalculateDetections(parallelCache);
+                    CalculateDetections(_parallelCache);
                     _isProcessing = false;
                 });
             }
 
-            HashSet<WorldDetectionInfo> infos = new HashSet<WorldDetectionInfo>();
             foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensors)
             {
                 foreach (var sensorDetection in sensor.Detections)
                 {
                     var detection = new WorldDetectionInfo(sensorDetection);
                     //DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
-                    infos.Add(detection);
+                    _infosCache.AddLast(detection);
                 }
             }
 
-            DetectionCache.Enqueue(AggregateInfos(infos));
+            DetectionCache.Enqueue(AggregateInfos(_infosCache));
+            _infosCache.Clear();
             while (DetectionCache.Count > AggregationTime * 60)
                 DetectionCache.Dequeue();
 
@@ -249,65 +165,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             //}
         }
 
-        private WorldDetectionInfo[] AggregateInfos(ICollection<WorldDetectionInfo> infos)
+        public override void UpdateAfterSimulation10()
         {
-            var groups = GroupInfos(infos);
-            var aggregated = new WorldDetectionInfo[groups.Count];
-            for (int i = 0; i < aggregated.Length; i++)
-            {
-                aggregated[i] = WorldDetectionInfo.Average(groups[i]);
-            }
-
-            return aggregated;
-        }
-
-        /// <summary>
-        /// Groups detection info from a single moment in time.
-        /// </summary>
-        /// <param name="infos"></param>
-        private List<List<WorldDetectionInfo>> GroupInfos(ICollection<WorldDetectionInfo> infos)
-        {
-            var groups = new List<List<WorldDetectionInfo>>();
-
-            foreach (var info in infos)
-            {
-                // Check if any existing groups match RCS and position
-                bool didMatch = false;
-                foreach (var group in groups)
-                {
-                    foreach (var member in group)
-                    {
-                        bool typesMatch = AggregateTypes || member.DetectionType == info.DetectionType;
-                        bool crossSectionsMatch = member.DetectionType != info.DetectionType || Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold;
-                        double maxPositionDiff = Math.Max(member.Error, info.Error) * DistanceThreshold;
-                        bool positionsMatch = Vector3D.DistanceSquared(member.Position, info.Position) <= maxPositionDiff * maxPositionDiff;
-
-                        // Cross-section doesn't have to match if the sensors are different types.
-                        if (!typesMatch || !crossSectionsMatch || !positionsMatch)
-                            continue;
-
-                        didMatch = true;
-                        break;
-                    }
-
-                    // Add to group if matched
-                    if (!didMatch)
-                        continue;
-                    group.Add(info);
-                    break;
-                }
-
-                // Otherwise create new group
-                if (!didMatch)
-                {
-                    groups.Add(new List<WorldDetectionInfo>(UseAllSensors.Value ? GridSensors.Sensors.Count : ActiveSensors.Count)
-                    {
-                        info
-                    });
-                }
-            }
-
-            return groups;
+            // This method is pretty slow, let's not call it often.
+            _bufferVisibleAggregators = DatalinkManager.GetActiveDatalinkChannels(Block.CubeGrid, Block.OwnerId);
         }
 
         internal class AggregatorUpdatePacket : PacketBase
