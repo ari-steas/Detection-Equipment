@@ -8,6 +8,10 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Client.Networking;
+using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Shared.Networking;
+using ProtoBuf;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
@@ -47,16 +51,20 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             }
         }
 
+        private int[] _datalinkInChannels = new[] { 0 };
         public int[] DatalinkInChannels
         {
             get
             {
-                // TODO
-                return new int[] { 0 };
+                return _datalinkInChannels;
             }
             set
             {
-                // TODO
+                _datalinkInChannels = value;
+                if (MyAPIGateway.Session.IsServer)
+                    ServerNetwork.SendToEveryoneInSync(new AggregatorUpdatePacket(this), Block.GetPosition());
+                else
+                    ClientNetwork.SendToServer(new AggregatorUpdatePacket(this));
             }
         }
 
@@ -300,6 +308,33 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             }
 
             return groups;
+        }
+
+        internal class AggregatorUpdatePacket : PacketBase
+        {
+            [ProtoMember(1)] private long BlockId;
+            [ProtoMember(2)] private int[] DatalinkInChannels;
+
+            public AggregatorUpdatePacket(AggregatorBlock block)
+            {
+                BlockId = block.Block.EntityId;
+                DatalinkInChannels = block.DatalinkInChannels;
+            }
+
+            private AggregatorUpdatePacket()
+            {
+            }
+
+            public override void Received(ulong senderSteamId, bool fromServer)
+            {
+                var block = MyAPIGateway.Entities.GetEntityById(BlockId)?.GameLogic?.GetAs<AggregatorBlock>();
+                if (block == null)
+                    return;
+                block._datalinkInChannels = DatalinkInChannels;
+
+                if (MyAPIGateway.Session.IsServer)
+                    ServerNetwork.SendToEveryoneInSync(this, block.Block.GetPosition());
+            }
         }
     }
 }

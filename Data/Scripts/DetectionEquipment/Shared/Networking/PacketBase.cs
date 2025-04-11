@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
+﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Networking
@@ -6,6 +7,7 @@ namespace DetectionEquipment.Shared.Networking
     [ProtoInclude(100, typeof(SensorUpdatePacket))]
     [ProtoInclude(101, typeof(SensorInitPacket))]
     [ProtoInclude(102, typeof(BlockSelectControlPacket))]
+    [ProtoInclude(103, typeof(AggregatorBlock.AggregatorUpdatePacket))]
     [ProtoContract(UseProtoMembersOnly = true)]
     public abstract class PacketBase
     {
