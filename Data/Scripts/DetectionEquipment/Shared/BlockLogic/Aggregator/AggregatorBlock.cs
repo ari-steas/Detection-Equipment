@@ -188,6 +188,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             public override void Received(ulong senderSteamId, bool fromServer)
             {
+                if (fromServer && MyAPIGateway.Session.IsServer)
+                    return;
+
                 var block = MyAPIGateway.Entities.GetEntityById(BlockId)?.GameLogic?.GetAs<AggregatorBlock>();
                 if (block == null)
                     return;
