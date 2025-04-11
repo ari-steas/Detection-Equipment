@@ -4,6 +4,7 @@ using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
+using DetectionEquipment.Shared;
 using VRage;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -44,19 +45,19 @@ namespace DetectionEquipment.Server.Sensors
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
-            return GetDetectionInfo(track, IsInfrared ? track.InfraredVisibility(Position) : track.OpticalVisibility(Position));
+            return GetDetectionInfo(track, IsInfrared ? track.InfraredVisibility(Position) : track.OpticalVisibility(Position), track.BoundingBox.ClosestCorner(Position));
         }
 
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
         {
-            return GetDetectionInfo(visibilitySet.Track, IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility);
+            return GetDetectionInfo(visibilitySet.Track, IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility, visibilitySet.ClosestCorner);
         }
 
-        public DetectionInfo? GetDetectionInfo(ITrack track, double visibility)
+        public DetectionInfo? GetDetectionInfo(ITrack track, double visibility, Vector3D closestCorner)
         {
             double targetAngle = 0;
             if (track.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                targetAngle = Vector3D.Angle(Direction, track.BoundingBox.ClosestCorner(Position) - Position);
+                targetAngle = Vector3D.Angle(Direction, closestCorner - Position);
 
             Vector3D bearing = track.Position - Position;
             double range = bearing.Normalize();
@@ -64,11 +65,6 @@ namespace DetectionEquipment.Server.Sensors
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
             if (targetAngle > Aperture || targetSizeRatio < MinVisibility)
-                return null;
-
-            IHitInfo hitInfo;
-            MyAPIGateway.Physics.CastLongRay(Position, track.Position, out hitInfo, false);
-            if (hitInfo != null && hitInfo.HitEntity.EntityId != track.EntityId)
                 return null;
 
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);

@@ -1,4 +1,5 @@
 ﻿using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
@@ -63,19 +64,19 @@ namespace DetectionEquipment.Server.Sensors
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
-            return GetDetectionInfo(track, track.RadarVisibility(Position));
+            return GetDetectionInfo(track, track.RadarVisibility(Position), track.BoundingBox.ClosestCorner(Position));
         }
 
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
         {
-            return GetDetectionInfo(visibilitySet.Track, visibilitySet.RadarVisibility);
+            return GetDetectionInfo(visibilitySet.Track, visibilitySet.RadarVisibility, visibilitySet.ClosestCorner);
         }
 
-        public DetectionInfo? GetDetectionInfo(ITrack track, double radarCrossSection)
+        public DetectionInfo? GetDetectionInfo(ITrack track, double radarCrossSection, Vector3D closestCorner)
         {
             double targetAngle = 0;
             if (track.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                targetAngle = Vector3D.Angle(Direction, track.BoundingBox.ClosestCorner(Position) - Position);
+                targetAngle = Vector3D.Angle(Direction, closestCorner - Position);
 
             if (targetAngle > Aperture)
                 return null;
@@ -96,11 +97,6 @@ namespace DetectionEquipment.Server.Sensors
             //MyAPIGateway.Utilities.ShowNotification($"Power: {Power/1000000:N1}MW -> {signalToNoiseRatio:F} dB", 1000/60);
             //MyAPIGateway.Utilities.ShowNotification($"{(MathHelper.Clamp(signalToNoiseRatio / MinStableSignal, 0, 1)) * 100:N0}% track integrity ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
 
-            IHitInfo hitInfo;
-            MyAPIGateway.Physics.CastLongRay(Position, track.Position, out hitInfo, false);
-            if (hitInfo != null && hitInfo.HitEntity.EntityId != track.EntityId)
-                return null;
-
             if (track is EntityTrack)
                 PassiveRadarSensor.NotifyOnRadarHit(((EntityTrack)track).Entity, this);
 
@@ -118,7 +114,7 @@ namespace DetectionEquipment.Server.Sensors
 
             OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(radarCrossSection, range, maxRangeError, maxBearingError, bearing, iffCodes));
 
-            return new DetectionInfo()
+            return new DetectionInfo
             {
                 Track = track,
                 Sensor = this,

@@ -61,19 +61,23 @@ namespace DetectionEquipment.Shared.Utils
 
         public static Vector3D ClosestCorner(this BoundingBoxD boundingBoxD, Vector3D position)
         {
-            double closestDSq = double.MaxValue;
-            Vector3D closest = Vector3D.Zero;
-            for (int i = 0; i < BoundingBoxD.NUMBER_OF_CORNERS; ++i)
-            {
-                var corner = boundingBoxD.GetCorner(i);
-                double distSq = Vector3D.DistanceSquared(corner, position);
-                if (distSq > closestDSq)
-                    continue;
-                closestDSq = distSq;
-                closest = corner;
-            }
+            //double closestDSq = double.MaxValue;
+            //Vector3D closest = Vector3D.Zero;
+            //for (int i = 0; i < BoundingBoxD.NUMBER_OF_CORNERS; ++i)
+            //{
+            //    Vector3D corner = boundingBoxD.GetCorner(i);
+            //    double distSq = Vector3D.DistanceSquared(corner, position);
+            //    if (distSq > closestDSq)
+            //        continue;
+            //    closestDSq = distSq;
+            //    closest = corner;
+            //}
+            var delta = position - boundingBoxD.Center;
 
-            return closest;
+            return new Vector3D(
+                delta.X > 0 ? boundingBoxD.Max.X : boundingBoxD.Min.X,
+                delta.Y > 0 ? boundingBoxD.Max.Y : boundingBoxD.Min.Y,
+                delta.Z > 0 ? boundingBoxD.Max.Z : boundingBoxD.Min.Z);
         }
 
         private static readonly HashSet<MyDataBroadcaster> _broadcasters = new HashSet<MyDataBroadcaster>();

@@ -6,6 +6,7 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using DetectionEquipment.Shared.Utils;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
@@ -59,6 +60,12 @@ namespace DetectionEquipment.Server.SensorBlocks
                         if (gT?.Grid?.GetTopMostParent() == Grid.GetTopMostParent())
                             continue;
 
+                        // Only track objects the grid can see
+                        IHitInfo hitInfo;
+                        MyAPIGateway.Physics.CastLongRay(Grid.WorldAABB.ClosestCorner(trackKvp.Value.Position), trackKvp.Value.Position, out hitInfo, false);
+                        if (hitInfo != null && hitInfo.HitEntity.EntityId != trackKvp.Value.EntityId)
+                            continue;
+
                         if (gT != null)
                         {
                             var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
@@ -89,10 +96,13 @@ namespace DetectionEquipment.Server.SensorBlocks
                 });
             }
 
-            MyAPIGateway.Parallel.ForEach(Sensors, sensor =>
-            {
+            foreach (var sensor in Sensors)
                 sensor.Update(TrackVisibility);
-            });
+
+            //MyAPIGateway.Parallel.ForEach(Sensors, sensor =>
+            //{
+            //    sensor.Update(TrackVisibility);
+            //});
         }
 
         public void Close()
@@ -142,6 +152,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             public double RadarVisibility;
             public double OpticalVisibility;
             public double InfraredVisibility;
+            public Vector3D ClosestCorner;
 
             public VisibilitySet(IMyCubeGrid grid, ITrack track)
             {
@@ -156,6 +167,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     OpticalVisibility = track.OpticalVisibility(grid.WorldAABB.Center);
                 }
                 InfraredVisibility = track.InfraredVisibility(grid.WorldAABB.Center, OpticalVisibility);
+                ClosestCorner = Track.BoundingBox.ClosestCorner(grid.WorldAABB.Center);
             }
 
             public VisibilitySet(ICollection<VisibilitySet> toAverage)
@@ -165,6 +177,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 RadarVisibility = 0;
                 OpticalVisibility = 0;
                 InfraredVisibility = 0;
+                ClosestCorner = Vector3D.Zero;
 
                 foreach (var visibilitySet in toAverage)
                 {
@@ -176,7 +189,10 @@ namespace DetectionEquipment.Server.SensorBlocks
                     RadarVisibility += visibilitySet.RadarVisibility;
                     OpticalVisibility += visibilitySet.OpticalVisibility;
                     InfraredVisibility += visibilitySet.InfraredVisibility;
+                    ClosestCorner += visibilitySet.ClosestCorner;
                 }
+
+                ClosestCorner /= toAverage.Count;
             }
         }
     }
