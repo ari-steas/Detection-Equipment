@@ -20,5 +20,10 @@ namespace DetectionEquipment.Shared.Structs
         {
             return $"Range: {Range:N0} +-{RangeError:N1}m\nBearing: {Bearing.ToString("N0")} +-{MathHelper.ToDegrees(BearingError):N1}°\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
         }
+
+        public override int GetHashCode()
+        {
+            return Track.EntityId.GetHashCode();
+        }
     }
 }
