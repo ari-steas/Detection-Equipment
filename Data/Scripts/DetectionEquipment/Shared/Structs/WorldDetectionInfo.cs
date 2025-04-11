@@ -35,6 +35,9 @@ namespace DetectionEquipment.Shared.Structs
             IffCodes = info.IffCodes ?? Array.Empty<string>();
         }
 
+        public override bool Equals(object obj) => obj is WorldDetectionInfo && Position.Equals(((WorldDetectionInfo)obj).Position);
+        public override int GetHashCode() => Position.GetHashCode();
+
         public override string ToString()
         {
             return $"Position: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
@@ -56,6 +59,8 @@ namespace DetectionEquipment.Shared.Structs
             Velocity == null ? null : new MyTuple<Vector3D, double>?(new MyTuple<Vector3D, double>(Velocity.Value, VelocityVariance.Value)),
             IffCodes
             );
+
+        public static WorldDetectionInfo Average(params WorldDetectionInfo[] args) => Average((ICollection<WorldDetectionInfo>) args);
 
         public static WorldDetectionInfo Average(ICollection<WorldDetectionInfo> args)
         {

@@ -108,18 +108,23 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             for (int i = 0; i < aggregated.Length; i++)
             {
                 aggregated[i] = WorldDetectionInfo.Average(groups[i]);
+                groups[i].Clear();
+                GroupInfoBuffer.Push(groups[i]);
             }
-
+        
             return aggregated;
         }
+
+        private static readonly Stack<HashSet<WorldDetectionInfo>> GroupInfoBuffer = new Stack<HashSet<WorldDetectionInfo>>();
 
         /// <summary>
         /// Groups detection info from a single moment in time.
         /// </summary>
         /// <param name="infos"></param>
-        private List<List<WorldDetectionInfo>> GroupInfos(ICollection<WorldDetectionInfo> infos)
+        private List<HashSet<WorldDetectionInfo>> GroupInfos(ICollection<WorldDetectionInfo> infos)
         {
-            var groups = new List<List<WorldDetectionInfo>>();
+            // This is an *INCREDIBLY* hot loop, so we need to squeeze as much performance out as we possibly can.
+            var groups = new List<HashSet<WorldDetectionInfo>>();
 
             foreach (var info in infos)
             {
@@ -152,10 +157,15 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 // Otherwise create new group
                 if (!didMatch)
                 {
-                    groups.Add(new List<WorldDetectionInfo>(UseAllSensors.Value ? GridSensors.Sensors.Count : ActiveSensors.Count)
-                    {
-                        info
-                    });
+                    var list = GroupInfoBuffer.Count > 0
+                        ? GroupInfoBuffer.Pop()
+                        : new HashSet<WorldDetectionInfo>(UseAllSensors.Value
+                            ? GridSensors.Sensors.Count
+                            : ActiveSensors.Count);
+
+                    list.Add(info);
+
+                    groups.Add(list);
                 }
             }
 
