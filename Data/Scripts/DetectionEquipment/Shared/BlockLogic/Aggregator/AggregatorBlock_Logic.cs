@@ -103,44 +103,50 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         private WorldDetectionInfo[] AggregateInfos(ICollection<WorldDetectionInfo> infos)
         {
-            var groups = GroupInfos(infos);
-            var aggregated = new WorldDetectionInfo[groups.Count];
+            GroupInfos(infos);
+            var aggregated = new WorldDetectionInfo[_groupsCache.Count];
             for (int i = 0; i < aggregated.Length; i++)
             {
-                aggregated[i] = WorldDetectionInfo.Average(groups[i]);
-                groups[i].Clear();
-                GroupInfoBuffer.Push(groups[i]);
+                aggregated[i] = WorldDetectionInfo.Average(_groupsCache[i]);
+                _groupsCache[i].Clear();
+                GroupInfoBuffer.Push(_groupsCache[i]);
             }
+
+            _groupsCache.Clear();
         
             return aggregated;
         }
 
+        private List<HashSet<WorldDetectionInfo>> _groupsCache = new List<HashSet<WorldDetectionInfo>>();
         private static readonly Stack<HashSet<WorldDetectionInfo>> GroupInfoBuffer = new Stack<HashSet<WorldDetectionInfo>>();
 
         /// <summary>
         /// Groups detection info from a single moment in time.
         /// </summary>
         /// <param name="infos"></param>
-        private List<HashSet<WorldDetectionInfo>> GroupInfos(ICollection<WorldDetectionInfo> infos)
+        private void GroupInfos(ICollection<WorldDetectionInfo> infos)
         {
             // This is an *INCREDIBLY* hot loop, so we need to squeeze as much performance out as we possibly can.
-            var groups = new List<HashSet<WorldDetectionInfo>>();
 
             foreach (var info in infos)
             {
                 // Check if any existing groups match RCS and position
                 bool didMatch = false;
-                foreach (var group in groups)
+                foreach (var group in _groupsCache)
                 {
                     foreach (var member in group)
                     {
-                        bool typesMatch = AggregateTypes || member.DetectionType == info.DetectionType;
-                        bool crossSectionsMatch = member.DetectionType != info.DetectionType || Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold;
-                        double maxPositionDiff = Math.Max(member.Error, info.Error) * DistanceThreshold;
+                        bool typesMatch = AggregateTypes.Value || member.DetectionType == info.DetectionType;
+                        // Cross-section doesn't have to match if the sensors are different types.
+                        bool crossSectionsMatch = member.DetectionType != info.DetectionType || Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold.Value;
+                        // If types or cross-sections don't match, it's likely that this group won't match at all.
+                        if (!typesMatch || !crossSectionsMatch)
+                            break;
+                        
+                        double maxPositionDiff = Math.Max(member.Error, info.Error) * DistanceThreshold.Value;
                         bool positionsMatch = Vector3D.DistanceSquared(member.Position, info.Position) <= maxPositionDiff * maxPositionDiff;
 
-                        // Cross-section doesn't have to match if the sensors are different types.
-                        if (!typesMatch || !crossSectionsMatch || !positionsMatch)
+                        if (!positionsMatch)
                             continue;
 
                         didMatch = true;
@@ -165,11 +171,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
                     list.Add(info);
 
-                    groups.Add(list);
+                    _groupsCache.Add(list);
                 }
             }
-
-            return groups;
         }
     }
 }
