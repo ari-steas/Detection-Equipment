@@ -55,13 +55,15 @@ namespace DetectionEquipment.Server.Sensors
             double targetAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
                 targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
+            if (targetAngle > Aperture)
+                return null;
 
             Vector3D bearing = visibilitySet.Position - Position;
             double range = bearing.Normalize();
             double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
-            if (targetAngle > Aperture || targetSizeRatio < MinVisibility)
+            if (targetSizeRatio < MinVisibility)
                 return null;
 
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);
@@ -74,7 +76,7 @@ namespace DetectionEquipment.Server.Sensors
 
             OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(visibility, range, maxRangeError, maxBearingError, bearing, Array.Empty<string>()));
 
-            return new DetectionInfo()
+            return new DetectionInfo
             {
                 Track = visibilitySet.Track,
                 Sensor = this,

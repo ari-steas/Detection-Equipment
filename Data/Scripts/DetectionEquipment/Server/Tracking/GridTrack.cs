@@ -144,7 +144,7 @@ namespace DetectionEquipment.Server.Tracking
             //MyAPIGateway.Utilities.ShowNotification($"Max: {maxCheck.ToString("F")}", 1000);
 
             var gridPos = Grid.WorldAABB.Center;
-            DebugDraw.AddLine(gridPos, Vector3D.Rotate(direction * 10, Grid.WorldMatrix) + gridPos, Color.Blue, 1);
+            //DebugDraw.AddLine(gridPos, Vector3D.Rotate(direction * 10, Grid.WorldMatrix) + gridPos, Color.Blue, 1);
 
             // Cast for occupied cells, if there's a hit then do a physics cast.
             HashSet<Vector3I> visited = new HashSet<Vector3I>();

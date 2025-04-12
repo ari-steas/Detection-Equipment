@@ -105,11 +105,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         {
             GroupInfos(infos);
             var aggregated = new WorldDetectionInfo[_groupsCache.Count];
-            for (int i = 0; i < aggregated.Length; i++)
+            int i = 0;
+            foreach (var set in _groupsCache.Values)
             {
-                aggregated[i] = WorldDetectionInfo.Average(_groupsCache[i]);
-                _groupsCache[i].Clear();
-                GroupInfoBuffer.Push(_groupsCache[i]);
+                aggregated[i++] = WorldDetectionInfo.Average(set);
+                set.Clear();
+                GroupInfoBuffer.Push(set);
             }
 
             _groupsCache.Clear();
@@ -117,8 +118,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             return aggregated;
         }
 
-        private List<HashSet<WorldDetectionInfo>> _groupsCache = new List<HashSet<WorldDetectionInfo>>();
-        private static readonly Stack<HashSet<WorldDetectionInfo>> GroupInfoBuffer = new Stack<HashSet<WorldDetectionInfo>>();
+        private Dictionary<long, List<WorldDetectionInfo>> _groupsCache = new Dictionary<long, List<WorldDetectionInfo>>();
+        private static readonly Stack<List<WorldDetectionInfo>> GroupInfoBuffer = new Stack<List<WorldDetectionInfo>>();
 
         /// <summary>
         /// Groups detection info from a single moment in time.
@@ -126,53 +127,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         /// <param name="infos"></param>
         private void GroupInfos(ICollection<WorldDetectionInfo> infos)
         {
-            // This is an *INCREDIBLY* hot loop, so we need to squeeze as much performance out as we possibly can.
-
             foreach (var info in infos)
             {
-                // Check if any existing groups match RCS and position
-                bool didMatch = false;
-                foreach (var group in _groupsCache)
-                {
-                    foreach (var member in group)
-                    {
-                        bool typesMatch = AggregateTypes.Value || member.DetectionType == info.DetectionType;
-                        // Cross-section doesn't have to match if the sensors are different types.
-                        bool crossSectionsMatch = member.DetectionType != info.DetectionType || Math.Abs(member.CrossSection - info.CrossSection) <= Math.Max(member.CrossSection, info.CrossSection) * RCSThreshold.Value;
-                        // If types or cross-sections don't match, it's likely that this group won't match at all.
-                        if (!typesMatch || !crossSectionsMatch)
-                            break;
-                        
-                        double maxPositionDiff = Math.Max(member.Error, info.Error) * DistanceThreshold.Value;
-                        bool positionsMatch = Vector3D.DistanceSquared(member.Position, info.Position) <= maxPositionDiff * maxPositionDiff;
-
-                        if (!positionsMatch)
-                            continue;
-
-                        didMatch = true;
-                        break;
-                    }
-
-                    // Add to group if matched
-                    if (!didMatch)
-                        continue;
-                    group.Add(info);
-                    break;
-                }
-
-                // Otherwise create new group
-                if (!didMatch)
-                {
-                    var list = GroupInfoBuffer.Count > 0
-                        ? GroupInfoBuffer.Pop()
-                        : new HashSet<WorldDetectionInfo>(UseAllSensors.Value
-                            ? GridSensors.Sensors.Count
-                            : ActiveSensors.Count);
-
-                    list.Add(info);
-
-                    _groupsCache.Add(list);
-                }
+                if (!_groupsCache.ContainsKey(info.EntityId))
+                    _groupsCache[info.EntityId] = GroupInfoBuffer.Count > 0 ? GroupInfoBuffer.Pop() : new List<WorldDetectionInfo>();
+                _groupsCache[info.EntityId].Add(info);
             }
         }
     }

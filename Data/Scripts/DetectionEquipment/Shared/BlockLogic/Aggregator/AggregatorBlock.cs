@@ -98,7 +98,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
             foreach (var info in _bufferDetections)
-                _infosCache.AddLast(info);
+                _infosCache.Add(info);
 
             foreach (var channel in _bufferVisibleAggregators)
             {
@@ -107,7 +107,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 foreach (var aggregator in channel.Value)
                     if (aggregator != this)
                         foreach (var info in aggregator._bufferDetections)
-                            _infosCache.AddLast(info);
+                            _infosCache.Add(info);
             }
 
             var detectionSet = AggregateInfos(_infosCache).ToHashSet();
@@ -117,8 +117,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         }
 
         private bool _isProcessing = false;
-        private readonly LinkedList<WorldDetectionInfo[]> _parallelCache = new LinkedList<WorldDetectionInfo[]>();
-        private readonly LinkedList<WorldDetectionInfo> _infosCache = new LinkedList<WorldDetectionInfo>();
+        private readonly List<WorldDetectionInfo[]> _parallelCache = new List<WorldDetectionInfo[]>();
+        private readonly List<WorldDetectionInfo> _infosCache = new List<WorldDetectionInfo>();
         public override void UpdateAfterSimulation()
         {
             if (!MyAPIGateway.Session.IsServer)
@@ -129,8 +129,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 _isProcessing = true;
 
                 _parallelCache.Clear();
+                _parallelCache.EnsureCapacity(DetectionCache.Count + 1);
                 foreach (var item in DetectionCache)
-                    _parallelCache.AddLast(item);
+                    _parallelCache.Add(item);
 
                 MyAPIGateway.Parallel.Start(() =>
                 {
@@ -145,7 +146,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 {
                     var detection = new WorldDetectionInfo(sensorDetection);
                     //DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
-                    _infosCache.AddLast(detection);
+                    _infosCache.Add(detection);
                 }
             }
 

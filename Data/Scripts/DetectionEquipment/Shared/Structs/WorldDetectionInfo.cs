@@ -11,6 +11,7 @@ namespace DetectionEquipment.Shared.Structs
 {
     internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>
     {
+        public long EntityId;
         public double CrossSection, Error;
         public Vector3D Position;
         public Vector3D? Velocity;
@@ -20,6 +21,7 @@ namespace DetectionEquipment.Shared.Structs
 
         public WorldDetectionInfo(DetectionInfo info)
         {
+            EntityId = info.Track.EntityId;
             CrossSection = info.CrossSection;
             Position = info.Sensor.Position + info.Bearing * info.Range;
 
@@ -67,10 +69,12 @@ namespace DetectionEquipment.Shared.Structs
             if (args.Count == 0)
                 throw new Exception("No detection infos provided!");
 
+            long entityId = -1;
             double totalError = 0;
-            HashSet<string> allCodes = new HashSet<string>();
+            var allCodes = new List<string>();
             foreach (var info in args)
             {
+                entityId = info.EntityId;
                 totalError += info.Error;
                 foreach (var code in info.IffCodes)
                     allCodes.Add(code);
@@ -95,65 +99,64 @@ namespace DetectionEquipment.Shared.Structs
                 avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
             avgDiff = Math.Sqrt(avgDiff) / args.Count;
 
-            WorldDetectionInfo result = new WorldDetectionInfo()
+            return new WorldDetectionInfo
             {
+                EntityId = entityId,
                 CrossSection = totalCrossSection / args.Count,
                 Position = averagePos,
                 Error = avgDiff,
                 DetectionType = 0,
                 IffCodes = allCodes.ToArray()
             };
-
-            return result;
         }
 
-        public static WorldDetectionInfo AverageWeighted(ICollection<KeyValuePair<WorldDetectionInfo, int>> args)
-        {
-            if (args.Count == 0)
-                throw new Exception("No detection infos provided!");
-
-            double totalError = 0;
-            double totalWeight = 0;
-            double highestError = 0;
-
-            HashSet<string> allCodes = new HashSet<string>();
-            foreach (var info in args)
-            {
-                totalError += info.Key.Error;
-                totalWeight += info.Value;
-                if (info.Key.Error > highestError)
-                    highestError = info.Key.Error;
-                foreach (var code in info.Key.IffCodes)
-                    allCodes.Add(code);
-            }
-
-            Vector3D averagePos = Vector3D.Zero;
-            double avgCrossSection = 0;
-            foreach (var info in args)
-            {
-                double infoWeightPct = info.Value / totalWeight;
-
-                averagePos += info.Key.Position * infoWeightPct;
-
-                avgCrossSection += info.Key.CrossSection * infoWeightPct;
-            }
-
-            double avgDiff = 0;
-            foreach (var info in args)
-                avgDiff += Vector3D.Distance(info.Key.Position, averagePos);
-            avgDiff /= args.Count;
-
-            WorldDetectionInfo result = new WorldDetectionInfo()
-            {
-                CrossSection = avgCrossSection,
-                Position = averagePos,
-                Error = avgDiff,
-                DetectionType = 0,
-                IffCodes = allCodes.ToArray()
-            };
-
-            return result;
-        }
+        //public static WorldDetectionInfo AverageWeighted(ICollection<KeyValuePair<WorldDetectionInfo, int>> args)
+        //{
+        //    if (args.Count == 0)
+        //        throw new Exception("No detection infos provided!");
+        //
+        //    double totalError = 0;
+        //    double totalWeight = 0;
+        //    double highestError = 0;
+        //
+        //    HashSet<string> allCodes = new HashSet<string>();
+        //    foreach (var info in args)
+        //    {
+        //        totalError += info.Key.Error;
+        //        totalWeight += info.Value;
+        //        if (info.Key.Error > highestError)
+        //            highestError = info.Key.Error;
+        //        foreach (var code in info.Key.IffCodes)
+        //            allCodes.Add(code);
+        //    }
+        //
+        //    Vector3D averagePos = Vector3D.Zero;
+        //    double avgCrossSection = 0;
+        //    foreach (var info in args)
+        //    {
+        //        double infoWeightPct = info.Value / totalWeight;
+        //
+        //        averagePos += info.Key.Position * infoWeightPct;
+        //
+        //        avgCrossSection += info.Key.CrossSection * infoWeightPct;
+        //    }
+        //
+        //    double avgDiff = 0;
+        //    foreach (var info in args)
+        //        avgDiff += Vector3D.Distance(info.Key.Position, averagePos);
+        //    avgDiff /= args.Count;
+        //
+        //    WorldDetectionInfo result = new WorldDetectionInfo()
+        //    {
+        //        CrossSection = avgCrossSection,
+        //        Position = averagePos,
+        //        Error = avgDiff,
+        //        DetectionType = 0,
+        //        IffCodes = allCodes.ToArray()
+        //    };
+        //
+        //    return result;
+        //}
 
         public int CompareTo(WorldDetectionInfo other)
         {

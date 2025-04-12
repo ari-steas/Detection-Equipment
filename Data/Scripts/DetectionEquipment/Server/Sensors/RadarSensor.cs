@@ -74,9 +74,9 @@ namespace DetectionEquipment.Server.Sensors
             double targetAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
                 targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
-
             if (targetAngle > Aperture)
                 return null;
+
             double targetDistanceSq = Vector3D.DistanceSquared(Position, visibilitySet.Position);
 
             double signalToNoiseRatio;

@@ -88,8 +88,28 @@ namespace DetectionEquipment.Shared.Utils
 
         public static Vector3D RandomCone(Vector3D centerDirection, double radius)
         {
-            Vector3D axis = Vector3D.CalculatePerpendicularVector(centerDirection).Rotate(centerDirection, Math.PI * 2 * Random.NextDouble());
-            return centerDirection.Rotate(axis, radius * Random.NextDouble());
+            // Optimized random vector cone. Assume normalized center direction.
+            double azi = Math.Atan2(centerDirection.X, centerDirection.Z);
+            if (double.IsNaN(azi))
+                azi = Math.PI;
+        
+            double elev = Math.Asin(-centerDirection.Y);
+            if (double.IsNaN(elev))
+                elev = Math.PI;
+
+            azi += radius * (1 - 2 * Random.NextDouble());
+            elev += radius * (1 - 2 * Random.NextDouble());
+
+            var cosElev = Math.Cos(elev);
+
+            return new Vector3D(
+                Math.Sin(azi) * cosElev,
+                Math.Cos(azi) * cosElev,
+                Math.Sin(elev)
+            );
+
+            //Vector3D axis = Vector3D.CalculatePerpendicularVector(centerDirection).Rotate(centerDirection, Math.PI * 2 * Random.NextDouble());
+            //return centerDirection.Rotate(axis, radius * Random.NextDouble());
         }
 
         public static Vector3D RandomSphere(Vector3D position, double radius)
