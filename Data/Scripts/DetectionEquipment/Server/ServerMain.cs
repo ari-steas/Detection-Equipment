@@ -6,6 +6,7 @@ using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
+using DetectionEquipment.Server.Countermeasures;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -46,6 +47,7 @@ namespace DetectionEquipment.Server
             });
 
             new ServerNetwork().LoadData();
+            CountermeasureManager.Init();
 
             Log.DecreaseIndent();
             Log.Info("ServerMain", "Initialized.");
@@ -58,6 +60,7 @@ namespace DetectionEquipment.Server
             Log.Info("ServerMain", "Start unload...");
             Log.IncreaseIndent();
 
+            CountermeasureManager.Close();
             ServerNetwork.I.UnloadData();
 
             PbApiInitializer.Unload();
@@ -88,6 +91,8 @@ namespace DetectionEquipment.Server
 
             foreach (var manager in GridSensorMangers.Values)
                 manager.Update();
+
+            CountermeasureManager.Update();
 
             ServerNetwork.I.Update();
         }

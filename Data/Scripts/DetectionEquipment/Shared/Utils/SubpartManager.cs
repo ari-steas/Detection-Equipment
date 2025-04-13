@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using VRage.Game.Entity;
 using VRage.ModAPI;
@@ -64,10 +65,9 @@ namespace DetectionEquipment.Shared.Utils
             return desiredSubpart;
         }
 
-        public string[] GetAllSubparts(IMyEntity entity)
+        public static List<MyEntitySubpart> GetAllSubparts(IMyEntity entity)
         {
-            if (entity == null) return new string[0];
-            return ((MyEntity)entity).Subparts.Keys.ToArray();
+            return entity == null ? new List<MyEntitySubpart>(0) : ((MyEntity)entity).Subparts.Values.ToList();
         }
 
         public void LocalRotateSubpart(MyEntitySubpart subpart, Matrix matrix)

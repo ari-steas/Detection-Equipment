@@ -11,7 +11,7 @@ namespace DetectionEquipment.Shared.Definitions
     [ProtoContract]
     public class SensorDefinition
     {
-        [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!!
+        [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
         /// <summary>
         /// Subtypes this sensor is attached to.
         /// </summary>
