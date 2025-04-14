@@ -29,6 +29,7 @@ namespace DetectionEquipment.Server.Sensors
 
         double BearingErrorModifier { get; set; }
         double RangeErrorModifier { get; set; }
+        double CountermeasureNoise { get; set; }
 
         Action<LocalDetTuple> OnDetection { get; set; }
 

@@ -21,6 +21,8 @@ namespace DetectionEquipment.Server.Sensors
         public Vector3D Direction { get; set; }
 
         private Dictionary<long, DetectionInfo> _queuedRadarHits = new Dictionary<long, DetectionInfo>();
+        public double CountermeasureNoise { get; set; } = 0;
+
 
         public PassiveRadarSensor(IMyEntity attachedEntity, SensorDefinition definition)
         {

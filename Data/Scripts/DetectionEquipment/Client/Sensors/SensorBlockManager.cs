@@ -85,7 +85,7 @@ namespace DetectionEquipment.Client.Sensors
             var fatblock = block.FatBlock as IMyCameraBlock;
             if (fatblock == null)
                 return;
-            if (DefinitionManager.GetDefinitions(fatblock).Count == 0)
+            if (DefinitionManager.GetSensorDefinitions(fatblock).Count == 0)
                 return;
 
             var logic = new ClientBlockSensor(fatblock);

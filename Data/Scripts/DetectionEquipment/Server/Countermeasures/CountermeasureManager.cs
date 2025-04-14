@@ -4,8 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Weapons;
+using Sandbox.ModAPI;
+using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Server.Countermeasures
 {
@@ -25,6 +29,7 @@ namespace DetectionEquipment.Server.Countermeasures
             _deadCountermeasures = new List<Countermeasure>();
             HighestCountermeasureId = 0;
             HighestCountermeasureEmitterId = 0;
+            ServerMain.I.OnBlockPlaced += OnBlockPlaced;
 
             Log.Info("CountermeasureManager", "Ready.");
         }
@@ -45,10 +50,30 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public static void Close()
         {
+            ServerMain.I.OnBlockPlaced -= OnBlockPlaced;
             CountermeasureIdMap = null;
             CountermeasureEmitterIdMap = null;
 
             Log.Info("CountermeasureManager", "Closed.");
+        }
+
+        public static float GetNoise(ISensor sensor)
+        {
+            float totalNoise = 0;
+            foreach (var counter in CountermeasureIdMap.Values)
+                totalNoise += counter.GetSensorNoise(sensor);
+            return totalNoise;
+        }
+
+        private static void OnBlockPlaced(IMyCubeBlock obj)
+        {
+            var block = obj as IMyConveyorSorter;
+            if (block == null)
+                return;
+
+            var emitters = DefinitionManager.TryCreateCountermeasureEmitters(block);
+            foreach (var emitter in emitters)
+                CountermeasureEmitterIdMap[emitter.Id] = emitter;
         }
     }
 }

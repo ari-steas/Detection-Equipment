@@ -33,6 +33,13 @@ namespace DetectionEquipment.Client.Interface
                     _blockCategory.AddBlock(subtype);
         }
 
+        public static void RegisterFromDefinition(CountermeasureEmitterDefinition definition)
+        {
+            foreach (var subtype in definition.BlockSubtypes)
+                if (_bufferBlockSubtypes.Add(subtype) && _blockCategory != null)
+                    _blockCategory.AddBlock(subtype);
+        }
+
         public static void Close()
         {
             _blockCategory = null;

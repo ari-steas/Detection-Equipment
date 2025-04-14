@@ -99,7 +99,7 @@ namespace DetectionEquipment.Client.Sensors
             Sensors[packet.Id] = new ClientSensorData()
             {
                 Id = packet.Id,
-                Definition = DefinitionManager.GetDefinition(packet.DefinitionId),
+                Definition = DefinitionManager.GetSensorDefinition(packet.DefinitionId),
             };
             if (CurrentSensorId == uint.MaxValue)
                 CurrentSensorId = packet.Id;

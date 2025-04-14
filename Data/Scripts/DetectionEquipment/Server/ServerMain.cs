@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Server.Networking;
+﻿using System;
+using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.PBApi;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Server.Sensors;
@@ -24,6 +25,7 @@ namespace DetectionEquipment.Server
 
         public Dictionary<uint, ISensor> SensorIdMap = new Dictionary<uint, ISensor>();
         public Dictionary<uint, BlockSensor> BlockSensorIdMap = new Dictionary<uint, BlockSensor>();
+        public Action<IMyCubeBlock> OnBlockPlaced = null;
         public uint HighestSensorId = 0;
         
         private bool _doneTickInit = false;
@@ -107,6 +109,7 @@ namespace DetectionEquipment.Server
             {
                 Tracks.Add(obj, new GridTrack(grid));
                 GridSensorMangers.Add(grid, new GridSensorManager(grid));
+                grid.OnBlockAdded += InvokeOnBlockPlaced;
             }
             else
                 Tracks.Add(obj, new EntityTrack((MyEntity)obj));
@@ -122,9 +125,16 @@ namespace DetectionEquipment.Server
             var grid = obj as IMyCubeGrid;
             if (grid != null)
             {
+                grid.OnBlockAdded -= InvokeOnBlockPlaced;
                 GridSensorMangers[grid].Close();
                 GridSensorMangers.Remove(grid);
             }
+        }
+
+        private void InvokeOnBlockPlaced(IMySlimBlock block)
+        {
+            if (block.FatBlock != null)
+                OnBlockPlaced?.Invoke(block.FatBlock);
         }
     }
 }

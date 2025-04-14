@@ -40,7 +40,7 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(6)] public float MinEffectAperture;
         /// <summary>
-        /// Maximum aperture cone radius, in radians.
+        /// Maximum aperture cone radius, in radians. Default value for aperture.
         /// </summary>
         [ProtoMember(6)] public float MaxEffectAperture;
         /// <summary>

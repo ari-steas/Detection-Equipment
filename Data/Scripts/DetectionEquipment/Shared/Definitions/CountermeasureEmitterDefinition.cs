@@ -37,15 +37,15 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(5)] public float ShotsPerSecond;
 
-        /// <summary>
-        /// Number of shots in the magazine. Set less than or equal to 0 to ignore.
-        /// </summary>
-        [ProtoMember(6)] public int MagazineSize;
-
-        /// <summary>
-        /// Reload time. Set to less than or equal to 1/60f to ignore.
-        /// </summary>
-        [ProtoMember(7)] public float ReloadTime;
+        ///// <summary>
+        ///// Number of shots in the magazine. Set less than or equal to 0 to ignore.
+        ///// </summary>
+        //[ProtoMember(6)] public int MagazineSize;
+        //
+        ///// <summary>
+        ///// Reload time. Set to less than or equal to 1/60f to ignore.
+        ///// </summary>
+        //[ProtoMember(7)] public float ReloadTime;
 
         /// <summary>
         /// Additive ejection velocity.
@@ -58,6 +58,6 @@ namespace DetectionEquipment.Shared.Definitions
         [ProtoMember(9)] public string FireParticle;
 
 
-        [ProtoIgnore] public bool ContinuousMagazine => MagazineSize <= 0 || ReloadTime <= 1/60f;
+        //[ProtoIgnore] public bool ContinuousMagazine => MagazineSize <= 0 || ReloadTime <= 1/60f;
     }
 }

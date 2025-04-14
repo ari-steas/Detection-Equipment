@@ -26,6 +26,7 @@ namespace DetectionEquipment.Server.Sensors
         public double BearingErrorModifier { get; set; } = 0.1;
         public double RangeErrorModifier { get; set; } = 5;
         public double MinVisibility = 0.001;
+        public double CountermeasureNoise { get; set; } = 0;
 
         public VisualSensor(SensorDefinition definition)
         {
@@ -60,7 +61,7 @@ namespace DetectionEquipment.Server.Sensors
 
             Vector3D bearing = visibilitySet.Position - Position;
             double range = bearing.Normalize();
-            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;
+            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture / CountermeasureNoise;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
             if (targetSizeRatio < MinVisibility)

@@ -4,6 +4,7 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Server.Countermeasures;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.Definitions
@@ -12,7 +13,10 @@ namespace DetectionEquipment.Shared.Definitions
     {
         internal static DefinitionApi DefinitionApi;
 
-        private static readonly Dictionary<int, SensorDefinition> Definitions = new Dictionary<int, SensorDefinition>();
+        private static readonly Dictionary<int, SensorDefinition> SensorDefinitions = new Dictionary<int, SensorDefinition>();
+        private static readonly Dictionary<int, CountermeasureDefinition> CountermeasureDefinitions = new Dictionary<int, CountermeasureDefinition>();
+        private static readonly Dictionary<int, CountermeasureEmitterDefinition> CountermeasureEmitterDefinitions = new Dictionary<int, CountermeasureEmitterDefinition>();
+
         private static bool HasShownApiFailMsg = false;
         private static int ApiFailCheckCount = 0;
 
@@ -53,9 +57,18 @@ namespace DetectionEquipment.Shared.Definitions
         {
             Log.IncreaseIndent();
 
-            DefinitionApi.RegisterOnUpdate<SensorDefinition>(OnDefinitionUpdate);
+            DefinitionApi.RegisterOnUpdate<SensorDefinition>(OnSensorDefinitionUpdate);
             foreach (string definitionId in DefinitionApi.GetDefinitionsOfType<SensorDefinition>())
-                OnDefinitionUpdate(definitionId, 0);
+                OnSensorDefinitionUpdate(definitionId, 0);
+
+            DefinitionApi.RegisterOnUpdate<CountermeasureDefinition>(OnCountermeasureDefinitionUpdate);
+            foreach (string definitionId in DefinitionApi.GetDefinitionsOfType<CountermeasureDefinition>())
+                OnCountermeasureDefinitionUpdate(definitionId, 0);
+
+            DefinitionApi.RegisterOnUpdate<CountermeasureEmitterDefinition>(OnCountermeasureEmitterDefinitionUpdate);
+            foreach (string definitionId in DefinitionApi.GetDefinitionsOfType<CountermeasureEmitterDefinition>())
+                OnCountermeasureEmitterDefinitionUpdate(definitionId, 0);
+
             InternalDefinitions.Register();
 
             Log.DecreaseIndent();
@@ -63,15 +76,18 @@ namespace DetectionEquipment.Shared.Definitions
 
         public static void Unload()
         {
-            DefinitionApi.UnregisterOnUpdate<SensorDefinition>(OnDefinitionUpdate);
+            DefinitionApi.UnregisterOnUpdate<SensorDefinition>(OnSensorDefinitionUpdate);
+            DefinitionApi.UnregisterOnUpdate<CountermeasureDefinition>(OnCountermeasureDefinitionUpdate);
+            DefinitionApi.UnregisterOnUpdate<CountermeasureEmitterDefinition>(OnCountermeasureEmitterDefinitionUpdate);
+
             DefinitionApi.UnloadData();
             DefinitionApi = null;
-            Definitions.Clear();
+            SensorDefinitions.Clear();
 
             Log.Info("DefinitionManager", "Unloaded.");
         }
 
-        private static void OnDefinitionUpdate(string definitionId, int updateType)
+        private static void OnSensorDefinitionUpdate(string definitionId, int updateType)
         {
             // We're caching data because getting it from the API is inefficient.
             switch (updateType)
@@ -79,15 +95,61 @@ namespace DetectionEquipment.Shared.Definitions
                 case 0:
                     var definition = DefinitionApi.GetDefinition<SensorDefinition>(definitionId);
                     definition.Id = definitionId.GetHashCode();
-                    Definitions[definition.Id] = definition;
+                    SensorDefinitions[definition.Id] = definition;
                     if (!MyAPIGateway.Utilities.IsDedicated)
-                        Client.Interface.BlockCategoryManager.RegisterFromDefinition(Definitions[definitionId.GetHashCode()]);
+                        Client.Interface.BlockCategoryManager.RegisterFromDefinition(SensorDefinitions[definitionId.GetHashCode()]);
 
-                    Log.Info("DefinitionManager", $"Registered new definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
+                    Log.Info("DefinitionManager", $"Registered new sensor definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
                     break;
                 case 1:
-                    Definitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
-                    Log.Info("DefinitionManager", "Unregistered definition " + definitionId);
+                    SensorDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
+                    Log.Info("DefinitionManager", "Unregistered sensor definition " + definitionId);
+                    break;
+                case 2:
+                    // Live methods, ignored.
+                    break;
+            }
+        }
+
+        private static void OnCountermeasureDefinitionUpdate(string definitionId, int updateType)
+        {
+            // We're caching data because getting it from the API is inefficient.
+            switch (updateType)
+            {
+                case 0:
+                    var definition = DefinitionApi.GetDefinition<CountermeasureDefinition>(definitionId);
+                    definition.Id = definitionId.GetHashCode();
+                    CountermeasureDefinitions[definition.Id] = definition;
+
+                    Log.Info("DefinitionManager", $"Registered new CM definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
+                    break;
+                case 1:
+                    SensorDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
+                    Log.Info("DefinitionManager", "Unregistered CM definition " + definitionId);
+                    break;
+                case 2:
+                    // Live methods, ignored.
+                    break;
+            }
+        }
+
+        private static void OnCountermeasureEmitterDefinitionUpdate(string definitionId, int updateType)
+        {
+            // We're caching data because getting it from the API is inefficient.
+            switch (updateType)
+            {
+                case 0:
+                    var definition = DefinitionApi.GetDefinition<CountermeasureEmitterDefinition>(definitionId);
+                    definition.Id = definitionId.GetHashCode();
+                    CountermeasureEmitterDefinitions[definition.Id] = definition;
+                    if (!MyAPIGateway.Utilities.IsDedicated)
+                        Client.Interface.BlockCategoryManager.RegisterFromDefinition(CountermeasureEmitterDefinitions[definitionId.GetHashCode()]);
+
+                    Log.Info("DefinitionManager", $"Registered new CM Emitter definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new
+                    break;
+                case 1:
+                    CountermeasureEmitterDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing
+                    Log.Info("DefinitionManager", "Unregistered CM Emitter definition " + definitionId);
                     break;
                 case 2:
                     // Live methods, ignored.
@@ -98,7 +160,7 @@ namespace DetectionEquipment.Shared.Definitions
         public static List<BlockSensor> TryCreateSensors(IMyFunctionalBlock block)
         {
             var sensors = new List<BlockSensor>();
-            foreach (var definition in Definitions.Values)
+            foreach (var definition in SensorDefinitions.Values)
             {
                 if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
                     continue;
@@ -107,10 +169,22 @@ namespace DetectionEquipment.Shared.Definitions
             return sensors;
         }
 
-        public static List<SensorDefinition> GetDefinitions(IMyCubeBlock block)
+        public static List<CountermeasureEmitterBlock> TryCreateCountermeasureEmitters(IMyConveyorSorter block)
+        {
+            var sensors = new List<CountermeasureEmitterBlock>();
+            foreach (var definition in CountermeasureEmitterDefinitions.Values)
+            {
+                if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
+                    continue;
+                sensors.Add(new CountermeasureEmitterBlock(block, definition));
+            }
+            return sensors;
+        }
+
+        public static List<SensorDefinition> GetSensorDefinitions(IMyCubeBlock block)
         {
             var defs = new List<SensorDefinition>();
-            foreach (var definition in Definitions.Values)
+            foreach (var definition in SensorDefinitions.Values)
             {
                 if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
                     continue;
@@ -119,9 +193,31 @@ namespace DetectionEquipment.Shared.Definitions
             return defs;
         }
 
-        public static SensorDefinition GetDefinition(int id)
+        public static List<CountermeasureEmitterDefinition> GetCountermeasureEmitterDefinitions(IMyCubeBlock block)
         {
-            return Definitions[id];
+            var defs = new List<CountermeasureEmitterDefinition>();
+            foreach (var definition in CountermeasureEmitterDefinitions.Values)
+            {
+                if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
+                    continue;
+                defs.Add(definition);
+            }
+            return defs;
+        }
+
+        public static SensorDefinition GetSensorDefinition(int id)
+        {
+            return SensorDefinitions[id];
+        }
+
+        public static CountermeasureDefinition GetCountermeasureDefinition(int id)
+        {
+            return CountermeasureDefinitions[id];
+        }
+
+        public static CountermeasureEmitterDefinition GetCountermeasureEmitterDefinition(int id)
+        {
+            return CountermeasureEmitterDefinitions[id];
         }
     }
 }

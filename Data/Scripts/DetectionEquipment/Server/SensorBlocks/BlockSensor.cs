@@ -8,6 +8,7 @@ using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
+using DetectionEquipment.Server.Countermeasures;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
@@ -152,6 +153,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 return;
 
             Detections.Clear();
+            Sensor.CountermeasureNoise = CountermeasureManager.GetNoise(Sensor);
 
             foreach (var track in cachedVisibility)
             {

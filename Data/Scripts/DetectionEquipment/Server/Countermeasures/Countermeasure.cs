@@ -6,7 +6,9 @@ using System.Threading.Tasks;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
+using VRage.Game;
 using VRage.Game.ModAPI;
 using VRageMath;
 
@@ -22,6 +24,8 @@ namespace DetectionEquipment.Server.Countermeasures
         public Vector3D Position;
         public Vector3D Direction;
         public Vector3D Velocity;
+
+        public MyParticleEffect Particle;
 
         private readonly CountermeasureEmitterBlock ParentEmitter = null;
         private readonly int AttachedMuzzleIdx = -1;
@@ -98,42 +102,51 @@ namespace DetectionEquipment.Server.Countermeasures
                 Position += Velocity;
             }
 
+            if (Particle == null && !string.IsNullOrEmpty(Definition.ParticleEffect))
+            {
+                var matrix = MatrixD.CreateWorld(Position, Direction, Vector3D.Up);
+                if (!MyParticlesManager.TryCreateParticleEffect(Definition.ParticleEffect,
+                        ref matrix, ref Vector3D.Zero, uint.MaxValue, out Particle))
+                {
+                    Log.Exception("CountermeasureEmitterBlock", new Exception($"Failed to create new projectile particle \"{Definition.ParticleEffect}\"!"));
+                }
+            }
 
+            if (Particle != null)
+                Particle.WorldMatrix = MatrixD.CreateWorld(Position, Direction, Vector3D.Up);
+
+
+            if (--RemainingLifetime == 0)
+                Close();
         }
 
-        public bool GetSensorNoise(ISensor sensor, out float noise)
+        public float GetSensorNoise(ISensor sensor)
         {
             bool sensorIsVisual = sensor is VisualSensor;
             bool sensorIsInfrared = sensorIsVisual && ((VisualSensor)sensor).IsInfrared;
             sensorIsVisual &= !sensorIsInfrared;
 
-            noise = 0;
             if (sensor is RadarSensor && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Radar) == 0 ||
                 sensorIsVisual && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Optical) == 0 ||
                 sensorIsInfrared && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Infrared) == 0
                 )
-                return false;
+                return 0;
 
             var distance = (float) Vector3D.Distance(sensor.Position, Position);
 
             if (distance > Definition.MaxRange || Vector3D.Angle(Direction, sensor.Position - Position) > EffectAperture)
-                return false;
+                return 0;
 
             switch (Definition.FalloffType)
             {
                 case CountermeasureDefinition.FalloffTypeEnum.Quadratic:
-                    noise = Definition.FalloffScalar / ((distance + Definition.MaxRange)*(distance + Definition.MaxRange)) + Definition.MinNoise;
-                    break;
+                    return Definition.FalloffScalar / ((distance + Definition.MaxRange)*(distance + Definition.MaxRange)) + Definition.MinNoise;
                 case CountermeasureDefinition.FalloffTypeEnum.Linear:
-                    noise = -Definition.FalloffScalar * (Definition.MaxRange - distance) + Definition.MinNoise;
-                    break;
+                    return Definition.FalloffScalar * (Definition.MaxRange - distance) + Definition.MinNoise;
                 case CountermeasureDefinition.FalloffTypeEnum.None:
                 default:
-                    noise = Definition.MinNoise;
-                    break;
+                    return Definition.MinNoise;
             }
-
-            return true;
         }
 
         public void Close()

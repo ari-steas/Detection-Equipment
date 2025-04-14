@@ -22,6 +22,7 @@ namespace DetectionEquipment.Server.Sensors
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
 
+
         public RadarSensor(long attachedEntityId, SensorDefinition definition)
         {
             Id = ServerMain.I.HighestSensorId++;
@@ -61,6 +62,7 @@ namespace DetectionEquipment.Server.Sensors
         public double Bandwidth = 1.67E6;
         public double Frequency = 2800E6;
         public double Losses = 6.3; // 8dB
+        public double CountermeasureNoise { get; set; } = 0;
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
@@ -88,7 +90,7 @@ namespace DetectionEquipment.Server.Sensors
 
                 // Can make this fancier if I want later.
                 // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
-                signalToNoiseRatio = MathUtils.ToDecibels((Power * PowerEfficiencyModifier * gain * gain * lambda * lambda * visibilitySet.RadarVisibility) / (1984.40171 * targetDistanceSq * targetDistanceSq * 1.38E-23 * 950 * Bandwidth));
+                signalToNoiseRatio = MathUtils.ToDecibels((Power * PowerEfficiencyModifier * gain * gain * lambda * lambda * visibilitySet.RadarVisibility) / (1984.40171 * targetDistanceSq * targetDistanceSq * 1.38E-23 * 950 * Bandwidth + CountermeasureNoise));
             }
 
             //MyAPIGateway.Utilities.ShowNotification($"Power: {Power/1000000:N1}MW -> {signalToNoiseRatio:F} dB", 1000/60);
