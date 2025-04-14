@@ -61,7 +61,7 @@ namespace DetectionEquipment.Server.Sensors
 
             Vector3D bearing = visibilitySet.Position - Position;
             double range = bearing.Normalize();
-            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture / (1 + CountermeasureNoise);
+            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
             if (targetSizeRatio < MinVisibility)
@@ -69,10 +69,10 @@ namespace DetectionEquipment.Server.Sensors
 
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);
 
-            double maxBearingError = Aperture/2 * BearingErrorModifier * errorScalar;
+            double maxBearingError = Aperture/2 * BearingErrorModifier * errorScalar + CountermeasureNoise/100;
             bearing = MathUtils.RandomCone(bearing, maxBearingError);
 
-            double maxRangeError = Math.Sqrt(range) * RangeErrorModifier * errorScalar;
+            double maxRangeError = Math.Sqrt(range) * RangeErrorModifier * errorScalar + CountermeasureNoise/100;
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
             OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(visibility, range, maxRangeError, maxBearingError, bearing, Array.Empty<string>()));

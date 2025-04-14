@@ -74,8 +74,8 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 CountermeasureType = CountermeasureDefinition.CountermeasureTypeEnum.Infrared,
                 MaxRange = 10000,
-                FalloffScalar = 0.0001f,
-                MinNoise = 1,
+                FalloffScalar = 0.00001f,
+                MinNoise = 0.01f,
                 FalloffType = CountermeasureDefinition.FalloffTypeEnum.Linear,
                 MinEffectAperture = (float) Math.PI,
                 MaxEffectAperture = (float) Math.PI,

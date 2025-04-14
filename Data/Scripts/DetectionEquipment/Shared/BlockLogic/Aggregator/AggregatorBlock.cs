@@ -97,17 +97,27 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
-            foreach (var info in _bufferDetections)
-                _infosCache.Add(info);
+            lock (_bufferDetections)
+            {
+                foreach (var info in _bufferDetections)
+                    _infosCache.Add(info);
+            }
 
             foreach (var channel in _bufferVisibleAggregators)
             {
                 if (!DatalinkInChannels.Contains(channel.Key))
                     continue;
                 foreach (var aggregator in channel.Value)
-                    if (aggregator != this)
+                {
+                    if (aggregator == this) continue;
+
+                    lock (aggregator._bufferDetections)
+                    {
                         foreach (var info in aggregator._bufferDetections)
                             _infosCache.Add(info);
+                    }
+                }
+                    
             }
 
             var detectionSet = AggregateInfos(_infosCache).ToHashSet();

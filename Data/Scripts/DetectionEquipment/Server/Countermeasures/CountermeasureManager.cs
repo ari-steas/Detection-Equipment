@@ -89,6 +89,8 @@ namespace DetectionEquipment.Server.Countermeasures
             float totalNoise = 0;
             foreach (var counter in CountermeasureIdMap.Values)
                 totalNoise += counter.GetSensorNoise(sensor);
+            if (totalNoise > 0)
+                MyAPIGateway.Utilities.ShowNotification($"{totalNoise:F1}", 1000/60);
             return totalNoise;
         }
 

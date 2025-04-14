@@ -15,7 +15,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             if (cache.Count == 0)
             {
-                _bufferDetections.Clear();
+                lock (_bufferDetections)
+                    _bufferDetections.Clear();
                 return;
             }
 
@@ -98,7 +99,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 toCombine.Clear();
             }
 
-            _bufferDetections = aggregatedDetections;
+            lock (_bufferDetections)
+                _bufferDetections = aggregatedDetections;
         }
 
         private WorldDetectionInfo[] AggregateInfos(ICollection<WorldDetectionInfo> infos)
