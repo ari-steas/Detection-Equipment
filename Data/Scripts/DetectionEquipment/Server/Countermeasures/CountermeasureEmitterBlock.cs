@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
@@ -39,6 +40,9 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public void Update()
         {
+            if (!Block.IsWorking)
+                return;
+
             ShotAggregator += Definition.ShotsPerSecond / 60f;
             int startMuzzleIdx = CurrentMuzzleIdx;
             while (ShotAggregator >= 1)
@@ -63,12 +67,12 @@ namespace DetectionEquipment.Server.Countermeasures
                 if (Definition.IsCountermeasureAttached)
                     AttachedCountermeasures[CurrentMuzzleIdx] = counter;
 
-                if (!string.IsNullOrEmpty(Definition.FireParticle))
+                if (!string.IsNullOrEmpty(Definition.FireParticle)) // TODO: this doesn't go in server
                 {
                     MyParticleEffect discard;
                     var matrix = MuzzleMatrix;
-                    if (!MyParticlesManager.TryCreateParticleEffect(Definition.FireParticle,
-                            ref matrix, ref Vector3D.Zero, Muzzles[CurrentMuzzleIdx].Parent.Render.GetRenderObjectID(), out discard))
+                    var pos = matrix.Translation;
+                    if (!MyParticlesManager.TryCreateParticleEffect(Definition.FireParticle, ref matrix, ref pos, Muzzles[CurrentMuzzleIdx].Parent.Render.GetRenderObjectID(), out discard)) // TODO this goes in client
                     {
                         Log.Exception("CountermeasureEmitterBlock", new Exception($"Failed to create new projectile particle \"{Definition.FireParticle}\"!"));
                     }

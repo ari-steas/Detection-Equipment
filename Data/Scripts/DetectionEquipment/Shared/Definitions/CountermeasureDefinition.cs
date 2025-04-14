@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -42,7 +43,7 @@ namespace DetectionEquipment.Shared.Definitions
         /// <summary>
         /// Maximum aperture cone radius, in radians. Default value for aperture.
         /// </summary>
-        [ProtoMember(6)] public float MaxEffectAperture;
+        [ProtoMember(7)] public float MaxEffectAperture;
         /// <summary>
         /// Ticks this countermeasure should last for. Set to -1 for guaranteed attached countermeasures.
         /// </summary>
@@ -74,6 +75,21 @@ namespace DetectionEquipment.Shared.Definitions
             None = 0,
             Linear = 1,
             Quadratic = 2,
+        }
+
+        public static bool Verify(CountermeasureDefinition def)
+        {
+            bool isValid = true;
+
+            if (def == null)
+            {
+                Log.Info("CountermeasureDefinition", "Definition null!");
+                return false;
+            }
+            if (def.CountermeasureType == CountermeasureTypeEnum.None)
+                Log.Info("CountermeasureDefinition", "CountermeasureType is undefined! Not an error, but your countermeasure won't do anything.");
+
+            return isValid;
         }
     }
 }

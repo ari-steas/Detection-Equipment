@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Definitions
@@ -59,5 +61,33 @@ namespace DetectionEquipment.Shared.Definitions
 
 
         //[ProtoIgnore] public bool ContinuousMagazine => MagazineSize <= 0 || ReloadTime <= 1/60f;
+
+        public static bool Verify(CountermeasureEmitterDefinition def)
+        {
+            bool isValid = true;
+
+            if (def == null)
+            {
+                Log.Info("CountermeasureEmitterDefinition", "Definition null!");
+                return false;
+            }
+            if (def.BlockSubtypes == null || def.BlockSubtypes.Length == 0)
+            {
+                Log.Info("CountermeasureEmitterDefinition", "BlockSubtypes unset!");
+                isValid = false;
+            }
+            if (def.Muzzles == null || def.Muzzles.Length == 0)
+            {
+                Log.Info("CountermeasureEmitterDefinition", "Muzzles unset! Defaulting to center of block.");
+                def.Muzzles = Array.Empty<string>();
+            }
+            if (def.CountermeasureIds == null || def.CountermeasureIds.Length == 0)
+            {
+                Log.Info("CountermeasureEmitterDefinition", "CountermeasureIds unset!");
+                isValid = false;
+            }
+
+            return isValid;
+        }
     }
 }

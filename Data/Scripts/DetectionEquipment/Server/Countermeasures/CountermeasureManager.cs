@@ -16,19 +16,24 @@ namespace DetectionEquipment.Server.Countermeasures
     internal static class CountermeasureManager
     {
         public static Dictionary<uint, Countermeasure> CountermeasureIdMap;
-        public static Dictionary<uint, CountermeasureEmitterBlock> CountermeasureEmitterIdMap;
+        private static List<Countermeasure> _deadCountermeasures;
         public static uint HighestCountermeasureId = 0;
+
+        public static Dictionary<uint, CountermeasureEmitterBlock> CountermeasureEmitterIdMap;
+        private static List<CountermeasureEmitterBlock> _deadEmitters;
         public static uint HighestCountermeasureEmitterId = 0;
 
-        private static List<Countermeasure> _deadCountermeasures;
 
         public static void Init()
         {
             CountermeasureIdMap = new Dictionary<uint, Countermeasure>();
-            CountermeasureEmitterIdMap = new Dictionary<uint, CountermeasureEmitterBlock>();
             _deadCountermeasures = new List<Countermeasure>();
             HighestCountermeasureId = 0;
+
+            CountermeasureEmitterIdMap = new Dictionary<uint, CountermeasureEmitterBlock>();
+            _deadEmitters = new List<CountermeasureEmitterBlock>();
             HighestCountermeasureEmitterId = 0;
+
             ServerMain.I.OnBlockPlaced += OnBlockPlaced;
 
             Log.Info("CountermeasureManager", "Ready.");
@@ -36,23 +41,45 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public static void Update()
         {
-            foreach (var countermeasure in CountermeasureIdMap.Values)
+            try
             {
-                countermeasure.Update();
-                if (!countermeasure.IsActive)
-                    _deadCountermeasures.Add(countermeasure);
-            }
+                foreach (var countermeasure in CountermeasureIdMap.Values)
+                {
+                    countermeasure.Update();
+                    if (!countermeasure.IsActive)
+                        _deadCountermeasures.Add(countermeasure);
+                }
 
-            foreach (var deadCountermeasure in _deadCountermeasures)
-                CountermeasureIdMap.Remove(deadCountermeasure.Id);
-            _deadCountermeasures.Clear();
+                foreach (var deadCountermeasure in _deadCountermeasures)
+                    CountermeasureIdMap.Remove(deadCountermeasure.Id);
+                _deadCountermeasures.Clear();
+
+                foreach (var emitter in CountermeasureEmitterIdMap.Values)
+                {
+                    emitter.Update();
+                    if (emitter.Block.Closed)
+                        _deadEmitters.Add(emitter);
+                }
+
+                foreach (var deadEmitter in _deadEmitters)
+                    CountermeasureEmitterIdMap.Remove(deadEmitter.Id);
+                _deadEmitters.Clear();
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("CountermeasureManager", ex);
+            }
         }
 
         public static void Close()
         {
             ServerMain.I.OnBlockPlaced -= OnBlockPlaced;
+
             CountermeasureIdMap = null;
+            _deadCountermeasures = null;
+
             CountermeasureEmitterIdMap = null;
+            _deadEmitters = null;
 
             Log.Info("CountermeasureManager", "Closed.");
         }

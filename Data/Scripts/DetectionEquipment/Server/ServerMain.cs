@@ -39,6 +39,9 @@ namespace DetectionEquipment.Server
 
             I = this;
 
+            new ServerNetwork().LoadData();
+            CountermeasureManager.Init();
+
             MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
             MyAPIGateway.Entities.OnEntityRemove += OnEntityRemove;
 
@@ -47,9 +50,6 @@ namespace DetectionEquipment.Server
                 OnEntityAdd(e);
                 return false;
             });
-
-            new ServerNetwork().LoadData();
-            CountermeasureManager.Init();
 
             Log.DecreaseIndent();
             Log.Info("ServerMain", "Initialized.");
@@ -110,6 +110,11 @@ namespace DetectionEquipment.Server
                 Tracks.Add(obj, new GridTrack(grid));
                 GridSensorMangers.Add(grid, new GridSensorManager(grid));
                 grid.OnBlockAdded += InvokeOnBlockPlaced;
+                grid.GetBlocks(null, b =>
+                {
+                    InvokeOnBlockPlaced(b);
+                    return false;
+                });
             }
             else
                 Tracks.Add(obj, new EntityTrack((MyEntity)obj));

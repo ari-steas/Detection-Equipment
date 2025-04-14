@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
@@ -66,7 +67,7 @@ namespace DetectionEquipment.Server.Countermeasures
 
             // Ejection velocity
             Velocity = Direction * emitter.Definition.EjectionVelocity;
-            if (emitter.Block?.Physics != null)
+            if (emitter.Block?.CubeGrid?.Physics != null)
             {
                 var ownerGrid = emitter.Block.CubeGrid;
                 Vector3D ownerCenter = ownerGrid.Physics.CenterOfMassWorld;
@@ -92,29 +93,27 @@ namespace DetectionEquipment.Server.Countermeasures
             }
             else 
             {
-                if (Definition.HasPhysics)
-                {
-                    float ignored;
-                    Velocity += MyAPIGateway.Physics.CalculateNaturalGravityAt(Position, out ignored);
-                    if (Definition.DragMultiplier != 0 && Velocity != Vector3D.Zero)
-                        Velocity = Vector3D.Lerp(Velocity, Vector3D.Zero, Velocity.LengthSquared() * Definition.DragMultiplier);
-                }
-                Position += Velocity;
+                //if (Definition.HasPhysics)
+                //{
+                //    float ignored;
+                //    Velocity += MyAPIGateway.Physics.CalculateNaturalGravityAt(Position, out ignored) / 60;
+                //    if (Definition.DragMultiplier != 0 && Velocity != Vector3D.Zero)
+                //        Velocity = Vector3D.Lerp(Velocity, Vector3D.Zero, Velocity.LengthSquared() * Definition.DragMultiplier / 60);
+                //}
+                Position += Velocity / 60;
             }
 
             if (Particle == null && !string.IsNullOrEmpty(Definition.ParticleEffect))
             {
-                var matrix = MatrixD.CreateWorld(Position, Direction, Vector3D.Up);
-                if (!MyParticlesManager.TryCreateParticleEffect(Definition.ParticleEffect,
-                        ref matrix, ref Vector3D.Zero, uint.MaxValue, out Particle))
+                var matrix = MatrixD.CreateWorld(Position, Direction, Vector3D.CalculatePerpendicularVector(Direction));
+                if (!MyParticlesManager.TryCreateParticleEffect(Definition.ParticleEffect, ref matrix, ref Position, uint.MaxValue, out Particle))
                 {
-                    Log.Exception("CountermeasureEmitterBlock", new Exception($"Failed to create new projectile particle \"{Definition.ParticleEffect}\"!"));
+                    Log.Exception("Countermeasure", new Exception($"Failed to create new projectile particle \"{Definition.ParticleEffect}\"!"));
                 }
             }
 
             if (Particle != null)
                 Particle.WorldMatrix = MatrixD.CreateWorld(Position, Direction, Vector3D.Up);
-
 
             if (--RemainingLifetime == 0)
                 Close();
@@ -122,6 +121,9 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public float GetSensorNoise(ISensor sensor)
         {
+            if (Definition.CountermeasureType == CountermeasureDefinition.CountermeasureTypeEnum.None)
+                return 0;
+
             bool sensorIsVisual = sensor is VisualSensor;
             bool sensorIsInfrared = sensorIsVisual && ((VisualSensor)sensor).IsInfrared;
             sensorIsVisual &= !sensorIsInfrared;
@@ -134,7 +136,7 @@ namespace DetectionEquipment.Server.Countermeasures
 
             var distance = (float) Vector3D.Distance(sensor.Position, Position);
 
-            if (distance > Definition.MaxRange || Vector3D.Angle(Direction, sensor.Position - Position) > EffectAperture)
+            if (distance > Definition.MaxRange || Vector3D.Angle(sensor.Direction, Position - sensor.Position) > sensor.Aperture || Vector3D.Angle(Direction, sensor.Position - Position) > EffectAperture)
                 return 0;
 
             switch (Definition.FalloffType)
@@ -152,6 +154,7 @@ namespace DetectionEquipment.Server.Countermeasures
         public void Close()
         {
             IsActive = false;
+            Particle?.Close();
             //ServerNetwork.SendToEveryoneInSync((SerializedCloseProjectile) deadCountermeasure, deadCountermeasure.Position);
         }
     }

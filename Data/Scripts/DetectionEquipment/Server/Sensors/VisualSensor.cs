@@ -61,7 +61,7 @@ namespace DetectionEquipment.Server.Sensors
 
             Vector3D bearing = visibilitySet.Position - Position;
             double range = bearing.Normalize();
-            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture / CountermeasureNoise;
+            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture / (1 + CountermeasureNoise);
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
             if (targetSizeRatio < MinVisibility)

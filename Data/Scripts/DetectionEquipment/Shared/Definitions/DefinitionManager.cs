@@ -118,6 +118,16 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 case 0:
                     var definition = DefinitionApi.GetDefinition<CountermeasureDefinition>(definitionId);
+
+                    Log.IncreaseIndent();
+                    bool valid = CountermeasureDefinition.Verify(definition);
+                    Log.DecreaseIndent();
+                    if (!valid)
+                    {
+                        Log.Info("DefinitionManager", $"Did not register definition {definitionId}.");
+                        return;
+                    }
+
                     definition.Id = definitionId.GetHashCode();
                     CountermeasureDefinitions[definition.Id] = definition;
 
@@ -140,6 +150,16 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 case 0:
                     var definition = DefinitionApi.GetDefinition<CountermeasureEmitterDefinition>(definitionId);
+
+                    Log.IncreaseIndent();
+                    bool valid = CountermeasureEmitterDefinition.Verify(definition);
+                    Log.DecreaseIndent();
+                    if (!valid)
+                    {
+                        Log.Info("DefinitionManager", $"Did not register definition {definitionId}.");
+                        return;
+                    }
+
                     definition.Id = definitionId.GetHashCode();
                     CountermeasureEmitterDefinitions[definition.Id] = definition;
                     if (!MyAPIGateway.Utilities.IsDedicated)
@@ -171,14 +191,14 @@ namespace DetectionEquipment.Shared.Definitions
 
         public static List<CountermeasureEmitterBlock> TryCreateCountermeasureEmitters(IMyConveyorSorter block)
         {
-            var sensors = new List<CountermeasureEmitterBlock>();
+            var emitters = new List<CountermeasureEmitterBlock>();
             foreach (var definition in CountermeasureEmitterDefinitions.Values)
             {
                 if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
                     continue;
-                sensors.Add(new CountermeasureEmitterBlock(block, definition));
+                emitters.Add(new CountermeasureEmitterBlock(block, definition));
             }
-            return sensors;
+            return emitters;
         }
 
         public static List<SensorDefinition> GetSensorDefinitions(IMyCubeBlock block)
