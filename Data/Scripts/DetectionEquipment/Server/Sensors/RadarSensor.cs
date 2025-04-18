@@ -72,12 +72,17 @@ namespace DetectionEquipment.Server.Sensors
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
         {
             var track = visibilitySet.Track;
+            if (track == null) return null;
 
             double targetAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
                 targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
             if (targetAngle > Aperture)
+            {
+                DebugDraw.AddLine(Position, visibilitySet.Track.BoundingBox.ClosestCorner(Position), Color.Purple, 0);
+                DebugDraw.AddLine(visibilitySet.Position, visibilitySet.ClosestCorner, Color.Purple, 0);
                 return null;
+            }
 
             double targetDistanceSq = Vector3D.DistanceSquared(Position, visibilitySet.Position);
 
@@ -90,7 +95,7 @@ namespace DetectionEquipment.Server.Sensors
 
                 // Can make this fancier if I want later.
                 // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
-                signalToNoiseRatio = MathUtils.ToDecibels((Power * PowerEfficiencyModifier * gain * gain * lambda * lambda * visibilitySet.RadarVisibility) / (1984.40171 * targetDistanceSq * targetDistanceSq * 1.38E-23 * 950 * Bandwidth + CountermeasureNoise));
+                signalToNoiseRatio = MathUtils.ToDecibels((Power * PowerEfficiencyModifier * gain * gain * lambda * lambda * visibilitySet.RadarVisibility) / (1984.40171 * targetDistanceSq * targetDistanceSq * 1.38E-23 * 950 * Bandwidth * (1 + CountermeasureNoise)));
             }
 
             //MyAPIGateway.Utilities.ShowNotification($"Power: {Power/1000000:N1}MW -> {signalToNoiseRatio:F} dB", 1000/60);
@@ -100,7 +105,10 @@ namespace DetectionEquipment.Server.Sensors
                 PassiveRadarSensor.NotifyOnRadarHit(((EntityTrack)track).Entity, this);
 
             if (signalToNoiseRatio < 0)
+            {
+                DebugDraw.AddLine(Position, visibilitySet.Position, Color.Blue, 0);
                 return null;
+            }
 
             double maxBearingError = BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / MinStableSignal, 0, 1));
             Vector3D bearing = MathUtils.RandomCone(Vector3D.Normalize(visibilitySet.Position - Position), maxBearingError);

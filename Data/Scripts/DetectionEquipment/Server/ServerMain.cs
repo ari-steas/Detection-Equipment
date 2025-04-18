@@ -79,7 +79,7 @@ namespace DetectionEquipment.Server
         }
 
 
-
+        private List<IMyEntity> _deadTracks = new List<IMyEntity>();
         public override void UpdateAfterSimulation()
         {
             if (!MyAPIGateway.Session.IsServer)
@@ -89,6 +89,16 @@ namespace DetectionEquipment.Server
             {
                 PbApiInitializer.Init();
                 _doneTickInit = true;
+            }
+
+            // Safety check for closed tracks that didn't notify
+            {
+                foreach (var ent in Tracks.Keys)
+                    if (ent.Closed)
+                        _deadTracks.Add(ent);
+                foreach (var ent in _deadTracks)
+                    Tracks.Remove(ent);
+                _deadTracks.Clear();
             }
 
             foreach (var manager in GridSensorMangers.Values)

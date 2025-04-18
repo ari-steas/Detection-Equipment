@@ -25,6 +25,7 @@ namespace DetectionEquipment.Server.Countermeasures
         public Vector3D Position;
         public Vector3D Direction;
         public Vector3D Velocity;
+        public float Intensity = 1;
 
         public MyParticleEffect Particle;
 
@@ -119,7 +120,7 @@ namespace DetectionEquipment.Server.Countermeasures
                 Close();
         }
 
-        public float GetSensorNoise(ISensor sensor)
+        public double GetSensorNoise(ISensor sensor)
         {
             if (Definition.CountermeasureType == CountermeasureDefinition.CountermeasureTypeEnum.None)
                 return 0;
@@ -134,7 +135,7 @@ namespace DetectionEquipment.Server.Countermeasures
                 )
                 return 0;
 
-            var distance = (float) Vector3D.Distance(sensor.Position, Position);
+            var distance = Vector3D.Distance(sensor.Position, Position);
 
             if (distance > Definition.MaxRange || Vector3D.Angle(sensor.Direction, Position - sensor.Position) > sensor.Aperture || Vector3D.Angle(Direction, sensor.Position - Position) > EffectAperture)
                 return 0;
@@ -142,12 +143,12 @@ namespace DetectionEquipment.Server.Countermeasures
             switch (Definition.FalloffType)
             {
                 case CountermeasureDefinition.FalloffTypeEnum.Quadratic:
-                    return Definition.FalloffScalar / ((distance + Definition.MaxRange)*(distance + Definition.MaxRange)) + Definition.MinNoise;
+                    return Intensity * (Definition.FalloffScalar / (distance*distance) + Definition.MinNoise);
                 case CountermeasureDefinition.FalloffTypeEnum.Linear:
-                    return Definition.FalloffScalar * (Definition.MaxRange - distance) + Definition.MinNoise;
+                    return Intensity * (Definition.FalloffScalar * (Definition.MaxRange - distance) + Definition.MinNoise);
                 case CountermeasureDefinition.FalloffTypeEnum.None:
                 default:
-                    return Definition.MinNoise;
+                    return Intensity * Definition.MinNoise;
             }
         }
 

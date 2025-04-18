@@ -45,7 +45,7 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(7)] public float MaxEffectAperture;
         /// <summary>
-        /// Ticks this countermeasure should last for. Set to -1 for guaranteed attached countermeasures.
+        /// Ticks this countermeasure should last for. Set to uint.MaxValue for guaranteed attached countermeasures.
         /// </summary>
         [ProtoMember(8)] public uint MaxLifetime;
         /// <summary>

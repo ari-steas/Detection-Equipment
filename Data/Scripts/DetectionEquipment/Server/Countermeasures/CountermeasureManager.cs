@@ -9,6 +9,7 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Weapons;
 using Sandbox.ModAPI;
+using VRage.Game.Components;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Server.Countermeasures
@@ -84,13 +85,13 @@ namespace DetectionEquipment.Server.Countermeasures
             Log.Info("CountermeasureManager", "Closed.");
         }
 
-        public static float GetNoise(ISensor sensor)
+        public static double GetNoise(ISensor sensor)
         {
-            float totalNoise = 0;
+            double totalNoise = 0;
             foreach (var counter in CountermeasureIdMap.Values)
                 totalNoise += counter.GetSensorNoise(sensor);
             if (totalNoise > 0)
-                MyAPIGateway.Utilities.ShowNotification($"{totalNoise:F1}", 1000/60);
+                MyAPIGateway.Utilities.ShowNotification($"{sensor.GetType().Name}: {totalNoise:F} ({CountermeasureIdMap.Count})", 1000/60);
             return totalNoise;
         }
 

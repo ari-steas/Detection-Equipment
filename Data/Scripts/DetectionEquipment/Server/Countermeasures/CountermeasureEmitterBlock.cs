@@ -38,10 +38,19 @@ namespace DetectionEquipment.Server.Countermeasures
             SetupMuzzles();
         }
 
+        private bool _didCloseAttached = false;
         public void Update()
         {
             if (!Block.IsWorking)
+            {
+                if (!Definition.IsCountermeasureAttached || _didCloseAttached)
+                    return;
+                foreach (var counter in AttachedCountermeasures)
+                    counter?.Close();
+                _didCloseAttached = true;
                 return;
+            }
+            _didCloseAttached = false;
 
             ShotAggregator += Definition.ShotsPerSecond / 60f;
             int startMuzzleIdx = CurrentMuzzleIdx;
@@ -51,11 +60,22 @@ namespace DetectionEquipment.Server.Countermeasures
                 if (CurrentMuzzleIdx == startMuzzleIdx) // Prevent infinite loop if all muzzles are in use.
                     break;
             }
+
+            if (Block.ShowOnHUD && Definition.IsCountermeasureAttached)
+            {
+                foreach (var counter in AttachedCountermeasures)
+                {
+                    var matrix = MatrixD.CreateWorld(counter.Position, counter.Direction,
+                        Vector3D.CalculatePerpendicularVector(counter.Direction));
+                    var color = new Color((uint) ((50 + counter.Id) * Block.EntityId)).Alpha(0.1f);
+                    MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(counter.EffectAperture) * counter.Definition.MaxRange, counter.Definition.MaxRange, ref color, 8, DebugDraw.MaterialSquare);
+                }
+            }
         }
 
         private void FireOnce()
         {
-            if (!Definition.IsCountermeasureAttached || AttachedCountermeasures[CurrentMuzzleIdx] == null) // Only spawn a new countermeasure if needed.
+            if (!Definition.IsCountermeasureAttached || !(AttachedCountermeasures[CurrentMuzzleIdx]?.IsActive ?? false)) // Only spawn a new countermeasure if needed.
             {
                 var counterDef =
                     DefinitionManager.GetCountermeasureDefinition(Definition.CountermeasureIds[CurrentSequenceIdx++]

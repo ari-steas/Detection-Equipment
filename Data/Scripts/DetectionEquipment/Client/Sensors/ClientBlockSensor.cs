@@ -179,7 +179,7 @@ namespace DetectionEquipment.Client.Sensors
                 // HUD
                 if (block.ShowOnHUD)
                 {
-                    var color = new Color((uint) ((50 + Id) * block.EntityId)).Alpha(0.39f);
+                    var color = new Color((uint) ((50 + Id) * block.EntityId)).Alpha(0.1f);
                     var matrix = MatrixD.CreateWorld(Position, Direction, Vector3D.CalculatePerpendicularVector(Direction));
 
                     if (Aperture < Math.PI)

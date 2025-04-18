@@ -83,6 +83,20 @@ namespace DetectionEquipment.Shared.Definitions
                 HasPhysics = true,
                 DragMultiplier = 0.001f,
                 ParticleEffect = "Smoke_Firework"
+            },
+            ["SimpleAreaJammer"] = new CountermeasureDefinition
+            {
+                CountermeasureType = CountermeasureDefinition.CountermeasureTypeEnum.Radar,
+                MaxRange = 50000,
+                FalloffScalar = 1.0f,
+                MinNoise = 0f,
+                FalloffType = CountermeasureDefinition.FalloffTypeEnum.Quadratic,
+                MinEffectAperture = (float) Math.PI,
+                MaxEffectAperture = (float) Math.PI,
+                MaxLifetime = uint.MaxValue,
+                HasPhysics = false,
+                DragMultiplier = 0.001f,
+                ParticleEffect = ""
             }
         };
 
@@ -130,6 +144,25 @@ namespace DetectionEquipment.Shared.Definitions
                 ShotsPerSecond = 15,
                 EjectionVelocity = 50,
                 FireParticle = "Smoke_Collector"
+            },
+            ["SimpleJammer"] = new CountermeasureEmitterDefinition
+            {
+                BlockSubtypes = new[]
+                {
+                    "SimpleJammer"
+                },
+                Muzzles = new[]
+                {
+                    "muzzle",
+                },
+                CountermeasureIds = new[]
+                {
+                    "SimpleAreaJammer"
+                },
+                IsCountermeasureAttached = true,
+                ShotsPerSecond = 60,
+                EjectionVelocity = 0,
+                FireParticle = ""
             }
         };
 

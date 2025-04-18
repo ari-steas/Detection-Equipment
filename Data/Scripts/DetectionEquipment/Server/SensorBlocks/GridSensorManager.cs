@@ -6,6 +6,9 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
+using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -57,14 +60,22 @@ namespace DetectionEquipment.Server.SensorBlocks
                             continue;
 
                         var gT = trackKvp.Value as GridTrack;
-                        if (gT?.Grid?.GetTopMostParent() == Grid.GetTopMostParent())
+                        if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
                             continue;
 
                         // Only track objects the grid can see
                         IHitInfo hitInfo;
                         MyAPIGateway.Physics.CastLongRay(Grid.WorldAABB.ClosestCorner(trackKvp.Value.Position), trackKvp.Value.Position, out hitInfo, false);
-                        if (hitInfo != null && hitInfo.HitEntity.EntityId != trackKvp.Value.EntityId)
-                            continue;
+                        if (hitInfo != null && hitInfo.HitEntity?.GetTopMostParent() != trackKvp.Key.GetTopMostParent())
+                        {
+                            // All this is special handling for subgrids
+                            var gridHit = hitInfo.HitEntity as IMyCubeGrid;
+                            var gridEnt = trackKvp.Key as IMyCubeGrid;
+                            bool differentType = gridHit == null ^ gridEnt == null;
+                            bool bothGrids = gridHit != null && gridEnt != null;
+                            if (differentType || (bothGrids && !gridHit.IsInSameLogicalGroupAs(gridEnt)))
+                                continue;
+                        }
 
                         if (gT != null)
                         {
@@ -126,6 +137,8 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 Sensors.Add(newSensor);
                 ids.Add(newSensor.Sensor.Id);
+
+                HasRadar |= newSensor.Sensor is RadarSensor || newSensor.Sensor is PassiveRadarSensor;
             }
 
             if (ids.Count > 0)
@@ -143,6 +156,8 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 Sensors.RemoveWhere(sensor => sensor.Block == cubeBlock);
                 BlockSensorIdMap.Remove(cubeBlock);
+
+                HasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
             }
         }
 
@@ -158,25 +173,25 @@ namespace DetectionEquipment.Server.SensorBlocks
             public Vector3D ClosestCorner, Position;
             public BoundingBoxD BoundingBox;
 
-            public VisibilitySet(IMyCubeGrid grid, ITrack track)
+            public VisibilitySet(IMyCubeGrid thisGrid, ITrack track)
             {
                 Track = track;
                 if (track is GridTrack)
                 {
-                    ((GridTrack)track).CalculateRcs(Vector3D.Normalize(((GridTrack)track).Grid.WorldAABB.Center - grid.WorldAABB.Center), out RadarVisibility, out OpticalVisibility);
+                    ((GridTrack)track).CalculateRcs(Vector3D.Normalize(((GridTrack)track).Grid.WorldAABB.Center - thisGrid.WorldAABB.Center), out RadarVisibility, out OpticalVisibility);
                 }
                 else
                 {
-                    RadarVisibility = track.RadarVisibility(grid.WorldAABB.Center);
-                    OpticalVisibility = track.OpticalVisibility(grid.WorldAABB.Center);
+                    RadarVisibility = track.RadarVisibility(thisGrid.WorldAABB.Center);
+                    OpticalVisibility = track.OpticalVisibility(thisGrid.WorldAABB.Center);
                 }
-                InfraredVisibility = track.InfraredVisibility(grid.WorldAABB.Center, OpticalVisibility);
-                ClosestCorner = Track.BoundingBox.ClosestCorner(grid.WorldAABB.Center);
+                InfraredVisibility = track.InfraredVisibility(thisGrid.WorldAABB.Center, OpticalVisibility);
+                ClosestCorner = Track.BoundingBox.ClosestCorner(thisGrid.WorldAABB.Center);
                 Position = Track.Position;
                 BoundingBox = Track.BoundingBox;
             }
 
-            public VisibilitySet(IEnumerable<VisibilitySet> toAverage)
+            public VisibilitySet(ICollection<VisibilitySet> toAverage)
             {
                 double largestVisibility = 0;
                 Track = null;
@@ -200,7 +215,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                     RadarVisibility += visibilitySet.RadarVisibility;
                     OpticalVisibility += visibilitySet.OpticalVisibility;
                     InfraredVisibility += visibilitySet.InfraredVisibility;
-                    ClosestCorner += visibilitySet.ClosestCorner;
                 }
             }
         }
