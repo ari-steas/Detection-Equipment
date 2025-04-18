@@ -88,14 +88,14 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 CountermeasureType = CountermeasureDefinition.CountermeasureTypeEnum.Radar,
                 MaxRange = 50000,
-                FalloffScalar = 1.0f,
+                FalloffScalar = 1.0E12f,
                 MinNoise = 0f,
                 FalloffType = CountermeasureDefinition.FalloffTypeEnum.Quadratic,
                 MinEffectAperture = (float) Math.PI,
                 MaxEffectAperture = (float) Math.PI,
                 MaxLifetime = uint.MaxValue,
                 HasPhysics = false,
-                DragMultiplier = 0.001f,
+                DragMultiplier = 0f,
                 ParticleEffect = ""
             }
         };

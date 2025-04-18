@@ -44,11 +44,6 @@ namespace DetectionEquipment.Server.Sensors
             ServerMain.I.SensorIdMap.Remove(Id);
         }
 
-        public DetectionInfo? GetDetectionInfo(ITrack track)
-        {
-            return GetDetectionInfo(track, IsInfrared ? track.InfraredVisibility(Position) : track.OpticalVisibility(Position));
-        }
-
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
         {
             var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
@@ -80,43 +75,6 @@ namespace DetectionEquipment.Server.Sensors
             return new DetectionInfo
             {
                 Track = visibilitySet.Track,
-                Sensor = this,
-                CrossSection = visibility,
-                Bearing = bearing,
-                BearingError = maxBearingError,
-                Range = range,
-                RangeError = maxRangeError,
-                IffCodes = Array.Empty<string>(),
-            };
-        }
-
-        public DetectionInfo? GetDetectionInfo(ITrack track, double visibility)
-        {
-            double targetAngle = 0;
-            if (track.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                targetAngle = Vector3D.Angle(Direction, track.BoundingBox.ClosestCorner(Position) - Position);
-
-            Vector3D bearing = track.Position - Position;
-            double range = bearing.Normalize();
-            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;
-
-            //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
-            if (targetAngle > Aperture || targetSizeRatio < MinVisibility)
-                return null;
-
-            double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);
-
-            double maxBearingError = Aperture/2 * BearingErrorModifier * errorScalar;
-            bearing = MathUtils.RandomCone(bearing, maxBearingError);
-
-            double maxRangeError = Math.Sqrt(range) * RangeErrorModifier * errorScalar;
-            range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
-
-            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(visibility, range, maxRangeError, maxBearingError, bearing, Array.Empty<string>()));
-
-            return new DetectionInfo()
-            {
-                Track = track,
                 Sensor = this,
                 CrossSection = visibility,
                 Bearing = bearing,

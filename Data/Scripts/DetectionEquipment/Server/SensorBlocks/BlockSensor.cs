@@ -162,7 +162,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     Detections.Add(detection.Value);
             }
 
-            if (Block.ShowOnHUD)
+            if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
             {
                 foreach (var detection in Detections)
                 {

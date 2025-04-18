@@ -91,7 +91,7 @@ namespace DetectionEquipment.Server.Countermeasures
             foreach (var counter in CountermeasureIdMap.Values)
                 totalNoise += counter.GetSensorNoise(sensor);
             if (totalNoise > 0)
-                MyAPIGateway.Utilities.ShowNotification($"{sensor.GetType().Name}: {totalNoise:F} ({CountermeasureIdMap.Count})", 1000/60);
+                MyAPIGateway.Utilities.ShowNotification($"{sensor.GetType().Name}: {MathUtils.ToDecibels(totalNoise):F}dB noise ({CountermeasureIdMap.Count} source[s])", 1000/60);
             return totalNoise;
         }
 

@@ -33,8 +33,6 @@ namespace DetectionEquipment.Server.Sensors
 
         Action<LocalDetTuple> OnDetection { get; set; }
 
-        DetectionInfo? GetDetectionInfo(ITrack track);
-        DetectionInfo? GetDetectionInfo(ITrack track, double visibility);
         DetectionInfo? GetDetectionInfo(VisibilitySet visibility);
         void Close();
     }
