@@ -79,10 +79,24 @@ namespace DetectionEquipment.Shared.Definitions
                 FalloffType = CountermeasureDefinition.FalloffTypeEnum.Linear,
                 MinEffectAperture = (float) Math.PI,
                 MaxEffectAperture = (float) Math.PI,
-                MaxLifetime = 600,
+                MaxLifetime = 300,
                 HasPhysics = true,
                 DragMultiplier = 0.001f,
                 ParticleEffect = "Smoke_Firework"
+            },
+            ["SimpleChaff"] = new CountermeasureDefinition
+            {
+                CountermeasureType = CountermeasureDefinition.CountermeasureTypeEnum.Radar,
+                MaxRange = 10000,
+                FalloffScalar = 1.0E10f,
+                MinNoise = 0f,
+                FalloffType = CountermeasureDefinition.FalloffTypeEnum.Quadratic,
+                MinEffectAperture = (float) Math.PI,
+                MaxEffectAperture = (float) Math.PI,
+                MaxLifetime = 240,
+                HasPhysics = true,
+                DragMultiplier = 0.001f,
+                ParticleEffect = "SimpleChaffParticle"
             },
             ["SimpleAreaJammer"] = new CountermeasureDefinition
             {
@@ -143,7 +157,50 @@ namespace DetectionEquipment.Shared.Definitions
                 IsCountermeasureAttached = false,
                 ShotsPerSecond = 15,
                 EjectionVelocity = 50,
-                FireParticle = "Smoke_Collector"
+                FireParticle = "Muzzle_Flash_Autocannon"
+            },
+            ["SimpleChaffEmitter"] = new CountermeasureEmitterDefinition
+            {
+                BlockSubtypes = new[]
+                {
+                    "ChaffLauncher"
+                },
+                Muzzles = new[]
+                {
+                    "muzzle_01",
+                    "muzzle_02",
+                    "muzzle_03",
+                    "muzzle_04",
+                    "muzzle_05",
+                    "muzzle_06",
+                    "muzzle_07",
+                    "muzzle_08",
+                    "muzzle_09",
+                    "muzzle_10",
+                    "muzzle_11",
+                    "muzzle_12",
+                    "muzzle_13",
+                    "muzzle_14",
+                    "muzzle_15",
+                    "muzzle_16",
+                    "muzzle_17",
+                    "muzzle_18",
+                    "muzzle_19",
+                    "muzzle_20",
+                    "muzzle_21",
+                    "muzzle_22",
+                    "muzzle_23",
+                    "muzzle_24",
+                    "muzzle_25",
+                },
+                CountermeasureIds = new[]
+                {
+                    "SimpleChaff"
+                },
+                IsCountermeasureAttached = false,
+                ShotsPerSecond = 15,
+                EjectionVelocity = 100,
+                FireParticle = "Muzzle_Flash_Autocannon"
             },
             ["SimpleJammer"] = new CountermeasureEmitterDefinition
             {

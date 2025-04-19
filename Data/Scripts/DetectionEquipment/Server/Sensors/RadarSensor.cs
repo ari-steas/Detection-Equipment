@@ -53,15 +53,18 @@ namespace DetectionEquipment.Server.Sensors
 
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
         public double Power = 14000000;
-        public double RecieverArea = 4.9 * 2.7;
-        public double MinStableSignal = 30; // Minimum signal at which there is zero error, in dB
+        public double ReceiverArea = 4.9 * 2.7;
+
+        /// <summary>
+        /// Minimum signal at which there is zero error, in dB
+        /// </summary>
+        public double MinStableSignal = 30;
 
         public double PowerEfficiencyModifier = 0.00000000000000025;
         public double BearingErrorModifier { get; set; } = 0.1;
         public double RangeErrorModifier { get; set; } = 0.0001; //0.005;
         public double Bandwidth = 1.67E6;
         public double Frequency = 2800E6;
-        public double Losses = 6.3; // 8dB
         public double CountermeasureNoise { get; set; } = 0;
 
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
@@ -81,15 +84,20 @@ namespace DetectionEquipment.Server.Sensors
             {
                 double lambda = 299792458 / Frequency;
                 double outputDensity = (2 * Math.PI) / Aperture; // Inverse output density
-                double recieverAreaAtAngle = Aperture < Math.PI ? RecieverArea * Math.Cos(targetAngle) : RecieverArea; // If the aperture is more than 180 degrees, assume that it's a spheroid.
-                double gain = 4 * Math.PI * recieverAreaAtAngle / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
+                double receiverAreaAtAngle = Aperture < Math.PI ? ReceiverArea * Math.Cos(targetAngle) : ReceiverArea; // If the aperture is more than 180 degrees, assume that it's a spheroid.
+
+                //            4 * pi * receiverArea
+                // ----------------------------------------------
+                // lambda^2 * angleOffsetScalar * outputDensity^3
+                double gain = 4 * Math.PI * receiverAreaAtAngle / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
 
                 // Can make this fancier if I want later.
                 // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
                 signalToNoiseRatio = MathUtils.ToDecibels(
+                    // netpower * gain^2 * lambda^2 * rcs
                     (Power * PowerEfficiencyModifier * gain * gain * lambda * lambda * visibilitySet.RadarVisibility)
                     /
-                    // 4pi^3 * range^4 * boltzmann * sysnoise
+                    // 4pi^3 * range^4 * boltzmann * systemNoise * bandwidth
                     (1984.40171 * targetDistanceSq * targetDistanceSq * 1.38E-23 * (950 + CountermeasureNoise) * Bandwidth)
                     );
             }
@@ -137,7 +145,7 @@ namespace DetectionEquipment.Server.Sensors
 
             double lambda = 299792458 / Frequency;
             double outputDensity = (2 * Math.PI) / Aperture; // Inverse output density
-            double gain = 4 * Math.PI * RecieverArea / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
+            double gain = 4 * Math.PI * ReceiverArea / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
 
             // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
             return MathUtils.ToDecibels((Power * PowerEfficiencyModifier * gain * crossSection) / (4 * Math.PI * targetDistanceSq * 1.38E-23 * 950 * Bandwidth));

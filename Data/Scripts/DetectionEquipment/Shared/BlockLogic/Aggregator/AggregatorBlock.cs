@@ -168,15 +168,15 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             // testing //
             //MyAPIGateway.Utilities.ShowNotification($"Det: {AggregatedDetections.Count} Cache: {DetectionCache.Count}", 1000/60);
-            if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
-            {
-                foreach (var detection in _bufferDetections)
-                {
-                    DebugDraw.AddLine(Block.GetPosition(), detection.Position, Color.Green, 0);
-                    if (detection.Velocity != null)
-                        DebugDraw.AddLine(detection.Position, detection.Position + detection.Velocity.Value, Color.Blue, 0);
-                }
-            }
+            //if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
+            //{
+            //    foreach (var detection in _bufferDetections)
+            //    {
+            //        DebugDraw.AddLine(Block.GetPosition(), detection.Position, Color.Green, 0);
+            //        if (detection.Velocity != null)
+            //            DebugDraw.AddLine(detection.Position, detection.Position + detection.Velocity.Value, Color.Blue, 0);
+            //    }
+            //}
         }
 
         public override void UpdateAfterSimulation10()

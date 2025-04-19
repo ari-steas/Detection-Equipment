@@ -90,9 +90,11 @@ namespace DetectionEquipment.Server.Countermeasures
                 if (!string.IsNullOrEmpty(Definition.FireParticle)) // TODO: this doesn't go in server
                 {
                     MyParticleEffect discard;
-                    var matrix = MuzzleMatrix;
-                    var pos = matrix.Translation;
-                    if (!MyParticlesManager.TryCreateParticleEffect(Definition.FireParticle, ref matrix, ref pos, Muzzles[CurrentMuzzleIdx].Parent?.Render?.GetRenderObjectID() ?? uint.MaxValue, out discard)) // TODO this goes in client
+
+                    uint renderId = Muzzles[CurrentMuzzleIdx].Parent?.Render?.GetRenderObjectID() ?? uint.MaxValue;
+                    var matrix = (MatrixD) Muzzles[CurrentMuzzleIdx].Dummy.Matrix;
+                    var pos = MuzzleMatrix.Translation;
+                    if (!MyParticlesManager.TryCreateParticleEffect(Definition.FireParticle, ref matrix, ref pos, renderId, out discard)) // TODO this goes in client
                     {
                         Log.Exception("CountermeasureEmitterBlock", new Exception($"Failed to create new projectile particle \"{Definition.FireParticle}\"!"));
                     }
