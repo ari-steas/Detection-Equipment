@@ -4,10 +4,11 @@ using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Networking
 {
-    [ProtoInclude(100, typeof(SensorUpdatePacket))]
-    [ProtoInclude(101, typeof(SensorInitPacket))]
-    [ProtoInclude(102, typeof(BlockSelectControlPacket))]
-    [ProtoInclude(103, typeof(AggregatorBlock.AggregatorUpdatePacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 0, typeof(SensorUpdatePacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 1, typeof(SensorInitPacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 2, typeof(BlockSelectControlPacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 3, typeof(AggregatorBlock.AggregatorUpdatePacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 4, typeof(CountermeasurePacket))]
     [ProtoContract(UseProtoMembersOnly = true)]
     public abstract class PacketBase
     {

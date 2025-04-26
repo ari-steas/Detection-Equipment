@@ -11,7 +11,7 @@ namespace DetectionEquipment.Shared.Definitions
         private static readonly Dictionary<string, SensorDefinition> SensorDefinitions = new Dictionary<string, SensorDefinition>
         {
             // Vanilla Camera
-            ["VanillaCamera"] = new SensorDefinition
+            ["DetEq_Internal_VanillaCamera"] = new SensorDefinition
             {
                 BlockSubtypes = new[]
                 {
@@ -27,7 +27,7 @@ namespace DetectionEquipment.Shared.Definitions
             },
 
             // SimpleActiveRadar
-            ["SimpleActiveRadar"] = new SensorDefinition
+            ["DetEq_Internal_SimpleActiveRadar"] = new SensorDefinition
             {
                 BlockSubtypes = new[]
                 {
@@ -53,7 +53,7 @@ namespace DetectionEquipment.Shared.Definitions
             },
 
             // SimplePassiveRadar
-            ["SimplePassiveRadar"] = new SensorDefinition
+            ["DetEq_Internal_SimplePassiveRadar"] = new SensorDefinition
             {
                 BlockSubtypes = new[]
                 {
@@ -70,7 +70,7 @@ namespace DetectionEquipment.Shared.Definitions
 
         private static readonly Dictionary<string, CountermeasureDefinition> CountermeasureDefinitions = new Dictionary<string, CountermeasureDefinition>
         {
-            ["SimpleFlare"] = new CountermeasureDefinition
+            ["DetEq_Internal_SimpleFlare"] = new CountermeasureDefinition
             {
                 CountermeasureType = CountermeasureDefinition.CountermeasureTypeEnum.Infrared,
                 MaxRange = 10000,
@@ -84,7 +84,7 @@ namespace DetectionEquipment.Shared.Definitions
                 DragMultiplier = 0.001f,
                 ParticleEffect = "Smoke_Firework"
             },
-            ["SimpleChaff"] = new CountermeasureDefinition
+            ["DetEq_Internal_SimpleChaff"] = new CountermeasureDefinition
             {
                 CountermeasureType = CountermeasureDefinition.CountermeasureTypeEnum.Radar,
                 MaxRange = 10000,
@@ -98,7 +98,7 @@ namespace DetectionEquipment.Shared.Definitions
                 DragMultiplier = 0.001f,
                 ParticleEffect = "SimpleChaffParticle"
             },
-            ["SimpleAreaJammer"] = new CountermeasureDefinition
+            ["DetEq_Internal_SimpleAreaJammer"] = new CountermeasureDefinition
             {
                 CountermeasureType = CountermeasureDefinition.CountermeasureTypeEnum.Radar,
                 MaxRange = 50000,
@@ -116,7 +116,7 @@ namespace DetectionEquipment.Shared.Definitions
 
         private static readonly Dictionary<string, CountermeasureEmitterDefinition> CountermeasureEmitterDefinitions = new Dictionary<string, CountermeasureEmitterDefinition>
         {
-            ["SimpleFlareEmitter"] = new CountermeasureEmitterDefinition
+            ["DetEq_Internal_SimpleFlareEmitter"] = new CountermeasureEmitterDefinition
             {
                 BlockSubtypes = new[]
                 {
@@ -152,14 +152,14 @@ namespace DetectionEquipment.Shared.Definitions
                 },
                 CountermeasureIds = new[]
                 {
-                    "SimpleFlare"
+                    "DetEq_Internal_SimpleFlare"
                 },
                 IsCountermeasureAttached = false,
                 ShotsPerSecond = 15,
                 EjectionVelocity = 50,
                 FireParticle = "Muzzle_Flash_Autocannon"
             },
-            ["SimpleChaffEmitter"] = new CountermeasureEmitterDefinition
+            ["DetEq_Internal_SimpleChaffEmitter"] = new CountermeasureEmitterDefinition
             {
                 BlockSubtypes = new[]
                 {
@@ -195,14 +195,14 @@ namespace DetectionEquipment.Shared.Definitions
                 },
                 CountermeasureIds = new[]
                 {
-                    "SimpleChaff"
+                    "DetEq_Internal_SimpleChaff"
                 },
                 IsCountermeasureAttached = false,
                 ShotsPerSecond = 15,
                 EjectionVelocity = 100,
                 FireParticle = "Muzzle_Flash_Autocannon"
             },
-            ["SimpleJammer"] = new CountermeasureEmitterDefinition
+            ["DetEq_Internal_SimpleJammer"] = new CountermeasureEmitterDefinition
             {
                 BlockSubtypes = new[]
                 {
@@ -214,7 +214,7 @@ namespace DetectionEquipment.Shared.Definitions
                 },
                 CountermeasureIds = new[]
                 {
-                    "SimpleAreaJammer"
+                    "DetEq_Internal_SimpleAreaJammer"
                 },
                 IsCountermeasureAttached = true,
                 ShotsPerSecond = 60,
@@ -227,7 +227,7 @@ namespace DetectionEquipment.Shared.Definitions
         {
             Log.Info("InternalDefinitions", "Registering...");
             foreach (var definitionKvp in SensorDefinitions)
-                DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+                DefinitionManager.DefinitionApi.RegisterDefinition( definitionKvp.Key, definitionKvp.Value);
             foreach (var definitionKvp in CountermeasureDefinitions)
                 DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
             foreach (var definitionKvp in CountermeasureEmitterDefinitions)

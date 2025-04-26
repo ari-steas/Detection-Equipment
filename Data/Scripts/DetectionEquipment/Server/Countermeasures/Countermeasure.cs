@@ -7,6 +7,7 @@ using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRage.Game;
@@ -26,8 +27,6 @@ namespace DetectionEquipment.Server.Countermeasures
         public Vector3D Direction;
         public Vector3D Velocity;
         public float Intensity = 1;
-
-        public MyParticleEffect Particle;
 
         private readonly CountermeasureEmitterBlock ParentEmitter = null;
         private readonly int AttachedMuzzleIdx = -1;
@@ -51,6 +50,10 @@ namespace DetectionEquipment.Server.Countermeasures
             Position = position;
             Direction = direction;
             Velocity = initialVelocity;
+
+            // We only want to send countermeasures with VFX
+            if (!string.IsNullOrEmpty(Definition.ParticleEffect))
+                ServerNetwork.SendToEveryoneInSync(new CountermeasurePacket(this), Position);
         }
 
         public Countermeasure(CountermeasureDefinition definition, CountermeasureEmitterBlock emitter) : this(
@@ -76,6 +79,10 @@ namespace DetectionEquipment.Server.Countermeasures
                 // Add linear velocity at point; this accounts for angular velocity and linear velocity
                 Velocity += ownerGrid.Physics.LinearVelocity + ownerGrid.Physics.AngularVelocity.Cross(Position - ownerCenter);
             }
+
+            // We only want to send countermeasures with VFX
+            if (!string.IsNullOrEmpty(Definition.ParticleEffect))
+                ServerNetwork.SendToEveryoneInSync(new CountermeasurePacket(this), Position);
         }
 
         public void Update()
@@ -94,27 +101,15 @@ namespace DetectionEquipment.Server.Countermeasures
             }
             else 
             {
-                //if (Definition.HasPhysics)
-                //{
-                //    float ignored;
-                //    Velocity += MyAPIGateway.Physics.CalculateNaturalGravityAt(Position, out ignored) / 60;
-                //    if (Definition.DragMultiplier != 0 && Velocity != Vector3D.Zero)
-                //        Velocity = Vector3D.Lerp(Velocity, Vector3D.Zero, Velocity.LengthSquared() * Definition.DragMultiplier / 60);
-                //}
+                if (Definition.HasPhysics)
+                {
+                    float ignored;
+                    Velocity += MyAPIGateway.Physics.CalculateNaturalGravityAt(Position, out ignored) / 60;
+                    if (Definition.DragMultiplier != 0 && Velocity != Vector3D.Zero)
+                        Velocity = Vector3D.Lerp(Velocity, Vector3D.Zero, Velocity.LengthSquared() * Definition.DragMultiplier / 60);
+                }
                 Position += Velocity / 60;
             }
-
-            if (Particle == null && !string.IsNullOrEmpty(Definition.ParticleEffect))
-            {
-                var matrix = MatrixD.CreateWorld(Position, Direction, Vector3D.CalculatePerpendicularVector(Direction));
-                if (!MyParticlesManager.TryCreateParticleEffect(Definition.ParticleEffect, ref matrix, ref Position, uint.MaxValue, out Particle))
-                {
-                    Log.Exception("Countermeasure", new Exception($"Failed to create new projectile particle \"{Definition.ParticleEffect}\"!"));
-                }
-            }
-
-            if (Particle != null)
-                Particle.WorldMatrix = MatrixD.CreateWorld(Position, Direction, Vector3D.Up);
 
             if (--RemainingLifetime == 0)
                 Close();
@@ -155,8 +150,6 @@ namespace DetectionEquipment.Server.Countermeasures
         public void Close()
         {
             IsActive = false;
-            Particle?.Close();
-            //ServerNetwork.SendToEveryoneInSync((SerializedCloseProjectile) deadCountermeasure, deadCountermeasure.Position);
         }
     }
 }

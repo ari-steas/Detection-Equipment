@@ -7,6 +7,7 @@ using VRage.Game.Components;
 namespace DetectionEquipment.Shared
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation, Priority = int.MinValue)]
+    // ReSharper disable once ClassNeverInstantiated.Global
     internal class SharedMain : MySessionComponentBase
     {
         public static SharedMain I;

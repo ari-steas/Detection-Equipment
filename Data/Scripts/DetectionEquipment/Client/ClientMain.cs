@@ -1,4 +1,5 @@
-﻿using VRage.Game.Components;
+﻿using DetectionEquipment.Client.Countermeasures;
+using VRage.Game.Components;
 using DetectionEquipment.Client.Sensors;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Client.Networking;
@@ -7,6 +8,7 @@ using DetectionEquipment.Client.Interface;
 namespace DetectionEquipment.Client
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
+    // ReSharper disable once UnusedType.Global
     internal class ClientMain : MySessionComponentBase
     {
         public override void LoadData()
@@ -17,6 +19,7 @@ namespace DetectionEquipment.Client
             SensorBlockManager.Init();
             new ClientNetwork().LoadData();
             BlockCategoryManager.Init();
+            CountermeasureManager.Init();
 
             Log.DecreaseIndent();
             Log.Info("ClientMain", "Initialized.");
@@ -26,6 +29,7 @@ namespace DetectionEquipment.Client
         {
             ClientNetwork.I.Update();
             SensorBlockManager.Update();
+            CountermeasureManager.Update();
         }
 
         protected override void UnloadData()
@@ -33,6 +37,7 @@ namespace DetectionEquipment.Client
             Log.Info("ClientMain", "Start unload...");
             Log.IncreaseIndent();
 
+            CountermeasureManager.Close();
             BlockCategoryManager.Close();
             ClientNetwork.I.UnloadData();
             SensorBlockManager.Unload();

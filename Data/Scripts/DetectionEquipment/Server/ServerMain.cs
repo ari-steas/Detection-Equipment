@@ -16,6 +16,7 @@ using VRage.ModAPI;
 namespace DetectionEquipment.Server
 {
     [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
+    // ReSharper disable once ClassNeverInstantiated.Global
     internal class ServerMain : MySessionComponentBase
     {
         public static ServerMain I;
