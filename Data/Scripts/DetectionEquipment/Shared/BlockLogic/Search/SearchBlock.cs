@@ -1,5 +1,4 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;

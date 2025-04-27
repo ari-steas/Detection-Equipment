@@ -61,9 +61,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Scalar for V/RCS difference at which to combine detections.",
                 0,
                 10,
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.RCSThreshold,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().RCSThreshold.Value = v,
-                (b, sb) => sb.Append((100 * b.GameLogic.GetAs<AggregatorBlock>().RCSThreshold.Value).ToString("F1") + "%")
+                b => b.GameLogic.GetAs<AggregatorBlock>()?.RcsThreshold,
+                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().RcsThreshold.Value = v,
+                (b, sb) => sb.Append((100 * b.GameLogic.GetAs<AggregatorBlock>().RcsThreshold.Value).ToString("F1") + "%")
                 );
             CreateToggle(
                 "AggregateTypes",
@@ -103,7 +103,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                             ActiveSensors[logic].Add(sensor);
                             break;
                         }
-                    };
+                    }
                 }
                 );
             ActiveSensorSelect.ListBox.Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllSensors ?? true);

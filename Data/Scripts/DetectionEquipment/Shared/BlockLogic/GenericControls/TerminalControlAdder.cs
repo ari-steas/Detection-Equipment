@@ -8,29 +8,28 @@ using VRage.Game.Components;
 using System.Collections.Generic;
 using VRage.ModAPI;
 using DetectionEquipment.Shared.Utils;
-using System.Reflection.Emit;
 
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
-    internal abstract class TerminalControlAdder<LogicType, BlockType> : ITerminalControlAdder
-        where LogicType : MyGameLogicComponent, IControlBlockBase
-        where BlockType : IMyTerminalBlock, IMyFunctionalBlock
+    internal abstract class TerminalControlAdder<TLogicType, TBlockType> : ITerminalControlAdder
+        where TLogicType : MyGameLogicComponent, IControlBlockBase
+        where TBlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
         private static bool _isDone = false;
-        protected static Func<IMyTerminalBlock, bool> VisibleFunc = (block) => block.GameLogic.GetAs<LogicType>() != null;
-        public static string IdPrefix { get; protected set; }= nameof(LogicType) + "_";
+        protected static Func<IMyTerminalBlock, bool> VisibleFunc = (block) => block.GameLogic.GetAs<TLogicType>() != null;
+        public static string IdPrefix { get; protected set; }= nameof(TLogicType) + "_";
 
-        public virtual void DoOnce(LogicType thisLogic)
+        public virtual void DoOnce(TLogicType thisLogic)
         {
             if (_isDone) return;
 
-            ControlBlockBase<BlockType>.Controls = this;
+            ControlBlockBase<TBlockType>.Controls = this;
 
             CreateTerminalActions();
             CreateTerminalProperties();
 
             _isDone = true;
-            Log.Info(GetType().Name, $"Created terminal actions and properties for {typeof(BlockType).Name}/{typeof(LogicType).Name}.");
+            Log.Info(GetType().Name, $"Created terminal actions and properties for {typeof(TBlockType).Name}/{typeof(TLogicType).Name}.");
         }
 
         protected abstract void CreateTerminalActions();
@@ -38,7 +37,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
         public static IMyTerminalControlOnOffSwitch CreateToggle(string id, string displayName, string toolTip, Func<IMyTerminalBlock, bool> getter, Action<IMyTerminalBlock, bool> setter)
         {
-            var toggle = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlOnOffSwitch, BlockType>(IdPrefix + id);
+            var toggle = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlOnOffSwitch, TBlockType>(IdPrefix + id);
             toggle.Title = MyStringId.GetOrCompute(displayName);
             toggle.Tooltip = MyStringId.GetOrCompute(toolTip);
             toggle.SupportsMultipleBlocks = true; // wether this control should be visible when multiple blocks are selected (as long as they all have this control).
@@ -52,14 +51,14 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             toggle.Getter = getter;  // Getting the value
             toggle.Setter = setter; // Setting the value
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(toggle);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(toggle);
 
             return toggle;
         }
 
         public static IMyTerminalControlSlider CreateSlider(string id, string displayName, string toolTip, float min, float max, Func<IMyTerminalBlock, float> getter, Action<IMyTerminalBlock, float> setter, Action<IMyTerminalBlock, StringBuilder> writer)
         {
-            var slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, BlockType>(IdPrefix + id);
+            var slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, TBlockType>(IdPrefix + id);
             slider.Title = MyStringId.GetOrCompute(displayName);
             slider.Tooltip = MyStringId.GetOrCompute(toolTip);
             slider.SetLimits(min, max); // Set the minimum and maximum values for the slider
@@ -70,13 +69,13 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             slider.Visible = VisibleFunc;
             slider.SupportsMultipleBlocks = true;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(slider);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(slider);
             return slider;
         }
 
         public static IMyTerminalControlButton CreateButton(string id, string displayName, string toolTip, Action<IMyTerminalBlock> action)
         {
-            var button = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlButton, BlockType>(IdPrefix + id);
+            var button = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlButton, TBlockType>(IdPrefix + id);
             button.Title = MyStringId.GetOrCompute(displayName);
             button.Tooltip = MyStringId.GetOrCompute(toolTip);
             button.SupportsMultipleBlocks = true;
@@ -84,14 +83,14 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             button.Visible = VisibleFunc;
             button.Action = action;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(button);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(button);
 
             return button;
         }
 
         public static IMyTerminalControlCheckbox CreateCheckbox(string id, string displayName, string toolTip, Func<IMyTerminalBlock, bool> getter, Action<IMyTerminalBlock, bool> setter)
         {
-            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCheckbox, BlockType>(IdPrefix + id);
+            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCheckbox, TBlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
             box.Tooltip = MyStringId.GetOrCompute(toolTip);
             box.SupportsMultipleBlocks = true;
@@ -100,13 +99,13 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             box.Getter = getter;
             box.Setter = setter;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
             return box;
         }
 
         public static IMyTerminalControlCombobox CreateCombobox(string id, string displayName, string toolTip, Action<List<MyTerminalControlComboBoxItem>> content, Func<IMyTerminalBlock, long> getter, Action<IMyTerminalBlock, long> setter)
         {
-            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCombobox, BlockType>(IdPrefix + id);
+            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlCombobox, TBlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
             box.Tooltip = MyStringId.GetOrCompute(toolTip);
             box.SupportsMultipleBlocks = true;
@@ -116,13 +115,13 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             box.Getter = getter;
             box.Setter = setter;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
             return box;
         }
 
         public static IMyTerminalControlListbox CreateListbox(string id, string displayName, string toolTip, bool multiSelect, Action<IMyTerminalBlock, List<MyTerminalControlListBoxItem>, List<MyTerminalControlListBoxItem>> content, Action<IMyTerminalBlock, List<MyTerminalControlListBoxItem>> itemSelected)
         {
-            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlListbox, BlockType>(IdPrefix + id);
+            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlListbox, TBlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
             box.Tooltip = MyStringId.GetOrCompute(toolTip);
             box.SupportsMultipleBlocks = true;
@@ -133,13 +132,13 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             box.ItemSelected = itemSelected;
             box.VisibleRowsCount = 10;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
             return box;
         }
 
         public static IMyTerminalControlTextbox CreateTextbox(string id, string displayName, string toolTip, Func<IMyTerminalBlock, StringBuilder> getter, Action<IMyTerminalBlock, StringBuilder> setter)
         {
-            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlTextbox, BlockType>(IdPrefix + id);
+            var box = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlTextbox, TBlockType>(IdPrefix + id);
             box.Title = MyStringId.GetOrCompute(displayName);
             box.Tooltip = MyStringId.GetOrCompute(toolTip);
             box.SupportsMultipleBlocks = true;
@@ -148,28 +147,28 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             box.Getter = getter;
             box.Setter = setter;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(box);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
             return box;
         }
 
         public static IMyTerminalControlLabel CreateLabel(string id, string text)
         {
-            var label = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlLabel, BlockType>(IdPrefix + id);
+            var label = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlLabel, TBlockType>(IdPrefix + id);
             label.Label = MyStringId.GetOrCompute(text);
 
             label.Visible = VisibleFunc;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(label);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(label);
             return label;
         }
 
         public static IMyTerminalControlSeparator CreateSeperator(string id)
         {
-            var seperator = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSeparator, BlockType>(IdPrefix + id);
+            var seperator = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSeparator, TBlockType>(IdPrefix + id);
 
             seperator.Visible = VisibleFunc;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(seperator);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(seperator);
             return seperator;
         }
 
@@ -184,7 +183,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         /// <returns></returns>
         public static IMyTerminalAction CreateAction(string id, string displayName, Action<IMyTerminalBlock> action, Action<IMyTerminalBlock, StringBuilder> writer, string icon)
         {
-            var act = MyAPIGateway.TerminalControls.CreateAction<BlockType>(IdPrefix + id);
+            var act = MyAPIGateway.TerminalControls.CreateAction<TBlockType>(IdPrefix + id);
             act.Name = new StringBuilder(displayName);
             act.Action = action;
             act.Writer = writer;
@@ -192,7 +191,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             act.ValidForGroups = true;
 
             act.Enabled = VisibleFunc;
-            MyAPIGateway.TerminalControls.AddAction<BlockType>(act);
+            MyAPIGateway.TerminalControls.AddAction<TBlockType>(act);
 
             return act;
         }
@@ -207,13 +206,13 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         /// <returns></returns>
         public static IMyTerminalControlProperty<TValue> CreateProperty<TValue>(string id, Func<IMyTerminalBlock, TValue> getter, Action<IMyTerminalBlock, TValue> setter)
         {
-            var prop = MyAPIGateway.TerminalControls.CreateProperty<TValue, BlockType>(IdPrefix + id);
+            var prop = MyAPIGateway.TerminalControls.CreateProperty<TValue, TBlockType>(IdPrefix + id);
             prop.SupportsMultipleBlocks = true;
 
             prop.Getter = getter;
             prop.Setter = setter;
 
-            MyAPIGateway.TerminalControls.AddControl<BlockType>(prop);
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(prop);
             return prop;
         }
     }

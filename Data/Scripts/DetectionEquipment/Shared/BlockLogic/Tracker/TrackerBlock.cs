@@ -1,13 +1,11 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Structs;
-using DetectionEquipment.Shared.Utils;
 using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
 using VRage.Game.Components;
-using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 using VRageMath;
@@ -25,7 +23,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             }
             set
             {
-                TrackerControls.ActiveAggregatorSelect.UpdateSelected(this, new long[] { value.Block.EntityId });
+                TrackerControls.ActiveAggregatorSelect.UpdateSelected(this, new[] { value.Block.EntityId });
             }
         }
 

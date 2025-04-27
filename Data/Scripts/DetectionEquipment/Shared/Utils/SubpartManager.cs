@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using VRage.Game.Entity;
 using VRage.ModAPI;
@@ -33,7 +32,7 @@ namespace DetectionEquipment.Shared.Utils
             // Return subpart
             if (_cachedSubparts[entity][name] == null)
             {
-                MyEntitySubpart subpart = null;
+                MyEntitySubpart subpart;
                 entity.TryGetSubpart(name, out subpart);
 
                 if (_cachedSubparts[entity][name] == null)

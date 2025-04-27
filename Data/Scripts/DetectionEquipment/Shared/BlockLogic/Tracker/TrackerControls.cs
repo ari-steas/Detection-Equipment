@@ -63,7 +63,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                             logic.LockDecay[sensor] = 0;
                             break;
                         }
-                    };
+                    }
                 }
                 );
             ActiveAggregatorSelect = new BlockSelectControl<TrackerBlock, IMyConveyorSorter>(

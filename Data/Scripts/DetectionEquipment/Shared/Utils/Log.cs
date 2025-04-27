@@ -20,7 +20,7 @@ namespace DetectionEquipment.Shared.Utils
             _writer.WriteLine($"");
             _writer.WriteLine($"Space Engineers v{MyAPIGateway.Session?.Version}");
             _writer.WriteLine($"Server: {MyAPIGateway.Session?.IsServer} | Client: {!MyAPIGateway.Utilities.IsDedicated}");
-            _writer.WriteLine($"Session: {MyAPIGateway.Session?.Name ?? "MultiplayerSession"} | Client Info: {(MyAPIGateway.Multiplayer?.MyName == "" ? null : MyAPIGateway.Multiplayer.MyName) ?? "DedicatedHost"}::{MyAPIGateway.Multiplayer.MyId}");
+            _writer.WriteLine($"Session: {MyAPIGateway.Session?.Name ?? "MultiplayerSession"} | Client Info: {(string.IsNullOrEmpty(MyAPIGateway.Multiplayer?.MyName) ? null : MyAPIGateway.Multiplayer?.MyName) ?? "DedicatedHost"}::{MyAPIGateway.Multiplayer?.MyId}");
             _writer.WriteLine("=================================================");
             _writer.Flush();
 

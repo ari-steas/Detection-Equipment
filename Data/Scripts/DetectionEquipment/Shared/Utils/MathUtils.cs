@@ -69,9 +69,9 @@ namespace DetectionEquipment.Shared.Utils
             double tmax = (-num2 + Math.Sqrt(d)) / (2.0 * num1);
             if (tmin > tmax)
             {
-                double num4 = tmin;
+                //double num4 = tmin;
                 tmin = tmax;
-                tmax = num4;
+                //tmax = num4;
             }
             return tmin <= line.Length;
         }

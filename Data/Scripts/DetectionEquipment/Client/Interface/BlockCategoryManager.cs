@@ -8,8 +8,8 @@ namespace DetectionEquipment.Client.Interface
 {
     public static class BlockCategoryManager
     {
-        private static GuiBlockCategoryHelper _blockCategory = null;
-        private static HashSet<string> _bufferBlockSubtypes = new HashSet<string>()
+        private static GuiBlockCategoryHelper _blockCategory;
+        private static HashSet<string> _bufferBlockSubtypes = new HashSet<string>
         {
             "DetectionAggregatorBlock",
             "IffReflector",

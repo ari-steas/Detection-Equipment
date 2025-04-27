@@ -1,5 +1,4 @@
-﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using Sandbox.Common.ObjectBuilders;
+﻿using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -35,27 +34,27 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             new IffControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
 
-            if (!IffMap.ContainsKey(Block.CubeGrid))
-                IffMap.Add(Block.CubeGrid, new HashSet<IffReflectorBlock>());
-            IffMap[Block.CubeGrid].Add(this);
+            if (!_iffMap.ContainsKey(Block.CubeGrid))
+                _iffMap.Add(Block.CubeGrid, new HashSet<IffReflectorBlock>());
+            _iffMap[Block.CubeGrid].Add(this);
         }
 
         public override void MarkForClose()
         {
             base.MarkForClose();
-            if (!IffMap.ContainsKey(Block.CubeGrid))
+            if (!_iffMap.ContainsKey(Block.CubeGrid))
                 return;
 
-            IffMap[Block.CubeGrid].Remove(this);
-            if (IffMap[Block.CubeGrid].Count == 0)
-                IffMap.Remove(Block.CubeGrid);
+            _iffMap[Block.CubeGrid].Remove(this);
+            if (_iffMap[Block.CubeGrid].Count == 0)
+                _iffMap.Remove(Block.CubeGrid);
         }
 
-        private static Dictionary<IMyCubeGrid, HashSet<IffReflectorBlock>> IffMap = new Dictionary<IMyCubeGrid, HashSet<IffReflectorBlock>>();
+        private static Dictionary<IMyCubeGrid, HashSet<IffReflectorBlock>> _iffMap = new Dictionary<IMyCubeGrid, HashSet<IffReflectorBlock>>();
         public static string[] GetIffCodes(IMyCubeGrid grid)
         {
             HashSet<IffReflectorBlock> map;
-            if (!IffMap.TryGetValue(grid, out map))
+            if (!_iffMap.TryGetValue(grid, out map))
                 return Array.Empty<string>();
             var codes = new HashSet<string>();
             foreach (var reflector in map)

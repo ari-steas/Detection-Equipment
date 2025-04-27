@@ -22,10 +22,10 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public Muzzle[] Muzzles;
         public int CurrentMuzzleIdx = 0;
-        private int CurrentSequenceIdx = 0;
-        private float ShotAggregator = 0;
+        private int _currentSequenceIdx = 0;
+        private float _shotAggregator = 0;
 
-        private Countermeasure[] AttachedCountermeasures;
+        private Countermeasure[] _attachedCountermeasures;
 
         public MatrixD MuzzleMatrix => Muzzles[CurrentMuzzleIdx].GetMatrix();
 
@@ -47,16 +47,16 @@ namespace DetectionEquipment.Server.Countermeasures
             {
                 if (!Definition.IsCountermeasureAttached || _didCloseAttached)
                     return;
-                foreach (var counter in AttachedCountermeasures)
+                foreach (var counter in _attachedCountermeasures)
                     counter?.Close();
                 _didCloseAttached = true;
                 return;
             }
             _didCloseAttached = false;
 
-            ShotAggregator += Definition.ShotsPerSecond / 60f;
+            _shotAggregator += Definition.ShotsPerSecond / 60f;
             int startMuzzleIdx = CurrentMuzzleIdx;
-            while (ShotAggregator >= 1)
+            while (_shotAggregator >= 1)
             {
                 FireOnce();
                 if (CurrentMuzzleIdx == startMuzzleIdx) // Prevent infinite loop if all muzzles are in use.
@@ -65,7 +65,7 @@ namespace DetectionEquipment.Server.Countermeasures
 
             if (Block.ShowOnHUD && Definition.IsCountermeasureAttached)
             {
-                foreach (var counter in AttachedCountermeasures)
+                foreach (var counter in _attachedCountermeasures)
                 {
                     var matrix = MatrixD.CreateWorld(counter.Position, counter.Direction,
                         Vector3D.CalculatePerpendicularVector(counter.Direction));
@@ -77,22 +77,22 @@ namespace DetectionEquipment.Server.Countermeasures
 
         private void FireOnce()
         {
-            if (!Definition.IsCountermeasureAttached || !(AttachedCountermeasures[CurrentMuzzleIdx]?.IsActive ?? false)) // Only spawn a new countermeasure if needed.
+            if (!Definition.IsCountermeasureAttached || !(_attachedCountermeasures[CurrentMuzzleIdx]?.IsActive ?? false)) // Only spawn a new countermeasure if needed.
             {
                 var counterDef =
-                    DefinitionManager.GetCountermeasureDefinition(Definition.CountermeasureIds[CurrentSequenceIdx++]
+                    DefinitionManager.GetCountermeasureDefinition(Definition.CountermeasureIds[_currentSequenceIdx++]
                         .GetHashCode());
-                if (CurrentSequenceIdx >= Definition.CountermeasureIds.Length)
-                    CurrentSequenceIdx = 0;
+                if (_currentSequenceIdx >= Definition.CountermeasureIds.Length)
+                    _currentSequenceIdx = 0;
 
                 var counter = new Countermeasure(counterDef, this);
                 if (Definition.IsCountermeasureAttached)
-                    AttachedCountermeasures[CurrentMuzzleIdx] = counter;
+                    _attachedCountermeasures[CurrentMuzzleIdx] = counter;
 
                 if (!string.IsNullOrEmpty(Definition.FireParticle))
                     ServerNetwork.SendToEveryoneInSync(new CountermeasureEmitterPacket(this), Block.WorldMatrix.Translation);
 
-                ShotAggregator -= 1;
+                _shotAggregator -= 1;
             }
 
             CurrentMuzzleIdx++;
@@ -108,14 +108,14 @@ namespace DetectionEquipment.Server.Countermeasures
             Muzzle.CheckBlockForMuzzles(Block, Definition, ref muzzles);
 
             Muzzles = new Muzzle[muzzles.Count];
-            AttachedCountermeasures = new Countermeasure[muzzles.Count];
+            _attachedCountermeasures = new Countermeasure[muzzles.Count];
             int latestIdx = 0;
             foreach (var muzzleName in Definition.Muzzles)
             {
                 if (!muzzles.ContainsKey(muzzleName))
                     continue;
                 Muzzles[latestIdx] = muzzles[muzzleName];
-                AttachedCountermeasures[latestIdx] = null;
+                _attachedCountermeasures[latestIdx] = null;
                 latestIdx++;
             }
         }

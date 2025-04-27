@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
@@ -16,7 +12,7 @@ namespace DetectionEquipment.Client.Countermeasures
     {
         private readonly CountermeasureDefinition _definition;
         private Vector3D _position, _direction, _velocity;
-        private MyParticleEffect _particle = null;
+        private MyParticleEffect _particle;
         private uint _remainingLifetime;
         public bool IsActive = true;
 

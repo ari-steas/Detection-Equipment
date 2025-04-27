@@ -2,18 +2,15 @@
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
 using ProtoBuf;
-using Sandbox.Definitions;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
-using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
@@ -25,22 +22,22 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
     /// <summary>
     /// Network-synced block selector listbox terminal control.
     /// </summary>
-    /// <typeparam name="LogicType"></typeparam>
-    /// <typeparam name="BlockType"></typeparam>
-    internal class BlockSelectControl<LogicType, BlockType> : IBlockSelectControl
-        where LogicType : MyGameLogicComponent, IControlBlockBase
-        where BlockType : IMyTerminalBlock, IMyFunctionalBlock
+    /// <typeparam name="TLogicType"></typeparam>
+    /// <typeparam name="TBlockType"></typeparam>
+    internal class BlockSelectControl<TLogicType, TBlockType> : IBlockSelectControl
+        where TLogicType : MyGameLogicComponent, IControlBlockBase
+        where TBlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
-        public Dictionary<LogicType, long[]> SelectedBlocks = new Dictionary<LogicType, long[]>();
+        public Dictionary<TLogicType, long[]> SelectedBlocks = new Dictionary<TLogicType, long[]>();
         public IMyTerminalControlListbox ListBox;
-        public Func<LogicType, IEnumerable<IMyCubeBlock>> AvailableBlocks;
-        public Action<LogicType, long[]> OnListChanged;
+        public Func<TLogicType, IEnumerable<IMyCubeBlock>> AvailableBlocks;
+        public Action<TLogicType, long[]> OnListChanged;
 
         public readonly string Id;
 
-        public BlockSelectControl(string id, string tooltip, string description, bool multiSelect, Func<LogicType, IEnumerable<IMyCubeBlock>> availableBlocks, Action<LogicType, long[]> onListChanged = null)
+        public BlockSelectControl(string id, string tooltip, string description, bool multiSelect, Func<TLogicType, IEnumerable<IMyCubeBlock>> availableBlocks, Action<TLogicType, long[]> onListChanged = null)
         {
-            ListBox = TerminalControlAdder<LogicType, BlockType>.CreateListbox(
+            ListBox = TerminalControlAdder<TLogicType, TBlockType>.CreateListbox(
                 id,
                 tooltip,
                 description,
@@ -51,13 +48,13 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             AvailableBlocks = availableBlocks;
             OnListChanged = onListChanged;
 
-            Id = TerminalControlAdder<LogicType, BlockType>.IdPrefix + id;
+            Id = TerminalControlAdder<TLogicType, TBlockType>.IdPrefix + id;
             ControlBlockManager.I.BlockControls[Id] = this;
         }
 
         public void UpdateSelected(IControlBlockBase logic, long[] selected, bool fromNetwork = false)
         {
-            var thisLogic = logic as LogicType;
+            var thisLogic = logic as TLogicType;
             if (thisLogic == null)
                 return;
 
@@ -68,7 +65,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             {
                 if (MyAPIGateway.Session.IsServer)
                 {
-                    ServerNetwork.SendToEveryoneInSync(new BlockSelectControlPacket()
+                    ServerNetwork.SendToEveryoneInSync(new BlockSelectControlPacket
                     {
                         BlockId = logic.CubeBlock.EntityId,
                         ControlId = Id,
@@ -77,7 +74,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 else
                 {
-                    ClientNetwork.SendToServer(new BlockSelectControlPacket()
+                    ClientNetwork.SendToServer(new BlockSelectControlPacket
                     {
                         BlockId = logic.CubeBlock.EntityId,
                         ControlId = Id,
@@ -89,7 +86,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
         private void Content(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> content, List<MyTerminalControlListBoxItem> selected)
         {
-            var logic = block.GameLogic.GetAs<LogicType>();
+            var logic = block.GameLogic.GetAs<TLogicType>();
             if (logic == null)
                 return;
 
@@ -111,7 +108,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
         private void OnSelect(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> selected)
         {
-            var logic = block.GameLogic.GetAs<LogicType>();
+            var logic = block.GameLogic.GetAs<TLogicType>();
             if (logic == null)
                 return;
             var array = new long[selected.Count];

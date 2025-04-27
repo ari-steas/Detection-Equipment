@@ -7,13 +7,13 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
     public static class HideSorterControls
     {
-        static bool Done = false;
+        static bool _done = false;
 
         public static void DoOnce()
         {
-            if (Done)
+            if (_done)
                 return;
-            Done = true;
+            _done = true;
 
             EditControls();
             EditActions();

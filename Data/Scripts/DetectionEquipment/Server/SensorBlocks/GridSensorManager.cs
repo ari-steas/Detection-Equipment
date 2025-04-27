@@ -1,14 +1,10 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Serialization;
-using ParallelTasks;
 using Sandbox.ModAPI;
-using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;

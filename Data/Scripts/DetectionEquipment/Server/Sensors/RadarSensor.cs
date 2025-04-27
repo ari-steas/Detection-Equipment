@@ -8,7 +8,6 @@ using Sandbox.ModAPI;
 using System;
 using VRage;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;

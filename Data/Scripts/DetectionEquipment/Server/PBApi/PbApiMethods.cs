@@ -13,7 +13,6 @@ using DetectionEquipment.Shared.BlockLogic;
 
 using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
-using System.Linq;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -21,7 +20,7 @@ namespace DetectionEquipment.Server.PBApi
     {
         public static ImmutableDictionary<string, Delegate> SafeMethods => ImmutableDictionary.CreateRange(_methods);
 
-        private static Dictionary<string, Delegate> _methods = new Dictionary<string, Delegate>()
+        private static Dictionary<string, Delegate> _methods = new Dictionary<string, Delegate>
         {
             // Sensors
             ["GetSensorIds"] = new Func<IMyCubeBlock, uint[]>(GetSensorIds),
@@ -198,14 +197,14 @@ namespace DetectionEquipment.Server.PBApi
             IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
                 return -1;
-            return (control as AggregatorBlock)?.RCSThreshold.Value ?? -1;
+            return (control as AggregatorBlock)?.RcsThreshold.Value ?? -1;
         }
         private static void SetAggregatorRcs(IMyCubeBlock block, float value)
         {
             IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
-            (control as AggregatorBlock).RCSThreshold.Value = value;
+            (control as AggregatorBlock).RcsThreshold.Value = value;
         }
         private static bool GetAggregatorTypes(IMyCubeBlock block)
         {
@@ -276,9 +275,6 @@ namespace DetectionEquipment.Server.PBApi
         {
             IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
-                return;
-            AggregatorBlock aggregator = control as AggregatorBlock;
-            if (aggregator == null)
                 return;
 
             var valid = new List<long>();

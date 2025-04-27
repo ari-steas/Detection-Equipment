@@ -81,7 +81,7 @@ namespace DetectionEquipment.Shared.Serialization
                 if (loadedSettings == null)
                     return;
 
-                int loadedCount = 0;
+                //int loadedCount = 0;
                 foreach (var sensor in sensors)
                 {
                     // Find sensor index in settings
@@ -99,7 +99,7 @@ namespace DetectionEquipment.Shared.Serialization
                     sensor.DesiredAzimuth = loadedSettings.Azimuth[idx];
                     sensor.DesiredElevation = loadedSettings.Elevation[idx];
                     sensor.Aperture = loadedSettings.Aperture[idx];
-                    loadedCount++;
+                    //loadedCount++;
                 }
 
                 //Log.Info("BlockSensorSettings", $"Loaded {loadedCount} of {sensors.Count} sensor data(s) for block {block.EntityId}.");
@@ -125,11 +125,14 @@ namespace DetectionEquipment.Shared.Serialization
             if (!manager.BlockSensorIdMap.TryGetValue(block, out ids))
                 return;
 
-            var sensorSet = manager.Sensors.Where(sensor => ids.Contains(sensor.Sensor.Id));
-            if (!sensorSet.Any())
+            var sensorSet = new List<BlockSensor>();
+            foreach (var sensor in manager.Sensors)
+                if (ids.Contains(sensor.Sensor.Id))
+                    sensorSet.Add(sensor);
+            if (sensorSet.Count == 0)
                 return;
 
-            SaveBlockSettings(block, sensorSet.ToList());
+            SaveBlockSettings(block, sensorSet);
         }
 
         internal static void SaveBlockSettings(IMyCubeBlock block, List<BlockSensor> sensors)

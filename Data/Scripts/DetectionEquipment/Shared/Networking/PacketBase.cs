@@ -16,7 +16,6 @@ namespace DetectionEquipment.Shared.Networking
         /// <summary>
         /// Called whenever your packet is recieved.
         /// </summary>
-        /// <param name="SenderSteamId"></param>
         public abstract void Received(ulong senderSteamId, bool fromServer);
     }
 }

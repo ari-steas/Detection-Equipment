@@ -14,8 +14,8 @@ namespace DetectionEquipment.Client.Sensors
 
         // These two fields could cause memory leaks with a high rate of packet loss.
         // Howver, they are quite important to prevent low-latency client<->server sensor init from failing.
-        private static Dictionary<IMyCameraBlock, List<SensorInitPacket>> DelayedInitPackets;
-        private static Dictionary<uint, SensorUpdatePacket> DelayedUpdatePackets;
+        private static Dictionary<IMyCameraBlock, List<SensorInitPacket>> _delayedInitPackets;
+        private static Dictionary<uint, SensorUpdatePacket> _delayedUpdatePackets;
 
         public static void Init()
         {
@@ -27,8 +27,8 @@ namespace DetectionEquipment.Client.Sensors
             });
             BlockSensorIdMap = new Dictionary<uint, ClientBlockSensor>();
             GridBlockSensorsMap = new Dictionary<IMyCubeGrid, HashSet<IMyCubeBlock>>();
-            DelayedInitPackets = new Dictionary<IMyCameraBlock, List<SensorInitPacket>>();
-            DelayedUpdatePackets = new Dictionary<uint, SensorUpdatePacket>();
+            _delayedInitPackets = new Dictionary<IMyCameraBlock, List<SensorInitPacket>>();
+            _delayedUpdatePackets = new Dictionary<uint, SensorUpdatePacket>();
             Log.Info("SensorBlockManager", "Initialized.");
         }
 
@@ -43,8 +43,8 @@ namespace DetectionEquipment.Client.Sensors
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
             BlockSensorIdMap = null;
             GridBlockSensorsMap = null;
-            DelayedInitPackets = null;
-            DelayedUpdatePackets = null;
+            _delayedInitPackets = null;
+            _delayedUpdatePackets = null;
             Log.Info("SensorBlockManager", "Unloaded.");
         }
 
@@ -55,10 +55,10 @@ namespace DetectionEquipment.Client.Sensors
                 logic.RegisterSensor(packet);
             else
             {
-                if (!DelayedInitPackets.ContainsKey(block))
-                    DelayedInitPackets[block] = new List<SensorInitPacket>() { packet };
+                if (!_delayedInitPackets.ContainsKey(block))
+                    _delayedInitPackets[block] = new List<SensorInitPacket> { packet };
                 else
-                    DelayedInitPackets[block].Add(packet);
+                    _delayedInitPackets[block].Add(packet);
             }
         }
 
@@ -67,7 +67,7 @@ namespace DetectionEquipment.Client.Sensors
             if (BlockSensorIdMap.ContainsKey(logicId))
                 BlockSensorIdMap[logicId].UpdateFromPacket(packet);
             else
-                DelayedUpdatePackets[logicId] = packet;
+                _delayedUpdatePackets[logicId] = packet;
         }
 
         private static void OnEntityAdd(VRage.ModAPI.IMyEntity obj)
@@ -94,21 +94,21 @@ namespace DetectionEquipment.Client.Sensors
             if (GridBlockSensorsMap.ContainsKey(block.CubeGrid))
                 GridBlockSensorsMap[block.CubeGrid].Add(fatblock);
             else
-                GridBlockSensorsMap[block.CubeGrid] = new HashSet<IMyCubeBlock>() { fatblock };
+                GridBlockSensorsMap[block.CubeGrid] = new HashSet<IMyCubeBlock> { fatblock };
             logic.OnClose += () => GridBlockSensorsMap[block.CubeGrid].Remove(fatblock);
 
-            if (DelayedInitPackets.ContainsKey(fatblock))
+            if (_delayedInitPackets.ContainsKey(fatblock))
             {
-                foreach (var initPacket in DelayedInitPackets[fatblock])
+                foreach (var initPacket in _delayedInitPackets[fatblock])
                 {
                     logic.RegisterSensor(initPacket);
-                    if (DelayedUpdatePackets.ContainsKey(initPacket.Id))
+                    if (_delayedUpdatePackets.ContainsKey(initPacket.Id))
                     {
-                        logic.UpdateFromPacket(DelayedUpdatePackets[initPacket.Id]);
-                        DelayedUpdatePackets.Remove(initPacket.Id);
+                        logic.UpdateFromPacket(_delayedUpdatePackets[initPacket.Id]);
+                        _delayedUpdatePackets.Remove(initPacket.Id);
                     }
                 }
-                DelayedInitPackets.Remove(fatblock);
+                _delayedInitPackets.Remove(fatblock);
             }
         }
     }

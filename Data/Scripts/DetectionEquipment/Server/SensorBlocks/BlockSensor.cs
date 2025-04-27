@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Server.Networking;
+﻿using System;
+using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
@@ -27,7 +28,7 @@ namespace DetectionEquipment.Server.SensorBlocks
         public HashSet<DetectionInfo> Detections = new HashSet<DetectionInfo>();
 
         
-        MyDefinitionId ElectricityId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Electricity");
+        MyDefinitionId _electricityId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Electricity");
 
         public double Azimuth { get; private set;} = 0;
         public double Elevation { get; private set; } = 0;
@@ -81,7 +82,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             BlockSensorSettings.SaveBlockSettings(Block);
         }
 
-        private MyEntitySubpart _aziPart = null, _elevPart = null;
+        private MyEntitySubpart _aziPart, _elevPart;
 
         public BlockSensor(IMyFunctionalBlock block, SensorDefinition definition)
         {
@@ -120,13 +121,15 @@ namespace DetectionEquipment.Server.SensorBlocks
                         MinVisibility = definition.DetectionThreshold,
                     };
                     break;
+                default:
+                    throw new Exception($"Invalid SensorType {definition.Type}");
             }
 
             ServerMain.I.BlockSensorIdMap[Sensor.Id] = this;
 
             if (Definition.MaxPowerDraw > 0)
             {
-                Block.ResourceSink.SetMaxRequiredInputByType(ElectricityId, (float) Definition.MaxPowerDraw);
+                Block.ResourceSink.SetMaxRequiredInputByType(_electricityId, (float) Definition.MaxPowerDraw);
             }
 
             ServerNetwork.SendToEveryoneInSync(new SensorInitPacket(this), Block.GetPosition());
@@ -199,24 +202,24 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         private Matrix GetAzimuthMatrix(float delta)
         {
-            var _limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.AzimuthRate * delta);
+            var limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.AzimuthRate * delta);
 
             if (!Definition.Movement.CanElevateFull)
-                Azimuth = MathUtils.Clamp(_limitedAzimuth, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
+                Azimuth = MathUtils.Clamp(limitedAzimuth, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
             else
-                Azimuth = MathUtils.NormalizeAngle(_limitedAzimuth);
+                Azimuth = MathUtils.NormalizeAngle(limitedAzimuth);
 
             return Matrix.CreateFromYawPitchRoll((float) Azimuth, 0, 0);
         }
 
         private Matrix GetElevationMatrix(float delta)
         {
-            var _limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.ElevationRate * delta);
+            var limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.ElevationRate * delta);
 
             if (!Definition.Movement.CanElevateFull)
-                Elevation = MathUtils.Clamp(_limitedElevation, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
+                Elevation = MathUtils.Clamp(limitedElevation, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
             else
-                Elevation = MathUtils.NormalizeAngle(_limitedElevation);
+                Elevation = MathUtils.NormalizeAngle(limitedElevation);
 
             return Matrix.CreateFromYawPitchRoll(0, (float) Elevation, 0);
         }

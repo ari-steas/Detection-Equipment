@@ -7,7 +7,6 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
@@ -96,7 +95,7 @@ namespace DetectionEquipment.Client.Sensors
 
         public void RegisterSensor(SensorInitPacket packet)
         {
-            Sensors[packet.Id] = new ClientSensorData()
+            Sensors[packet.Id] = new ClientSensorData
             {
                 Id = packet.Id,
                 Definition = DefinitionManager.GetSensorDefinition(packet.DefinitionId),
@@ -127,16 +126,16 @@ namespace DetectionEquipment.Client.Sensors
             public Vector3D Position { get; private set; } = Vector3D.Zero;
             public Vector3D Direction { get; private set; } = Vector3D.Forward;
 
-            private MyEntitySubpart _aziPart = null, _elevPart = null;
+            private MyEntitySubpart _aziPart, _elevPart;
             private Matrix _baseLocalMatrix;
-            private SubpartManager SubpartManager = new SubpartManager();
+            private SubpartManager _subpartManager = new SubpartManager();
 
             public void Update(IMyCameraBlock block, bool isPrimarySensor)
             {
                 if (_aziPart == null && _elevPart == null && Definition.Movement != null)
                 {
-                    _aziPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
-                    _elevPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
+                    _aziPart = _subpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
+                    _elevPart = _subpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
                     _baseLocalMatrix = block.LocalMatrix;
                     //Log.Info("ClientBlockSensor", "Inited subparts for " + block.BlockDefinition.SubtypeName);
                 }
@@ -144,12 +143,12 @@ namespace DetectionEquipment.Client.Sensors
                 // Sensor Movement
                 if (_aziPart != null && Azimuth != DesiredAzimuth)
                     if (!MyAPIGateway.Session.IsServer) // Server rotates parts too
-                        SubpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
+                        _subpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
                 if (_elevPart != null)
                 {
                     if (Elevation != DesiredElevation)
                         if (!MyAPIGateway.Session.IsServer) // Server rotates parts too
-                            SubpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
+                            _subpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
                     Position = _elevPart.WorldMatrix.Translation;
                     Direction = _elevPart.WorldMatrix.Forward;
 
@@ -189,24 +188,24 @@ namespace DetectionEquipment.Client.Sensors
 
             private Matrix GetAzimuthMatrix(float delta)
             {
-                var _limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.AzimuthRate * delta);
+                var limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.AzimuthRate * delta);
 
                 if (!Definition.Movement.CanElevateFull)
-                    Azimuth = (float) MathUtils.Clamp(_limitedAzimuth, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
+                    Azimuth = (float) MathUtils.Clamp(limitedAzimuth, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
                 else
-                    Azimuth = (float) MathUtils.NormalizeAngle(_limitedAzimuth);
+                    Azimuth = (float) MathUtils.NormalizeAngle(limitedAzimuth);
 
                 return Matrix.CreateFromYawPitchRoll(Azimuth, 0, 0);
             }
 
             private Matrix GetElevationMatrix(float delta)
             {
-                var _limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.ElevationRate * delta);
+                var limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.ElevationRate * delta);
 
                 if (!Definition.Movement.CanElevateFull)
-                    Elevation = (float) MathUtils.Clamp(_limitedElevation, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
+                    Elevation = (float) MathUtils.Clamp(limitedElevation, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
                 else
-                    Elevation = (float) MathUtils.NormalizeAngle(_limitedElevation);
+                    Elevation = (float) MathUtils.NormalizeAngle(limitedElevation);
 
                 return Matrix.CreateFromYawPitchRoll(0, Elevation, 0);
             }

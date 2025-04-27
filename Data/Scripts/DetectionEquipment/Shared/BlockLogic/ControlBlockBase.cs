@@ -1,7 +1,6 @@
 ﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;

@@ -3,7 +3,6 @@ using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
-using System.Linq;
 using VRage.Game.ModAPI;
 using VRageMath;
 
@@ -47,7 +46,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                             logic.DirectionSigns[sensor] = Vector2I.One;
                             break;
                         }
-                    };
+                    }
                 }
                 );
         }

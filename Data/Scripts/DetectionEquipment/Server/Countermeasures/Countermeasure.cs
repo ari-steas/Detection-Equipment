@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DetectionEquipment.Server.Networking;
+﻿using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
-using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
-using VRage.Game;
-using VRage.Game.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Server.Countermeasures
@@ -28,8 +19,8 @@ namespace DetectionEquipment.Server.Countermeasures
         public Vector3D Velocity;
         public float Intensity = 1;
 
-        private readonly CountermeasureEmitterBlock ParentEmitter = null;
-        private readonly int AttachedMuzzleIdx = -1;
+        private readonly CountermeasureEmitterBlock _parentEmitter;
+        private readonly int _attachedMuzzleIdx = -1;
 
         public float EffectAperture;
 
@@ -61,8 +52,8 @@ namespace DetectionEquipment.Server.Countermeasures
         {
             if (emitter.Definition.IsCountermeasureAttached)
             {
-                ParentEmitter = emitter;
-                AttachedMuzzleIdx = emitter.CurrentMuzzleIdx;
+                _parentEmitter = emitter;
+                _attachedMuzzleIdx = emitter.CurrentMuzzleIdx;
             }
             
             var muzzleMatrix = emitter.MuzzleMatrix;
@@ -87,15 +78,15 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public void Update()
         {
-            if (ParentEmitter != null)
+            if (_parentEmitter != null)
             {
-                if (ParentEmitter.Block.Closed)
+                if (_parentEmitter.Block.Closed)
                 {
                     Close();
                     return;
                 }
 
-                var muzzleMatrix = ParentEmitter.Muzzles[AttachedMuzzleIdx].GetMatrix();
+                var muzzleMatrix = _parentEmitter.Muzzles[_attachedMuzzleIdx].GetMatrix();
                 Position = muzzleMatrix.Translation;
                 Direction = muzzleMatrix.Forward;
             }

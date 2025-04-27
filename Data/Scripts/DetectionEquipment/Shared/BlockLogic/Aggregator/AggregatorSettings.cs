@@ -10,12 +10,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         [ProtoMember(1)] public float AggregationTime = 1f;
         [ProtoMember(2)] public float DistanceThreshold = 2f;
         [ProtoMember(3)] public float VelocityErrorThreshold = 32f;
-        [ProtoMember(4)] public float RCSThreshold = 1f;
+        [ProtoMember(4)] public float RcsThreshold = 1f;
         [ProtoMember(5)] public bool AggregateTypes = true;
         [ProtoMember(6)] public bool UseAllSensors = true;
         [ProtoMember(7)] public long[] SelectedSensors = Array.Empty<long>();
         [ProtoMember(8)] public int DatalinkOutChannel = 0;
-        [ProtoMember(9)] public int[] DatalinkInChannels = new int[] { 0 };
+        [ProtoMember(9)] public int[] DatalinkInChannels = { 0 };
 
         [ProtoIgnore] public new AggregatorBlock AttachedLogic => (AggregatorBlock) base.AttachedLogic;
 
@@ -30,7 +30,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AttachedLogic.AggregationTime.Value = AggregationTime;
             AttachedLogic.DistanceThreshold.Value = DistanceThreshold;
             AttachedLogic.VelocityErrorThreshold.Value = VelocityErrorThreshold;
-            AttachedLogic.RCSThreshold.Value = RCSThreshold;
+            AttachedLogic.RcsThreshold.Value = RcsThreshold;
             AttachedLogic.AggregateTypes.Value = AggregateTypes;
             AttachedLogic.UseAllSensors.Value = UseAllSensors;
 
@@ -45,7 +45,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AggregationTime = AttachedLogic.AggregationTime.Value;
             DistanceThreshold = AttachedLogic.DistanceThreshold.Value;
             VelocityErrorThreshold = AttachedLogic.VelocityErrorThreshold.Value;
-            RCSThreshold = AttachedLogic.RCSThreshold.Value;
+            RcsThreshold = AttachedLogic.RcsThreshold.Value;
             AggregateTypes = AttachedLogic.AggregateTypes.Value;
             UseAllSensors = AttachedLogic.UseAllSensors.Value;
 

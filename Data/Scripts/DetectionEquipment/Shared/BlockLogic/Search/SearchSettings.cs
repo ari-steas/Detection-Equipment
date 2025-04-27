@@ -1,5 +1,4 @@
-﻿using DetectionEquipment.Shared.BlockLogic.IffReflector;
-using ProtoBuf;
+﻿using ProtoBuf;
 using Sandbox.ModAPI;
 using System;
 

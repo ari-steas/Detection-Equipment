@@ -3,7 +3,6 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using DetectionEquipment.Server.Countermeasures;
 using VRage.Game.ModAPI;
 
@@ -17,13 +16,13 @@ namespace DetectionEquipment.Shared.Definitions
         private static readonly Dictionary<int, CountermeasureDefinition> CountermeasureDefinitions = new Dictionary<int, CountermeasureDefinition>();
         private static readonly Dictionary<int, CountermeasureEmitterDefinition> CountermeasureEmitterDefinitions = new Dictionary<int, CountermeasureEmitterDefinition>();
 
-        private static bool HasShownApiFailMsg = false;
-        private static int ApiFailCheckCount = 0;
+        private static bool _hasShownApiFailMsg = false;
+        private static int _apiFailCheckCount = 0;
 
         public static void Load()
         {
-            HasShownApiFailMsg = false;
-            ApiFailCheckCount = 0;
+            _hasShownApiFailMsg = false;
+            _apiFailCheckCount = 0;
             DefinitionApi = new DefinitionApi();
             DefinitionApi.Init(GlobalData.ModContext, OnApiReady);
             Log.Info("DefinitionManager", "Initialized.");
@@ -31,7 +30,7 @@ namespace DetectionEquipment.Shared.Definitions
 
         public static void Update()
         {
-            if (DefinitionApi.IsReady || HasShownApiFailMsg || ApiFailCheckCount++ < 1)
+            if (DefinitionApi.IsReady || _hasShownApiFailMsg || _apiFailCheckCount++ < 1)
                 return;
 
             MyAPIGateway.Utilities.ShowNotification("Detection Equipment - DefinitionApi isn't loaded!", int.MaxValue, "Red");
@@ -50,7 +49,7 @@ namespace DetectionEquipment.Shared.Definitions
                 "\n" +
                 "==================================");
 
-            HasShownApiFailMsg = true;
+            _hasShownApiFailMsg = true;
         }
 
         private static void OnApiReady()

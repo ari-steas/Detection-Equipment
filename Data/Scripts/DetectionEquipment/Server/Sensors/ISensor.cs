@@ -1,5 +1,4 @@
-﻿using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared.Definitions;
+﻿using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using System;
 using VRageMath;

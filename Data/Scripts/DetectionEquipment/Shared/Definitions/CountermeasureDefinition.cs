@@ -1,9 +1,5 @@
 ﻿using ProtoBuf;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.Definitions
@@ -86,8 +82,12 @@ namespace DetectionEquipment.Shared.Definitions
                 Log.Info("CountermeasureDefinition", "Definition null!");
                 return false;
             }
+
             if (def.CountermeasureType == CountermeasureTypeEnum.None)
-                Log.Info("CountermeasureDefinition", "CountermeasureType is undefined! Not an error, but your countermeasure won't do anything.");
+            {
+                Log.Info("CountermeasureDefinition", "CountermeasureType is undefined!");
+                isValid = false;
+            }
 
             return isValid;
         }

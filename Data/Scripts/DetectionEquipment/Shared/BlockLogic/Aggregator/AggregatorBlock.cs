@@ -15,7 +15,6 @@ using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 using VRage.ModAPI;
-using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -25,7 +24,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public MySync<float, SyncDirection.BothWays> AggregationTime;
         public MySync<float, SyncDirection.BothWays> DistanceThreshold;
         public MySync<float, SyncDirection.BothWays> VelocityErrorThreshold; // Standard Deviation at which to ignore velocity estimation
-        public MySync<float, SyncDirection.BothWays> RCSThreshold;
+        public MySync<float, SyncDirection.BothWays> RcsThreshold;
         public MySync<bool, SyncDirection.BothWays> AggregateTypes;
         public MySync<bool, SyncDirection.BothWays> UseAllSensors;
         public MySync<int, SyncDirection.BothWays> DatalinkOutChannel;
@@ -187,13 +186,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         internal class AggregatorUpdatePacket : PacketBase
         {
-            [ProtoMember(1)] private long BlockId;
-            [ProtoMember(2)] private int[] DatalinkInChannels;
+            [ProtoMember(1)] private long _blockId;
+            [ProtoMember(2)] private int[] _datalinkInChannels;
 
             public AggregatorUpdatePacket(AggregatorBlock block)
             {
-                BlockId = block.Block.EntityId;
-                DatalinkInChannels = block.DatalinkInChannels;
+                _blockId = block.Block.EntityId;
+                _datalinkInChannels = block.DatalinkInChannels;
             }
 
             private AggregatorUpdatePacket()
@@ -205,10 +204,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 if (fromServer && MyAPIGateway.Session.IsServer)
                     return;
 
-                var block = MyAPIGateway.Entities.GetEntityById(BlockId)?.GameLogic?.GetAs<AggregatorBlock>();
+                var block = MyAPIGateway.Entities.GetEntityById(_blockId)?.GameLogic?.GetAs<AggregatorBlock>();
                 if (block == null)
                     return;
-                block._datalinkInChannels = DatalinkInChannels;
+                block._datalinkInChannels = _datalinkInChannels;
 
                 if (MyAPIGateway.Session.IsServer)
                     ServerNetwork.SendToEveryoneInSync(this, block.Block.GetPosition());

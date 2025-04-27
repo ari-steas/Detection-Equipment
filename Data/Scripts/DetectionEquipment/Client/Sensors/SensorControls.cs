@@ -9,10 +9,10 @@ namespace DetectionEquipment.Client.Sensors
 {
     internal class SensorControls : TerminalControlAdder<ClientBlockSensor, IMyCameraBlock>
     {
+        private IMyTerminalControlSlider _apeSlider, _aziSlider, _eleSlider;
+
         protected override void CreateTerminalActions()
         {
-            IMyTerminalControlSlider apeSlider = null, aziSlider = null, eleSlider = null;
-
             var currentSensorSet = CreateListbox(
                 "CurrentSensor",
                 "Current Sensor",
@@ -40,16 +40,16 @@ namespace DetectionEquipment.Client.Sensors
                     uint selectedId = (uint) selected[0].UserData;
                     if (logic.Sensors.Values.Any(b => b.Id == selectedId))
                         logic.CurrentSensorId = selectedId;
-                    apeSlider.UpdateVisual();
-                    aziSlider.UpdateVisual();
-                    eleSlider.UpdateVisual();
+                    _apeSlider.UpdateVisual();
+                    _aziSlider.UpdateVisual();
+                    _eleSlider.UpdateVisual();
                 }
                 );
             currentSensorSet.VisibleRowsCount = 4;
             currentSensorSet.Visible = b => b.GameLogic.GetAs<ClientBlockSensor>().Sensors.Count > 1;
             currentSensorSet.SupportsMultipleBlocks = false;
 
-            apeSlider = CreateSlider(
+            _apeSlider = CreateSlider(
                 "Aperture",
                 "Aperture",
                 "Sensor aperture in degrees",
@@ -63,12 +63,12 @@ namespace DetectionEquipment.Client.Sensors
                 },
                 (b, sb) => sb.Append(MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentAperture).ToString("F1") + "°")
                 );
-            apeSlider.SetLimits(
+            _apeSlider.SetLimits(
                     b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.MinAperture),
                     b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.MaxAperture)
                 );
 
-            aziSlider = CreateSlider(
+            _aziSlider = CreateSlider(
                 "Azimuth",
                 "Desired Azimuth",
                 "Sensor azimuth in degrees",
@@ -84,13 +84,13 @@ namespace DetectionEquipment.Client.Sensors
                 },
                 (b, sb) => sb.Append(MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDesiredAzimuth).ToString("F1") + "°")
                 );
-            aziSlider.SetLimits(
+            _aziSlider.SetLimits(
                     b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement?.MinAzimuth ?? 0),
                     b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement?.MaxAzimuth ?? 0)
                 );
-            aziSlider.Enabled = b => b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement != null;
+            _aziSlider.Enabled = b => b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement != null;
 
-            eleSlider = CreateSlider(
+            _eleSlider = CreateSlider(
                 "Elevation",
                 "Desired Elevation",
                 "Sensor elevation in degrees",
@@ -106,11 +106,11 @@ namespace DetectionEquipment.Client.Sensors
                 },
                 (b, sb) => sb.Append(MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDesiredElevation).ToString("F1") + "°")
                 );
-            eleSlider.SetLimits(
+            _eleSlider.SetLimits(
                     b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement?.MinElevation ?? 0),
                     b => (float)MathHelper.ToDegrees(b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement?.MaxElevation ?? 0)
                 );
-            eleSlider.Enabled = b => b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement != null;
+            _eleSlider.Enabled = b => b.GameLogic.GetAs<ClientBlockSensor>().CurrentDefinition.Movement != null;
         }
 
         protected override void CreateTerminalProperties()

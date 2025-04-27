@@ -1,7 +1,6 @@
 ﻿using DetectionEquipment.Shared.Definitions;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using VRage;
 using VRageMath;
 
@@ -30,7 +29,7 @@ namespace DetectionEquipment.Shared.Structs
             Error += info.RangeError * info.RangeError; // normal error
             Error = Math.Sqrt(Error);
 
-            DetectionType = info.Sensor?.Definition.Type ?? 0;
+            DetectionType = info.Sensor.Definition.Type;
 
             Velocity = null;
             VelocityVariance = null;
@@ -58,7 +57,7 @@ namespace DetectionEquipment.Shared.Structs
             CrossSection,
             Error,
             Position,
-            Velocity == null ? null : new MyTuple<Vector3D, double>?(new MyTuple<Vector3D, double>(Velocity.Value, VelocityVariance.Value)),
+            Velocity == null ? null : new MyTuple<Vector3D, double>?(new MyTuple<Vector3D, double>(Velocity.Value, VelocityVariance ?? 0)),
             IffCodes
             );
 

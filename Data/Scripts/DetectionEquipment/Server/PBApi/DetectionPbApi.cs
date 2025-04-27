@@ -45,8 +45,7 @@ namespace IngameScript
                 throw new Exception("Only one DetectionPbApi should be active at at time!");
 
             // Shamelessly adapted from the WcPbAPI
-            Program = program;
-            if (Program == null)
+            if (program == null)
                 throw new Exception("Invalid Program instance!");
 
             _methodMap = program.Me.GetProperty("DetectionPbApi")?.As<IReadOnlyDictionary<string, Delegate>>()?.GetValue(program.Me);
@@ -173,8 +172,7 @@ namespace IngameScript
 
         #region API Internals
 
-        private MyGridProgram Program;
-        private IReadOnlyDictionary<string, Delegate> _methodMap;
+        private readonly IReadOnlyDictionary<string, Delegate> _methodMap;
         public static DetectionPbApi I { get; private set; }
 
         private void InitializeApi()
@@ -212,13 +210,19 @@ namespace IngameScript
             SetApiMethod("SetAggregatorUseAllSensors", ref _setAggregatorUseAllSensors);
             SetApiMethod("GetAggregatorActiveSensors", ref _getAggregatorActiveSensors);
             SetApiMethod("SetAggregatorActiveSensors", ref _setAggregatorActiveSensors);
+
+            SetApiMethod("HasReflector", ref _hasReflector);
+            SetApiMethod("GetIffCode", ref _getIffCode);
+            SetApiMethod("SetIffCode", ref _setIffCode);
+            SetApiMethod("GetIffReturnHashed", ref _getIffReturnHashed);
+            SetApiMethod("SetIffReturnHashed", ref _setIffReturnHashed);
         }
 
         /// <summary>
         ///     Assigns a single API endpoint.
         /// </summary>
         /// <typeparam name="T"></typeparam>
-        /// <param name="name">Shared endpoint name; matches with the framework mod.</param>
+        /// <param name="methodTag">Shared endpoint name; matches with the framework mod.</param>
         /// <param name="method">Method to assign.</param>
         /// <exception cref="Exception"></exception>
         private void SetApiMethod<T>(string methodTag, ref T method) where T : class
@@ -250,12 +254,13 @@ namespace IngameScript
             public readonly PbSensorDefinition Definition;
             public readonly IMyCubeBlock Block;
             public readonly uint Id;
-            private Action<PbDetectionInfo> _onDetection = null;
+            private Action<PbDetectionInfo> _onDetection;
 
             /// <summary>
             /// Constructor - equivalent to DetectionPbApi.GetSensor(block);
             /// </summary>
             /// <param name="block"></param>
+            /// <param name="id"></param>
             public PbSensorBlock(IMyCubeBlock block, uint id)
             {
                 Id = id;
@@ -393,12 +398,12 @@ namespace IngameScript
                 Infrared = 3,
             }
 
-            public static explicit operator PbSensorDefinition(MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double> tuple) => new PbSensorDefinition()
+            public static explicit operator PbSensorDefinition(MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double> tuple) => new PbSensorDefinition
             {
                 Type = (SensorType)tuple.Item1,
                 MaxAperture = tuple.Item2,
                 MinAperture = tuple.Item3,
-                Movement = tuple.Item4 == null ? null : new SensorMovementDefinition()
+                Movement = tuple.Item4 == null ? null : new SensorMovementDefinition
                 {
                     MinAzimuth = tuple.Item4.Value.Item1,
                     MaxAzimuth = tuple.Item4.Value.Item2,
@@ -440,7 +445,7 @@ namespace IngameScript
                     averageRange += info.Range * (info.RangeError / totalRangeError);
                 }
 
-                PbDetectionInfo result = new PbDetectionInfo()
+                PbDetectionInfo result = new PbDetectionInfo
                 {
                     Bearing = averageBearing.Normalized(),
                     BearingError = totalBearingError / args.Count,
@@ -451,7 +456,7 @@ namespace IngameScript
                 return result;
             }
 
-            public static explicit operator PbDetectionInfo(MyTuple<double, double, double, double, Vector3D, string[]> tuple) => new PbDetectionInfo()
+            public static explicit operator PbDetectionInfo(MyTuple<double, double, double, double, Vector3D, string[]> tuple) => new PbDetectionInfo
             {
                 CrossSection = tuple.Item1,
                 Range = tuple.Item2,
@@ -543,7 +548,7 @@ namespace IngameScript
                     avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
                 avgDiff = Math.Sqrt(avgDiff) / args.Count;
 
-                PbWorldDetectionInfo result = new PbWorldDetectionInfo()
+                PbWorldDetectionInfo result = new PbWorldDetectionInfo
                 {
                     CrossSection = totalCrossSection / args.Count,
                     Position = averagePos,
@@ -587,7 +592,7 @@ namespace IngameScript
                     avgDiff += Vector3D.Distance(info.Key.Position, averagePos);
                 avgDiff /= args.Count;
 
-                PbWorldDetectionInfo result = new PbWorldDetectionInfo()
+                PbWorldDetectionInfo result = new PbWorldDetectionInfo
                 {
                     CrossSection = avgCrossSection,
                     Position = averagePos,

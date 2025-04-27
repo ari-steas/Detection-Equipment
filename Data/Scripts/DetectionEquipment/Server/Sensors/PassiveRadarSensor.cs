@@ -100,7 +100,7 @@ namespace DetectionEquipment.Server.Sensors
                 double maxRangeError = range * passiveSensor.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / passiveSensor.MinStableSignal, 0, 1));
                 range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-                passiveSensor._queuedRadarHits[sensor.AttachedEntityId()] = new DetectionInfo()
+                passiveSensor._queuedRadarHits[sensor.AttachedEntityId()] = new DetectionInfo
                 {
                     Sensor = passiveSensor,
                     CrossSection = signalToNoiseRatio,

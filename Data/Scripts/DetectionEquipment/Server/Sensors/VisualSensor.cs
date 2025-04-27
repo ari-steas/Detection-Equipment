@@ -1,12 +1,8 @@
-﻿using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared.Definitions;
+﻿using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
-using Sandbox.ModAPI;
 using System;
-using DetectionEquipment.Shared;
 using VRage;
-using VRage.Game.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 

@@ -1,10 +1,8 @@
-﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using DetectionEquipment.Shared.Utils;
+﻿using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
-using VRage.Game.Components;
 
 namespace DetectionEquipment.Shared.BlockLogic
 {
@@ -26,7 +24,6 @@ namespace DetectionEquipment.Shared.BlockLogic
         /// <summary>
         /// Populate a given logic's data.
         /// </summary>
-        /// <param name="logic"></param>
         protected abstract void AssignData();
 
         /// <summary>

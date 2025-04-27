@@ -10,7 +10,7 @@ using VRageMath;
 
 namespace DetectionEquipment.Server.Tracking
 {
-    internal class GridTrack : EntityTrack, ITrack
+    internal class GridTrack : EntityTrack
     {
         public readonly IMyCubeGrid Grid;
 
@@ -263,18 +263,18 @@ namespace DetectionEquipment.Server.Tracking
                 Vector3D to = globalDirection * maxCastLength + from;
             
                 IHitInfo hitInfo;
-                if (MyAPIGateway.Physics.CastRay(from, to, out hitInfo, 15))
-                {
-                    if (hitInfo?.HitEntity != Grid)
-                        return;
+                if (!MyAPIGateway.Physics.CastRay(from, to, out hitInfo, 15))
+                    return;
 
-                    //DebugDraw.AddLine(hitInfo.Position, hitInfo.Position + hitInfo.Normal, Color.Green, 0);
-                    totalVcs += 1;
-                    if (isSlimBlock) // SlimBlocks provide half the RCS of a fatblock, because uhh yeah.
-                        totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal)) / 2;
-                    else
-                        totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
-                }
+                if (hitInfo == null || hitInfo.HitEntity != Grid)
+                    return;
+
+                //DebugDraw.AddLine(hitInfo.Position, hitInfo.Position + hitInfo.Normal, Color.Green, 0);
+                totalVcs += 1;
+                if (isSlimBlock) // SlimBlocks provide half the RCS of a fatblock, because uhh yeah.
+                    totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal)) / 2;
+                else
+                    totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
             });
 
             radarCrossSection = totalRcs * Grid.GridSize * Grid.GridSize;
