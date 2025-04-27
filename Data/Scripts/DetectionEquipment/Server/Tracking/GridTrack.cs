@@ -66,14 +66,14 @@ namespace DetectionEquipment.Server.Tracking
         public override double InfraredVisibility(Vector3D source)
         {
             // Retrieve power draw and add to base visibility. Scale by inverse of base visibility to simulate heat distribution; a smaller object with the same power draw as a larger object is hotter.
-            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId);
-            return base.InfraredVisibility(source) + powerDraw / ProjectedArea(source, VisibilityType.Optical);
+            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid);
+            return base.InfraredVisibility(source) + powerDraw * ProjectedArea(source, VisibilityType.Optical);
         }
 
         public override double InfraredVisibility(Vector3D source, double opticalVisibility)
         {
-            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId);
-            return base.InfraredVisibility(source) + powerDraw / opticalVisibility;
+            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid);
+            return base.InfraredVisibility(source) + powerDraw * opticalVisibility;
         }
 
         // TODO: Scale visible and infrared visibility by thrust output.

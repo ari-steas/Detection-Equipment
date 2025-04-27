@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
 using VRage.Game.Entity;
