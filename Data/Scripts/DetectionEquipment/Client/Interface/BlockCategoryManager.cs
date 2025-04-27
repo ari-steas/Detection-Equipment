@@ -65,8 +65,7 @@ namespace DetectionEquipment.Client.Interface
 
             public void AddBlock(string subtypeId)
             {
-                if (!_category.ItemIds.Contains(subtypeId))
-                    _category.ItemIds.Add(subtypeId);
+                _category.ItemIds.Add(subtypeId);
 
                 //foreach (var _cat in MyDefinitionManager.Static.GetCategories().Values)
                 //{

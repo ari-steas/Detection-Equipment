@@ -20,6 +20,7 @@ namespace DetectionEquipment.Client
             new ClientNetwork().LoadData();
             BlockCategoryManager.Init();
             CountermeasureManager.Init();
+            RcsTool.Init();
 
             Log.DecreaseIndent();
             Log.Info("ClientMain", "Initialized.");
@@ -30,6 +31,7 @@ namespace DetectionEquipment.Client
             ClientNetwork.I.Update();
             SensorBlockManager.Update();
             CountermeasureManager.Update();
+            RcsTool.Update();
         }
 
         protected override void UnloadData()
@@ -37,6 +39,7 @@ namespace DetectionEquipment.Client
             Log.Info("ClientMain", "Start unload...");
             Log.IncreaseIndent();
 
+            RcsTool.Close();
             CountermeasureManager.Close();
             BlockCategoryManager.Close();
             ClientNetwork.I.UnloadData();

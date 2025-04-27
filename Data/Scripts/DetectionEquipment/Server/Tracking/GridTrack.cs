@@ -70,6 +70,12 @@ namespace DetectionEquipment.Server.Tracking
             return base.InfraredVisibility(source) + powerDraw / ProjectedArea(source, VisibilityType.Optical);
         }
 
+        public override double InfraredVisibility(Vector3D source, double opticalVisibility)
+        {
+            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId);
+            return base.InfraredVisibility(source) + powerDraw / opticalVisibility;
+        }
+
         // TODO: Scale visible and infrared visibility by thrust output.
 
         /// <summary>
@@ -258,7 +264,6 @@ namespace DetectionEquipment.Server.Tracking
 
             MyAPIGateway.Parallel.ForEach(visited, hitPos =>
             {
-                bool isSlimBlock = Grid.GetCubeBlock(hitPos)?.FatBlock == null;
                 Vector3D from = Vector3D.Transform(hitPos * Grid.GridSize, Grid.WorldMatrix) - globalDirection * maxCastLength;
                 Vector3D to = globalDirection * maxCastLength + from;
             
@@ -269,12 +274,20 @@ namespace DetectionEquipment.Server.Tracking
                 if (hitInfo == null || hitInfo.HitEntity != Grid)
                     return;
 
+                var block = Grid.GetCubeBlock(hitPos);
+
                 //DebugDraw.AddLine(hitInfo.Position, hitInfo.Position + hitInfo.Normal, Color.Green, 0);
+                // Armor blocks have half the RCS of components, and light armor has half the RCS of heavy armor.
                 totalVcs += 1;
-                if (isSlimBlock) // SlimBlocks provide half the RCS of a fatblock, because uhh yeah.
-                    totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal)) / 2;
+                if (block?.FatBlock == null)
+                {
+                    if (ServerMain.I.LowRcsSubtypes.Contains(block?.BlockDefinition.Id.SubtypeName))
+                        totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal)) / 2;
+                    else
+                        totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
+                }
                 else
-                    totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
+                    totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal)) * 2;
             });
 
             radarCrossSection = totalRcs * Grid.GridSize * Grid.GridSize;

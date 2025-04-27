@@ -8,6 +8,7 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
+using Sandbox.Definitions;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -28,6 +29,8 @@ namespace DetectionEquipment.Server
         public Dictionary<uint, BlockSensor> BlockSensorIdMap = new Dictionary<uint, BlockSensor>();
         public Action<IMyCubeBlock> OnBlockPlaced = null;
         public uint HighestSensorId = 0;
+
+        public string[] LowRcsSubtypes = Array.Empty<string>();
         
         private bool _doneTickInit = false;
 
@@ -43,14 +46,30 @@ namespace DetectionEquipment.Server
             new ServerNetwork().LoadData();
             CountermeasureManager.Init();
 
-            MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
-            MyAPIGateway.Entities.OnEntityRemove += OnEntityRemove;
-
-            MyAPIGateway.Entities.GetEntities(null, e =>
             {
-                OnEntityAdd(e);
-                return false;
-            });
+                var lowRcsBlocksBuffer = new List<string>();
+                foreach (var definition in MyDefinitionManager.Static.GetAllDefinitions())
+                {
+                    MyCubeBlockDefinition block = definition as MyCubeBlockDefinition;
+                    if (block == null || !block.DisplayNameText.Contains("Light Armor"))
+                        continue;
+                    lowRcsBlocksBuffer.Add(block.Id.SubtypeName);
+                }
+                LowRcsSubtypes = lowRcsBlocksBuffer.ToArray();
+                Log.Info("ServerMain", $"{LowRcsSubtypes.Length} low-RCS block definitions found.");
+            }
+
+            {
+                MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
+                MyAPIGateway.Entities.OnEntityRemove += OnEntityRemove;
+
+                MyAPIGateway.Entities.GetEntities(null, e =>
+                {
+                    OnEntityAdd(e);
+                    return false;
+                });
+                Log.Info("ServerMain", "Entities pre-registered.");
+            }
 
             Log.DecreaseIndent();
             Log.Info("ServerMain", "Initialized.");
