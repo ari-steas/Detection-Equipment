@@ -65,9 +65,27 @@ namespace DetectionEquipment.Shared.Utils
             return desiredSubpart;
         }
 
+        /// <summary>
+        /// Returns a list of every subpart below this entity in its hierarchy.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public static List<MyEntitySubpart> GetAllSubparts(IMyEntity entity)
         {
-            return entity == null ? new List<MyEntitySubpart>(0) : ((MyEntity)entity).Subparts.Values.ToList();
+            if (entity == null)
+                return new List<MyEntitySubpart>(0);
+            var myEnt = (MyEntity)entity;
+            if (myEnt.Subparts.Count == 0)
+                return myEnt.Subparts.Values.ToList();
+
+            var subparts = new List<MyEntitySubpart>();
+            var toCheck = new Queue<MyEntity>();
+            toCheck.Enqueue(myEnt);
+
+            while (toCheck.Count > 0)
+                subparts.AddRange(toCheck.Dequeue().Subparts.Values);
+
+            return subparts;
         }
 
         public void LocalRotateSubpart(MyEntitySubpart subpart, Matrix matrix)

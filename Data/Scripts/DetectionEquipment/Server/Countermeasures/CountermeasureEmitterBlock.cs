@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRage.Game;
@@ -87,18 +89,8 @@ namespace DetectionEquipment.Server.Countermeasures
                 if (Definition.IsCountermeasureAttached)
                     AttachedCountermeasures[CurrentMuzzleIdx] = counter;
 
-                if (!string.IsNullOrEmpty(Definition.FireParticle)) // TODO: this doesn't go in server
-                {
-                    MyParticleEffect discard;
-
-                    uint renderId = Muzzles[CurrentMuzzleIdx].Parent?.Render?.GetRenderObjectID() ?? uint.MaxValue;
-                    var matrix = (MatrixD) Muzzles[CurrentMuzzleIdx].Dummy.Matrix;
-                    var pos = MuzzleMatrix.Translation;
-                    if (!MyParticlesManager.TryCreateParticleEffect(Definition.FireParticle, ref matrix, ref pos, renderId, out discard)) // TODO this goes in client
-                    {
-                        Log.Exception("CountermeasureEmitterBlock", new Exception($"Failed to create new projectile particle \"{Definition.FireParticle}\"!"));
-                    }
-                }
+                if (!string.IsNullOrEmpty(Definition.FireParticle))
+                    ServerNetwork.SendToEveryoneInSync(new CountermeasureEmitterPacket(this), Block.WorldMatrix.Translation);
 
                 ShotAggregator -= 1;
             }
@@ -112,11 +104,8 @@ namespace DetectionEquipment.Server.Countermeasures
         private void SetupMuzzles()
         {
             var muzzles = new Dictionary<string, Muzzle>();
-            var bufferDict = new Dictionary<string, IMyModelDummy>();
-
-            CheckPartForMuzzles((MyEntity) Block, ref muzzles, ref bufferDict);
-            foreach (var subpart in SubpartManager.GetAllSubparts(Block))
-                CheckPartForMuzzles(subpart, ref muzzles, ref bufferDict);
+            
+            Muzzle.CheckBlockForMuzzles(Block, Definition, ref muzzles);
 
             Muzzles = new Muzzle[muzzles.Count];
             AttachedCountermeasures = new Countermeasure[muzzles.Count];
@@ -131,16 +120,6 @@ namespace DetectionEquipment.Server.Countermeasures
             }
         }
 
-        private void CheckPartForMuzzles(MyEntity entity, ref Dictionary<string, Muzzle> muzzles,
-            ref Dictionary<string, IMyModelDummy> bufferDict)
-        {
-            ((IMyEntity)entity).Model?.GetDummies(bufferDict);
-            foreach (var dummyKvp in bufferDict)
-                if (Definition.Muzzles.Contains(dummyKvp.Key))
-                    muzzles[dummyKvp.Key] = new Muzzle(entity, dummyKvp.Value);
-            bufferDict.Clear();
-        }
-
         public class Muzzle
         {
             public IMyModelDummy Dummy;
@@ -152,10 +131,27 @@ namespace DetectionEquipment.Server.Countermeasures
                 Dummy = dummy;
             }
 
-
             public MatrixD GetMatrix()
             {
                 return Dummy.Matrix * Parent.WorldMatrix;
+            }
+
+            public static void CheckBlockForMuzzles(IMyCubeBlock block, CountermeasureEmitterDefinition definition, ref Dictionary<string, Muzzle> muzzles)
+            {
+                var bufferDict = new Dictionary<string, IMyModelDummy>();
+                CheckPartForMuzzles((MyEntity) block, definition, ref muzzles, ref bufferDict);
+                foreach (var subpart in SubpartManager.GetAllSubparts(block))
+                    CheckPartForMuzzles(subpart, definition, ref muzzles, ref bufferDict);
+            }
+
+            private static void CheckPartForMuzzles(MyEntity entity, CountermeasureEmitterDefinition definition, ref Dictionary<string, Muzzle> muzzles,
+                ref Dictionary<string, IMyModelDummy> bufferDict)
+            {
+                ((IMyEntity)entity).Model?.GetDummies(bufferDict);
+                foreach (var dummyKvp in bufferDict)
+                    if (definition.Muzzles.Contains(dummyKvp.Key))
+                        muzzles[dummyKvp.Key] = new Muzzle(entity, dummyKvp.Value);
+                bufferDict.Clear();
             }
         }
     }

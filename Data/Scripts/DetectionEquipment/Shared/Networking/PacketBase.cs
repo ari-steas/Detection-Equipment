@@ -9,6 +9,7 @@ namespace DetectionEquipment.Shared.Networking
     [ProtoInclude(GlobalData.ServerNetworkId + 2, typeof(BlockSelectControlPacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 3, typeof(AggregatorBlock.AggregatorUpdatePacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 4, typeof(CountermeasurePacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 5, typeof(CountermeasureEmitterPacket))]
     [ProtoContract(UseProtoMembersOnly = true)]
     public abstract class PacketBase
     {

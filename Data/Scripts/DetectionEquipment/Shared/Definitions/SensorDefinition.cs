@@ -9,7 +9,7 @@ namespace DetectionEquipment.Shared.Definitions
     /// Basic definition for a single sensor.
     /// </summary>
     [ProtoContract]
-    public class SensorDefinition
+    public class SensorDefinition // TODO: Bearing and Range Accuracy Modifiers
     {
         [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
         /// <summary>

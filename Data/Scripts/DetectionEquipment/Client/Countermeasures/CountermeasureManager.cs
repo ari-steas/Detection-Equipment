@@ -23,7 +23,7 @@ namespace DetectionEquipment.Client.Countermeasures
 
         public static void Update()
         {
-            try // TODO: Firing particles for emitters
+            try
             {
                 foreach (var countermeasure in _countermeasures)
                 {
