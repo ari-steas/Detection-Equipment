@@ -115,7 +115,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             for (int i = 0; i < array.Length; i++)
                 array[i] = (long)selected[i].UserData;
             
-            UpdateSelected(logic, array, false);
+            UpdateSelected(logic, array);
         }
     }
 

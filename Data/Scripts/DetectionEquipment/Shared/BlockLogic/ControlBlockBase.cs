@@ -41,13 +41,13 @@ namespace DetectionEquipment.Shared.BlockLogic
             HideSorterControls.DoOnce();
             ControlBlockManager.I.Blocks.Add(Block as MyCubeBlock, this);
 
+            GetSettings?.LoadSettings();
+
             if (!MyAPIGateway.Session.IsServer)
                 return;
 
             GridSensors = ServerMain.I.GridSensorMangers[Block.CubeGrid];
             NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
-
-            GetSettings?.LoadSettings();
         }
 
         public override bool IsSerialized()

@@ -3,6 +3,7 @@ using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Client.Sensors
@@ -11,6 +12,7 @@ namespace DetectionEquipment.Client.Sensors
     {
         public static Dictionary<uint, ClientBlockSensor> BlockSensorIdMap;
         public static Dictionary<IMyCubeGrid, HashSet<IMyCubeBlock>> GridBlockSensorsMap;
+        private static List<uint> _deadSensors;
 
         // These two fields could cause memory leaks with a high rate of packet loss.
         // Howver, they are quite important to prevent low-latency client<->server sensor init from failing.
@@ -27,6 +29,7 @@ namespace DetectionEquipment.Client.Sensors
             });
             BlockSensorIdMap = new Dictionary<uint, ClientBlockSensor>();
             GridBlockSensorsMap = new Dictionary<IMyCubeGrid, HashSet<IMyCubeBlock>>();
+            _deadSensors = new List<uint>();
             _delayedInitPackets = new Dictionary<IMyCameraBlock, List<SensorInitPacket>>();
             _delayedUpdatePackets = new Dictionary<uint, SensorUpdatePacket>();
             Log.Info("SensorBlockManager", "Initialized.");
@@ -34,8 +37,15 @@ namespace DetectionEquipment.Client.Sensors
 
         public static void Update()
         {
-            foreach (var sensor in BlockSensorIdMap.Values)
-                sensor.UpdateAfterSimulation(); // we're not properly registering the gamelogic so methods must be called manually
+            foreach (var sensor in BlockSensorIdMap)
+            {
+                sensor.Value.UpdateAfterSimulation(); // we're not properly registering the gamelogic so methods must be called manually
+                if (sensor.Value.Block.Closed)
+                    _deadSensors.Add(sensor.Key);
+            }
+
+            foreach (var id in _deadSensors)
+                BlockSensorIdMap.Remove(id);
         }
 
         public static void Unload()

@@ -34,7 +34,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AttachedLogic.AggregateTypes.Value = AggregateTypes;
             AttachedLogic.UseAllSensors.Value = UseAllSensors;
 
-            AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, SelectedSensors ?? Array.Empty<long>(), false);
+            AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, SelectedSensors ?? Array.Empty<long>());
 
             AttachedLogic.DatalinkOutChannel.Value = DatalinkOutChannel;
             AttachedLogic.DatalinkInChannels = DatalinkInChannels;

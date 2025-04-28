@@ -22,14 +22,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
         protected override void AssignData()
         {
-            AttachedLogic.IffCode.Value = IffCode;
-            AttachedLogic.ReturnHash.Value = ReturnHash;
+            AttachedLogic.IffCode = IffCode;
+            AttachedLogic.ReturnHash = ReturnHash;
         }
 
         protected override void RetrieveData()
         {
-            IffCode = AttachedLogic.IffCode.Value;
-            ReturnHash = AttachedLogic.ReturnHash.Value;
+            IffCode = AttachedLogic.IffCode;
+            ReturnHash = AttachedLogic.ReturnHash;
         }
     }
 }
