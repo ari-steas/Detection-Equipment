@@ -30,8 +30,6 @@ namespace DetectionEquipment.Server
         public Action<IMyCubeBlock> OnBlockPlaced = null;
         public uint HighestSensorId = 0;
 
-        public string[] LowRcsSubtypes = Array.Empty<string>();
-        
         private bool _doneTickInit = false;
 
         public override void LoadData()
@@ -45,19 +43,6 @@ namespace DetectionEquipment.Server
 
             new ServerNetwork().LoadData();
             CountermeasureManager.Init();
-
-            {
-                var lowRcsBlocksBuffer = new List<string>();
-                foreach (var definition in MyDefinitionManager.Static.GetAllDefinitions())
-                {
-                    MyCubeBlockDefinition block = definition as MyCubeBlockDefinition;
-                    if (block == null || !block.DisplayNameText.Contains("Light Armor"))
-                        continue;
-                    lowRcsBlocksBuffer.Add(block.Id.SubtypeName);
-                }
-                LowRcsSubtypes = lowRcsBlocksBuffer.ToArray();
-                Log.Info("ServerMain", $"{LowRcsSubtypes.Length} low-RCS block definitions found.");
-            }
 
             {
                 MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;

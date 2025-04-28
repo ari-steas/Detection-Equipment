@@ -1,4 +1,5 @@
 ﻿using DetectionEquipment.Shared.Utils;
+using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -15,10 +16,25 @@ namespace DetectionEquipment.Shared
         public static readonly Guid SettingsGuid = new Guid("b4e33a2c-0406-4aea-bf0a-d1ad04266a14");
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
+        public static string[] LowRcsSubtypes;
 
         internal static void Init()
         {
             ModContext = SharedMain.I.ModContext;
+
+            {
+                var lowRcsBlocksBuffer = new List<string>();
+                foreach (var definition in MyDefinitionManager.Static.GetAllDefinitions())
+                {
+                    MyCubeBlockDefinition block = definition as MyCubeBlockDefinition;
+                    if (block == null || !block.DisplayNameText.Contains("Light Armor"))
+                        continue;
+                    lowRcsBlocksBuffer.Add(block.Id.SubtypeName);
+                }
+                LowRcsSubtypes = lowRcsBlocksBuffer.ToArray();
+                Log.Info("GlobalData", $"{LowRcsSubtypes.Length} low-RCS block definitions found.");
+            }
+
             Log.Info("GlobalData", "Initial values set.");
         }
 

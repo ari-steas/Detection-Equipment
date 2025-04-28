@@ -281,7 +281,7 @@ namespace DetectionEquipment.Server.Tracking
                 totalVcs += 1;
                 if (block?.FatBlock == null)
                 {
-                    if (ServerMain.I.LowRcsSubtypes.Contains(block?.BlockDefinition.Id.SubtypeName))
+                    if (GlobalData.LowRcsSubtypes.Contains(block?.BlockDefinition.Id.SubtypeName))
                         totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal)) / 2;
                     else
                         totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));

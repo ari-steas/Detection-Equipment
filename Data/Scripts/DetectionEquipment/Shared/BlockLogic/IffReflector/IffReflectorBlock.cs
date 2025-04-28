@@ -2,6 +2,7 @@
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Network;
@@ -21,14 +22,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
-
+            
             IffCode.ValueChanged += sync =>
             {
-                IffCodeCache = ReturnHash ? "H" + sync.Value.GetHashCode().ToString() : "S" + sync.Value;
+                IffCodeCache = ReturnHash ? "H" + sync.Value.GetHashCode() : "S" + sync.Value;
             };
             ReturnHash.ValueChanged += sync =>
             {
-                IffCodeCache = sync.Value ? "H" + IffCode.Value.GetHashCode().ToString() : "S" + IffCode.Value;
+                IffCodeCache = sync.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value;
             };
 
             new IffControls().DoOnce(this);

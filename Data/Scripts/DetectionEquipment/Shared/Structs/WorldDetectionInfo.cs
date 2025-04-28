@@ -76,7 +76,8 @@ namespace DetectionEquipment.Shared.Structs
                 entityId = info.EntityId;
                 totalError += info.Error;
                 foreach (var code in info.IffCodes)
-                    allCodes.Add(code);
+                    if (!allCodes.Contains(code))
+                        allCodes.Add(code);
             }
 
             Vector3D averagePos = Vector3D.Zero;
