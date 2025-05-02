@@ -17,8 +17,18 @@ namespace DetectionEquipment.Client.Interface
             "DetectionTrackerBlock",
         }; // DefinitionManager can load before the BlockCategoryManager on client and cause an exception.
 
+        private static Dictionary<string, string> _subtypeToTypePairing;
+
         public static void Init()
         {
+            _subtypeToTypePairing = new Dictionary<string, string>();
+            foreach (var def in MyDefinitionManager.Static.GetAllDefinitions())
+            {
+                var blockdef = def as MyCubeBlockDefinition;
+                if (blockdef == null || string.IsNullOrEmpty(blockdef.Id.SubtypeName)) continue;
+                _subtypeToTypePairing[blockdef.Id.SubtypeName] = blockdef.Id.TypeId.ToString().Replace("MyObjectBuilder_", "");
+            }
+
             _blockCategory = new GuiBlockCategoryHelper("[Detection Equipment]", "DetectionEquipmentBlockCategory");
             foreach (var item in _bufferBlockSubtypes)
                 _blockCategory.AddBlock(item);
@@ -42,6 +52,7 @@ namespace DetectionEquipment.Client.Interface
 
         public static void Close()
         {
+            _subtypeToTypePairing = null;
             _blockCategory = null;
             Log.Info("BlockCategoryManager", "Unloaded.");
         }
@@ -65,7 +76,17 @@ namespace DetectionEquipment.Client.Interface
 
             public void AddBlock(string subtypeId)
             {
-                _category.ItemIds.Add(subtypeId);
+                string typeId;
+                if (_subtypeToTypePairing.TryGetValue(subtypeId, out typeId)) // keen broke block category items with just subtypeid
+                {
+                    _category.ItemIds.Add(typeId + "/" + subtypeId);
+                    Log.Info("GuiBlockCategoryHelper", $"Added {typeId + "/" + subtypeId}");
+                }
+                else
+                {
+                    _category.ItemIds.Add(subtypeId + "/(null)");
+                    Log.Info("GuiBlockCategoryHelper", $"Added {subtypeId + "/(null)"}");
+                }
 
                 //foreach (var _cat in MyDefinitionManager.Static.GetCategories().Values)
                 //{

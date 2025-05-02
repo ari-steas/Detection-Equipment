@@ -119,7 +119,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
             public IffReflectorPacket(IffReflectorBlock block)
             {
-                _iffCode = block.IffCode;
+                _iffCode = block.IffCode; // TODO custom mysync setup
                 _returnHash = block.ReturnHash;
                 _blockId = block.Block.EntityId;
             }
@@ -136,6 +136,8 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
                     // Slight init delay in case this packet arrives before the client is ready.
                     if (!_hasWaited)
                         MyAPIGateway.Utilities.InvokeOnGameThread(() => Received(senderSteamId, fromServer), StartAt: MyAPIGateway.Session.GameplayFrameCounter + 10);
+                    else
+                        Log.Exception("IffReflectorPacket", new Exception($"Invalid EntityId \"{_blockId}\" for IFF reflector!")); // TODO this isn't working. try a cache method like with sensors. FUCK
                     _hasWaited = true;
                     return;
                 }

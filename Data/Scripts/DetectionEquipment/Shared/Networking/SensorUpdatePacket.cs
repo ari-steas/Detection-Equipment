@@ -70,6 +70,7 @@ namespace DetectionEquipment.Shared.Networking
         [ProtoMember(1)] public uint Id;
         [ProtoMember(2)] public long AttachedBlockId;
         [ProtoMember(3)] public int DefinitionId;
+        [ProtoIgnore] private bool _hasWaited = false;
 
         public SensorInitPacket(BlockSensor sensor)
         {
@@ -97,7 +98,11 @@ namespace DetectionEquipment.Shared.Networking
             var block = MyAPIGateway.Entities.GetEntityById(AttachedBlockId) as IMyCameraBlock;
             if (block == null)
             {
-                Log.Exception("SensorInitPacket", new Exception($"Invalid EntityId \"{AttachedBlockId}\" for sensor \"{Id}\"!"));
+                if (!_hasWaited)
+                    MyAPIGateway.Utilities.InvokeOnGameThread(() => Received(senderSteamId, fromServer), StartAt: MyAPIGateway.Session.GameplayFrameCounter + 10);
+                else
+                    Log.Exception("SensorInitPacket", new Exception($"Invalid EntityId \"{AttachedBlockId}\" for sensor \"{Id}\"!"));
+                _hasWaited = true;
                 return;
             }
 
