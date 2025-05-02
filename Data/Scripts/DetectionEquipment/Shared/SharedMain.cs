@@ -1,8 +1,11 @@
-﻿using DetectionEquipment.Shared.BlockLogic;
+﻿using System;
+using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
+using VRage.Game;
 using VRage.Game.Components;
+using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared
 {
@@ -14,46 +17,69 @@ namespace DetectionEquipment.Shared
 
         public override void LoadData()
         {
-            Log.Init();
-            Log.Info("SharedMain", "Start initialize...");
-            Log.IncreaseIndent();
+            try
+            {
+                I = this;
 
-            I = this;
-        
-            GlobalData.Init();
-            ControlBlockManager.Load();
-            DefinitionManager.Load();
-            DatalinkManager.Load();
+                Log.Init(ModContext);
+                Log.Info("SharedMain", "Start initialize...");
+                Log.IncreaseIndent();
 
-            Log.DecreaseIndent();
-            Log.Info("SharedMain", "Initialized.");
+                GlobalData.Init();
+                ControlBlockManager.Load();
+                DefinitionManager.Load();
+                DatalinkManager.Load();
+
+                Log.DecreaseIndent();
+                Log.Info("SharedMain", "Initialized.");
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("SharedMain", ex, true);
+            }
         }
 
         private int _ticks = 0;
+
         public override void UpdateAfterSimulation()
         {
-            if (_ticks % 10 == 0)
+            try
             {
-                DefinitionManager.Update();
-                GlobalData.UpdatePlayers();
+                if (_ticks % 10 == 0)
+                {
+                    DefinitionManager.Update();
+                    GlobalData.UpdatePlayers();
+                }
+
+                _ticks++;
             }
-            _ticks++;
+            catch (Exception ex)
+            {
+                Log.Exception("SharedMain", ex);
+            }
         }
 
         protected override void UnloadData()
         {
-            Log.Info("SharedMain", "Start unload...");
-            Log.IncreaseIndent();
+            try
+            {
+                Log.Info("SharedMain", "Start unload...");
+                Log.IncreaseIndent();
         
-            GlobalData.Unload();
-            DatalinkManager.Unload();
-            ControlBlockManager.Unload();
-            DefinitionManager.Unload();
+                GlobalData.Unload();
+                DatalinkManager.Unload();
+                ControlBlockManager.Unload();
+                DefinitionManager.Unload();
 
-            I = null;
+                I = null;
 
-            Log.DecreaseIndent();
-            Log.Info("SharedMain", "Unloaded.");
+                Log.DecreaseIndent();
+                Log.Info("SharedMain", "Unloaded.");
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("SharedMain", ex, true);
+            }
         }
     }
 }

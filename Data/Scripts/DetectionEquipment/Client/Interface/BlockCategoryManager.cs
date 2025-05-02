@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Definitions;
@@ -33,6 +34,7 @@ namespace DetectionEquipment.Client.Interface
             foreach (var item in _bufferBlockSubtypes)
                 _blockCategory.AddBlock(item);
             _bufferBlockSubtypes.Clear();
+
             Log.Info("BlockCategoryManager", "Initialized.");
         }
 

@@ -36,51 +36,67 @@ namespace DetectionEquipment.Server
         {
             if (!MyAPIGateway.Session.IsServer)
                 return;
-            Log.Info("ServerMain", "Start initialize...");
-            Log.IncreaseIndent();
 
-            I = this;
-
-            new ServerNetwork().LoadData();
-            CountermeasureManager.Init();
-
+            try
             {
-                MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
-                MyAPIGateway.Entities.OnEntityRemove += OnEntityRemove;
+                Log.Info("ServerMain", "Start initialize...");
+                Log.IncreaseIndent();
 
-                MyAPIGateway.Entities.GetEntities(null, e =>
+                I = this;
+
+                new ServerNetwork().LoadData();
+                CountermeasureManager.Init();
+
                 {
-                    OnEntityAdd(e);
-                    return false;
-                });
-                Log.Info("ServerMain", "Entities pre-registered.");
-            }
+                    MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
+                    MyAPIGateway.Entities.OnEntityRemove += OnEntityRemove;
 
-            Log.DecreaseIndent();
-            Log.Info("ServerMain", "Initialized.");
+                    MyAPIGateway.Entities.GetEntities(null, e =>
+                    {
+                        OnEntityAdd(e);
+                        return false;
+                    });
+                    Log.Info("ServerMain", "Entities pre-registered.");
+                }
+
+                Log.DecreaseIndent();
+                Log.Info("ServerMain", "Initialized.");
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("ServerMain", ex, true);
+            }
         }
 
         protected override void UnloadData()
         {
             if (!MyAPIGateway.Session.IsServer)
                 return;
-            Log.Info("ServerMain", "Start unload...");
-            Log.IncreaseIndent();
 
-            CountermeasureManager.Close();
-            ServerNetwork.I.UnloadData();
+            try
+            {
+                Log.Info("ServerMain", "Start unload...");
+                Log.IncreaseIndent();
 
-            PbApiInitializer.Unload();
+                CountermeasureManager.Close();
+                ServerNetwork.I.UnloadData();
 
-            MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
-            MyAPIGateway.Entities.OnEntityRemove -= OnEntityRemove;
+                PbApiInitializer.Unload();
 
-            foreach (var manager in GridSensorMangers.Values)
-                manager.Close();
+                MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
+                MyAPIGateway.Entities.OnEntityRemove -= OnEntityRemove;
 
-            I = null;
-            Log.DecreaseIndent();
-            Log.Info("ServerMain", "Unloaded.");
+                foreach (var manager in GridSensorMangers.Values)
+                    manager.Close();
+
+                I = null;
+                Log.DecreaseIndent();
+                Log.Info("ServerMain", "Unloaded.");
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("ServerMain", ex, true);
+            }
         }
 
 
@@ -90,71 +106,99 @@ namespace DetectionEquipment.Server
             if (!MyAPIGateway.Session.IsServer)
                 return;
 
-            if (!_doneTickInit)
+            try
             {
-                PbApiInitializer.Init();
-                _doneTickInit = true;
-            }
+                if (!_doneTickInit)
+                {
+                    PbApiInitializer.Init();
+                    _doneTickInit = true;
+                }
 
-            // Safety check for closed tracks that didn't notify
+                // Safety check for closed tracks that didn't notify
+                {
+                    foreach (var ent in Tracks.Keys)
+                        if (ent.Closed)
+                            _deadTracks.Add(ent);
+                    foreach (var ent in _deadTracks)
+                        Tracks.Remove(ent);
+                    _deadTracks.Clear();
+                }
+
+                foreach (var manager in GridSensorMangers.Values)
+                    manager.Update();
+
+                CountermeasureManager.Update();
+
+                ServerNetwork.I.Update();
+            }
+            catch (Exception ex)
             {
-                foreach (var ent in Tracks.Keys)
-                    if (ent.Closed)
-                        _deadTracks.Add(ent);
-                foreach (var ent in _deadTracks)
-                    Tracks.Remove(ent);
-                _deadTracks.Clear();
+                Log.Exception("ServerMain", ex);
             }
-
-            foreach (var manager in GridSensorMangers.Values)
-                manager.Update();
-
-            CountermeasureManager.Update();
-
-            ServerNetwork.I.Update();
         }
 
         private void OnEntityAdd(IMyEntity obj)
         {
-            if (obj.Physics == null)
-                return;
-
-            var grid = obj as IMyCubeGrid;
-            if (grid != null)
+            try
             {
-                Tracks.Add(obj, new GridTrack(grid));
-                GridSensorMangers.Add(grid, new GridSensorManager(grid));
-                grid.OnBlockAdded += InvokeOnBlockPlaced;
-                grid.GetBlocks(null, b =>
+                if (obj.Physics == null)
+                    return;
+
+                var grid = obj as IMyCubeGrid;
+                if (grid != null)
                 {
-                    InvokeOnBlockPlaced(b);
-                    return false;
-                });
+                    Tracks.Add(obj, new GridTrack(grid));
+                    GridSensorMangers.Add(grid, new GridSensorManager(grid));
+                    grid.OnBlockAdded += InvokeOnBlockPlaced;
+                    grid.GetBlocks(null, b =>
+                    {
+                        InvokeOnBlockPlaced(b);
+                        return false;
+                    });
+                }
+                else
+                    Tracks.Add(obj, new EntityTrack((MyEntity)obj));
             }
-            else
-                Tracks.Add(obj, new EntityTrack((MyEntity)obj));
+            catch (Exception ex)
+            {
+                Log.Exception("ServerMain", ex, true);
+            }
         }
 
         private void OnEntityRemove(IMyEntity obj)
         {
-            if (obj.Physics == null)
-                return;
-
-            Tracks.Remove(obj);
-
-            var grid = obj as IMyCubeGrid;
-            if (grid != null)
+            try
             {
-                grid.OnBlockAdded -= InvokeOnBlockPlaced;
-                GridSensorMangers[grid].Close();
-                GridSensorMangers.Remove(grid);
+                if (obj.Physics == null)
+                    return;
+
+                Tracks.Remove(obj);
+
+                var grid = obj as IMyCubeGrid;
+                if (grid != null)
+                {
+                    grid.OnBlockAdded -= InvokeOnBlockPlaced;
+                    GridSensorMangers[grid].Close();
+                    GridSensorMangers.Remove(grid);
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("ServerMain", ex, true);
             }
         }
 
         private void InvokeOnBlockPlaced(IMySlimBlock block)
         {
-            if (block.FatBlock != null)
-                OnBlockPlaced?.Invoke(block.FatBlock);
+            try
+            {
+                if (block.FatBlock != null)
+                    OnBlockPlaced?.Invoke(block.FatBlock);
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("ServerMain", ex, true);
+            }
         }
     }
 }
