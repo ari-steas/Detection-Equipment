@@ -2,58 +2,17 @@
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using DetectionEquipment.Client.Networking;
-using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
-using DetectionEquipment.Shared.Utils;
-using ProtoBuf;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
-using VRage.Game.ModAPI.Network;
-using VRage.Sync;
-using Sandbox.Game.Multiplayer;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector")]
     internal class IffReflectorBlock : ControlBlockBase<IMyConveyorSorter>
     {
-        private string _iffCode = "";
-        public string IffCode
-        {
-            get
-            {
-                return _iffCode;
-            }
-            set
-            {
-                _iffCode = value;
-                IffCodeCache = _returnHash ? "H" + _iffCode.GetHashCode() : "S" + _iffCode;
-                if (MyAPIGateway.Session.IsServer)
-                    ServerNetwork.SendToEveryoneInSync(new IffReflectorPacket(this), Block.WorldMatrix.Translation);
-                else
-                    ClientNetwork.SendToServer(new IffReflectorPacket(this));
-            }
-        }
-
-        private bool _returnHash = false;
-        public bool ReturnHash
-        {
-            get
-            {
-                return _returnHash;
-            }
-            set
-            {
-                _returnHash = value;
-                IffCodeCache = _returnHash ? "H" + _iffCode.GetHashCode() : "S" + _iffCode;
-                if (MyAPIGateway.Session.IsServer)
-                    ServerNetwork.SendToEveryoneInSync(new IffReflectorPacket(this), Block.WorldMatrix.Translation);
-                else
-                    ClientNetwork.SendToServer(new IffReflectorPacket(this));
-            }
-        }
+        public SimpleSync<string> IffCode;
+        public SimpleSync<bool> ReturnHash;
 
         public string IffCodeCache { get; private set; } = "";
         protected override ControlBlockSettingsBase GetSettings => new IffReflectorSettings(this);
@@ -62,6 +21,15 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
+
+            IffCode = new SimpleSync<string>(this, Block.CubeGrid.CustomName, (value, fromNetwork) =>
+            {
+                IffCodeCache = ReturnHash.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value;
+            });
+            ReturnHash = new SimpleSync<bool>(this, false, (value, fromNetwork) =>
+            {
+                IffCodeCache = ReturnHash.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value;
+            });
             
             new IffControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
@@ -69,9 +37,6 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             if (!_iffMap.ContainsKey(Block.CubeGrid))
                 _iffMap.Add(Block.CubeGrid, new HashSet<IffReflectorBlock>());
             _iffMap[Block.CubeGrid].Add(this);
-
-            if (MyAPIGateway.Session.IsServer)
-                ServerNetwork.SendToEveryoneInSync(new IffReflectorPacket(this), Block.WorldMatrix.Translation);
         }
 
         public override void MarkForClose()
@@ -105,49 +70,6 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             }
 
             return array;
-        }
-
-        [ProtoContract]
-        internal class IffReflectorPacket : PacketBase
-        {
-            [ProtoMember(1)] private string _iffCode;
-            [ProtoMember(2)] private bool _returnHash;
-            [ProtoMember(3)] private long _blockId;
-            [ProtoIgnore] private bool _hasWaited = false;
-
-            private IffReflectorPacket() { }
-
-            public IffReflectorPacket(IffReflectorBlock block)
-            {
-                _iffCode = block.IffCode; // TODO custom mysync setup
-                _returnHash = block.ReturnHash;
-                _blockId = block.Block.EntityId;
-            }
-
-            public override void Received(ulong senderSteamId, bool fromServer)
-            {
-                if (MyAPIGateway.Session.IsServer && fromServer)
-                    return; // assume it was already updated
-
-                var logic = (MyAPIGateway.Entities.GetEntityById(_blockId) as IMyCubeBlock)?.GameLogic
-                    ?.GetAs<IffReflectorBlock>();
-                if (logic == null)
-                {
-                    // Slight init delay in case this packet arrives before the client is ready.
-                    if (!_hasWaited)
-                        MyAPIGateway.Utilities.InvokeOnGameThread(() => Received(senderSteamId, fromServer), StartAt: MyAPIGateway.Session.GameplayFrameCounter + 10);
-                    else
-                        Log.Exception("IffReflectorPacket", new Exception($"Invalid EntityId \"{_blockId}\" for IFF reflector!")); // TODO this isn't working. try a cache method like with sensors. FUCK
-                    _hasWaited = true;
-                    return;
-                }
-
-                logic._iffCode = _iffCode;
-                logic._returnHash = _returnHash;
-            
-                if (MyAPIGateway.Session.IsServer && !fromServer)
-                    ServerNetwork.SendToEveryoneInSync(this, logic.Block.WorldMatrix.Translation);
-            }
         }
     }
 }

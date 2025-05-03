@@ -18,12 +18,14 @@ namespace DetectionEquipment.Client.Networking
         {
             I = this;
             MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(GlobalData.ClientNetworkId, ReceivedPacket);
+            SimpleSyncManager.Init();
 
             Log.Info("ClientNetwork", "Ready.");
         }
 
         public void UnloadData()
         {
+            SimpleSyncManager.Close();
             MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(GlobalData.ClientNetworkId, ReceivedPacket);
             Log.Info("ClientNetwork", "Closed.");
         }

@@ -58,6 +58,10 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             if (thisLogic == null)
                 return;
 
+            // sometimes stuff breaks and I don't know why
+            if (selected == null)
+                selected = Array.Empty<long>();
+
             SelectedBlocks[thisLogic] = selected;
             OnListChanged?.Invoke(thisLogic, selected);
 

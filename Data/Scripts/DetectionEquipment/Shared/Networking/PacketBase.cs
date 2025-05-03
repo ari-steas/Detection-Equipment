@@ -1,6 +1,5 @@
 ﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Networking
@@ -11,7 +10,7 @@ namespace DetectionEquipment.Shared.Networking
     [ProtoInclude(GlobalData.ServerNetworkId + 3, typeof(AggregatorBlock.AggregatorUpdatePacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 4, typeof(CountermeasurePacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 5, typeof(CountermeasureEmitterPacket))]
-    [ProtoInclude(GlobalData.ServerNetworkId + 6, typeof(IffReflectorBlock.IffReflectorPacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 6, typeof(SimpleSyncManager.InternalSimpleSyncBothWays))]
     [ProtoContract(UseProtoMembersOnly = true)]
     public abstract class PacketBase
     {

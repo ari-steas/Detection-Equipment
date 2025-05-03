@@ -39,6 +39,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                     case "candidatesList":
                     case "addToSelectionButton":
                     case "ShowInInventory":
+                    case "SearchField":
                         {
                             //c.Enabled = TerminalChainedDelegate.Create(c.Enabled, AppendedCondition); // grays out
                             c.Visible = TerminalChainedDelegate.Create(c.Visible, AppendedCondition); // hides

@@ -4,6 +4,7 @@ using System.Linq;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using VRage;
+using VRage.Scripting.MemorySafeTypes;
 using VRageMath;
 
 using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
@@ -158,8 +159,8 @@ namespace IngameScript
         private Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[]> _getAggregatorInfo;
         private Func<IMyCubeBlock, bool> _getAggregatorUseAllSensors;
         private Action<IMyCubeBlock, bool> _setAggregatorUseAllSensors;
-        private Func<IMyCubeBlock, List<IMyTerminalBlock>> _getAggregatorActiveSensors;
-        private Action<IMyCubeBlock, List<IMyTerminalBlock>> _setAggregatorActiveSensors;
+        private Func<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>> _getAggregatorActiveSensors;
+        private Action<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>> _setAggregatorActiveSensors;
 
         // Iff Reflector
         private Func<IMyCubeBlock, bool> _hasReflector;
@@ -716,7 +717,7 @@ namespace IngameScript
             /// <summary>
             /// Sensors being used by the aggregator. Ignored if <see cref="UseAllGridSensors"/> is true.
             /// </summary>
-            public List<IMyTerminalBlock> ActiveSensors
+            public MemorySafeList<IMyTerminalBlock> ActiveSensors
             {
                 get
                 {

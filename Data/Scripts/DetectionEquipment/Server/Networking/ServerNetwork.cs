@@ -20,12 +20,14 @@ namespace DetectionEquipment.Server.Networking
         {
             I = this;
             MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(GlobalData.ServerNetworkId, ReceivedPacket);
+            SimpleSyncManager.Init();
 
             Log.Info("ServerNetwork", "Ready.");
         }
 
         public void UnloadData()
         {
+            SimpleSyncManager.Close();
             MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(GlobalData.ServerNetworkId, ReceivedPacket);
             I = null;
             Log.Info("ServerNetwork", "Closed.");

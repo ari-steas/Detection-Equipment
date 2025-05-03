@@ -13,6 +13,7 @@ using DetectionEquipment.Shared.BlockLogic;
 
 using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
+using VRage.Scripting.MemorySafeTypes;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -53,8 +54,8 @@ namespace DetectionEquipment.Server.PBApi
             ["GetAggregatorInfo"] = new Func<IMyCubeBlock, WorldDetTuple[]>(GetAggregatorInfo),
             ["GetAggregatorUseAllSensors"] = new Func<IMyCubeBlock, bool>(GetAggregatorUseAllSensors),
             ["SetAggregatorUseAllSensors"] = new Action<IMyCubeBlock, bool>(SetAggregatorUseAllSensors),
-            ["GetAggregatorActiveSensors"] = new Func<IMyCubeBlock, List<IMyTerminalBlock>>(GetAggregatorActiveSensors),
-            ["SetAggregatorActiveSensors"] = new Action<IMyCubeBlock, List<IMyTerminalBlock>>(SetAggregatorActiveSensors),
+            ["GetAggregatorActiveSensors"] = new Func<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>>(GetAggregatorActiveSensors),
+            ["SetAggregatorActiveSensors"] = new Action<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>>(SetAggregatorActiveSensors),
 
             // IFF Reflector
             ["HasReflector"] = new Func<IMyCubeBlock, bool>(HasReflector),
@@ -255,7 +256,7 @@ namespace DetectionEquipment.Server.PBApi
             ((AggregatorBlock)control).UseAllSensors.Value = value;
         }
 
-        private static List<IMyTerminalBlock> GetAggregatorActiveSensors(IMyCubeBlock block)
+        private static MemorySafeList<IMyTerminalBlock> GetAggregatorActiveSensors(IMyCubeBlock block)
         {
             IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
@@ -264,20 +265,20 @@ namespace DetectionEquipment.Server.PBApi
             if (aggregator == null)
                 return null;
 
-            var active = new List<IMyTerminalBlock>(aggregator.ActiveSensors.Count);
+            var active = new MemorySafeList<IMyTerminalBlock>(aggregator.ActiveSensors.Count);
             foreach (var sensor in aggregator.ActiveSensors)
                 active.Add(sensor.Block);
 
             return active;
         }
 
-        private static void SetAggregatorActiveSensors(IMyCubeBlock block, List<IMyTerminalBlock> value)
+        private static void SetAggregatorActiveSensors(IMyCubeBlock block, MemorySafeList<IMyTerminalBlock> value)
         {
             IControlBlockBase control;
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
 
-            var valid = new List<long>();
+            var valid = new MemorySafeList<long>();
             var gridSensors = control.GridSensors.Sensors;
             // Validate entityIds
             foreach (var sensor in gridSensors)
@@ -317,7 +318,7 @@ namespace DetectionEquipment.Server.PBApi
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return;
             IffReflectorBlock reflector = (IffReflectorBlock)control;
-            reflector.IffCode = value;
+            reflector.IffCode.Value = value;
         }
         private static bool GetIffReturnHashed(IMyCubeBlock block)
         {
@@ -333,7 +334,7 @@ namespace DetectionEquipment.Server.PBApi
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return;
             IffReflectorBlock reflector = (IffReflectorBlock)control;
-            reflector.ReturnHash = value;
+            reflector.ReturnHash.Value = value;
         }
 
         #endregion

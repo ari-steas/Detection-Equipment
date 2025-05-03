@@ -5,6 +5,7 @@ using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Shared.Networking;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
@@ -38,7 +39,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 TrackerControls.ActiveSensorSelect.UpdateSelected(this, value.Select(sensor => sensor.Block.EntityId).ToArray());
             }
         }
-        public MySync<float, SyncDirection.BothWays> ResetAngleTime;
+        public SimpleSync<float> ResetAngleTime;
 
         private SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
         public Dictionary<BlockSensor, float> LockDecay = new Dictionary<BlockSensor, float>();
@@ -49,6 +50,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
+            ResetAngleTime = new SimpleSync<float>(this, 4);
             new TrackerControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
         }
