@@ -35,12 +35,6 @@ namespace DetectionEquipment.Client.Sensors
             _delayedInitPackets = new Dictionary<IMyCameraBlock, List<SensorInitPacket>>();
             _delayedUpdatePackets = new Dictionary<uint, SensorUpdatePacket>();
 
-            MyAPIGateway.Entities.GetEntities(null, e =>
-            {
-                OnEntityAdd(e);
-                return false;
-            });
-
             Log.Info("SensorBlockManager", "Initialized.");
         }
 
@@ -97,7 +91,6 @@ namespace DetectionEquipment.Client.Sensors
                 var grid = obj as IMyCubeGrid;
                 if (grid?.Physics == null)
                     return;
-                GridBlockSensorsMap[grid] = new HashSet<IMyCubeBlock>();
                 grid.OnBlockAdded += OnBlockAdded;
                 foreach (var block in grid.GetFatBlocks<IMyCameraBlock>())
                     OnBlockAdded(block.SlimBlock);
