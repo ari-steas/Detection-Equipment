@@ -131,7 +131,12 @@ namespace DetectionEquipment.Client.Sensors
                 GridBlockSensorsMap[block.CubeGrid].Add(fatblock);
             else
                 GridBlockSensorsMap[block.CubeGrid] = new HashSet<IMyCubeBlock> { fatblock };
-            logic.OnClose += () => GridBlockSensorsMap[block.CubeGrid].Remove(fatblock);
+            logic.OnClose += () =>
+            {
+                HashSet<IMyCubeBlock> set;
+                if (GridBlockSensorsMap.TryGetValue(block.CubeGrid, out set))
+                    set.Remove(fatblock);
+            };
 
             if (_delayedInitPackets.ContainsKey(fatblock))
             {
