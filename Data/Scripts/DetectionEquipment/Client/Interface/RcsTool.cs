@@ -16,7 +16,7 @@ namespace DetectionEquipment.Client.Interface
 {
     internal static class RcsTool
     {
-        private const string RcsToolSubtype = "SemiAutoPistolGun";
+        private const string RcsToolSubtype = "DetectionToolGun";
         private static bool _questlogDisposed = true;
 
         public static void Init()
@@ -65,6 +65,7 @@ namespace DetectionEquipment.Client.Interface
             irs = 0;
 
             var rifle = MyAPIGateway.Session.Player?.Character?.EquippedTool as IMyAutomaticRifleGun;
+            //MyAPIGateway.Utilities.ShowNotification($"{rifle?.DefinitionId.SubtypeName ?? "None"}", 950/6);
             if (rifle == null || rifle.DefinitionId.SubtypeName != RcsToolSubtype)
                 return false;
 

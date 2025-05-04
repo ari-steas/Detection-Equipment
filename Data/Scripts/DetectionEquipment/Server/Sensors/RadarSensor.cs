@@ -102,7 +102,7 @@ namespace DetectionEquipment.Server.Sensors
             }
 
             //MyAPIGateway.Utilities.ShowNotification($"Power: {Power/1000000:N1}MW -> {signalToNoiseRatio:F} dB", 1000/60);
-            MyAPIGateway.Utilities.ShowNotification($"{(signalToNoiseRatio / MinStableSignal) * 100:N0}% track integrity", 1000/60);
+            //MyAPIGateway.Utilities.ShowNotification($"{(signalToNoiseRatio / MinStableSignal) * 100:N0}% track integrity", 1000/60);
 
             if (track is EntityTrack)
                 PassiveRadarSensor.NotifyOnRadarHit(((EntityTrack)track).Entity, this);
