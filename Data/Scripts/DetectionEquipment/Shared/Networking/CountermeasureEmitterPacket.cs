@@ -28,6 +28,8 @@ namespace DetectionEquipment.Shared.Networking
             _definitionId = emitter.Definition.Id;
         }
 
+        private CountermeasureEmitterPacket () {}
+
         public override void Received(ulong senderSteamId, bool fromServer)
         {
             if (!fromServer)

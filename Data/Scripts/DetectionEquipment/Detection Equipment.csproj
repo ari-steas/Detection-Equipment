@@ -14,8 +14,11 @@
 
   <ItemGroup>
     <Compile Remove="Data\**" />
+    <Compile Remove="obj\**" />
     <EmbeddedResource Remove="Data\**" />
+    <EmbeddedResource Remove="obj\**" />
     <None Remove="Data\**" />
+    <None Remove="obj\**" />
   </ItemGroup>
 
   <ItemGroup>

@@ -40,6 +40,10 @@ namespace DetectionEquipment.Shared.Networking
             _velz = (float) countermeasure.Velocity.Z;
         }
 
+        private CountermeasurePacket()
+        {
+        }
+
         public override void Received(ulong senderSteamId, bool fromServer)
         {
             if (!fromServer)

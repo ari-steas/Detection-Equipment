@@ -5,6 +5,7 @@ using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Client.Interface;
 using System;
+using Sandbox.ModAPI;
 
 namespace DetectionEquipment.Client
 {
@@ -14,6 +15,9 @@ namespace DetectionEquipment.Client
     {
         public override void LoadData()
         {
+            if (MyAPIGateway.Utilities.IsDedicated)
+                return;
+
             try
             {
                 Log.Info("ClientMain", "Start initialize...");
@@ -36,6 +40,9 @@ namespace DetectionEquipment.Client
 
         public override void UpdateAfterSimulation()
         {
+            if (MyAPIGateway.Utilities.IsDedicated)
+                return;
+
             try
             {
                 ClientNetwork.I.Update();
@@ -51,6 +58,9 @@ namespace DetectionEquipment.Client
 
         protected override void UnloadData()
         {
+            if (MyAPIGateway.Utilities.IsDedicated)
+                return;
+
             try
             {
                 Log.Info("ClientMain", "Start unload...");
