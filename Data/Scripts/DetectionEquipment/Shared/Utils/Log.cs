@@ -126,7 +126,7 @@ namespace DetectionEquipment.Shared.Utils
                     "Please reach out to @aristeas. on discord with logs for help.\n\n" +
                     "Mod: %AppData%\\SpaceEngineers\\Storage\\DetectionEquipment.log \n" +
                     "Game: %AppData%\\SpaceEngineers\\SpaceEngineers_*_*.log\n\n" +
-                    $"{ex.Message}\n{ex.InnerException?.Message}\n"
+                    $"Reason: {ex.Message}\n{ex.InnerException?.Message}\n"
                     );
                 // Invoking on main thread to guarantee the hard-crash message
                 MyAPIGateway.Utilities.InvokeOnGameThread(() =>

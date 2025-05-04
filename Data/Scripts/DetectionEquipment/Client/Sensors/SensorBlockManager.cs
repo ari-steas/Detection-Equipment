@@ -34,6 +34,13 @@ namespace DetectionEquipment.Client.Sensors
             _deadSensors = new List<uint>();
             _delayedInitPackets = new Dictionary<IMyCameraBlock, List<SensorInitPacket>>();
             _delayedUpdatePackets = new Dictionary<uint, SensorUpdatePacket>();
+
+            MyAPIGateway.Entities.GetEntities(null, e =>
+            {
+                OnEntityAdd(e);
+                return false;
+            });
+
             Log.Info("SensorBlockManager", "Initialized.");
         }
 
