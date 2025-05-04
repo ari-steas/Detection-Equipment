@@ -68,7 +68,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
                 array[i] = code;
                 i++;
             }
-
+            
             return array;
         }
     }

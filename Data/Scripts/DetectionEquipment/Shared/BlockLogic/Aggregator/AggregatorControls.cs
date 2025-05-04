@@ -117,6 +117,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Antenna DataLink"
                 );
             CreateSlider(
+                "DatalinkInShareType",
+                "Datalink Source Type",
+                "Relations to read DataLink input from.",
+                0,
+                3,
+                b => b.GameLogic.GetAs<AggregatorBlock>()?.DatalinkInShareType,
+                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().DatalinkInShareType.Value = (int) Math.Round(v),
+                (b, sb) => sb.Append((AggregatorBlock.ShareType) b.GameLogic.GetAs<AggregatorBlock>().DatalinkInShareType.Value)
+                );
+            CreateSlider(
                 "DatalinkChannel",
                 "Datalink Channel",
                 "Datalink channel ID this aggregator should broadcast on. Set to -1 to disable.",

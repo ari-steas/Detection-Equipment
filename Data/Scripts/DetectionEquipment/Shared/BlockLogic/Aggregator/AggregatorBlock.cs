@@ -11,6 +11,7 @@ using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
 using ProtoBuf;
+using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
@@ -28,6 +29,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public MySync<bool, SyncDirection.BothWays> AggregateTypes;
         public MySync<bool, SyncDirection.BothWays> UseAllSensors;
         public MySync<int, SyncDirection.BothWays> DatalinkOutChannel;
+        public SimpleSync<int> DatalinkInShareType;
         private int _prevDatalinkOutChannel = -1;
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
@@ -75,6 +77,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
+            DatalinkInShareType = new SimpleSync<int>(this, 1);
             DatalinkOutChannel.ValueChanged += sync =>
             {
                 DatalinkManager.RegisterAggregator(this, sync.Value, _prevDatalinkOutChannel);
@@ -110,6 +113,25 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 foreach (var aggregator in channel.Value)
                 {
                     if (aggregator == this) continue;
+
+                    var relations = Block.GetUserRelationToOwner(aggregator.Block.OwnerId);
+                    if (relations == MyRelationsBetweenPlayerAndBlock.Enemies)
+                        continue;
+
+                    if (DatalinkInShareType != (int)ShareType.Unowned)
+                    {
+                        if (DatalinkInShareType.Value == (int)ShareType.Neutral &&
+                            relations != MyRelationsBetweenPlayerAndBlock.Neutral &&
+                            relations != MyRelationsBetweenPlayerAndBlock.FactionShare &&
+                            relations != MyRelationsBetweenPlayerAndBlock.Owner)
+                            continue;
+                        if (DatalinkInShareType.Value == (int)ShareType.FactionOnly &&
+                            relations != MyRelationsBetweenPlayerAndBlock.FactionShare &&
+                            relations != MyRelationsBetweenPlayerAndBlock.Owner)
+                            continue;
+                        if (DatalinkInShareType.Value == (int)ShareType.OwnerOnly && relations != MyRelationsBetweenPlayerAndBlock.Owner)
+                            continue;
+                    }
 
                     lock (aggregator._bufferDetections)
                     {
@@ -182,6 +204,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         {
             // This method is pretty slow, let's not call it often.
             _bufferVisibleAggregators = DatalinkManager.GetActiveDatalinkChannels(Block.CubeGrid, Block.OwnerId);
+        }
+
+        public enum ShareType
+        {
+            Unowned = 0,
+            Neutral = 1,
+            FactionOnly = 2,
+            OwnerOnly = 3,
         }
 
         internal class AggregatorUpdatePacket : PacketBase

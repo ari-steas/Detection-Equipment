@@ -16,6 +16,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         [ProtoMember(7)] public long[] SelectedSensors = Array.Empty<long>();
         [ProtoMember(8)] public int DatalinkOutChannel = 0;
         [ProtoMember(9)] public int[] DatalinkInChannels = { 0 };
+        [ProtoMember(10)] public int DatalinkInShareType = 1;
 
         [ProtoIgnore] public new AggregatorBlock AttachedLogic => (AggregatorBlock) base.AttachedLogic;
 
@@ -38,6 +39,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             AttachedLogic.DatalinkOutChannel.Value = DatalinkOutChannel;
             AttachedLogic.DatalinkInChannels = DatalinkInChannels;
+            AttachedLogic.DatalinkInShareType.Value = DatalinkInShareType;
         }
 
         protected override void RetrieveData()
@@ -54,6 +56,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             DatalinkOutChannel = AttachedLogic.DatalinkOutChannel.Value;
             DatalinkInChannels = AttachedLogic.DatalinkInChannels;
+            DatalinkInShareType = AttachedLogic.DatalinkInShareType.Value;
         }
     }
 }

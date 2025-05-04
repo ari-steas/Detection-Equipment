@@ -39,18 +39,19 @@ namespace DetectionEquipment.Shared.Networking
                     return;
                 _value = value;
 
-                if (!MyAPIGateway.Multiplayer.MultiplayerActive)
-                    return;
-
-                var packet = new SimpleSyncManager.InternalSimpleSyncBothWays
+                if (MyAPIGateway.Multiplayer.MultiplayerActive)
                 {
-                    SyncId = SyncId,
-                    Contents = MyAPIGateway.Utilities.SerializeToBinary(_value)
-                };
-                if (MyAPIGateway.Session.IsServer)
-                    ServerNetwork.SendToEveryoneInSync(packet, Component.Entity.GetPosition());
-                else
-                    ClientNetwork.SendToServer(packet);
+                    var packet = new SimpleSyncManager.InternalSimpleSyncBothWays
+                    {
+                        SyncId = SyncId,
+                        Contents = MyAPIGateway.Utilities.SerializeToBinary(_value)
+                    };
+                    if (MyAPIGateway.Session.IsServer)
+                        ServerNetwork.SendToEveryoneInSync(packet, Component.Entity.GetPosition());
+                    else
+                        ClientNetwork.SendToServer(packet);
+                }
+                
                 OnValueChanged?.Invoke(value, false);
             }
         }
