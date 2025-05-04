@@ -48,8 +48,29 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             toggle.OnText = MySpaceTexts.SwitchText_On;
             toggle.OffText = MySpaceTexts.SwitchText_Off;
             // setters and getters should both be assigned on all controls that have them, to avoid errors in mods or PB scripts getting exceptions from them.
-            toggle.Getter = getter;  // Getting the value
-            toggle.Setter = setter; // Setting the value
+            toggle.Getter = tb =>
+            {
+                try
+                {
+                    return getter.Invoke(tb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    return false;
+                }
+            };
+            toggle.Setter = (tb, v) =>
+            {
+                try
+                {
+                    setter.Invoke(tb, v);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                }
+            };
 
             MyAPIGateway.TerminalControls.AddControl<TBlockType>(toggle);
 
@@ -62,9 +83,30 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             slider.Title = MyStringId.GetOrCompute(displayName);
             slider.Tooltip = MyStringId.GetOrCompute(toolTip);
             slider.SetLimits(min, max); // Set the minimum and maximum values for the slider
-            slider.Getter = getter; // Replace with your property
-            slider.Setter = setter; // Replace with your property
-            slider.Writer = writer; // Replace with your property
+            slider.Getter = tb =>
+            {
+                try
+                {
+                    return getter.Invoke(tb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    return 0;
+                }
+            };
+            slider.Setter = (tb, v) =>
+            {
+                try
+                {
+                    setter.Invoke(tb, v);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                }
+            };
+            slider.Writer = writer;
 
             slider.Visible = VisibleFunc;
             slider.SupportsMultipleBlocks = true;
@@ -82,6 +124,17 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
             button.Visible = VisibleFunc;
             button.Action = action;
+            button.Action = tb =>
+            {
+                try
+                {
+                    action.Invoke(tb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                }
+            };
 
             MyAPIGateway.TerminalControls.AddControl<TBlockType>(button);
 
@@ -96,8 +149,29 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             box.SupportsMultipleBlocks = true;
 
             box.Visible = VisibleFunc;
-            box.Getter = getter;
-            box.Setter = setter;
+            box.Getter = tb =>
+            {
+                try
+                {
+                    return getter.Invoke(tb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    return false;
+                }
+            };
+            box.Setter = (tb, v) =>
+            {
+                try
+                {
+                    setter.Invoke(tb, v);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                }
+            };
 
             MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
             return box;
@@ -112,8 +186,29 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
             box.Visible = VisibleFunc;
             box.ComboBoxContent = content;
-            box.Getter = getter;
-            box.Setter = setter;
+            box.Getter = tb =>
+            {
+                try
+                {
+                    return getter.Invoke(tb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    return 0;
+                }
+            };
+            box.Setter = (tb, v) =>
+            {
+                try
+                {
+                    setter.Invoke(tb, v);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                }
+            };
 
             MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
             return box;
@@ -127,9 +222,31 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             box.SupportsMultipleBlocks = true;
 
             box.Visible = VisibleFunc;
-            box.ListContent = content;
+
+            box.ListContent = (tb, contentList, selectedList) =>
+            {
+                try
+                {
+                    content.Invoke(tb, contentList, selectedList);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                }
+            };
+            box.ItemSelected = (tb, selectedList) =>
+            {
+                try
+                {
+                    itemSelected.Invoke(tb, selectedList);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                }
+            };
+
             box.Multiselect = multiSelect;
-            box.ItemSelected = itemSelected;
             box.VisibleRowsCount = 10;
 
             MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
@@ -144,8 +261,30 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             box.SupportsMultipleBlocks = true;
 
             box.Visible = VisibleFunc;
-            box.Getter = getter;
-            box.Setter = setter;
+            box.Getter = tb =>
+            {
+                try
+                {
+                    return getter.Invoke(tb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    return new StringBuilder();
+                }
+            };
+            box.Setter = (tb, v) =>
+            {
+                try
+                {
+                    setter.Invoke(tb, v);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                }
+            };
+
 
             MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
             return box;
@@ -190,7 +329,19 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             act.Icon = icon;
             act.ValidForGroups = true;
 
-            act.Enabled = VisibleFunc;
+            act.Enabled = tb =>
+            {
+                try
+                {
+                    return VisibleFunc.Invoke(tb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    return false;
+                }
+            };
+
             MyAPIGateway.TerminalControls.AddAction<TBlockType>(act);
 
             return act;

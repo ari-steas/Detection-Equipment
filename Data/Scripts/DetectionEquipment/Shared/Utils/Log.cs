@@ -56,6 +56,12 @@ namespace DetectionEquipment.Shared.Utils
             //    MyLog.Default.WriteLineToConsole($"{_indent}[INFO]\t{source}\t{text}");
         }
 
+        /// <summary>
+        /// Logs an exception to the debug log.
+        /// </summary>
+        /// <param name="source"></param>
+        /// <param name="exception"></param>
+        /// <param name="fatal"></param>
         public static void Exception(string source, Exception exception, bool fatal = false)
         {
             _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[EXCEPTION]\t{source}\n{exception}");

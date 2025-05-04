@@ -24,7 +24,7 @@ namespace DetectionEquipment.Shared.Networking
         /// </summary>
         public Action<TValue, bool> OnValueChanged = null;
 
-        private MyGameLogicComponent _component;
+        public MyGameLogicComponent Component { get; }
         private TValue _value;
 
         public TValue Value
@@ -42,14 +42,13 @@ namespace DetectionEquipment.Shared.Networking
                 if (!MyAPIGateway.Multiplayer.MultiplayerActive)
                     return;
 
-                Log.Info("SimpleSync", "Sending...");
                 var packet = new SimpleSyncManager.InternalSimpleSyncBothWays
                 {
                     SyncId = SyncId,
                     Contents = MyAPIGateway.Utilities.SerializeToBinary(_value)
                 };
                 if (MyAPIGateway.Session.IsServer)
-                    ServerNetwork.SendToEveryoneInSync(packet, _component.Entity.GetPosition());
+                    ServerNetwork.SendToEveryoneInSync(packet, Component.Entity.GetPosition());
                 else
                     ClientNetwork.SendToServer(packet);
                 OnValueChanged?.Invoke(value, false);
@@ -63,7 +62,7 @@ namespace DetectionEquipment.Shared.Networking
 
         public SimpleSync(MyGameLogicComponent component, TValue value)
         {
-            _component = component;
+            Component = component;
             _value = value;
             SimpleSyncManager.RegisterSync(this, component.Entity.EntityId);
             component.BeforeRemovedFromContainer += comp => SimpleSyncManager.UnregisterSync(this);
@@ -103,7 +102,7 @@ namespace DetectionEquipment.Shared.Networking
             sync.SyncId = id;
 
             SyncIdMap.Add(sync.SyncId, sync);
-            Log.Info("SimpleSyncManager", $"Registered SimpleSync {sync.SyncId}");
+            Log.Info("SimpleSyncManager", $"Registered SimpleSync {sync.SyncId} on {sync.Component.GetType().Name}");
         }
 
         public static void UnregisterSync(ISimpleSync sync)
@@ -143,7 +142,7 @@ namespace DetectionEquipment.Shared.Networking
     internal interface ISimpleSync
     {
         long SyncId { get; set; }
-
+        MyGameLogicComponent Component { get; }
         void Update(byte[] data);
     }
 }

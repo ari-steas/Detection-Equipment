@@ -19,9 +19,9 @@ namespace DetectionEquipment.Server.PBApi
 {
     internal static class PbApiMethods
     {
-        public static ImmutableDictionary<string, Delegate> SafeMethods => ImmutableDictionary.CreateRange(_methods);
+        public static ImmutableDictionary<string, Delegate> SafeMethods => ImmutableDictionary.CreateRange(Methods);
 
-        private static Dictionary<string, Delegate> _methods = new Dictionary<string, Delegate>
+        private static readonly Dictionary<string, Delegate> Methods = new Dictionary<string, Delegate>
         {
             // Sensors
             ["GetSensorIds"] = new Func<IMyCubeBlock, uint[]>(GetSensorIds),
@@ -278,7 +278,7 @@ namespace DetectionEquipment.Server.PBApi
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
 
-            var valid = new MemorySafeList<long>();
+            var valid = new List<long>();
             var gridSensors = control.GridSensors.Sensors;
             // Validate entityIds
             foreach (var sensor in gridSensors)
