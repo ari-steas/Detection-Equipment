@@ -28,12 +28,12 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         where TLogicType : MyGameLogicComponent, IControlBlockBase
         where TBlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
-        public Dictionary<TLogicType, long[]> SelectedBlocks = new Dictionary<TLogicType, long[]>();
-        public IMyTerminalControlListbox ListBox;
-        public Func<TLogicType, IEnumerable<IMyCubeBlock>> AvailableBlocks;
-        public Action<TLogicType, long[]> OnListChanged;
+        public readonly Dictionary<TLogicType, long[]> SelectedBlocks = new Dictionary<TLogicType, long[]>();
+        public readonly IMyTerminalControlListbox ListBox;
+        private readonly Func<TLogicType, IEnumerable<IMyCubeBlock>> _availableBlocks;
+        private readonly Action<TLogicType, long[]> _onListChanged;
 
-        public readonly string Id;
+        private readonly string _id;
 
         public BlockSelectControl(string id, string tooltip, string description, bool multiSelect, Func<TLogicType, IEnumerable<IMyCubeBlock>> availableBlocks, Action<TLogicType, long[]> onListChanged = null)
         {
@@ -42,14 +42,14 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 tooltip,
                 description,
                 multiSelect,
-                Content,
+                GetContent,
                 OnSelect
                 );
-            AvailableBlocks = availableBlocks;
-            OnListChanged = onListChanged;
+            _availableBlocks = availableBlocks;
+            _onListChanged = onListChanged;
 
-            Id = TerminalControlAdder<TLogicType, TBlockType>.IdPrefix + id;
-            ControlBlockManager.I.BlockControls[Id] = this;
+            _id = TerminalControlAdder<TLogicType, TBlockType>.IdPrefix + id;
+            ControlBlockManager.I.BlockControls[_id] = this;
         }
 
         public void UpdateSelected(IControlBlockBase logic, long[] selected, bool fromNetwork = false)
@@ -63,7 +63,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 selected = Array.Empty<long>();
 
             SelectedBlocks[thisLogic] = selected;
-            OnListChanged?.Invoke(thisLogic, selected);
+            _onListChanged?.Invoke(thisLogic, selected);
 
             if (!fromNetwork)
             {
@@ -72,7 +72,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                     ServerNetwork.SendToEveryoneInSync(new BlockSelectControlPacket
                     {
                         BlockId = logic.CubeBlock.EntityId,
-                        ControlId = Id,
+                        ControlId = _id,
                         Selected = selected
                     }, logic.CubeBlock.GetPosition());
                 }
@@ -81,14 +81,14 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                     ClientNetwork.SendToServer(new BlockSelectControlPacket
                     {
                         BlockId = logic.CubeBlock.EntityId,
-                        ControlId = Id,
+                        ControlId = _id,
                         Selected = selected
                     });
                 }
             }
         }
 
-        private void Content(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> content, List<MyTerminalControlListBoxItem> selected)
+        private void GetContent(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> content, List<MyTerminalControlListBoxItem> selected)
         {
             var logic = block.GameLogic.GetAs<TLogicType>();
             if (logic == null)
@@ -97,11 +97,11 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             if (!SelectedBlocks.ContainsKey(logic))
             {
                 SelectedBlocks[logic] = Array.Empty<long>();
-                OnListChanged?.Invoke(logic, SelectedBlocks[logic]);
+                _onListChanged?.Invoke(logic, SelectedBlocks[logic]);
                 logic.OnClose += () => SelectedBlocks.Remove(logic);
             }
 
-            foreach (var available in AvailableBlocks.Invoke(logic))
+            foreach (var available in _availableBlocks.Invoke(logic))
             {
                 var item = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(available.DisplayNameText), MyStringId.NullOrEmpty, available.EntityId);
                 content.Add(item);

@@ -19,6 +19,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         public override void DoOnce(AggregatorBlock thisLogic)
         {
+            if (!_isDone)
+                ActiveSensors.Clear();
             base.DoOnce(thisLogic);
             ActiveSensors[thisLogic] = new HashSet<BlockSensor>();
         }
@@ -96,9 +98,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     ActiveSensors[logic].Clear();
                     foreach (var sensor in logic.GridSensors.Sensors)
                     {
-                        for (int i = 0; i < selected.Length; i++)
+                        foreach (var entId in selected)
                         {
-                            if (sensor.Block.EntityId != selected[i])
+                            if (sensor.Block.EntityId != entId)
                                 continue;
                             ActiveSensors[logic].Add(sensor);
                             break;

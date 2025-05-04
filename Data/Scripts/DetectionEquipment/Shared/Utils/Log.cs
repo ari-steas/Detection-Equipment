@@ -7,26 +7,26 @@ using VRage.Utils;
 
 namespace DetectionEquipment.Shared.Utils
 {
-    public class Log
+    public static class Log
     {
-        private static IMyModContext ModContext;
-        private static string ModName;
+        private static IMyModContext _modContext;
+        private static string _modName;
         private static TextWriter _writer;
         private static string _indent = "";
 
         public static void Init(IMyModContext context)
         {
-            ModContext = context;
-            ModName = context.ModName.Replace(" ", "");
+            _modContext = context;
+            _modName = context.ModName.Replace(" ", "");
             try
             {
-                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(ModName + ".log");
+                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(_modName + ".log");
 
                 int utcOffset = (DateTime.Now - DateTime.UtcNow).Hours;
 
-                _writer.WriteLine($"{ModName} Debug Log");
+                _writer.WriteLine($"{_modName} Debug Log");
                 _writer.WriteLine($"Local DateTime: {DateTime.Now:G} (UTC {(utcOffset > 0 ? "+" : "")}{utcOffset:00}:{(DateTime.Now - DateTime.UtcNow).Minutes:00})");
-                _writer.WriteLine($"");
+                _writer.WriteLine("");
                 _writer.WriteLine($"Space Engineers v{MyAPIGateway.Session?.Version}");
                 _writer.WriteLine($"Server: {MyAPIGateway.Session?.IsServer} | Client: {!MyAPIGateway.Utilities.IsDedicated}");
                 _writer.WriteLine($"Session: {MyAPIGateway.Session?.Name ?? "MultiplayerSession"} | Client Info: {(string.IsNullOrEmpty(MyAPIGateway.Multiplayer?.MyName) ? null : MyAPIGateway.Multiplayer?.MyName) ?? "DedicatedHost"}::{MyAPIGateway.Multiplayer?.MyId}");
@@ -38,7 +38,7 @@ namespace DetectionEquipment.Shared.Utils
                 throw new Exception("Failed to open log writer - did the previous session unload properly?", ex);
             }
 
-            MyLog.Default.WriteLineAndConsole($@"[{ModName}] - Debug log can be found in %AppData%\Roaming\SpaceEngineers\Storage\DetectionEquipment.log");
+            MyLog.Default.WriteLineAndConsole($@"[{_modName}] - Debug log can be found in %AppData%\Roaming\SpaceEngineers\Storage\DetectionEquipment.log");
         }
 
         public static void Close()
@@ -64,7 +64,7 @@ namespace DetectionEquipment.Shared.Utils
         /// <param name="fatal"></param>
         public static void Exception(string source, Exception exception, bool fatal = false)
         {
-            _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[EXCEPTION]\t{source}\n{exception}");
+            _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[{(fatal ? "CRITICAL " : "")}EXCEPTION]\t{source}\n{exception}");
             _writer?.Flush();
             if (MyAPIGateway.Utilities.IsDedicated)
                 MyLog.Default.WriteLineToConsole($"{source}\n{exception.Message}\n{exception.StackTrace}");
@@ -85,24 +85,24 @@ namespace DetectionEquipment.Shared.Utils
 
         private class CustomCrashModContext : IMyModContext
         {
-            public string ModName { get; set; }
-            public string ModId { get; set; }
-            public string ModServiceName { get; set; }
-            public string ModPath { get; set; }
-            public string ModPathData { get; set; }
-            public bool IsBaseGame { get; set; } = false;
-            public MyObjectBuilder_Checkpoint.ModItem ModItem { get; set; }
+            public string ModName { get; }
+            public string ModId { get; }
+            public string ModServiceName { get; }
+            public string ModPath { get; }
+            public string ModPathData { get; }
+            public bool IsBaseGame { get; }
+            public MyObjectBuilder_Checkpoint.ModItem ModItem { get; }
 
-            public CustomCrashModContext(IMyModContext context, string customInfo)
+            private CustomCrashModContext(IMyModContext context, string customInfo)
             {
                 // we really don't want to throw any exceptions early
                 if (context == null)
                 {
-                    ModName = Log.ModName;
-                    ModId = "CRIT ERR";
-                    ModServiceName = $"CRIT ERR)\n" + customInfo + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
-                    ModPath = "CRIT ERR";
-                    ModPathData = "CRIT ERR";
+                    ModName = Log._modName;
+                    ModId = "HANDLER FAIL";
+                    ModServiceName = "HANDLER FAIL)\n" + customInfo + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
+                    ModPath = "HANDLER FAIL";
+                    ModPathData = "HANDLER FAIL";
                     IsBaseGame = false;
                     ModItem = new MyObjectBuilder_Checkpoint.ModItem();
 
@@ -120,8 +120,9 @@ namespace DetectionEquipment.Shared.Utils
 
             public static void Throw(Exception ex)
             {
+                Log.Info("CustomCrashModContext", "Generating custom exception message and closing log...");
                 Log.Close();
-                var context = new CustomCrashModContext(Log.ModContext,
+                var context = new CustomCrashModContext(Log._modContext,
                     "Please reach out to @aristeas. on discord with logs for help.\n\n" +
                     "Mod: %AppData%\\SpaceEngineers\\Storage\\DetectionEquipment.log \n" +
                     "Game: %AppData%\\SpaceEngineers\\SpaceEngineers_*_*.log\n\n" +

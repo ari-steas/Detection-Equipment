@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Shared.Definitions;
+﻿using System;
+using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
@@ -22,6 +23,7 @@ namespace DetectionEquipment.Client.Sensors
         public static void Init()
         {
             MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
+            MyAPIGateway.Entities.OnEntityAdd += OnEntityRemove;
             MyAPIGateway.Entities.GetEntities(null, e =>
             {
                 OnEntityAdd(e);
@@ -51,6 +53,7 @@ namespace DetectionEquipment.Client.Sensors
         public static void Unload()
         {
             MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
+            MyAPIGateway.Entities.OnEntityAdd -= OnEntityRemove;
             BlockSensorIdMap = null;
             GridBlockSensorsMap = null;
             _delayedInitPackets = null;
@@ -82,12 +85,35 @@ namespace DetectionEquipment.Client.Sensors
 
         private static void OnEntityAdd(VRage.ModAPI.IMyEntity obj)
         {
-            var grid = obj as IMyCubeGrid;
-            if (grid?.Physics == null)
-                return;
-            grid.OnBlockAdded += OnBlockAdded;
-            foreach (var block in grid.GetFatBlocks<IMyCameraBlock>())
-                OnBlockAdded(block.SlimBlock);
+            try
+            {
+                var grid = obj as IMyCubeGrid;
+                if (grid?.Physics == null)
+                    return;
+                GridBlockSensorsMap[grid] = new HashSet<IMyCubeBlock>();
+                grid.OnBlockAdded += OnBlockAdded;
+                foreach (var block in grid.GetFatBlocks<IMyCameraBlock>())
+                    OnBlockAdded(block.SlimBlock);
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("SensorBlockManager", ex, true);
+            }
+        }
+
+        private static void OnEntityRemove(VRage.ModAPI.IMyEntity obj)
+        {
+            try
+            {
+                var grid = obj as IMyCubeGrid;
+                if (grid == null)
+                    return;
+                GridBlockSensorsMap.Remove(grid);
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("SensorBlockManager", ex, true);
+            }
         }
 
         private static void OnBlockAdded(IMySlimBlock block)
