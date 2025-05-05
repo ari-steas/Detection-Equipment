@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<!-- "borrowed" from digi's paint gun mod -->
+  <AmmoMagazines>
+    <AmmoMagazine>
+      <Id>
+        <TypeId>AmmoMagazine</TypeId>
+        <SubtypeId>DetectionToolMag</SubtypeId>
+      </Id>
+      <DisplayName>Detection Tool Ammo (Unused)</DisplayName>
+      <Icon>Textures\GUI\Icons\AstronautBackpack.dds</Icon>
+      <Size>
+        <X>0.001</X>
+        <Y>0.001</Y>
+        <Z>0.001</Z>
+      </Size>
+      <Mass>0.001</Mass>
+      <Volume>0.002</Volume>
+      <Model>Models\Debug\Capsule.mwm</Model>
+      <Capacity>1</Capacity>
+      <AmmoDefinitionId Subtype="DetectionToolBullet" />
+    </AmmoMagazine>
+  </AmmoMagazines>
+  <Ammos>
+    <Ammo xsi:type="MyObjectBuilder_ProjectileAmmoDefinition">
+      <Id>
+        <TypeId>AmmoDefinition</TypeId>
+        <SubtypeId>DetectionToolBullet</SubtypeId>
+      </Id>
+      <BasicProperties>
+        <DesiredSpeed>0</DesiredSpeed>
+        <SpeedVariance>0</SpeedVariance>
+        <MaxTrajectory>0</MaxTrajectory>
+        <BackkickForce>0.0</BackkickForce>
+        <ExplosiveDamageMultiplier>0</ExplosiveDamageMultiplier>
+      </BasicProperties>
+      <ProjectileProperties>
+        <ProjectileType>Bullet</ProjectileType>
+        <ProjectileHitImpulse>0</ProjectileHitImpulse>
+        <ProjectileMassDamage>0</ProjectileMassDamage>
+        <ProjectileHealthDamage>0</ProjectileHealthDamage>
+        <ProjectileTrailScale>0</ProjectileTrailScale>
+        <ProjectileTrailColor x="0" y="0" z="0" />
+        <ProjectileTrailProbability>0</ProjectileTrailProbability>
+        <ProjectileOnHitMaterialParticlesType>Small</ProjectileOnHitMaterialParticlesType>
+        <ProjectileOnHitParticlesType>BasicSmall</ProjectileOnHitParticlesType>
+      </ProjectileProperties>
+    </Ammo>
+  </Ammos>
+</Definitions>

@@ -4,8 +4,6 @@
         <HandItem xsi:type="MyObjectBuilder_HandItemDefinition">
             <Id Type="MyObjectBuilder_AutomaticRifle" Subtype="DetectionToolGun" />
 
-            <WeaponType>Pistol</WeaponType>
-
             <LeftHandOrientation>
                 <X>0.324681967</X>
                 <Y>-0.183467492</Y>
@@ -72,6 +70,7 @@
                 <Y>-0.09</Y>
                 <Z>-0.29</Z>
             </ItemIronsightPosition>
+			
             <ItemOrientation3rd>
                 <X>0</X>
                 <Y>0</Y>
@@ -105,6 +104,7 @@
                 <Y>-0.137324154</Y>
                 <Z>-0.199999988</Z>
             </ItemShootPosition3rd>
+			
             <BlendTime>0.9848932</BlendTime>
             <ShootBlend>0.100000009</ShootBlend>
             <XAmplitudeOffset>-3.95846844</XAmplitudeOffset>
@@ -117,17 +117,13 @@
             <AmplitudeMultiplier3rd>-1</AmplitudeMultiplier3rd>
             <SimulateLeftHandFps xsi:nil="true" />
             <SimulateRightHandFps xsi:nil="true" />
+			
             <FingersAnimation>HoldingWeapon</FingersAnimation>
             <MuzzlePosition>
                 <X>-0.178062677</X>
                 <Y>-0.742383838</Y>
                 <Z>-0.0410914421</Z>
             </MuzzlePosition>
-            <ShootScatter>
-                <X>0</X>
-                <Y>0</Y>
-                <Z>0</Z>
-            </ShootScatter>
             <ScatterSpeed>0.415077746</ScatterSpeed>
             <PhysicalItemId Type="MyObjectBuilder_PhysicalGunObject" Subtype="DetectionToolItem" />
             <LightColor>
@@ -146,6 +142,7 @@
             <ShakeAmountNoTarget>0</ShakeAmountNoTarget>
             <ToolSounds />
             <ToolMaterial>Rifle</ToolMaterial>
+			
             <ItemPositioning>TransformFromAnim</ItemPositioning>
             <ItemPositioning3rd>TransformFromAnim</ItemPositioning3rd>
             <ItemPositioningWalk>TransformFromAnim</ItemPositioningWalk>
@@ -191,28 +188,12 @@
             </Id>
             <ProjectileAmmoData RateOfFire="0" ShootSoundName="" ShotsInBurst="1"/>
             <NoAmmoSoundName></NoAmmoSoundName>
-            <ReloadSoundName></ReloadSoundName>
             <DeviateShotAngle>0</DeviateShotAngle>
-            <DeviateShotAngleAiming>0</DeviateShotAngleAiming>
-            <ReleaseTimeAfterFire>0</ReleaseTimeAfterFire>
-            <MuzzleFlashLifeSpan>0</MuzzleFlashLifeSpan>
-            <UseDefaultMuzzleFlash>false</UseDefaultMuzzleFlash>
-            <DamageMultiplier>0</DamageMultiplier>
-            <RangeMultiplier>0</RangeMultiplier>
-            <UseRandomizedRange>false</UseRandomizedRange>
-            <ReloadTime>0</ReloadTime>
+            <ReleaseTimeAfterFire>500</ReleaseTimeAfterFire>
+            <MuzzleFlashLifeSpan>-1</MuzzleFlashLifeSpan>
             <AmmoMagazines>
-                <AmmoMagazine Subtype="SemiAutoPistolMagazine" />
+                <AmmoMagazine Subtype="DetectionToolMag" />
             </AmmoMagazines>
-            <RecoilJetpackVertical>0</RecoilJetpackVertical>
-            <RecoilJetpackHorizontal>0</RecoilJetpackHorizontal>
-            <RecoilGroundVertical>0</RecoilGroundVertical>
-            <RecoilGroundHorizontal>0</RecoilGroundHorizontal>
-            <ShootDirectionUpdateTime>0</ShootDirectionUpdateTime>
-            <EquipDuration>0</EquipDuration>
-            <ShakeOnActionPrimary>false</ShakeOnActionPrimary>
-            <ShakeOnActionSecondary>false</ShakeOnActionSecondary>
-            <ShakeOnActionTertiary>false</ShakeOnActionTertiary>
         </Weapon>
 	</Weapons>
 </Definitions>

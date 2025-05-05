@@ -16,6 +16,7 @@ namespace DetectionEquipment.Client.Interface
             "IffReflector",
             "DetectionSearchBlock",
             "DetectionTrackerBlock",
+            "DetectionToolItem"
         }; // DefinitionManager can load before the BlockCategoryManager on client and cause an exception.
 
         private static Dictionary<string, string> _subtypeToTypePairing;
@@ -25,9 +26,8 @@ namespace DetectionEquipment.Client.Interface
             _subtypeToTypePairing = new Dictionary<string, string>();
             foreach (var def in MyDefinitionManager.Static.GetAllDefinitions())
             {
-                var blockdef = def as MyCubeBlockDefinition;
-                if (blockdef == null || string.IsNullOrEmpty(blockdef.Id.SubtypeName)) continue;
-                _subtypeToTypePairing[blockdef.Id.SubtypeName] = blockdef.Id.TypeId.ToString().Replace("MyObjectBuilder_", "");
+                if (string.IsNullOrEmpty(def.Id.SubtypeName)) continue;
+                _subtypeToTypePairing[def.Id.SubtypeName] = def.Id.TypeId.ToString().Replace("MyObjectBuilder_", "");
             }
 
             _blockCategory = new GuiBlockCategoryHelper("[Detection Equipment]", "DetectionEquipmentBlockCategory");

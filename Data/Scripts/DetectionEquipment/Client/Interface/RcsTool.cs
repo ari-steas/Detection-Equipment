@@ -74,7 +74,7 @@ namespace DetectionEquipment.Client.Interface
             if (castEnt == null)
                 return true;
 
-            Vector3D position = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
+            Vector3D position = MyAPIGateway.Session.Camera.WorldMatrix.Translation - MyAPIGateway.Session.Camera.WorldMatrix.Forward * 500;
 
             var castGrid = castEnt as IMyCubeGrid;
             if (castGrid != null)
