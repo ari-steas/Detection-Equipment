@@ -11,7 +11,7 @@ jobs:
       - uses: AnarkisGaming/workshop@v1
         with:
           appID: 244850
-          publishedFileID: 3446166220
+          publishedFileID: 3476173167
           changelog: ${{ github.event.head_commit.message }}             
         env:
           STEAM_ACCOUNT_NAME: ${{ secrets.accountname }}
