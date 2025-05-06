@@ -7,8 +7,6 @@ using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Shared.Networking;
 using VRage.Game.Components;
-using VRage.Game.ModAPI.Network;
-using VRage.Sync;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker

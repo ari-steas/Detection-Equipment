@@ -4,7 +4,6 @@ using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
-using System.Linq;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Client.Sensors

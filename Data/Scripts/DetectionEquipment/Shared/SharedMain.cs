@@ -3,9 +3,7 @@ using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
-using VRage.Game;
 using VRage.Game.Components;
-using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared
 {

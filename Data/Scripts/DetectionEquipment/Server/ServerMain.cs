@@ -8,7 +8,6 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
-using Sandbox.Definitions;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;

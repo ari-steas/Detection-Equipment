@@ -4,7 +4,6 @@ using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
-using Sandbox.ModAPI;
 using System;
 using VRage;
 using VRage.Game.Entity;

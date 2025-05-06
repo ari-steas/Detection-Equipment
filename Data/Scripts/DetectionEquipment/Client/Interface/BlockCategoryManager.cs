@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Definitions;
@@ -56,6 +55,7 @@ namespace DetectionEquipment.Client.Interface
         {
             _subtypeToTypePairing = null;
             _blockCategory = null;
+            _bufferBlockSubtypes = null;
             Log.Info("BlockCategoryManager", "Unloaded.");
         }
 

@@ -1,16 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game;
-using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Weapons;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
-using static VRage.Game.MyObjectBuilder_AIComponent;
 
 namespace DetectionEquipment.Client.Interface
 {

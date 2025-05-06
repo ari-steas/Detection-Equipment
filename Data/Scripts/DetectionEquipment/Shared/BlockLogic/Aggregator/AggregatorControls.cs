@@ -6,7 +6,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DetectionEquipment.Shared.Utils;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
