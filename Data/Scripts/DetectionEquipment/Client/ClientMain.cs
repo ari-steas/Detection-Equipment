@@ -6,6 +6,7 @@ using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Client.Interface;
 using System;
 using Sandbox.ModAPI;
+using DetectionEquipment.Client.External;
 
 namespace DetectionEquipment.Client
 {
@@ -28,6 +29,7 @@ namespace DetectionEquipment.Client
                 BlockCategoryManager.Init();
                 CountermeasureManager.Init();
                 RcsTool.Init();
+                WcInteractionManager.Init();
 
                 Log.DecreaseIndent();
                 Log.Info("ClientMain", "Initialized.");
@@ -66,6 +68,7 @@ namespace DetectionEquipment.Client
                 Log.Info("ClientMain", "Start unload...");
                 Log.IncreaseIndent();
 
+                WcInteractionManager.Close();
                 RcsTool.Close();
                 CountermeasureManager.Close();
                 BlockCategoryManager.Close();

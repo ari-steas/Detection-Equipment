@@ -73,10 +73,7 @@ namespace DetectionEquipment.Server
         public void DelayedInit()
         {
             PbApiInitializer.Init();
-            if (ApiManager.WcApi.IsReady)
-                OnWcApiReady();
-            else
-                ApiManager.WcApi.ReadyCallback += OnWcApiReady;
+            ApiManager.WcOnLoadRegisterOrInvoke(OnWcApiReady);
 
             _doneDelayedInit = true;
         }
@@ -150,6 +147,7 @@ namespace DetectionEquipment.Server
         private void OnWcApiReady()
         {
             ApiManager.WcApi.AddScanTargetsAction(GridSensorManager.ScanTargetsAction);
+            Log.Info("ServerMain", "WeaponCore targeting overridden.");
         }
 
         private void OnEntityAdd(IMyEntity obj)

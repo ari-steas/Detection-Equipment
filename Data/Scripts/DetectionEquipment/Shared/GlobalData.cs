@@ -12,8 +12,8 @@ namespace DetectionEquipment.Shared
         // TODO: Make some of these configurable.
         public const ushort ServerNetworkId = 15289;
         public const ushort ClientNetworkId = 15287;
-        public static readonly double SyncRange = MyAPIGateway.Session.SessionSettings.SyncDistance;
-        public static readonly double SyncRangeSq = MyAPIGateway.Session.SessionSettings.SyncDistance * MyAPIGateway.Session.SessionSettings.SyncDistance;
+        public static double SyncRange => MyAPIGateway.Session.SessionSettings.SyncDistance;
+        public static double SyncRangeSq => MyAPIGateway.Session.SessionSettings.SyncDistance * MyAPIGateway.Session.SessionSettings.SyncDistance;
         public static readonly Guid SettingsGuid = new Guid("b4e33a2c-0406-4aea-bf0a-d1ad04266a14");
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
@@ -21,9 +21,9 @@ namespace DetectionEquipment.Shared
         public static float MinLockForWcTarget = 1.0f;
 
         /// <summary>
-        /// Furthest distance a radar can lock onto a target.
+        /// Furthest distance a radar can lock onto a target. Don't increase this too high or syncing will break.
         /// </summary>
-        public static double MaxSensorRange = 250000;
+        public static double MaxSensorRange = 150000;
         /// <summary>
         /// Furthest distance a camera can lock onto a target. Cannot be further than MaxSensorRange.
         /// </summary>
@@ -65,8 +65,14 @@ namespace DetectionEquipment.Shared
 
             if (OverrideSyncDistance)
             {
+                double prevDist = SyncRange;
                 MyAPIGateway.Session.SessionSettings.SyncDistance = (int)Math.Abs(MaxSensorRange);
-                Log.Info("GlobalData", $"Sync distance overriden to {Math.Abs(MaxSensorRange):N0}m.");
+                Log.Info("GlobalData", $"Sync distance overriden from {prevDist/1000d:N1}km to {Math.Abs(MaxSensorRange)/1000d:N1}km.\n" +
+                                       "If you're using this for WeaponCore interaction, make sure to increase MaxHudFocusDistance in the world settings!");
+            }
+            else
+            {
+                Log.Info("GlobalData", $"Sync distance: {SyncRange/1000d:N1}km. If WeaponCore interaction is enabled, a low sync distance may cause problems!");
             }
 
             Log.DecreaseIndent();

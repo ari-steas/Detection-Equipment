@@ -121,7 +121,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         }
 
         private Dictionary<long, List<WorldDetectionInfo>> _groupsCache = new Dictionary<long, List<WorldDetectionInfo>>();
-        private static readonly Stack<List<WorldDetectionInfo>> GroupInfoBuffer = new Stack<List<WorldDetectionInfo>>();
+        public static volatile Stack<List<WorldDetectionInfo>> GroupInfoBuffer = new Stack<List<WorldDetectionInfo>>();
 
         /// <summary>
         /// Groups detection info from a single moment in time.

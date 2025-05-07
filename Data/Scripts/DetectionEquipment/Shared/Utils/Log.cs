@@ -17,16 +17,17 @@ namespace DetectionEquipment.Shared.Utils
         public static void Init(IMyModContext context)
         {
             _modContext = context;
-            _modName = context.ModName.Replace(" ", "");
+            _modName = _modContext.ModName;
             try
             {
-                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(_modName + ".log");
+                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(_modName.Replace(" ", "") + ".log");
 
                 int utcOffset = (DateTime.Now - DateTime.UtcNow).Hours;
 
                 _writer.WriteLine($"{_modName} Debug Log");
+                _writer.WriteLine( "  by Aristeas");
                 _writer.WriteLine($"Local DateTime: {DateTime.Now:G} (UTC {(utcOffset > 0 ? "+" : "")}{utcOffset:00}:{(DateTime.Now - DateTime.UtcNow).Minutes:00})");
-                _writer.WriteLine("");
+                _writer.WriteLine( "");
                 _writer.WriteLine($"Space Engineers v{MyAPIGateway.Session?.Version}");
                 _writer.WriteLine($"Server: {MyAPIGateway.Session?.IsServer} | Client: {!MyAPIGateway.Utilities.IsDedicated}");
                 _writer.WriteLine($"Session: {MyAPIGateway.Session?.Name ?? "MultiplayerSession"} | Client Info: {(string.IsNullOrEmpty(MyAPIGateway.Multiplayer?.MyName) ? null : MyAPIGateway.Multiplayer?.MyName) ?? "DedicatedHost"}::{MyAPIGateway.Multiplayer?.MyId}");

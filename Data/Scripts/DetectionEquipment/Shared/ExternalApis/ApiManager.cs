@@ -28,5 +28,17 @@ namespace DetectionEquipment.Shared.ExternalApis
             Log.DecreaseIndent();
             Log.Info("ApiManager", "Unloaded.");
         }
+
+        /// <summary>
+        /// Registers an action to invoke when the API is ready, or calls it immediately if ready.
+        /// </summary>
+        /// <param name="action"></param>
+        public static void WcOnLoadRegisterOrInvoke(Action action)
+        {
+            if (WcApi.IsReady)
+                action.Invoke();
+            else
+                WcApi.ReadyCallback += action;
+        }
     }
 }

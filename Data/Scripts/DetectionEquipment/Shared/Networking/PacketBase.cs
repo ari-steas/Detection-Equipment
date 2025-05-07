@@ -11,6 +11,7 @@ namespace DetectionEquipment.Shared.Networking
     [ProtoInclude(GlobalData.ServerNetworkId + 4, typeof(CountermeasurePacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 5, typeof(CountermeasureEmitterPacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 6, typeof(SimpleSyncManager.InternalSimpleSyncBothWays))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 7, typeof(WcTargetingPacket))]
     [ProtoContract(UseProtoMembersOnly = true)]
     public abstract class PacketBase
     {

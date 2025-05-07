@@ -98,12 +98,17 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
         }
 
+        /// <summary>
+        /// HAS to be run from main thread. Gets all detections from this aggregator and datalink.
+        /// </summary>
+        /// <returns></returns>
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
+            var infosCache = GroupInfoBuffer.Count > 0 ? GroupInfoBuffer.Pop() : new List<WorldDetectionInfo>();
             lock (_bufferDetections)
             {
                 foreach (var info in _bufferDetections)
-                    _infosCache.Add(info);
+                    infosCache.Add(info);
             }
 
             foreach (var channel in _bufferVisibleAggregators)
@@ -136,21 +141,21 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     lock (aggregator._bufferDetections)
                     {
                         foreach (var info in aggregator._bufferDetections)
-                            _infosCache.Add(info);
+                            infosCache.Add(info);
                     }
                 }
                     
             }
 
-            var detectionSet = AggregateInfos(_infosCache).ToHashSet();
-            _infosCache.Clear();
+            var detectionSet = AggregateInfos(infosCache).ToHashSet();
+            infosCache.Clear();
+            GroupInfoBuffer.Push(infosCache);
 
             return detectionSet;
         }
 
         private bool _isProcessing = false;
         private readonly List<WorldDetectionInfo[]> _parallelCache = new List<WorldDetectionInfo[]>();
-        private readonly List<WorldDetectionInfo> _infosCache = new List<WorldDetectionInfo>();
         public override void UpdateAfterSimulation()
         {
             if (!MyAPIGateway.Session.IsServer)
@@ -172,18 +177,20 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 });
             }
 
+            var infosCache = GroupInfoBuffer.Count > 0 ? GroupInfoBuffer.Pop() : new List<WorldDetectionInfo>();
             foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensors)
             {
                 foreach (var sensorDetection in sensor.Detections)
                 {
                     var detection = new WorldDetectionInfo(sensorDetection);
                     //DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
-                    _infosCache.Add(detection);
+                    infosCache.Add(detection);
                 }
             }
 
-            DetectionCache.Enqueue(AggregateInfos(_infosCache));
-            _infosCache.Clear();
+            DetectionCache.Enqueue(AggregateInfos(infosCache));
+            infosCache.Clear();
+            GroupInfoBuffer.Push(infosCache);
             while (DetectionCache.Count > AggregationTime * 60)
                 DetectionCache.Dequeue();
 

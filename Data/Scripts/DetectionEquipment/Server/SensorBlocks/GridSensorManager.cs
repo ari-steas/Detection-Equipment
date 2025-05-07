@@ -4,9 +4,11 @@ using DetectionEquipment.Shared.Serialization;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
 using VRage.Game.Entity;
@@ -31,24 +33,27 @@ namespace DetectionEquipment.Server.SensorBlocks
         public static void ScanTargetsAction(MyCubeGrid grid, BoundingSphereD sphere, List<MyEntity> targets)
         {
             GridSensorManager gridSensors;
-            if (!ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
-                return;
-            var gridPos = grid.WorldMatrix.Translation;
-            foreach (var aggregator in gridSensors.Aggregators)
+            if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
             {
-                foreach (var target in aggregator.GetAggregatedDetections())
+                var gridPos = grid.WorldMatrix.Translation;
+                foreach (var aggregator in gridSensors.Aggregators)
                 {
-                    var err = target.Error / Vector3D.Distance(gridPos, target.Position);
+                    foreach (var target in aggregator.GetAggregatedDetections())
+                    {
+                        var err = target.Error / Vector3D.Distance(gridPos, target.Position);
 
-                    DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6);
-                    MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}% err", 100000/60);
-                    if (err > GlobalData.MinLockForWcTarget)
-                        continue;
-                    if (target.Entity != null)
-                        targets.Add(target.Entity);
+                        DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
+                        MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}% err", 100000/60);
+                        if (err > GlobalData.MinLockForWcTarget)
+                            continue;
+                        if (target.Entity != null)
+                            targets.Add(target.Entity);
+                    }
                 }
+                MyAPIGateway.Utilities.ShowNotification($"Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.", 100000/60);
+                //Log.Info("GridSensorManager", $"Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.");
             }
-            MyAPIGateway.Utilities.ShowNotification($"Check Target {grid.DisplayNameText} - {targets.Count} found.", 100000/60);
+            ServerNetwork.SendToEveryoneInSync(new WcTargetingPacket(grid, targets), grid.WorldMatrix.Translation);
         }
 
         public GridSensorManager(IMyCubeGrid grid)
