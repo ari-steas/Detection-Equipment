@@ -10,6 +10,7 @@ using System.Linq;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
+using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using VRage.Game;
 using VRage.Game.Components;
@@ -104,7 +105,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         /// <returns></returns>
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
         {
-            var infosCache = GroupInfoBuffer.Count > 0 ? GroupInfoBuffer.Pop() : new List<WorldDetectionInfo>();
+            List<WorldDetectionInfo> infosCache;
+            if (!GroupInfoBuffer.TryPop(out infosCache))
+                infosCache = new List<WorldDetectionInfo>();
+
             lock (_bufferDetections)
             {
                 foreach (var info in _bufferDetections)
@@ -161,50 +165,60 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             if (!MyAPIGateway.Session.IsServer)
                 return;
 
-            if (!_isProcessing)
+            try
             {
-                _isProcessing = true;
-
-                _parallelCache.Clear();
-                _parallelCache.EnsureCapacity(DetectionCache.Count + 1);
-                foreach (var item in DetectionCache)
-                    _parallelCache.Add(item);
-
-                MyAPIGateway.Parallel.Start(() =>
+                if (!_isProcessing)
                 {
-                    CalculateDetections(_parallelCache);
-                    _isProcessing = false;
-                });
-            }
+                    _isProcessing = true;
 
-            var infosCache = GroupInfoBuffer.Count > 0 ? GroupInfoBuffer.Pop() : new List<WorldDetectionInfo>();
-            foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensors)
-            {
-                foreach (var sensorDetection in sensor.Detections)
-                {
-                    var detection = new WorldDetectionInfo(sensorDetection);
-                    //DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
-                    infosCache.Add(detection);
+                    _parallelCache.Clear();
+                    _parallelCache.EnsureCapacity(DetectionCache.Count + 1);
+                    foreach (var item in DetectionCache)
+                        _parallelCache.Add(item);
+
+                    MyAPIGateway.Parallel.Start(() =>
+                    {
+                        CalculateDetections(_parallelCache);
+                        _isProcessing = false;
+                    });
                 }
+
+                List<WorldDetectionInfo> infosCache;
+                if (!GroupInfoBuffer.TryPop(out infosCache))
+                    infosCache = new List<WorldDetectionInfo>();
+
+                foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensors)
+                {
+                    foreach (var sensorDetection in sensor.Detections)
+                    {
+                        var detection = new WorldDetectionInfo(sensorDetection);
+                        //DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
+                        infosCache.Add(detection);
+                    }
+                }
+
+                DetectionCache.Enqueue(AggregateInfos(infosCache));
+                infosCache.Clear();
+                GroupInfoBuffer.Push(infosCache);
+                while (DetectionCache.Count > AggregationTime * 60)
+                    DetectionCache.Dequeue();
+
+                // testing //
+                //MyAPIGateway.Utilities.ShowNotification($"Det: {AggregatedDetections.Count} Cache: {DetectionCache.Count}", 1000/60);
+                //if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
+                //{
+                //    foreach (var detection in _bufferDetections)
+                //    {
+                //        DebugDraw.AddLine(Block.GetPosition(), detection.Position, Color.Green, 0);
+                //        if (detection.Velocity != null)
+                //            DebugDraw.AddLine(detection.Position, detection.Position + detection.Velocity.Value, Color.Blue, 0);
+                //    }
+                //}
             }
-
-            DetectionCache.Enqueue(AggregateInfos(infosCache));
-            infosCache.Clear();
-            GroupInfoBuffer.Push(infosCache);
-            while (DetectionCache.Count > AggregationTime * 60)
-                DetectionCache.Dequeue();
-
-            // testing //
-            //MyAPIGateway.Utilities.ShowNotification($"Det: {AggregatedDetections.Count} Cache: {DetectionCache.Count}", 1000/60);
-            //if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
-            //{
-            //    foreach (var detection in _bufferDetections)
-            //    {
-            //        DebugDraw.AddLine(Block.GetPosition(), detection.Position, Color.Green, 0);
-            //        if (detection.Velocity != null)
-            //            DebugDraw.AddLine(detection.Position, detection.Position + detection.Velocity.Value, Color.Blue, 0);
-            //    }
-            //}
+            catch (Exception ex)
+            {
+                Log.Exception("AggregatorBlock", ex, true); 
+            }
         }
 
         public override void UpdateAfterSimulation10()

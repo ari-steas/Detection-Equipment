@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Shared.Structs;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using VRageMath;
@@ -121,7 +122,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         }
 
         private Dictionary<long, List<WorldDetectionInfo>> _groupsCache = new Dictionary<long, List<WorldDetectionInfo>>();
-        public static volatile Stack<List<WorldDetectionInfo>> GroupInfoBuffer = new Stack<List<WorldDetectionInfo>>();
+        public static volatile ConcurrentStack<List<WorldDetectionInfo>> GroupInfoBuffer = new ConcurrentStack<List<WorldDetectionInfo>>();
 
         /// <summary>
         /// Groups detection info from a single moment in time.
@@ -132,7 +133,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             foreach (var info in infos)
             {
                 if (!_groupsCache.ContainsKey(info.EntityId))
-                    _groupsCache[info.EntityId] = GroupInfoBuffer.Count > 0 ? GroupInfoBuffer.Pop() : new List<WorldDetectionInfo>();
+                {
+                    List<WorldDetectionInfo> set;
+                    if (!GroupInfoBuffer.TryPop(out set))
+                        set = new List<WorldDetectionInfo>();
+                    _groupsCache[info.EntityId] = set;
+                }
                 _groupsCache[info.EntityId].Add(info);
             }
         }

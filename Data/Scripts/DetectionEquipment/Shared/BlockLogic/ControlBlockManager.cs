@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
+﻿using System.Collections.Concurrent;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
@@ -16,7 +17,7 @@ namespace DetectionEquipment.Shared.BlockLogic
         internal static void Load()
         {
             I = new ControlBlockManager();
-            AggregatorBlock.GroupInfoBuffer = new Stack<List<WorldDetectionInfo>>();
+            AggregatorBlock.GroupInfoBuffer = new ConcurrentStack<List<WorldDetectionInfo>>();
             Log.Info("ControlBlockManager", "Ready.");
         }
 
