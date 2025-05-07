@@ -17,6 +17,7 @@ namespace DetectionEquipment.Shared
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
         public static string[] LowRcsSubtypes;
+        public static float MinLockForWcTarget = 1.0f;
 
         internal static void Init()
         {

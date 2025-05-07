@@ -5,7 +5,11 @@ using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Utils;
+using Sandbox.Game.Entities;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
@@ -17,11 +21,35 @@ namespace DetectionEquipment.Server.SensorBlocks
         public readonly IMyCubeGrid Grid;
         public HashSet<BlockSensor> Sensors = new HashSet<BlockSensor>();
         public Dictionary<IMyCubeBlock, uint[]> BlockSensorIdMap = new Dictionary<IMyCubeBlock, uint[]>();
+        public HashSet<AggregatorBlock> Aggregators = new HashSet<AggregatorBlock>();
         public HashSet<VisibilitySet> TrackVisibility = new HashSet<VisibilitySet>();
         public bool HasRadar = false;
 
         private Dictionary<IMyGridGroupData, List<VisibilitySet>> _combineBuffer = new Dictionary<IMyGridGroupData, List<VisibilitySet>>();
         private bool _isUpdateComplete = true;
+
+        public static void ScanTargetsAction(MyCubeGrid grid, BoundingSphereD sphere, List<MyEntity> targets)
+        {
+            GridSensorManager gridSensors;
+            if (!ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
+                return;
+            var gridPos = grid.WorldMatrix.Translation;
+            foreach (var aggregator in gridSensors.Aggregators)
+            {
+                foreach (var target in aggregator.GetAggregatedDetections())
+                {
+                    var err = target.Error / Vector3D.Distance(gridPos, target.Position);
+
+                    DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6);
+                    MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}% err", 100000/60);
+                    if (err > GlobalData.MinLockForWcTarget)
+                        continue;
+                    if (target.Entity != null)
+                        targets.Add(target.Entity);
+                }
+            }
+            MyAPIGateway.Utilities.ShowNotification($"Check Target {grid.DisplayNameText} - {targets.Count} found.", 100000/60);
+        }
 
         public GridSensorManager(IMyCubeGrid grid)
         {
@@ -143,6 +171,12 @@ namespace DetectionEquipment.Server.SensorBlocks
                 BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
                 BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
             }
+
+            var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
+            if (aggregator != null)
+            {
+                Aggregators.Add(aggregator);
+            }
         }
 
         private void OnBlockRemoved(IMySlimBlock obj)
@@ -154,6 +188,12 @@ namespace DetectionEquipment.Server.SensorBlocks
                 BlockSensorIdMap.Remove(cubeBlock);
 
                 HasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
+
+                var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
+                if (aggregator != null)
+                {
+                    Aggregators.Remove(aggregator);
+                }
             }
         }
 

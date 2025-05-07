@@ -1,7 +1,9 @@
 ﻿using DetectionEquipment.Shared.Definitions;
 using System;
 using System.Collections.Generic;
+using DetectionEquipment.Server.Tracking;
 using VRage;
+using VRage.Game.Entity;
 using VRageMath;
 
 using WorldDetTuple = VRage.MyTuple<int, double, double, VRageMath.Vector3D, VRage.MyTuple<VRageMath.Vector3D, double>?, string[]>;
@@ -17,10 +19,14 @@ namespace DetectionEquipment.Shared.Structs
         public double? VelocityVariance;
         public SensorDefinition.SensorType DetectionType;
         public string[] IffCodes;
+        public MyEntity Entity;
 
         public WorldDetectionInfo(DetectionInfo info)
         {
             EntityId = info.Track.EntityId;
+            var eTrack = info.Track as EntityTrack;
+            Entity = eTrack?.Entity;
+
             CrossSection = info.CrossSection;
             Position = info.Sensor.Position + info.Bearing * info.Range;
 
@@ -68,12 +74,16 @@ namespace DetectionEquipment.Shared.Structs
             if (args.Count == 0)
                 throw new Exception("No detection infos provided!");
 
+            MyEntity entity = null;
             long entityId = -1;
             double totalError = 0;
             var allCodes = new List<string>();
             foreach (var info in args)
             {
-                entityId = info.EntityId;
+                if (info.EntityId != -1)
+                    entityId = info.EntityId;
+                if (info.Entity != null)
+                    entity = info.Entity;
                 totalError += info.Error;
                 foreach (var code in info.IffCodes)
                     if (!allCodes.Contains(code))
@@ -102,6 +112,7 @@ namespace DetectionEquipment.Shared.Structs
             return new WorldDetectionInfo
             {
                 EntityId = entityId,
+                Entity = entity,
                 CrossSection = totalCrossSection / args.Count,
                 Position = averagePos,
                 Error = avgDiff,

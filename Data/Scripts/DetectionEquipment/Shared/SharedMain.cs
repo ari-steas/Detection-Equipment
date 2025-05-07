@@ -2,6 +2,7 @@
 using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Utils;
 using VRage.Game.Components;
 
@@ -24,6 +25,7 @@ namespace DetectionEquipment.Shared
                 Log.IncreaseIndent();
 
                 GlobalData.Init();
+                ApiManager.Init();
                 ControlBlockManager.Load();
                 DefinitionManager.Load();
                 DatalinkManager.Load();
@@ -65,6 +67,7 @@ namespace DetectionEquipment.Shared
                 Log.IncreaseIndent();
         
                 GlobalData.Unload();
+                ApiManager.Unload();
                 DatalinkManager.Unload();
                 ControlBlockManager.Unload();
                 DefinitionManager.Unload();

@@ -15,19 +15,18 @@
   <ItemGroup>
     <Compile Remove="Data\**" />
     <Compile Remove="obj\**" />
+    <Compile Remove="Server\SensorBlocks\Definitions\**" />
     <EmbeddedResource Remove="Data\**" />
     <EmbeddedResource Remove="obj\**" />
+    <EmbeddedResource Remove="Server\SensorBlocks\Definitions\**" />
     <None Remove="Data\**" />
     <None Remove="obj\**" />
+    <None Remove="Server\SensorBlocks\Definitions\**" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Mal.Mdk2.ModAnalyzers" Version="*" />
     <PackageReference Include="Mal.Mdk2.References" Version="*" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Server\SensorBlocks\Definitions\" />
   </ItemGroup>
 
   <ItemGroup>

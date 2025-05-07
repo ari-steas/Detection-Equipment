@@ -8,6 +8,7 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
+using DetectionEquipment.Shared.ExternalApis;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -29,7 +30,7 @@ namespace DetectionEquipment.Server
         public Action<IMyCubeBlock> OnBlockPlaced = null;
         public uint HighestSensorId = 0;
 
-        private bool _doneTickInit = false;
+        private bool _doneDelayedInit = false;
 
         public override void LoadData()
         {
@@ -65,6 +66,17 @@ namespace DetectionEquipment.Server
             {
                 Log.Exception("ServerMain", ex, true);
             }
+        }
+
+        public void DelayedInit()
+        {
+            PbApiInitializer.Init();
+            if (ApiManager.WcApi.IsReady)
+                OnWcApiReady();
+            else
+                ApiManager.WcApi.ReadyCallback += OnWcApiReady;
+
+            _doneDelayedInit = true;
         }
 
         protected override void UnloadData()
@@ -107,11 +119,8 @@ namespace DetectionEquipment.Server
 
             try
             {
-                if (!_doneTickInit)
-                {
-                    PbApiInitializer.Init();
-                    _doneTickInit = true;
-                }
+                if (!_doneDelayedInit)
+                    DelayedInit();
 
                 // Safety check for closed tracks that didn't notify
                 {
@@ -134,6 +143,11 @@ namespace DetectionEquipment.Server
             {
                 Log.Exception("ServerMain", ex);
             }
+        }
+
+        private void OnWcApiReady()
+        {
+            ApiManager.WcApi.AddScanTargetsAction(GridSensorManager.ScanTargetsAction);
         }
 
         private void OnEntityAdd(IMyEntity obj)
