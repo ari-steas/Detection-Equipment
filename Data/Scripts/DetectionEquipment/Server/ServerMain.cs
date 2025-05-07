@@ -51,12 +51,14 @@ namespace DetectionEquipment.Server
                     MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
                     MyAPIGateway.Entities.OnEntityRemove += OnEntityRemove;
 
+                    int ct = 0;
                     MyAPIGateway.Entities.GetEntities(null, e =>
                     {
                         OnEntityAdd(e);
+                        ct++;
                         return false;
                     });
-                    Log.Info("ServerMain", "Entities pre-registered.");
+                    Log.Info("ServerMain", $"{ct} entities pre-registered.");
                 }
 
                 Log.DecreaseIndent();

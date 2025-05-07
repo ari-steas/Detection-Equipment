@@ -50,7 +50,7 @@ namespace DetectionEquipment.Shared.Utils
 
         public static void Info(string source, string text)
         {
-            _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[INFO]\t{source}\t{text}");
+            _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[INFO]\t{source}\t{text.Replace("\n", $"\n{DateTime.UtcNow:HH:mm:ss}\t{_indent}\t\t")}");
             _writer?.Flush();
             //if (MyAPIGateway.Utilities.IsDedicated)
             //    MyLog.Default.WriteLineToConsole($"{_indent}[INFO]\t{source}\t{text}");

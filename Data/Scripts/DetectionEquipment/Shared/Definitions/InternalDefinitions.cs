@@ -226,12 +226,16 @@ namespace DetectionEquipment.Shared.Definitions
         public static void Register()
         {
             Log.Info("InternalDefinitions", "Registering...");
+            Log.IncreaseIndent();
+
             foreach (var definitionKvp in SensorDefinitions)
                 DefinitionManager.DefinitionApi.RegisterDefinition( definitionKvp.Key, definitionKvp.Value);
             foreach (var definitionKvp in CountermeasureDefinitions)
                 DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
             foreach (var definitionKvp in CountermeasureEmitterDefinitions)
                 DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+
+            Log.DecreaseIndent();
             Log.Info("InternalDefinitions", "Complete.");
         }
     }

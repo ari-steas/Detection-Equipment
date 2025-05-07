@@ -80,7 +80,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     foreach (var trackKvp in tracksBuffer)
                     {
                         // 500km max track range if radar is present, 50km otherwise
-                        if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (HasRadar ? 500000d * 500000d : 50000d * 50000d))
+                        if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (HasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
                             continue;
 
                         var gT = trackKvp.Value as GridTrack;

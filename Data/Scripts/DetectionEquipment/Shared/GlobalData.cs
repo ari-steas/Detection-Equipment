@@ -9,6 +9,7 @@ namespace DetectionEquipment.Shared
 {
     public static class GlobalData
     {
+        // TODO: Make some of these configurable.
         public const ushort ServerNetworkId = 15289;
         public const ushort ClientNetworkId = 15287;
         public static readonly double SyncRange = MyAPIGateway.Session.SessionSettings.SyncDistance;
@@ -19,9 +20,35 @@ namespace DetectionEquipment.Shared
         public static string[] LowRcsSubtypes;
         public static float MinLockForWcTarget = 1.0f;
 
+        /// <summary>
+        /// Furthest distance a radar can lock onto a target.
+        /// </summary>
+        public static double MaxSensorRange = 250000;
+        /// <summary>
+        /// Furthest distance a camera can lock onto a target. Cannot be further than MaxSensorRange.
+        /// </summary>
+        public static double MaxVisualSensorRange = Math.Max(MaxSensorRange, 50000);
+        /// <summary>
+        /// Required for WeaponCore integration. Increases sync distance to <see cref="MaxSensorRange"/>.
+        /// </summary>
+        public static bool OverrideSyncDistance = true;
+
         internal static void Init()
         {
-            ModContext = SharedMain.I.ModContext;
+            Log.Info("GlobalData", "Start initialize...");
+            Log.IncreaseIndent();
+
+            {
+                ModContext = SharedMain.I.ModContext;
+                string modId = ModContext.ModId.Replace(".sbm", "");
+                long discard;
+
+                Log.Info("GlobalData", "ModContext:\n" +
+                                       $"\tName: {ModContext.ModName}\n" +
+                                       $"\tItem: {(long.TryParse(modId, out discard) ? "https://steamcommunity.com/workshop/filedetails/?id=" : "LocalMod ")}{modId}\n" +
+                                       $"\tService: {ModContext.ModServiceName} (if this isn't steam, please report the mod)");
+            }
+            
 
             {
                 var lowRcsBlocksBuffer = new List<string>();
@@ -36,6 +63,13 @@ namespace DetectionEquipment.Shared
                 Log.Info("GlobalData", $"{LowRcsSubtypes.Length} low-RCS block definitions found.");
             }
 
+            if (OverrideSyncDistance)
+            {
+                MyAPIGateway.Session.SessionSettings.SyncDistance = (int)Math.Abs(MaxSensorRange);
+                Log.Info("GlobalData", $"Sync distance overriden to {Math.Abs(MaxSensorRange):N0}m.");
+            }
+
+            Log.DecreaseIndent();
             Log.Info("GlobalData", "Initial values set.");
         }
 
