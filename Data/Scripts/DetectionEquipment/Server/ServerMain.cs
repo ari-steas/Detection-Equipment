@@ -8,6 +8,7 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.ExternalApis;
 using VRage.Game.Components;
 using VRage.Game.Entity;
@@ -146,8 +147,15 @@ namespace DetectionEquipment.Server
 
         private void OnWcApiReady()
         {
-            ApiManager.WcApi.AddScanTargetsAction(GridSensorManager.ScanTargetsAction);
-            Log.Info("ServerMain", "WeaponCore targeting overridden.");
+            if (GlobalData.ContributeWcTargeting)
+            {
+                ApiManager.WcApi.AddScanTargetsAction(GridSensorManager.ScanTargetsAction);
+                Log.Info("ServerMain", "WeaponCore targeting overridden.");
+            }
+            else
+            {
+                Log.Info("ServerMain", "WeaponCore targeting not overriden.");
+            }
         }
 
         private void OnEntityAdd(IMyEntity obj)

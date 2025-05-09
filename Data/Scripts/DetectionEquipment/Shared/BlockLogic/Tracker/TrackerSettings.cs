@@ -7,11 +7,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
     [ProtoContract]
     internal class TrackerSettings : ControlBlockSettingsBase
     {
-        [ProtoMember(1)] public long[] SelectedAggregators = Array.Empty<long>();
-        [ProtoMember(2)] public long[] SelectedSensors = Array.Empty<long>();
-        [ProtoMember(3)] public float ResetAngleTime = 4;
+        [ProtoMember(1)] private long[] _selectedAggregators = Array.Empty<long>();
+        [ProtoMember(2)] private long[] _selectedSensors = Array.Empty<long>();
+        [ProtoMember(3)] private float _resetAngleTime = 4;
 
-        [ProtoIgnore] public new TrackerBlock AttachedLogic => (TrackerBlock) base.AttachedLogic;
+        [ProtoIgnore] private new TrackerBlock AttachedLogic => (TrackerBlock) base.AttachedLogic;
 
         public TrackerSettings(TrackerBlock logic) : base(logic) { }
 
@@ -21,18 +21,18 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
         protected override void AssignData()
         {
-            TrackerControls.ActiveAggregatorSelect.UpdateSelected(AttachedLogic, SelectedAggregators ?? Array.Empty<long>());
-            TrackerControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, SelectedSensors ?? Array.Empty<long>());
-            AttachedLogic.ResetAngleTime.Value = ResetAngleTime;
+            TrackerControls.ActiveAggregatorSelect.UpdateSelected(AttachedLogic, _selectedAggregators ?? Array.Empty<long>());
+            TrackerControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
+            AttachedLogic.ResetAngleTime.Value = _resetAngleTime;
         }
 
         protected override void RetrieveData()
         {
-            if (!TrackerControls.ActiveAggregatorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out SelectedAggregators))
-                SelectedAggregators = Array.Empty<long>();
-            if (!TrackerControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out SelectedSensors))
-                SelectedSensors = Array.Empty<long>();
-            ResetAngleTime = AttachedLogic.ResetAngleTime.Value;
+            if (!TrackerControls.ActiveAggregatorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedAggregators))
+                _selectedAggregators = Array.Empty<long>();
+            if (!TrackerControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedSensors))
+                _selectedSensors = Array.Empty<long>();
+            _resetAngleTime = AttachedLogic.ResetAngleTime.Value;
         }
     }
 }

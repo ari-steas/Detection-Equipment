@@ -8,6 +8,7 @@ using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
@@ -30,30 +31,44 @@ namespace DetectionEquipment.Server.SensorBlocks
         private Dictionary<IMyGridGroupData, List<VisibilitySet>> _combineBuffer = new Dictionary<IMyGridGroupData, List<VisibilitySet>>();
         private bool _isUpdateComplete = true;
 
-        public static void ScanTargetsAction(MyCubeGrid grid, BoundingSphereD sphere, List<MyEntity> targets)
+        public static void ScanTargetsAction(MyCubeGrid mainGrid, BoundingSphereD sphere, List<MyEntity> targets)
         {
-            GridSensorManager gridSensors;
-            if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
-            {
-                var gridPos = grid.WorldMatrix.Translation;
-                foreach (var aggregator in gridSensors.Aggregators)
-                {
-                    foreach (var target in aggregator.GetAggregatedDetections())
-                    {
-                        var err = target.Error / Vector3D.Distance(gridPos, target.Position);
+            // Vanilla WC targeting
+            if (!GlobalData.OverrideWcTargeting)
+                MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref sphere, targets);
 
-                        DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
-                        MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}% err", 100000/60);
-                        if (err > GlobalData.MinLockForWcTarget)
+            // Check all aggregators on this grid and subgrids
+            GridSensorManager gridSensors;
+            var allGrids = new List<IMyCubeGrid>();
+            mainGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(allGrids);
+            foreach (var grid in allGrids)
+            {
+                if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
+                {
+                    var gridPos = grid.WorldMatrix.Translation;
+                    foreach (var aggregator in gridSensors.Aggregators)
+                    {
+                        if (!aggregator.DoWcTargeting.Value)
                             continue;
-                        if (target.Entity != null)
-                            targets.Add(target.Entity);
+
+                        foreach (var target in aggregator.GetAggregatedDetections())
+                        {
+                            var err = target.Error / Vector3D.Distance(gridPos, target.Position);
+
+                            //DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
+                            //MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}% err", 100000/60);
+                            if (err > GlobalData.MinLockForWcTarget)
+                                continue;
+                            if (target.Entity != null && !targets.Contains(target.Entity))
+                                targets.Add(target.Entity);
+                        }
                     }
+                    //MyAPIGateway.Utilities.ShowNotification($"Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.", 100000/60);
+                    //Log.Info("GridSensorManager", $"Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.");
                 }
-                MyAPIGateway.Utilities.ShowNotification($"Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.", 100000/60);
-                //Log.Info("GridSensorManager", $"Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.");
             }
-            ServerNetwork.SendToEveryoneInSync(new WcTargetingPacket(grid, targets), grid.WorldMatrix.Translation);
+
+            ServerNetwork.SendToEveryoneInSync(new WcTargetingPacket(mainGrid, targets), mainGrid.WorldMatrix.Translation);
         }
 
         public GridSensorManager(IMyCubeGrid grid)

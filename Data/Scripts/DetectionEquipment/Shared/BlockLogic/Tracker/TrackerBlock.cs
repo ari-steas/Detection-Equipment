@@ -58,7 +58,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             if (!MyAPIGateway.Session.IsServer)
                 return;
 
-            if (SourceAggregator == null)
+            if (SourceAggregator == null || !Block.IsWorking)
                 return;
 
             _detectionTrackDict.Clear();

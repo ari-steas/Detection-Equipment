@@ -5,7 +5,6 @@ using ProtoBuf;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.Networking
 {
@@ -46,7 +45,7 @@ namespace DetectionEquipment.Shared.Networking
                         validEnts.Add((MyEntity) possible);
                 }
             }
-            Log.Info("WcTargetingPacket", $"Received targeting packet for {((IMyCubeGrid)grid).CustomName} - {validEnts.Count} of {_visibleTargets?.Length ?? 0} targets valid.");
+            //Log.Info("WcTargetingPacket", $"Received targeting packet for {((IMyCubeGrid)grid).CustomName} - {validEnts.Count} of {_visibleTargets?.Length ?? 0} targets valid.");
             WcInteractionManager.VisibleTargets[grid] = validEnts;
         }
     }

@@ -6,6 +6,7 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Shared.ExternalApis;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
@@ -110,7 +111,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 );
             ActiveSensorSelect.ListBox.Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllSensors ?? true);
 
-            CreateSeperator("DatalinkSeperator");
+            CreateSeperator("DatalinkSeparator");
             CreateLabel(
                 "DatalinkLabel",
                 "Antenna DataLink"
@@ -172,11 +173,37 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     logic.DatalinkInChannels = selected.Where(item => item.UserData != null).Select(item => (int) item.UserData).ToArray();
                 }
                 );
+
+            if (ApiManager.WcApi.IsReady)
+                CreateWcControls();
         }
 
         protected override void CreateTerminalProperties()
         {
 
+        }
+
+        private void CreateWcControls()
+        {
+            CreateSeperator("WcControlSeparator");
+            CreateLabel(
+                "WcControlLabel",
+                "Weapon Integration"
+                );
+            CreateToggle(
+                "WcDoTargetingToggle",
+                "Contribute Targeting Data",
+                "Whether this aggregator should give targeting data to weapons. Pulls from datalink.",
+                block => block.GameLogic.GetAs<AggregatorBlock>().DoWcTargeting.Value,
+                (block, value) => block.GameLogic.GetAs<AggregatorBlock>().DoWcTargeting.Value = value
+                );
+            //CreateToggle(
+            //    "WcUseAllWeapons",
+            //    "Contribute to All Weapons",
+            //    "Whether this aggregator should give targeting data to all grid weapons, or only selected.",
+            //    null,
+            //    null
+            //    );
         }
     }
 }

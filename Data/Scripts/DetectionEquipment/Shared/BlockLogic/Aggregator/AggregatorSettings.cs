@@ -7,18 +7,19 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
     [ProtoContract]
     internal class AggregatorSettings : ControlBlockSettingsBase
     {
-        [ProtoMember(1)] public float AggregationTime = 1f;
-        [ProtoMember(2)] public float DistanceThreshold = 2f;
-        [ProtoMember(3)] public float VelocityErrorThreshold = 32f;
-        [ProtoMember(4)] public float RcsThreshold = 1f;
-        [ProtoMember(5)] public bool AggregateTypes = true;
-        [ProtoMember(6)] public bool UseAllSensors = true;
-        [ProtoMember(7)] public long[] SelectedSensors = Array.Empty<long>();
-        [ProtoMember(8)] public int DatalinkOutChannel = 0;
-        [ProtoMember(9)] public int[] DatalinkInChannels = { 0 };
-        [ProtoMember(10)] public int DatalinkInShareType = 1;
+        [ProtoMember(1)] private float _aggregationTime = 1f;
+        [ProtoMember(2)] private float _distanceThreshold = 2f;
+        [ProtoMember(3)] private float _velocityErrorThreshold = 32f;
+        [ProtoMember(4)] private float _rcsThreshold = 1f;
+        [ProtoMember(5)] private bool _aggregateTypes = true;
+        [ProtoMember(6)] private bool _useAllSensors = true;
+        [ProtoMember(7)] private long[] _selectedSensors = Array.Empty<long>();
+        [ProtoMember(8)] private int _datalinkOutChannel = 0;
+        [ProtoMember(9)] private int[] _datalinkInChannels = { 0 };
+        [ProtoMember(10)] private int _datalinkInShareType = 1;
+        [ProtoMember(11)] private bool _doWcTargeting = true; 
 
-        [ProtoIgnore] public new AggregatorBlock AttachedLogic => (AggregatorBlock) base.AttachedLogic;
+        [ProtoIgnore] private new AggregatorBlock AttachedLogic => (AggregatorBlock) base.AttachedLogic;
 
         public AggregatorSettings(AggregatorBlock logic) : base(logic) { }
 
@@ -28,35 +29,37 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         protected override void AssignData()
         {
-            AttachedLogic.AggregationTime.Value = AggregationTime;
-            AttachedLogic.DistanceThreshold.Value = DistanceThreshold;
-            AttachedLogic.VelocityErrorThreshold.Value = VelocityErrorThreshold;
-            AttachedLogic.RcsThreshold.Value = RcsThreshold;
-            AttachedLogic.AggregateTypes.Value = AggregateTypes;
-            AttachedLogic.UseAllSensors.Value = UseAllSensors;
+            AttachedLogic.AggregationTime.Value = _aggregationTime;
+            AttachedLogic.DistanceThreshold.Value = _distanceThreshold;
+            AttachedLogic.VelocityErrorThreshold.Value = _velocityErrorThreshold;
+            AttachedLogic.RcsThreshold.Value = _rcsThreshold;
+            AttachedLogic.AggregateTypes.Value = _aggregateTypes;
+            AttachedLogic.UseAllSensors.Value = _useAllSensors;
 
-            AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, SelectedSensors ?? Array.Empty<long>());
+            AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
 
-            AttachedLogic.DatalinkOutChannel.Value = DatalinkOutChannel;
-            AttachedLogic.DatalinkInChannels = DatalinkInChannels;
-            AttachedLogic.DatalinkInShareType.Value = DatalinkInShareType;
+            AttachedLogic.DatalinkOutChannel.Value = _datalinkOutChannel;
+            AttachedLogic.DatalinkInChannels = _datalinkInChannels;
+            AttachedLogic.DatalinkInShareType.Value = _datalinkInShareType;
+            AttachedLogic.DoWcTargeting.Value = _doWcTargeting;
         }
 
         protected override void RetrieveData()
         {
-            AggregationTime = AttachedLogic.AggregationTime.Value;
-            DistanceThreshold = AttachedLogic.DistanceThreshold.Value;
-            VelocityErrorThreshold = AttachedLogic.VelocityErrorThreshold.Value;
-            RcsThreshold = AttachedLogic.RcsThreshold.Value;
-            AggregateTypes = AttachedLogic.AggregateTypes.Value;
-            UseAllSensors = AttachedLogic.UseAllSensors.Value;
+            _aggregationTime = AttachedLogic.AggregationTime.Value;
+            _distanceThreshold = AttachedLogic.DistanceThreshold.Value;
+            _velocityErrorThreshold = AttachedLogic.VelocityErrorThreshold.Value;
+            _rcsThreshold = AttachedLogic.RcsThreshold.Value;
+            _aggregateTypes = AttachedLogic.AggregateTypes.Value;
+            _useAllSensors = AttachedLogic.UseAllSensors.Value;
 
-            if (!AggregatorControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out SelectedSensors))
-                SelectedSensors = Array.Empty<long>();
+            if (!AggregatorControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedSensors))
+                _selectedSensors = Array.Empty<long>();
 
-            DatalinkOutChannel = AttachedLogic.DatalinkOutChannel.Value;
-            DatalinkInChannels = AttachedLogic.DatalinkInChannels;
-            DatalinkInShareType = AttachedLogic.DatalinkInShareType.Value;
+            _datalinkOutChannel = AttachedLogic.DatalinkOutChannel.Value;
+            _datalinkInChannels = AttachedLogic.DatalinkInChannels;
+            _datalinkInShareType = AttachedLogic.DatalinkInShareType.Value;
+            _doWcTargeting = AttachedLogic.DoWcTargeting.Value;
         }
     }
 }

@@ -32,6 +32,14 @@ namespace DetectionEquipment.Shared
         /// Required for WeaponCore integration. Increases sync distance to <see cref="MaxSensorRange"/>.
         /// </summary>
         public static bool OverrideSyncDistance = true;
+        /// <summary>
+        /// Should aggregators be able to provide targeting to WeaponCore guns?
+        /// </summary>
+        public static bool ContributeWcTargeting = true;
+        /// <summary>
+        /// Should vanilla WeaponCore magic targeting be disabled? If true, forces <see cref="ContributeWcTargeting"/> enabled.
+        /// </summary>
+        public static bool OverrideWcTargeting = true;
 
         internal static void Init()
         {
@@ -73,6 +81,16 @@ namespace DetectionEquipment.Shared
             else
             {
                 Log.Info("GlobalData", $"Sync distance: {SyncRange/1000d:N1}km. If WeaponCore interaction is enabled, a low sync distance may cause problems!");
+            }
+
+            {
+                ContributeWcTargeting |= OverrideWcTargeting;
+                if (OverrideWcTargeting)
+                    Log.Info("GlobalData", "Overriding WC targeting, if present.");
+                else if (ContributeWcTargeting)
+                    Log.Info("GlobalData", "Contributing to WC targeting, if present.");
+                else
+                    Log.Info("GlobalData", "Not contributing to WC targeting, if present.");
             }
 
             Log.DecreaseIndent();

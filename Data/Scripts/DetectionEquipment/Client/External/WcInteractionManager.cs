@@ -33,8 +33,21 @@ namespace DetectionEquipment.Client.External
 
         private static void OnWcApiReady()
         {
-            ApiManager.WcApi.AddScanTargetsAction(ScanTargetsAction);
-            Log.Info("WcInteractionManager", "WeaponCore targeting overridden.");
+            if (MyAPIGateway.Session.IsServer)
+            {
+                Log.Info("WcInteractionManager", "WeaponCore targeting not overridden (is server).");
+                return;
+            }
+
+            if (GlobalData.ContributeWcTargeting)
+            {
+                ApiManager.WcApi.AddScanTargetsAction(ScanTargetsAction);
+                Log.Info("WcInteractionManager", "WeaponCore targeting overridden.");
+            }
+            else
+            {
+                Log.Info("WcInteractionManager", "WeaponCore targeting not overridden.");
+            }
         }
 
         private static void ScanTargetsAction(MyCubeGrid grid, BoundingSphereD sphere, List<MyEntity> targets)

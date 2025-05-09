@@ -27,7 +27,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
         public override void UpdateAfterSimulation()
         {
-            if (!MyAPIGateway.Session.IsServer)
+            if (!MyAPIGateway.Session.IsServer || !Block.IsWorking)
                 return;
 
             foreach (var sensor in ControlledSensors)

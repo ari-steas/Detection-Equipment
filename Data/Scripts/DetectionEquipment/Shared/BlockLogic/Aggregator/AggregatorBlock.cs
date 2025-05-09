@@ -31,6 +31,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public MySync<bool, SyncDirection.BothWays> UseAllSensors;
         public MySync<int, SyncDirection.BothWays> DatalinkOutChannel;
         public SimpleSync<int> DatalinkInShareType;
+        public SimpleSync<bool> DoWcTargeting;
         private int _prevDatalinkOutChannel = -1;
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
@@ -84,6 +85,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 DatalinkManager.RegisterAggregator(this, sync.Value, _prevDatalinkOutChannel);
                 _prevDatalinkOutChannel = sync.Value;
             };
+            DoWcTargeting = new SimpleSync<bool>(this, true);
 
             new AggregatorControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();

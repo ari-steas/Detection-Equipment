@@ -6,14 +6,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
     [ProtoContract]
     internal class IffReflectorSettings : ControlBlockSettingsBase
     {
-        [ProtoMember(1)] public string IffCode = "";
-        [ProtoMember(2)] public bool ReturnHash = true;
+        [ProtoMember(1)] private string _iffCode = "";
+        [ProtoMember(2)] private bool _returnHash = true;
 
-        [ProtoIgnore] public new IffReflectorBlock AttachedLogic => (IffReflectorBlock) base.AttachedLogic;
+        [ProtoIgnore] private new IffReflectorBlock AttachedLogic => (IffReflectorBlock) base.AttachedLogic;
 
         public IffReflectorSettings(IffReflectorBlock logic) : base(logic)
         {
-            IffCode = logic.CubeBlock.CubeGrid.CustomName;
+            _iffCode = logic.CubeBlock.CubeGrid.CustomName;
         }
 
         protected IffReflectorSettings() : base() { }
@@ -22,14 +22,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
         protected override void AssignData()
         {
-            AttachedLogic.IffCode.Value = IffCode;
-            AttachedLogic.ReturnHash.Value = ReturnHash;
+            AttachedLogic.IffCode.Value = _iffCode;
+            AttachedLogic.ReturnHash.Value = _returnHash;
         }
 
         protected override void RetrieveData()
         {
-            IffCode = AttachedLogic.IffCode.Value;
-            ReturnHash = AttachedLogic.ReturnHash.Value;
+            _iffCode = AttachedLogic.IffCode.Value;
+            _returnHash = AttachedLogic.ReturnHash.Value;
         }
     }
 }

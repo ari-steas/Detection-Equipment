@@ -9,7 +9,7 @@ namespace DetectionEquipment.Shared.BlockLogic
     [ProtoContract]
     internal abstract class ControlBlockSettingsBase
     {
-        [ProtoIgnore] public IControlBlockBase AttachedLogic { get; private set;}
+        [ProtoIgnore] protected IControlBlockBase AttachedLogic { get; private set;}
 
         public ControlBlockSettingsBase(IControlBlockBase logic)
         {
