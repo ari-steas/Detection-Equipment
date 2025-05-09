@@ -71,6 +71,11 @@ namespace DetectionEquipment.Server.SensorBlocks
             ServerNetwork.SendToEveryoneInSync(new WcTargetingPacket(mainGrid, targets), mainGrid.WorldMatrix.Translation);
         }
 
+        public static bool ValidateWeaponTarget(IMyTerminalBlock weapon, int weaponId, MyEntity target)
+        {
+            return true;
+        }
+
         public GridSensorManager(IMyCubeGrid grid)
         {
             Grid = grid;

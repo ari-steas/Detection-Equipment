@@ -42,12 +42,18 @@ namespace DetectionEquipment.Client.External
             if (GlobalData.ContributeWcTargeting)
             {
                 ApiManager.WcApi.AddScanTargetsAction(ScanTargetsAction);
+                ApiManager.WcApi.SetValidateWeaponTargetFunc(ValidateWeaponTarget);
                 Log.Info("WcInteractionManager", "WeaponCore targeting overridden.");
             }
             else
             {
                 Log.Info("WcInteractionManager", "WeaponCore targeting not overridden.");
             }
+        }
+
+        private static bool ValidateWeaponTarget(IMyTerminalBlock weapon, int weaponId, MyEntity target)
+        {
+            return true;
         }
 
         private static void ScanTargetsAction(MyCubeGrid grid, BoundingSphereD sphere, List<MyEntity> targets)

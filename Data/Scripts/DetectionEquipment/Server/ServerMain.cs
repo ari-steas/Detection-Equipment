@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.ExternalApis;
+using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -150,6 +151,7 @@ namespace DetectionEquipment.Server
             if (GlobalData.ContributeWcTargeting)
             {
                 ApiManager.WcApi.AddScanTargetsAction(GridSensorManager.ScanTargetsAction);
+                ApiManager.WcApi.SetValidateWeaponTargetFunc(GridSensorManager.ValidateWeaponTarget);
                 Log.Info("ServerMain", "WeaponCore targeting overridden.");
             }
             else

@@ -11,8 +11,15 @@ namespace DetectionEquipment.Shared.ExternalApis
         {
             Log.IncreaseIndent();
 
-            WcApi = new WcApi.WcApi();
-            WcApi.Load(() => Log.Info("WcApi", "Ready."));
+            try
+            {
+                WcApi = new WcApi.WcApi();
+                WcApi.Load(() => Log.Info("WcApi", "Ready."));
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("ApiManager", new Exception("Failed to load WcApi!", ex));
+            }
 
             Log.DecreaseIndent();
             Log.Info("ApiManager", "Ready.");

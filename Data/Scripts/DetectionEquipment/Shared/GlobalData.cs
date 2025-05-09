@@ -18,18 +18,17 @@ namespace DetectionEquipment.Shared
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
         public static string[] LowRcsSubtypes;
-        public static float MinLockForWcTarget = 1.0f;
 
         /// <summary>
-        /// Furthest distance a radar can lock onto a target. Don't increase this too high or syncing will break.
+        /// Furthest distance (in meters) a radar can lock onto a target. Don't increase this too high or syncing will break.
         /// </summary>
         public static double MaxSensorRange = 150000;
         /// <summary>
-        /// Furthest distance a camera can lock onto a target. Cannot be further than MaxSensorRange.
+        /// Furthest distance (in meters) a camera can lock onto a target. Cannot be further than MaxSensorRange.
         /// </summary>
         public static double MaxVisualSensorRange = Math.Max(MaxSensorRange, 50000);
         /// <summary>
-        /// Required for WeaponCore integration. Increases sync distance to <see cref="MaxSensorRange"/>.
+        /// Required for extended-range WeaponCore integration. Increases sync distance to <see cref="MaxSensorRange"/>.
         /// </summary>
         public static bool OverrideSyncDistance = true;
         /// <summary>
@@ -40,6 +39,10 @@ namespace DetectionEquipment.Shared
         /// Should vanilla WeaponCore magic targeting be disabled? If true, forces <see cref="ContributeWcTargeting"/> enabled.
         /// </summary>
         public static bool OverrideWcTargeting = true;
+        /// <summary>
+        /// Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance
+        /// </summary>
+        public static float MinLockForWcTarget = 1.0f;
 
         internal static void Init()
         {
