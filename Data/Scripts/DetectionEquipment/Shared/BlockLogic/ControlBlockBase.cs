@@ -4,6 +4,7 @@ using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;
+using DetectionEquipment.Client.Interface;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;

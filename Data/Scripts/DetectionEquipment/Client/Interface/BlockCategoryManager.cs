@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Definitions;
@@ -11,11 +12,7 @@ namespace DetectionEquipment.Client.Interface
         private static GuiBlockCategoryHelper _blockCategory;
         private static HashSet<string> _bufferBlockSubtypes = new HashSet<string>
         {
-            "DetectionAggregatorBlock",
-            "IffReflector",
-            "DetectionSearchBlock",
-            "DetectionTrackerBlock",
-            "DetectionToolItem"
+            // Everything should be automatically added, but if not, put its subtype here.
         }; // DefinitionManager can load before the BlockCategoryManager on client and cause an exception.
 
         private static Dictionary<string, string> _subtypeToTypePairing;
@@ -27,12 +24,13 @@ namespace DetectionEquipment.Client.Interface
             {
                 if (string.IsNullOrEmpty(def.Id.SubtypeName)) continue;
                 _subtypeToTypePairing[def.Id.SubtypeName] = def.Id.TypeId.ToString().Replace("MyObjectBuilder_", "");
+                if (def.Context?.ModPath == GlobalData.ModContext.ModPath) // Adds all blocks from this mod automatically
+                    RegisterFromSubtype(def.Id.SubtypeName);
             }
 
             _blockCategory = new GuiBlockCategoryHelper("[Detection Equipment]", "DetectionEquipmentBlockCategory");
             foreach (var item in _bufferBlockSubtypes)
                 _blockCategory.AddBlock(item);
-            _bufferBlockSubtypes.Clear();
 
             Log.Info("BlockCategoryManager", "Initialized.");
         }
@@ -40,15 +38,19 @@ namespace DetectionEquipment.Client.Interface
         public static void RegisterFromDefinition(SensorDefinition definition)
         {
             foreach (var subtype in definition.BlockSubtypes)
-                if (_bufferBlockSubtypes.Add(subtype) && _blockCategory != null)
-                    _blockCategory.AddBlock(subtype);
+                RegisterFromSubtype(subtype);
         }
 
         public static void RegisterFromDefinition(CountermeasureEmitterDefinition definition)
         {
             foreach (var subtype in definition.BlockSubtypes)
-                if (_bufferBlockSubtypes.Add(subtype) && _blockCategory != null)
-                    _blockCategory.AddBlock(subtype);
+                RegisterFromSubtype(subtype);
+        }
+
+        public static void RegisterFromSubtype(string subtypeId)
+        {
+            if (_bufferBlockSubtypes.Add(subtypeId) && _blockCategory != null)
+                _blockCategory.AddBlock(subtypeId);
         }
 
         public static void Close()
@@ -78,6 +80,7 @@ namespace DetectionEquipment.Client.Interface
 
             public void AddBlock(string subtypeId)
             {
+                Log.IncreaseIndent();
                 string typeId;
                 if (_subtypeToTypePairing.TryGetValue(subtypeId, out typeId)) // keen broke block category items with just subtypeid
                 {
@@ -89,6 +92,7 @@ namespace DetectionEquipment.Client.Interface
                     _category.ItemIds.Add(subtypeId + "/(null)");
                     Log.Info("GuiBlockCategoryHelper", $"Added {subtypeId + "/(null)"}");
                 }
+                Log.DecreaseIndent();
 
                 //foreach (var _cat in MyDefinitionManager.Static.GetCategories().Values)
                 //{

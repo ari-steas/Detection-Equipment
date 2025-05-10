@@ -103,13 +103,13 @@ namespace DetectionEquipment.Shared.Networking
             sync.SyncId = id;
 
             SyncIdMap.Add(sync.SyncId, sync);
-            Log.Info("SimpleSyncManager", $"Registered SimpleSync {sync.SyncId} on {sync.Component.GetType().Name}");
+            //Log.Info("SimpleSyncManager", $"Registered SimpleSync {sync.SyncId} on {sync.Component.GetType().Name}");
         }
 
         public static void UnregisterSync(ISimpleSync sync)
         {
             SyncIdMap.Remove(sync.SyncId);
-            Log.Info("SimpleSyncManager", $"Unregistered SimpleSync {sync.SyncId}");
+            //Log.Info("SimpleSyncManager", $"Unregistered SimpleSync {sync.SyncId}");
         }
         
         public static void Close()
