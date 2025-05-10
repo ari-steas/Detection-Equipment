@@ -30,6 +30,7 @@ namespace DetectionEquipment.Client
                 CountermeasureManager.Init();
                 RcsTool.Init();
                 WcInteractionManager.Init();
+                ModderNotification.Init();
 
                 Log.DecreaseIndent();
                 Log.Info("ClientMain", "Initialized.");
@@ -51,6 +52,7 @@ namespace DetectionEquipment.Client
                 SensorBlockManager.Update();
                 CountermeasureManager.Update();
                 RcsTool.Update();
+                ModderNotification.Update();
             }
             catch (Exception ex)
             {
