@@ -69,23 +69,30 @@ namespace DetectionEquipment.Server.Sensors
 
             double signalToNoiseRatio;
             {
-                double lambda = 299792458 / Definition.RadarProperties.Frequency;
+                const double c = 299792458;
+                const double fourPi3 = 64 * Math.PI * Math.PI * Math.PI;
+                const double bmConstant = 1.38E-23;
+                const double inherentNoise = 950;
+
+                double lambda = c / Definition.RadarProperties.Frequency;
                 double outputDensity = (2 * Math.PI) / Aperture; // Inverse output density
-                double receiverAreaAtAngle = Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea; // If the aperture is more than 180 degrees, assume that it's a spheroid.
+                // If the aperture is more than 180 degrees, assume that it's a spheroid.
+                double receiverAreaAtAngle = Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
 
                 //            4 * pi * receiverArea
-                // ----------------------------------------------
-                // lambda^2 * angleOffsetScalar * outputDensity^3
+                // ------------------------------------------------
+                //  lambda^2 * angleOffsetScalar * outputDensity^3
                 double gain = 4 * Math.PI * receiverAreaAtAngle / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
 
                 // Can make this fancier if I want later.
                 // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
+                //            power_net * gain^2 * lambda^2 * rcs
+                // --------------------------------------------------------
+                //  (4pi)^3 * range^4 * boltzmann * noise_system * bandwidth
                 signalToNoiseRatio = MathUtils.ToDecibels(
-                    // netpower * gain^2 * lambda^2 * rcs
                     (Definition.MaxPowerDraw * Definition.RadarProperties.PowerEfficiencyModifier * gain * gain * lambda * lambda * visibilitySet.RadarVisibility)
                     /
-                    // 4pi^3 * range^4 * boltzmann * systemNoise * bandwidth
-                    (1984.40171 * targetDistanceSq * targetDistanceSq * 1.38E-23 * (950 + CountermeasureNoise) * Definition.RadarProperties.Bandwidth)
+                    (fourPi3 * targetDistanceSq * targetDistanceSq * bmConstant * (inherentNoise + CountermeasureNoise) * Definition.RadarProperties.Bandwidth)
                     );
             }
 
