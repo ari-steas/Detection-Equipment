@@ -40,16 +40,28 @@ namespace DetectionEquipment.Shared.Definitions
         /// Maximum active power draw.
         /// </summary>
         [ProtoMember(7)] public double MaxPowerDraw = 0;
+        /// <summary>
+        /// Multiplier for bearing error
+        /// </summary>
+        [ProtoMember(8)] public double BearingErrorModifier = 1;
+        /// <summary>
+        /// Multiplier for range error
+        /// </summary>
+        [ProtoMember(9)] public double RangeErrorModifier = 1;
+        [ProtoMember(10)] public RadarPropertiesDefinition RadarProperties = new RadarPropertiesDefinition();
 
+        /// <summary>
+        /// Defines properties for subpart-based movement.
+        /// </summary>
         [ProtoContract]
         public class SensorMovementDefinition
         {
             /// <summary>
-            /// Azimuth subpart name. Can be anywhere in heirarchy.
+            /// Azimuth subpart name. Can be anywhere in hierarchy.
             /// </summary>
             [ProtoMember(1)] public string AzimuthPart = "";
             /// <summary>
-            /// Elevation subpart name - required for movement. Can be anywhere in heirarchy.
+            /// Elevation subpart name - required for movement. Can be anywhere in hierarchy.
             /// </summary>
             [ProtoMember(2)] public string ElevationPart = "";
             /// <summary>
@@ -81,6 +93,30 @@ namespace DetectionEquipment.Shared.Definitions
             [ProtoIgnore] public bool CanElevateFull => MaxElevation >= Math.PI && MinElevation <= -Math.PI;
         }
 
+        /// <summary>
+        /// Defines radar-specific properties for passive and active radars.
+        /// </summary>
+        [ProtoContract]
+        public class RadarPropertiesDefinition
+        {
+            /// <summary>
+            /// Receiver area, in square meters.
+            /// </summary>
+            [ProtoMember(1)] public double ReceiverArea = 2.5 * 2.5;
+            /// <summary>
+            /// Multiplier on power output to power input. Only applies to active radars.
+            /// </summary>
+            [ProtoMember(2)] public double PowerEfficiencyModifier = 2.5E-16;
+            /// <summary>
+            /// Radar bandwidth. Only applies to active radars.
+            /// </summary>
+            [ProtoMember(3)] public double Bandwidth = 1.67E6;
+            /// <summary>
+            /// Radar frequency. Only applies to active radars.
+            /// </summary>
+            [ProtoMember(4)] public double Frequency = 2800E6;
+        }
+
         public enum SensorType
         {
             None = 0,
@@ -90,6 +126,7 @@ namespace DetectionEquipment.Shared.Definitions
             Infrared = 4,
         }
 
+        // TODO: Add new properties
         public static explicit operator SensorDefTuple(SensorDefinition d) => new SensorDefTuple(
                 (int) d.Type,
                 d.MaxAperture,

@@ -30,6 +30,7 @@ namespace DetectionEquipment.Server.Sensors
             AttachedEntity = attachedEntity;
             Sensors.Add(this);
             Definition = definition;
+            Aperture = definition.MaxAperture;
 
             ServerMain.I.SensorIdMap[Id] = this;
         }
@@ -43,12 +44,6 @@ namespace DetectionEquipment.Server.Sensors
         private PassiveRadarSensor() { }
 
         public double Aperture { get; set; } = Math.PI;
-        public double RecieverArea { get; set; } = 2.5*2.5;
-
-        public double BearingErrorModifier { get; set; } = 0.1;
-
-        public double RangeErrorModifier { get; set; } = 0.0001;
-        public double MinStableSignal = 30; // Minimum signal at which there is zero error, in dB
 
         public DetectionInfo? GetDetectionInfo(ITrack track)
         {
@@ -87,17 +82,17 @@ namespace DetectionEquipment.Server.Sensors
                 if (angleToTarget > passiveSensor.Aperture)
                     continue;
 
-                double signalToNoiseRatio = sensor.SignalRatioAtTarget(passiveSensor.Position, passiveSensor.Aperture < Math.PI ? passiveSensor.RecieverArea * Math.Cos(angleToTarget) : passiveSensor.RecieverArea);
+                double signalToNoiseRatio = sensor.SignalRatioAtTarget(passiveSensor.Position, passiveSensor.Aperture < Math.PI ? passiveSensor.Definition.RadarProperties.ReceiverArea * Math.Cos(angleToTarget) : passiveSensor.Definition.RadarProperties.ReceiverArea);
 
                 double range = bearing.Normalize();
 
                 if (signalToNoiseRatio < 0)
                     continue;
 
-                double maxBearingError = passiveSensor.BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / passiveSensor.MinStableSignal, 0, 1));
+                double maxBearingError = passiveSensor.Definition.BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / passiveSensor.Definition.DetectionThreshold, 0, 1));
                 bearing = MathUtils.RandomCone(bearing, maxBearingError);
 
-                double maxRangeError = range * passiveSensor.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / passiveSensor.MinStableSignal, 0, 1));
+                double maxRangeError = range * passiveSensor.Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / passiveSensor.Definition.DetectionThreshold, 0, 1));
                 range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
                 passiveSensor._queuedRadarHits[sensor.AttachedEntityId()] = new DetectionInfo

@@ -26,8 +26,6 @@ namespace DetectionEquipment.Server.Sensors
         double Aperture { get; set; }
         SensorDefinition Definition { get; }
 
-        double BearingErrorModifier { get; set; }
-        double RangeErrorModifier { get; set; }
         double CountermeasureNoise { get; set; }
 
         Action<LocalDetTuple> OnDetection { get; set; }

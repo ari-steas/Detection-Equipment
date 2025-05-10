@@ -19,9 +19,6 @@ namespace DetectionEquipment.Server.Sensors
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
 
         public bool IsInfrared = false;
-        public double BearingErrorModifier { get; set; } = 0.1;
-        public double RangeErrorModifier { get; set; } = 5;
-        public double MinVisibility = 0.001;
         public double CountermeasureNoise { get; set; } = 0;
 
         public VisualSensor(SensorDefinition definition)
@@ -29,6 +26,7 @@ namespace DetectionEquipment.Server.Sensors
             Id = ServerMain.I.HighestSensorId++;
             IsInfrared = definition.Type == SensorDefinition.SensorType.Infrared;
             Definition = definition;
+            Aperture = definition.MaxAperture;
             
             ServerMain.I.SensorIdMap[Id] = this;
         }
@@ -55,15 +53,15 @@ namespace DetectionEquipment.Server.Sensors
             double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
-            if (targetSizeRatio < MinVisibility)
+            if (targetSizeRatio < Definition.DetectionThreshold)
                 return null;
 
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);
 
-            double maxBearingError = Aperture/2 * BearingErrorModifier * errorScalar + CountermeasureNoise/100;
+            double maxBearingError = Aperture/2 * Definition.BearingErrorModifier * errorScalar + CountermeasureNoise/100;
             bearing = MathUtils.RandomCone(bearing, maxBearingError);
 
-            double maxRangeError = Math.Sqrt(range) * RangeErrorModifier * errorScalar + CountermeasureNoise/100;
+            double maxRangeError = Math.Sqrt(range) * Definition.RangeErrorModifier * errorScalar + CountermeasureNoise/100;
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
             OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(visibility, range, maxRangeError, maxBearingError, bearing, Array.Empty<string>()));

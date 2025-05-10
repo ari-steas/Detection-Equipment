@@ -22,6 +22,8 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxAperture = Math.PI/4,
                 MinAperture = Math.PI/16,
                 DetectionThreshold = 0.001,
+                BearingErrorModifier = 0.1,
+                RangeErrorModifier = 2.5,
                 MaxPowerDraw = -1,
                 Movement = null,
             },
@@ -38,6 +40,8 @@ namespace DetectionEquipment.Shared.Definitions
                 MinAperture = MathHelper.ToRadians(1),
                 DetectionThreshold = 30,
                 MaxPowerDraw = 14000000,
+                BearingErrorModifier = 0.1,
+                RangeErrorModifier = 0.0001,
                 Movement = new SensorMovementDefinition
                 {
                     AzimuthPart = "azimuth",
@@ -50,6 +54,13 @@ namespace DetectionEquipment.Shared.Definitions
                     MaxElevation = Math.PI/2,
                     MinElevation = -Math.PI/8,
                 },
+                RadarProperties = new RadarPropertiesDefinition
+                {
+                    ReceiverArea = 4.9 * 2.7,
+                    PowerEfficiencyModifier = 0.00000000000000025,
+                    Bandwidth = 1.67E6,
+                    Frequency = 2800E6,
+                }
             },
 
             // SimplePassiveRadar
@@ -64,7 +75,13 @@ namespace DetectionEquipment.Shared.Definitions
                 MinAperture = Math.PI,
                 DetectionThreshold = 30,
                 MaxPowerDraw = -1,
+                BearingErrorModifier = 0.1,
+                RangeErrorModifier = 0.0001,
                 Movement = null,
+                RadarProperties = new RadarPropertiesDefinition
+                {
+                    ReceiverArea = 2.5 * 2.5,
+                }
             },
         };
 

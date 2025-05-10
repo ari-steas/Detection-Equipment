@@ -99,27 +99,14 @@ namespace DetectionEquipment.Server.SensorBlocks
             switch (definition.Type)
             {
                 case SensorType.Radar:
-                    Sensor = new RadarSensor(block, definition)
-                    {
-                        Aperture = definition.MaxAperture,
-                        MinStableSignal = definition.DetectionThreshold,
-                        Power = definition.MaxPowerDraw,
-                    };
+                    Sensor = new RadarSensor(block, definition);
                     break;
                 case SensorType.PassiveRadar:
-                    Sensor = new PassiveRadarSensor(block, definition)
-                    {
-                        Aperture = definition.MaxAperture,
-                        MinStableSignal = definition.DetectionThreshold,
-                    };
+                    Sensor = new PassiveRadarSensor(block, definition);
                     break;
                 case SensorType.Optical:
                 case SensorType.Infrared:
-                    Sensor = new VisualSensor(definition)
-                    {
-                        Aperture = definition.MaxAperture,
-                        MinVisibility = definition.DetectionThreshold,
-                    };
+                    Sensor = new VisualSensor(definition);
                     break;
                 default:
                     throw new Exception($"Invalid SensorType {definition.Type}");
