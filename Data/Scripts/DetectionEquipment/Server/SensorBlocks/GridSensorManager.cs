@@ -73,7 +73,21 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public static bool ValidateWeaponTarget(IMyTerminalBlock weapon, int weaponId, MyEntity target)
         {
-            return true;
+            if (!GlobalData.OverrideWcTargeting)
+                return true;
+
+            foreach (var aggregatorSet in AggregatorControls.ActiveWeapons)
+            {
+                if (!aggregatorSet.Key.UseAllWeapons && !aggregatorSet.Value.Contains(weapon))
+                    continue;
+                lock (aggregatorSet.Key.LastDetectionSet)
+                {
+                    foreach (var item in aggregatorSet.Key.LastDetectionSet)
+                        if (item.Entity == target)
+                            return true;
+                }
+            }
+            return false;
         }
 
         public GridSensorManager(IMyCubeGrid grid)

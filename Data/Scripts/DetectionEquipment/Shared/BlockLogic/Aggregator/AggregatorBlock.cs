@@ -94,8 +94,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
         }
 
+        public HashSet<WorldDetectionInfo> LastDetectionSet = new HashSet<WorldDetectionInfo>(0);
         /// <summary>
-        /// HAS to be run from main thread. Gets all detections from this aggregator and datalink.
+        /// Gets all detections from this aggregator and datalink.
         /// </summary>
         /// <returns></returns>
         public HashSet<WorldDetectionInfo> GetAggregatedDetections()
@@ -146,11 +147,17 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     
             }
 
-            var detectionSet = AggregateInfos(infosCache).ToHashSet();
-            infosCache.Clear();
-            GroupInfoBuffer.Push(infosCache);
+            lock (LastDetectionSet)
+            {
+                LastDetectionSet.Clear();
+                foreach (var item in AggregateInfos(infosCache))
+                    LastDetectionSet.Add(item);
 
-            return detectionSet;
+                infosCache.Clear();
+                GroupInfoBuffer.Push(infosCache);
+
+                return LastDetectionSet;
+            }
         }
 
         private bool _isProcessing = false;
