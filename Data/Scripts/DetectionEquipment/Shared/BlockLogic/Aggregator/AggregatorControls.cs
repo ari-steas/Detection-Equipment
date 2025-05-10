@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Shared.ExternalApis;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
@@ -15,8 +16,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
     internal class AggregatorControls : TerminalControlAdder<AggregatorBlock, IMyConveyorSorter>
     {
-        public static BlockSelectControl<AggregatorBlock, IMyConveyorSorter> ActiveSensorSelect;
+        public static BlockSelectControl<AggregatorBlock, IMyConveyorSorter> ActiveSensorSelect = null;
+        public static BlockSelectControl<AggregatorBlock, IMyConveyorSorter> ActiveWeaponSelect = null;
         public static Dictionary<AggregatorBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<AggregatorBlock, HashSet<BlockSensor>>();
+        public static Dictionary<AggregatorBlock, HashSet<IMyTerminalBlock>> ActiveWeapons = new Dictionary<AggregatorBlock, HashSet<IMyTerminalBlock>>();
 
         public override void DoOnce(AggregatorBlock thisLogic)
         {
@@ -24,6 +27,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 ActiveSensors.Clear();
             base.DoOnce(thisLogic);
             ActiveSensors[thisLogic] = new HashSet<BlockSensor>();
+            ActiveWeapons[thisLogic] = new HashSet<IMyTerminalBlock>();
         }
 
         protected override void CreateTerminalActions()
@@ -80,8 +84,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Use All Grid Sensors",
                 "Whether the aggregator should use data from all sensors on the grid.",
                 b => b.GameLogic.GetAs<AggregatorBlock>()?.UseAllSensors,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().UseAllSensors.Value = v
-                );
+                (b, v) =>
+                {
+                    b.GameLogic.GetAs<AggregatorBlock>().UseAllSensors.Value = v;
+                    ActiveSensorSelect.ListBox.UpdateVisual();
+                });
 
             ActiveSensorSelect = new BlockSelectControl<AggregatorBlock, IMyConveyorSorter>(
                 "ActiveSensors",
@@ -140,7 +147,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             CreateListbox(
                 "DatalinkSources",
                 "Datalink Sources",
-                "Datalink channel IDs this aggregator should recieve from.",
+                "Datalink channel IDs this aggregator should receive from.",
                 true,
                 (block, content, selected) =>
                 {
@@ -155,7 +162,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     // Display all channels because clients won't always have sources loaded.
                     for (int id = 0; id <= 8; id++)
                     {
-                        int count = activeChannels.ContainsKey(id) ? activeChannels[id].Count : 0;
+                        HashSet<AggregatorBlock> channel;
+                        int count = activeChannels.TryGetValue(id, out channel) ? channel.Count : 0;
 
                         var item = new MyTerminalControlListBoxItem(
                             MyStringId.GetOrCompute($"ID {id}: {count} known source" + (count == 1 ? "" : "s")),
@@ -197,13 +205,48 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 block => block.GameLogic.GetAs<AggregatorBlock>().DoWcTargeting.Value,
                 (block, value) => block.GameLogic.GetAs<AggregatorBlock>().DoWcTargeting.Value = value
                 );
-            //CreateToggle(
-            //    "WcUseAllWeapons",
-            //    "Contribute to All Weapons",
-            //    "Whether this aggregator should give targeting data to all grid weapons, or only selected.",
-            //    null,
-            //    null
-            //    );
+            CreateToggle(
+                "WcUseAllWeapons",
+                "Contribute to All Weapons",
+                "Whether this aggregator should give targeting data to all grid weapons, or only selected.",
+                block => block.GameLogic.GetAs<AggregatorBlock>().UseAllWeapons.Value,
+                (block, value) =>
+                {
+                    block.GameLogic.GetAs<AggregatorBlock>().UseAllWeapons.Value = value;
+                    ActiveWeaponSelect.ListBox.UpdateVisual();
+                });
+            ActiveWeaponSelect = new BlockSelectControl<AggregatorBlock, IMyConveyorSorter>(
+                "WcActiveWeapons",
+                "Controlled Weapons",
+                "Weapons this aggregator should give targeting data to. Ctrl+Click to select multiple.",
+                true,
+                logic =>
+                {
+                    // awful and I hate it.
+                    List<IMyCubeBlock> blocks = new List<IMyCubeBlock>();
+                    List<IMyCubeGrid> grids = new List<IMyCubeGrid>();
+                    logic.CubeBlock.CubeGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(grids);
+                    foreach (var grid in grids)
+                        foreach (var block in grid.GetFatBlocks<IMyTerminalBlock>())
+                            if (ApiManager.WcApi.HasCoreWeapon((MyEntity) block))
+                                blocks.Add(block);
+                    return blocks;
+                },
+                (logic, selected) =>
+                {
+                    if (!MyAPIGateway.Session.IsServer)
+                        return;
+
+                    ActiveWeapons[logic].Clear();
+                    List<IMyCubeGrid> grids = new List<IMyCubeGrid>();
+                    logic.CubeBlock.CubeGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(grids);
+                    foreach (var grid in grids)
+                        foreach (var block in grid.GetFatBlocks<IMyTerminalBlock>())
+                            if (selected.Contains(block.EntityId))
+                                ActiveWeapons[logic].Add(block);
+                }
+            );
+            ActiveWeaponSelect.ListBox.Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllWeapons.Value ?? true);
         }
     }
 }

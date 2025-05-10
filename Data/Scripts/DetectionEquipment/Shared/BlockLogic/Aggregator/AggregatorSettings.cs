@@ -18,6 +18,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         [ProtoMember(9)] private int[] _datalinkInChannels = { 0 };
         [ProtoMember(10)] private int _datalinkInShareType = 1;
         [ProtoMember(11)] private bool _doWcTargeting = true; 
+        [ProtoMember(12)] private bool _useAllWeapons = true;
+        [ProtoMember(13)] private long[] _selectedWeapons = Array.Empty<long>();
 
         [ProtoIgnore] private new AggregatorBlock AttachedLogic => (AggregatorBlock) base.AttachedLogic;
 
@@ -37,11 +39,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AttachedLogic.UseAllSensors.Value = _useAllSensors;
 
             AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
+            AggregatorControls.ActiveWeaponSelect.UpdateSelected(AttachedLogic, _selectedWeapons ?? Array.Empty<long>());
 
             AttachedLogic.DatalinkOutChannel.Value = _datalinkOutChannel;
             AttachedLogic.DatalinkInChannels = _datalinkInChannels;
             AttachedLogic.DatalinkInShareType.Value = _datalinkInShareType;
             AttachedLogic.DoWcTargeting.Value = _doWcTargeting;
+            AttachedLogic.UseAllWeapons.Value = _useAllWeapons;
         }
 
         protected override void RetrieveData()
@@ -55,11 +59,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             if (!AggregatorControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedSensors))
                 _selectedSensors = Array.Empty<long>();
+            if (!AggregatorControls.ActiveWeaponSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedWeapons))
+                _selectedWeapons = Array.Empty<long>();
 
             _datalinkOutChannel = AttachedLogic.DatalinkOutChannel.Value;
             _datalinkInChannels = AttachedLogic.DatalinkInChannels;
             _datalinkInShareType = AttachedLogic.DatalinkInShareType.Value;
             _doWcTargeting = AttachedLogic.DoWcTargeting.Value;
+            _useAllWeapons = AttachedLogic.UseAllWeapons.Value;
         }
     }
 }

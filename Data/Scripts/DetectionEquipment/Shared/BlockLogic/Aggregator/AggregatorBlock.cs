@@ -32,6 +32,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public MySync<int, SyncDirection.BothWays> DatalinkOutChannel;
         public SimpleSync<int> DatalinkInShareType;
         public SimpleSync<bool> DoWcTargeting;
+        public SimpleSync<bool> UseAllWeapons;
         private int _prevDatalinkOutChannel = -1;
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
@@ -45,17 +46,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         protected override ControlBlockSettingsBase GetSettings => new AggregatorSettings(this);
 
-        internal HashSet<BlockSensor> ActiveSensors
-        {
-            get
-            {
-                return AggregatorControls.ActiveSensors[this];
-            }
-            set
-            {
-                AggregatorControls.ActiveSensorSelect.UpdateSelected(this, value.Select(sensor => sensor.Block.EntityId).ToArray());
-            }
-        }
+        internal HashSet<BlockSensor> ActiveSensors => AggregatorControls.ActiveSensors[this];
+        internal HashSet<IMyTerminalBlock> ActiveWeapons => AggregatorControls.ActiveWeapons[this];
 
         private int[] _datalinkInChannels = new[] { 0 };
         public int[] DatalinkInChannels
@@ -86,6 +78,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 _prevDatalinkOutChannel = sync.Value;
             };
             DoWcTargeting = new SimpleSync<bool>(this, true);
+            UseAllWeapons = new SimpleSync<bool>(this, true);
 
             new AggregatorControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
