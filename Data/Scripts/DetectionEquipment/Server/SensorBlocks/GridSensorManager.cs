@@ -51,7 +51,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                         if (!aggregator.DoWcTargeting.Value)
                             continue;
 
-                        foreach (var target in aggregator.GetAggregatedDetections())
+                        foreach (var target in aggregator.DetectionSet)
                         {
                             var err = target.Error / Vector3D.Distance(gridPos, target.Position);
 
@@ -80,12 +80,9 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 if (!aggregatorSet.Key.UseAllWeapons && !aggregatorSet.Value.Contains(weapon))
                     continue;
-                lock (aggregatorSet.Key.LastDetectionSet)
-                {
-                    foreach (var item in aggregatorSet.Key.LastDetectionSet)
-                        if (item.Entity == target)
-                            return true;
-                }
+                foreach (var item in aggregatorSet.Key.DetectionSet)
+                    if (item.Entity == target)
+                        return true;
             }
             return false;
         }

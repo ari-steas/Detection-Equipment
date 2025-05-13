@@ -31,6 +31,7 @@ namespace DetectionEquipment.Client
                 RcsTool.Init();
                 WcInteractionManager.Init();
                 ModderNotification.Init();
+                DetectionHud.Init();
 
                 Log.DecreaseIndent();
                 Log.Info("ClientMain", "Initialized.");
@@ -60,6 +61,21 @@ namespace DetectionEquipment.Client
             }
         }
 
+        public override void Draw()
+        {
+            if (MyAPIGateway.Utilities.IsDedicated)
+                return;
+
+            try
+            {
+                DetectionHud.Draw();
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("ClientMain", ex);
+            }
+        }
+
         protected override void UnloadData()
         {
             if (MyAPIGateway.Utilities.IsDedicated)
@@ -70,6 +86,7 @@ namespace DetectionEquipment.Client
                 Log.Info("ClientMain", "Start unload...");
                 Log.IncreaseIndent();
 
+                DetectionHud.Close();
                 WcInteractionManager.Close();
                 RcsTool.Close();
                 CountermeasureManager.Close();

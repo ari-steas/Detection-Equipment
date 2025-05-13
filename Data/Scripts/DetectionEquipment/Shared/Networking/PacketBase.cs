@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.BlockLogic.HudController;
 using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Networking
@@ -12,6 +13,7 @@ namespace DetectionEquipment.Shared.Networking
     [ProtoInclude(GlobalData.ServerNetworkId + 5, typeof(CountermeasureEmitterPacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 6, typeof(SimpleSyncManager.InternalSimpleSyncBothWays))]
     [ProtoInclude(GlobalData.ServerNetworkId + 7, typeof(WcTargetingPacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 8, typeof(HudControllerBlock.HudUpdatePacket))]
     [ProtoContract(UseProtoMembersOnly = true)]
     public abstract class PacketBase
     {

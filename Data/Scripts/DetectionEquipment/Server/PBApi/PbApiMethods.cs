@@ -227,7 +227,7 @@ namespace DetectionEquipment.Server.PBApi
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return null;
 
-            var set = ((AggregatorBlock)control).GetAggregatedDetections();
+            var set = ((AggregatorBlock)control).DetectionSet;
             var toReturn = new WorldDetTuple[set.Count];
 
             int i = 0;

@@ -10,7 +10,7 @@ rem	2. Edit this variable if applicable (do not add quotes or end with backslash
 set STEAM_PATH=C:\Program Files (x86)\Steam
 
 rem	3. Edit this with your mod's workshop id.
-set WORKSHOP_ID=3446166220
+set WORKSHOP_ID=3476173167
 
 rem	Now you can run it every time you want to update the mod on DS and client.
 

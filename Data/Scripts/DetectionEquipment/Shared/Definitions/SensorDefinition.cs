@@ -117,6 +117,7 @@ namespace DetectionEquipment.Shared.Definitions
             [ProtoMember(4)] public double Frequency = 2800E6;
         }
 
+        [ProtoContract]
         public enum SensorType
         {
             None = 0,

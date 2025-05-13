@@ -80,7 +80,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
                     foreach (var control in ControlBlockManager.I.Blocks.Values)
                     {
-                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid)
+                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid || !selected.Contains(control.CubeBlock.EntityId))
                             continue;
                         ActiveAggregators[logic] = (AggregatorBlock) control;
                     }

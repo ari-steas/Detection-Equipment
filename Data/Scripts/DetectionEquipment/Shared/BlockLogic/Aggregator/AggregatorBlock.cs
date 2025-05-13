@@ -94,12 +94,23 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
         }
 
-        public HashSet<WorldDetectionInfo> LastDetectionSet = new HashSet<WorldDetectionInfo>(0);
+        public HashSet<WorldDetectionInfo> DetectionSet
+        {
+            get
+            {
+                if (_lastDetectionSetUpdate + 1 < MyAPIGateway.Session.GameplayFrameCounter)
+                    return UpdateAggregatedDetections();
+                return _lastDetectionSet;
+            }
+        }
+
+        private int _lastDetectionSetUpdate = -1;
+        private HashSet<WorldDetectionInfo> _lastDetectionSet = new HashSet<WorldDetectionInfo>(0);
         /// <summary>
         /// Gets all detections from this aggregator and datalink.
         /// </summary>
         /// <returns></returns>
-        public HashSet<WorldDetectionInfo> GetAggregatedDetections()
+        private HashSet<WorldDetectionInfo> UpdateAggregatedDetections()
         {
             List<WorldDetectionInfo> infosCache;
             if (!GroupInfoBuffer.TryPop(out infosCache))
@@ -147,16 +158,17 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     
             }
 
-            lock (LastDetectionSet)
+            lock (_lastDetectionSet)
             {
-                LastDetectionSet.Clear();
+                _lastDetectionSetUpdate = MyAPIGateway.Session.GameplayFrameCounter;
+                _lastDetectionSet.Clear();
                 foreach (var item in AggregateInfos(infosCache))
-                    LastDetectionSet.Add(item);
+                    _lastDetectionSet.Add(item);
 
                 infosCache.Clear();
                 GroupInfoBuffer.Push(infosCache);
 
-                return LastDetectionSet;
+                return _lastDetectionSet;
             }
         }
 
@@ -193,7 +205,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 {
                     foreach (var sensorDetection in sensor.Detections)
                     {
-                        var detection = new WorldDetectionInfo(sensorDetection);
+                        var detection = WorldDetectionInfo.Create(sensorDetection);
                         //DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
                         infosCache.Add(detection);
                     }

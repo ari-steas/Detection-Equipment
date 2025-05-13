@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using DetectionEquipment.Server.Tracking;
+using ProtoBuf;
 using VRage;
 using VRage.Game.Entity;
 using VRageMath;
@@ -10,36 +11,40 @@ using WorldDetTuple = VRage.MyTuple<int, double, double, VRageMath.Vector3D, VRa
 
 namespace DetectionEquipment.Shared.Structs
 {
+    [ProtoContract]
     internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>
     {
-        public long EntityId;
-        public double CrossSection, Error;
-        public Vector3D Position;
-        public Vector3D? Velocity;
-        public double? VelocityVariance;
-        public SensorDefinition.SensorType DetectionType;
-        public string[] IffCodes;
+        [ProtoMember(1)] public long EntityId;
+        [ProtoMember(2)] public double CrossSection;
+        [ProtoMember(3)] public double Error;
+        [ProtoMember(4)] public Vector3D Position;
+        [ProtoMember(5)] public Vector3D? Velocity;
+        [ProtoMember(6)] public double? VelocityVariance;
+        [ProtoMember(7)] public SensorDefinition.SensorType DetectionType;
+        [ProtoMember(8)] public string[] IffCodes;
         public MyEntity Entity;
 
-        public WorldDetectionInfo(DetectionInfo info)
+        public static WorldDetectionInfo Create(DetectionInfo info)
         {
-            EntityId = info.Track.EntityId;
+            var wInfo = new WorldDetectionInfo();
+            wInfo.EntityId = info.Track.EntityId;
             var eTrack = info.Track as EntityTrack;
-            Entity = eTrack?.Entity;
+            wInfo.Entity = eTrack?.Entity;
 
-            CrossSection = info.CrossSection;
-            Position = info.Sensor.Position + info.Bearing * info.Range;
+            wInfo.CrossSection = info.CrossSection;
+            wInfo.Position = info.Sensor.Position + info.Bearing * info.Range;
 
-            Error = Math.Tan(info.BearingError) * info.Range; // planar error; base width of right triangle
-            Error *= Error;
-            Error += info.RangeError * info.RangeError; // normal error
-            Error = Math.Sqrt(Error);
+            wInfo.Error = Math.Tan(info.BearingError) * info.Range; // planar error; base width of right triangle
+            wInfo.Error *= wInfo.Error;
+            wInfo.Error += info.RangeError * info.RangeError; // normal error
+            wInfo.Error = Math.Sqrt(wInfo.Error);
 
-            DetectionType = info.Sensor.Definition.Type;
+            wInfo.DetectionType = info.Sensor.Definition.Type;
 
-            Velocity = null;
-            VelocityVariance = null;
-            IffCodes = info.IffCodes ?? Array.Empty<string>();
+            wInfo.Velocity = null;
+            wInfo.VelocityVariance = null;
+            wInfo.IffCodes = info.IffCodes ?? Array.Empty<string>();
+            return wInfo;
         }
 
         public override bool Equals(object obj) => obj is WorldDetectionInfo && Position.Equals(((WorldDetectionInfo)obj).Position);
@@ -74,20 +79,22 @@ namespace DetectionEquipment.Shared.Structs
             if (args.Count == 0)
                 throw new Exception("No detection infos provided!");
 
+            SensorDefinition.SensorType? proposedType = null;
             MyEntity entity = null;
-            long entityId = -1;
             double totalError = 0;
             var allCodes = new List<string>();
             foreach (var info in args)
             {
-                if (info.EntityId != -1)
-                    entityId = info.EntityId;
                 if (info.Entity != null)
                     entity = info.Entity;
                 totalError += info.Error;
                 foreach (var code in info.IffCodes)
                     if (!allCodes.Contains(code))
                         allCodes.Add(code);
+                if (proposedType == null)
+                    proposedType = info.DetectionType;
+                else if (proposedType != info.DetectionType)
+                    proposedType = SensorDefinition.SensorType.None;
             }
 
             Vector3D averagePos = Vector3D.Zero;
@@ -111,13 +118,13 @@ namespace DetectionEquipment.Shared.Structs
 
             return new WorldDetectionInfo
             {
-                EntityId = entityId,
+                EntityId = entity?.EntityId ?? -1,
                 Entity = entity,
                 CrossSection = totalCrossSection / args.Count,
                 Position = averagePos,
                 Error = avgDiff,
-                DetectionType = 0,
-                IffCodes = allCodes.ToArray()
+                DetectionType = proposedType ?? SensorDefinition.SensorType.None,
+                IffCodes = allCodes.ToArray(),
             };
         }
 

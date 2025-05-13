@@ -5,6 +5,7 @@ using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;
 using DetectionEquipment.Client.Interface;
+using DetectionEquipment.Shared.Utils;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -39,16 +40,23 @@ namespace DetectionEquipment.Shared.BlockLogic
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            HideSorterControls.DoOnce();
-            ControlBlockManager.I.Blocks.Add(Block as MyCubeBlock, this);
-
-            if (MyAPIGateway.Session.IsServer)
+            try
             {
-                GridSensors = ServerMain.I.GridSensorMangers[Block.CubeGrid];
+                HideSorterControls.DoOnce();
+                ControlBlockManager.I.Blocks.Add(Block as MyCubeBlock, this);
+
+                if (MyAPIGateway.Session.IsServer)
+                {
+                    GridSensors = ServerMain.I.GridSensorMangers[Block.CubeGrid];
+                }
+
+                GetSettings?.LoadSettings();
                 NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
             }
-
-            GetSettings?.LoadSettings();
+            catch (Exception ex)
+            {
+                Log.Exception($"ControlBlockBase::{GetType().Name}", ex, true);
+            }
         }
 
         public override bool IsSerialized()
