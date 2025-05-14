@@ -148,14 +148,8 @@ namespace IngameScript
         private Func<IMyCubeBlock, bool> _hasAggregator;
         private Func<IMyCubeBlock, float> _getAggregatorTime;
         private Action<IMyCubeBlock, float> _setAggregatorTime;
-        private Func<IMyCubeBlock, float> _getAggregatorDistance;
-        private Action<IMyCubeBlock, float> _setAggregatorDistance;
         private Func<IMyCubeBlock, float> _getAggregatorVelocity;
         private Action<IMyCubeBlock, float> _setAggregatorVelocity;
-        private Func<IMyCubeBlock, float> _getAggregatorRcs;
-        private Action<IMyCubeBlock, float> _setAggregatorRcs;
-        private Func<IMyCubeBlock, bool> _getAggregatorTypes;
-        private Action<IMyCubeBlock, bool> _setAggregatorTypes;
         private Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[]> _getAggregatorInfo;
         private Func<IMyCubeBlock, bool> _getAggregatorUseAllSensors;
         private Action<IMyCubeBlock, bool> _setAggregatorUseAllSensors;
@@ -198,14 +192,8 @@ namespace IngameScript
             SetApiMethod("HasAggregator", ref _hasAggregator);
             SetApiMethod("GetAggregatorTime", ref _getAggregatorTime);
             SetApiMethod("SetAggregatorTime", ref _setAggregatorTime);
-            SetApiMethod("GetAggregatorDistance", ref _getAggregatorDistance);
-            SetApiMethod("SetAggregatorDistance", ref _setAggregatorDistance);
             SetApiMethod("GetAggregatorVelocity", ref _getAggregatorVelocity);
             SetApiMethod("SetAggregatorVelocity", ref _setAggregatorVelocity);
-            SetApiMethod("GetAggregatorRcs", ref _getAggregatorRcs);
-            SetApiMethod("SetAggregatorRcs", ref _setAggregatorRcs);
-            SetApiMethod("GetAggregatorTypes", ref _getAggregatorTypes);
-            SetApiMethod("SetAggregatorTypes", ref _setAggregatorTypes);
             SetApiMethod("GetAggregatorInfo", ref _getAggregatorInfo);
             SetApiMethod("GetAggregatorUseAllSensors", ref _getAggregatorUseAllSensors);
             SetApiMethod("SetAggregatorUseAllSensors", ref _setAggregatorUseAllSensors);
@@ -630,24 +618,6 @@ namespace IngameScript
             }
 
             /// <summary>
-            /// Scalar for position error over which to combine detections.
-            /// <para>
-            ///     Ex: Error of 5m and DistanceThreshold of 2 means detections within 10m are combined.
-            /// </para>
-            /// </summary>
-            public float DistanceThreshold
-            {
-                get
-                {
-                    return I._getAggregatorDistance.Invoke(Block);
-                }
-                set
-                {
-                    I._setAggregatorDistance.Invoke(Block, value);
-                }
-            }
-
-            /// <summary>
             /// Maximum velocity variation at which to incorporate into position estimate.
             /// <seealso cref="PbWorldDetectionInfo.VelocityVariance"/>
             /// <para>
@@ -663,39 +633,6 @@ namespace IngameScript
                 set
                 {
                     I._setAggregatorVelocity.Invoke(Block, value);
-                }
-            }
-
-            /// <summary>
-            /// Scalar for RCS difference at which to combine detections.
-            /// <para>
-            ///     Ex: RCS_1 of 10m^2 and RCS_2 of 12m^2 has an "error" of |10-12|/Max(10, 12) = 1/6. As such, the RcsThreshold must be above 1/6 for these detection infos to be combined.
-            /// </para>
-            /// </summary>
-            public float RcsThreshold
-            {
-                get
-                {
-                    return I._getAggregatorRcs.Invoke(Block);
-                }
-                set
-                {
-                    I._setAggregatorRcs.Invoke(Block, value);
-                }
-            }
-
-            /// <summary>
-            /// Whether the aggregator should combine info from different sensor types.
-            /// </summary>
-            public bool AggregateTypes
-            {
-                get
-                {
-                    return I._getAggregatorTypes.Invoke(Block);
-                }
-                set
-                {
-                    I._setAggregatorTypes.Invoke(Block, value);
                 }
             }
 

@@ -11,6 +11,7 @@ using RichHudFramework;
 using RichHudFramework.UI;
 using RichHudFramework.UI.Client;
 using Sandbox.ModAPI;
+using VRage.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Client.Interface
@@ -34,7 +35,6 @@ namespace DetectionEquipment.Client.Interface
 
         public static void Draw()
         {
-            MyAPIGateway.Utilities.ShowNotification($"HudItems: {_hudItems.Count}", 1000/60);
             foreach (var item in _hudItems.Values)
                 item.Update();
         }
@@ -118,6 +118,7 @@ namespace DetectionEquipment.Client.Interface
                     Visible = true;
 
                 Offset = new Vector2((float) (offsetPos.X/scalar), (float) (offsetPos.Y/scalar));
+                ScaleOutline();
                 //MyAPIGateway.Utilities.ShowMessage("HudItem", $"Offset: {Offset} | {offsetPos}");
 
                 
@@ -129,17 +130,49 @@ namespace DetectionEquipment.Client.Interface
                     CrossSectionStr();
             }
 
+            private void ScaleOutline()
+            {
+                if (Detection.Entity == null)
+                {
+                    OutlineBox.Size = Vector2.One * 50;
+                    return;
+                }
+
+                var invMatrix = MatrixD.Invert(Parent.HudSpace.PlaneToWorld);
+                var box = ((IMyEntity)Detection.Entity).WorldAABB;
+                var nearPlane = MyAPIGateway.Session.Camera.NearPlaneDistance;
+                Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
+                Vector2 max = new Vector2(float.MinValue, float.MinValue);
+                for (int i = 0; i < BoundingBoxD.NUMBER_OF_CORNERS; ++i)
+                {
+                    var projectedCorner = Vector3D.Transform(box.GetCorner(i), invMatrix);
+                    var scalar = -projectedCorner.Z / nearPlane;
+                    var x = (float) (projectedCorner.X / scalar);
+                    var y = (float) (projectedCorner.Y / scalar);
+                    if (x < min.X)
+                        min.X = x;
+                    if (y < min.Y)
+                        min.Y = y;
+                    if (x > max.X)
+                        max.X = x;
+                    if (y > max.Y)
+                        max.Y = y;
+                }
+
+                OutlineBox.Size = new Vector2(max.X - min.X, max.Y - min.Y);
+            }
+
             private string DistanceStr()
             {
                 var dist = Vector3D.Distance(MyAPIGateway.Session.Player.Character.GetPosition(), Detection.Position);
-                return $"{(dist > 1000 ? dist/1000 : dist):N1}{(dist > 1000 ? "km" : "m")} \u00b1{(Detection.Error/dist)*100d:N0}% TOREMOVE:{Detection.Error:N0}\n";
+                return $"{(dist > 1000 ? dist/1000 : dist):N1}{(dist > 1000 ? "km" : "m")} \u00b1{(Detection.Error/dist)*100d:N0}%\n";
             }
 
             private string IffStr =>
                 $"IFF: {(Detection.IffCodes.Length == 0 ? "N/A" : string.Join(", ", Detection.IffCodes))}\n";
 
             private string VelocityStr =>
-                $"Vel: {(Detection.Velocity == null ? "NOLOC" : Detection.Velocity.Value.ToString("N0"))}\n";
+                $"Vel: {(Detection.Velocity == null ? "NOLOC" : $"{Detection.Velocity.Value.Length():N0}m/s")}\n";
 
             private string CrossSectionStr()
             {

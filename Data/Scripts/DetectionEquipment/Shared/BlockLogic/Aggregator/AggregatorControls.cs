@@ -43,16 +43,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 (b, sb) => sb.Append(b.GameLogic.GetAs<AggregatorBlock>().AggregationTime.Value.ToString("F1") + "s")
                 );
             CreateSlider(
-                "Distance",
-                "Distance Threshold",
-                "Scalar for position error over which to combine detections.",
-                0,
-                10,
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.DistanceThreshold,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().DistanceThreshold.Value = v,
-                (b, sb) => sb.Append((100 * b.GameLogic.GetAs<AggregatorBlock>().DistanceThreshold.Value).ToString("F1") + "%")
-                );
-            CreateSlider(
                 "VelocityError",
                 "Velocity Threshold",
                 "Maximum velocity variation at which to incorporate into position estimate.",
@@ -61,23 +51,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 b => b.GameLogic.GetAs<AggregatorBlock>()?.VelocityErrorThreshold,
                 (b, v) => b.GameLogic.GetAs<AggregatorBlock>().VelocityErrorThreshold.Value = v,
                 (b, sb) => sb.Append("R^2 = " + b.GameLogic.GetAs<AggregatorBlock>().VelocityErrorThreshold.Value.ToString("F1"))
-                );
-            CreateSlider(
-                "RcsThreshold",
-                "Cross-Section Threshold",
-                "Scalar for V/RCS difference at which to combine detections.",
-                0,
-                10,
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.RcsThreshold,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().RcsThreshold.Value = v,
-                (b, sb) => sb.Append((100 * b.GameLogic.GetAs<AggregatorBlock>().RcsThreshold.Value).ToString("F1") + "%")
-                );
-            CreateToggle(
-                "AggregateTypes",
-                "Aggregate Sensor Types",
-                "Whether unique sensor types should be aggregated together.",
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.AggregateTypes,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().AggregateTypes.Value = v
                 );
             CreateToggle(
                 "UseAllSensors",

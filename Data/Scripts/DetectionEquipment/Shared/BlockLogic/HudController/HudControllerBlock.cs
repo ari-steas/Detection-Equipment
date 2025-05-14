@@ -13,6 +13,7 @@ using DetectionEquipment.Shared.BlockLogic.Tracker;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
+using VRage.Game.Entity;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
 {
@@ -64,7 +65,19 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
             Detections.Clear();
             Detections.EnsureCapacity(SourceAggregator.DetectionSet.Count);
             foreach (var item in SourceAggregator.DetectionSet)
-                Detections.Add(item);
+            {
+                if (item.VelocityVariance != null && item.VelocityVariance > SourceAggregator.VelocityErrorThreshold)
+                {
+                    // Don't show velocity if we can't tell what it is.
+                    var newInfo = WorldDetectionInfo.Create(item);
+                    newInfo.Velocity = null;
+                    newInfo.VelocityVariance = null;
+                    Detections.Add(newInfo);
+                }
+                else
+                    Detections.Add(item);
+            }
+                
             ServerNetwork.SendToEveryoneInSync(new HudUpdatePacket(this), Block.WorldMatrix.Translation);
         }
 
@@ -111,7 +124,16 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 if (_detections == null)
                     controller.Detections.Clear();
                 else
+                {
+                    for (var i = 0; i < _detections.Count; i++)
+                    {
+                        var info = _detections[i];
+                        info.Entity = (MyEntity) MyAPIGateway.Entities.GetEntityById(info.EntityId);
+                        _detections[i] = info;
+                    }
+
                     controller.Detections = _detections;
+                }
             }
         }
     }

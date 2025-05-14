@@ -43,14 +43,8 @@ namespace DetectionEquipment.Server.PBApi
             ["HasAggregator"] = new Func<IMyCubeBlock, bool>(HasAggregator),
             ["GetAggregatorTime"] = new Func<IMyCubeBlock, float>(GetAggregatorTime),
             ["SetAggregatorTime"] = new Action<IMyCubeBlock, float>(SetAggregatorTime),
-            ["GetAggregatorDistance"] = new Func<IMyCubeBlock, float>(GetAggregatorDistance),
-            ["SetAggregatorDistance"] = new Action<IMyCubeBlock, float>(SetAggregatorDistance),
             ["GetAggregatorVelocity"] = new Func<IMyCubeBlock, float>(GetAggregatorVelocity),
             ["SetAggregatorVelocity"] = new Action<IMyCubeBlock, float>(SetAggregatorVelocity),
-            ["GetAggregatorRcs"] = new Func<IMyCubeBlock, float>(GetAggregatorRcs),
-            ["SetAggregatorRcs"] = new Action<IMyCubeBlock, float>(SetAggregatorRcs),
-            ["GetAggregatorTypes"] = new Func<IMyCubeBlock, bool>(GetAggregatorTypes),
-            ["SetAggregatorTypes"] = new Action<IMyCubeBlock, bool>(SetAggregatorTypes),
             ["GetAggregatorInfo"] = new Func<IMyCubeBlock, WorldDetTuple[]>(GetAggregatorInfo),
             ["GetAggregatorUseAllSensors"] = new Func<IMyCubeBlock, bool>(GetAggregatorUseAllSensors),
             ["SetAggregatorUseAllSensors"] = new Action<IMyCubeBlock, bool>(SetAggregatorUseAllSensors),
@@ -165,20 +159,6 @@ namespace DetectionEquipment.Server.PBApi
                 return;
             ((AggregatorBlock)control).AggregationTime.Value = value;
         }
-        private static float GetAggregatorDistance(IMyCubeBlock block)
-        {
-            IControlBlockBase control;
-            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
-                return -1;
-            return (control as AggregatorBlock)?.DistanceThreshold.Value ?? -1;
-        }
-        private static void SetAggregatorDistance(IMyCubeBlock block, float value)
-        {
-            IControlBlockBase control;
-            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
-                return;
-            ((AggregatorBlock)control).DistanceThreshold.Value = value;
-        }
         private static float GetAggregatorVelocity(IMyCubeBlock block)
         {
             IControlBlockBase control;
@@ -192,34 +172,6 @@ namespace DetectionEquipment.Server.PBApi
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
                 return;
             ((AggregatorBlock)control).VelocityErrorThreshold.Value = value;
-        }
-        private static float GetAggregatorRcs(IMyCubeBlock block)
-        {
-            IControlBlockBase control;
-            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
-                return -1;
-            return (control as AggregatorBlock)?.RcsThreshold.Value ?? -1;
-        }
-        private static void SetAggregatorRcs(IMyCubeBlock block, float value)
-        {
-            IControlBlockBase control;
-            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
-                return;
-            ((AggregatorBlock)control).RcsThreshold.Value = value;
-        }
-        private static bool GetAggregatorTypes(IMyCubeBlock block)
-        {
-            IControlBlockBase control;
-            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
-                return false;
-            return (control as AggregatorBlock)?.AggregateTypes ?? false;
-        }
-        private static void SetAggregatorTypes(IMyCubeBlock block, bool value)
-        {
-            IControlBlockBase control;
-            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is AggregatorBlock))
-                return;
-            ((AggregatorBlock)control).AggregateTypes.Value = value;
         }
         private static WorldDetTuple[] GetAggregatorInfo(IMyCubeBlock block)
         {

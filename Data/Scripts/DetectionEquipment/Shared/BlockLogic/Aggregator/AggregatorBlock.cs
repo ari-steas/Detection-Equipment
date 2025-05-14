@@ -24,10 +24,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
     internal partial class AggregatorBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public MySync<float, SyncDirection.BothWays> AggregationTime;
-        public MySync<float, SyncDirection.BothWays> DistanceThreshold;
         public MySync<float, SyncDirection.BothWays> VelocityErrorThreshold; // Standard Deviation at which to ignore velocity estimation
-        public MySync<float, SyncDirection.BothWays> RcsThreshold;
-        public MySync<bool, SyncDirection.BothWays> AggregateTypes;
         public MySync<bool, SyncDirection.BothWays> UseAllSensors;
         public MySync<int, SyncDirection.BothWays> DatalinkOutChannel;
         public SimpleSync<int> DatalinkInShareType;

@@ -8,10 +8,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
     internal class AggregatorSettings : ControlBlockSettingsBase
     {
         [ProtoMember(1)] private float _aggregationTime = 1f;
-        [ProtoMember(2)] private float _distanceThreshold = 2f;
         [ProtoMember(3)] private float _velocityErrorThreshold = 32f;
-        [ProtoMember(4)] private float _rcsThreshold = 1f;
-        [ProtoMember(5)] private bool _aggregateTypes = true;
         [ProtoMember(6)] private bool _useAllSensors = true;
         [ProtoMember(7)] private long[] _selectedSensors = Array.Empty<long>();
         [ProtoMember(8)] private int _datalinkOutChannel = 0;
@@ -32,10 +29,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         protected override void AssignData()
         {
             AttachedLogic.AggregationTime.Value = _aggregationTime;
-            AttachedLogic.DistanceThreshold.Value = _distanceThreshold;
             AttachedLogic.VelocityErrorThreshold.Value = _velocityErrorThreshold;
-            AttachedLogic.RcsThreshold.Value = _rcsThreshold;
-            AttachedLogic.AggregateTypes.Value = _aggregateTypes;
             AttachedLogic.UseAllSensors.Value = _useAllSensors;
 
             AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
@@ -51,10 +45,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         protected override void RetrieveData()
         {
             _aggregationTime = AttachedLogic.AggregationTime.Value;
-            _distanceThreshold = AttachedLogic.DistanceThreshold.Value;
             _velocityErrorThreshold = AttachedLogic.VelocityErrorThreshold.Value;
-            _rcsThreshold = AttachedLogic.RcsThreshold.Value;
-            _aggregateTypes = AttachedLogic.AggregateTypes.Value;
             _useAllSensors = AttachedLogic.UseAllSensors.Value;
 
             if (!AggregatorControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedSensors))

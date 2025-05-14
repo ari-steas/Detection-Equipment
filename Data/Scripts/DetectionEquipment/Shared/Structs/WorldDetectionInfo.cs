@@ -49,6 +49,21 @@ namespace DetectionEquipment.Shared.Structs
             return wInfo;
         }
 
+        public static WorldDetectionInfo Create(WorldDetectionInfo info)
+        {
+            return new WorldDetectionInfo
+            {
+                EntityId = info.EntityId,
+                CrossSection = info.CrossSection,
+                Error = info.Error,
+                Position = info.Position,
+                Velocity = info.Velocity,
+                VelocityVariance = info.VelocityVariance,
+                DetectionType = info.DetectionType,
+                IffCodes = info.IffCodes,
+            };
+        }
+
         public override bool Equals(object obj) => obj is WorldDetectionInfo && Position.Equals(((WorldDetectionInfo)obj).Position);
         public override int GetHashCode() => Position.GetHashCode();
 
