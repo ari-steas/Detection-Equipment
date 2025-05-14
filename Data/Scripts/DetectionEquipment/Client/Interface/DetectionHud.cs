@@ -138,17 +138,17 @@ namespace DetectionEquipment.Client.Interface
                     return;
                 }
 
-                var invMatrix = MatrixD.Invert(Parent.HudSpace.PlaneToWorld);
-                var box = ((IMyEntity)Detection.Entity).WorldAABB;
+                var invMatrix = Detection.Entity.WorldMatrix * MatrixD.Invert(Parent.HudSpace.PlaneToWorld);
+                var box = ((IMyEntity)Detection.Entity).LocalAABB;
                 var nearPlane = MyAPIGateway.Session.Camera.NearPlaneDistance;
-                Vector2 min = new Vector2(float.MaxValue, float.MaxValue);
-                Vector2 max = new Vector2(float.MinValue, float.MinValue);
-                for (int i = 0; i < BoundingBoxD.NUMBER_OF_CORNERS; ++i)
+                Vector2D min = new Vector2(float.MaxValue, float.MaxValue);
+                Vector2D max = new Vector2(float.MinValue, float.MinValue);
+                foreach (var corner in box.Corners)
                 {
-                    var projectedCorner = Vector3D.Transform(box.GetCorner(i), invMatrix);
+                    var projectedCorner = Vector3D.Transform(corner, invMatrix);
                     var scalar = -projectedCorner.Z / nearPlane;
-                    var x = (float) (projectedCorner.X / scalar);
-                    var y = (float) (projectedCorner.Y / scalar);
+                    var x = projectedCorner.X / scalar;
+                    var y = projectedCorner.Y / scalar;
                     if (x < min.X)
                         min.X = x;
                     if (y < min.Y)
@@ -159,7 +159,7 @@ namespace DetectionEquipment.Client.Interface
                         max.Y = y;
                 }
 
-                OutlineBox.Size = new Vector2(max.X - min.X, max.Y - min.Y);
+                OutlineBox.Size = new Vector2((float) MathUtils.ClampAbs(max.X - min.X, 25, 400), (float) MathUtils.ClampAbs(max.Y - min.Y, 25, 400));
             }
 
             private string DistanceStr()

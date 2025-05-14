@@ -16,7 +16,33 @@ namespace DetectionEquipment.Shared.Utils
             return value;
         }
 
-        public static double ClampAbs(double value, double absMax) => Clamp(value, -absMax, absMax);
+        public static double ClampAbs(double value, double absMax)
+        {
+            if (value < -absMax)
+                return -absMax;
+            if (value > absMax)
+                return absMax;
+            return value;
+        }
+
+        public static double ClampAbs(double value, double absMin, double absMax)
+        {
+            if (value < 0)
+            {
+                if (value > -absMin)
+                    return -absMin;
+                if (value < -absMax)
+                    return -absMax;
+            }
+            else
+            {
+                if (value < absMin)
+                    return absMin;
+                if (value > absMax)
+                    return absMax;
+            }
+            return value;
+        }
 
         public static double MinAbs(double value1, double value2)
         {

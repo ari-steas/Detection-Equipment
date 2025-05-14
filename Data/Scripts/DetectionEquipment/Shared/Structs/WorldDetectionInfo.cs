@@ -53,6 +53,7 @@ namespace DetectionEquipment.Shared.Structs
         {
             return new WorldDetectionInfo
             {
+                Entity = info.Entity,
                 EntityId = info.EntityId,
                 CrossSection = info.CrossSection,
                 Error = info.Error,
