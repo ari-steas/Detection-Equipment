@@ -1,7 +1,9 @@
 ﻿using DetectionEquipment.Shared.Definitions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using VRage;
 using VRage.Game.Entity;
@@ -79,15 +81,20 @@ namespace DetectionEquipment.Shared.Structs
             if (args.Count == 0)
                 throw new Exception("No detection infos provided!");
 
+            if (args.Count == 1)
+                return args.First();
+
             SensorDefinition.SensorType? proposedType = null;
             MyEntity entity = null;
             double totalError = 0;
+            double minError = Double.MaxValue;
             var allCodes = new List<string>();
             foreach (var info in args)
             {
                 if (info.Entity != null)
                     entity = info.Entity;
                 totalError += info.Error;
+                if (info.Error < minError) minError = info.Error;
                 foreach (var code in info.IffCodes)
                     if (!allCodes.Contains(code))
                         allCodes.Add(code);
@@ -99,22 +106,26 @@ namespace DetectionEquipment.Shared.Structs
 
             Vector3D averagePos = Vector3D.Zero;
             double totalCrossSection = 0;
+            double pctSum = 0;
             foreach (var info in args)
             {
+                pctSum += 1 - (info.Error / totalError);
                 if (totalError > 0)
-                    averagePos += info.Position * (info.Error / totalError);
+                    averagePos += info.Position * (1 - (info.Error / totalError));
                 else
                     averagePos += info.Position;
                 totalCrossSection += info.CrossSection;
             }
 
-            if (totalError <= 0)
+            if (totalError > 0)
+                averagePos /= pctSum;
+            else
                 averagePos /= args.Count;
 
-            double avgDiff = 0;
-            foreach (var info in args)
-                avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
-            avgDiff = Math.Sqrt(avgDiff) / args.Count;
+            //double avgDiff = 0;
+            //foreach (var info in args)
+            //    avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
+            //avgDiff = Math.Sqrt(avgDiff) / args.Count;
 
             return new WorldDetectionInfo
             {
@@ -122,7 +133,7 @@ namespace DetectionEquipment.Shared.Structs
                 Entity = entity,
                 CrossSection = totalCrossSection / args.Count,
                 Position = averagePos,
-                Error = avgDiff,
+                Error = minError,
                 DetectionType = proposedType ?? SensorDefinition.SensorType.None,
                 IffCodes = allCodes.ToArray(),
             };

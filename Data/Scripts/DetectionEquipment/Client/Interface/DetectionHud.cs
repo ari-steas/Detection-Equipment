@@ -120,6 +120,29 @@ namespace DetectionEquipment.Client.Interface
                 Offset = new Vector2((float) (offsetPos.X/scalar), (float) (offsetPos.Y/scalar));
                 //MyAPIGateway.Utilities.ShowMessage("HudItem", $"Offset: {Offset} | {offsetPos}");
 
+                
+
+                InfoLabel.Text =
+                    DistanceStr() +
+                    IffStr +
+                    VelocityStr +
+                    CrossSectionStr();
+            }
+
+            private string DistanceStr()
+            {
+                var dist = Vector3D.Distance(MyAPIGateway.Session.Player.Character.GetPosition(), Detection.Position);
+                return $"{(dist > 1000 ? dist/1000 : dist):N1}{(dist > 1000 ? "km" : "m")} \u00b1{(Detection.Error/dist)*100d:N0}% TOREMOVE:{Detection.Error:N0}\n";
+            }
+
+            private string IffStr =>
+                $"IFF: {(Detection.IffCodes.Length == 0 ? "N/A" : string.Join(", ", Detection.IffCodes))}\n";
+
+            private string VelocityStr =>
+                $"Vel: {(Detection.Velocity == null ? "NOLOC" : Detection.Velocity.Value.ToString("N0"))}\n";
+
+            private string CrossSectionStr()
+            {
                 string detectionTypePrefix = "DCS", detectionTypeSuffix = "";
                 switch (Detection.DetectionType)
                 {
@@ -139,12 +162,10 @@ namespace DetectionEquipment.Client.Interface
                         detectionTypePrefix = "IRS";
                         detectionTypeSuffix = "Wm^2";
                         break;
+                    case SensorDefinition.SensorType.None:
+                        return "";
                 }
-
-                InfoLabel.Text =
-                    $"IFF: {(Detection.IffCodes.Length == 0 ? "N/A" : string.Join(", ", Detection.IffCodes))}\n" +
-                    $"Vel: {(Detection.Velocity == null ? "NOLOC" : Detection.Velocity.Value.ToString("N0"))}\n" +
-                    $"{detectionTypePrefix}: {Detection.CrossSection:N0} {detectionTypeSuffix}";
+                return $"{detectionTypePrefix}: {Detection.CrossSection:N0} {detectionTypeSuffix}\n";
             }
         }
     }
