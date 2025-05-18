@@ -3,7 +3,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DetectionEquipment.Client.Interface;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
 using VRage.Game.Components;
@@ -14,6 +13,7 @@ using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using VRage.Game.Entity;
+using DetectionEquipment.Client.Interface.DetectionHud;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
 {

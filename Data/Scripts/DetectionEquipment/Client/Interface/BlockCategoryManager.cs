@@ -12,7 +12,7 @@ namespace DetectionEquipment.Client.Interface
         private static GuiBlockCategoryHelper _blockCategory;
         private static HashSet<string> _bufferBlockSubtypes = new HashSet<string>
         {
-            // Everything should be automatically added, but if not, put its subtype here.
+            // Everything relevant should be automatically added, but if not, put its subtype here.
         }; // DefinitionManager can load before the BlockCategoryManager on client and cause an exception.
 
         private static Dictionary<string, string> _subtypeToTypePairing;
@@ -24,7 +24,7 @@ namespace DetectionEquipment.Client.Interface
             {
                 if (string.IsNullOrEmpty(def.Id.SubtypeName)) continue;
                 _subtypeToTypePairing[def.Id.SubtypeName] = def.Id.TypeId.ToString().Replace("MyObjectBuilder_", "");
-                if (def.Context?.ModPath == GlobalData.ModContext.ModPath) // Adds all blocks from this mod automatically
+                if (def.Context?.ModPath == GlobalData.ModContext.ModPath && (def is MyCubeBlockDefinition || def is MyPhysicalItemDefinition)) // Adds all blocks from this mod automatically
                     RegisterFromSubtype(def.Id.SubtypeName);
             }
 

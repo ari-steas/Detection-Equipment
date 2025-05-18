@@ -7,6 +7,7 @@ using DetectionEquipment.Client.Interface;
 using System;
 using Sandbox.ModAPI;
 using DetectionEquipment.Client.External;
+using DetectionEquipment.Client.Interface.DetectionHud;
 
 namespace DetectionEquipment.Client
 {
