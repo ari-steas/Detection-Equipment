@@ -10,6 +10,8 @@ using System.Text;
 using System.Threading.Tasks;
 using RichHudFramework;
 using RichHudFramework.UI.Rendering;
+using VRage.Game;
+using VRage.Game.Entity;
 using VRage.ModAPI;
 using VRageMath;
 
@@ -47,7 +49,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         public void Update(WorldDetectionInfo detection)
         {
             Detection = detection;
-            if (HudMarker.GetMarkerType(detection) != OutlineBox.Type)
+            if (HudMarker.GetMarkerType(detection) != OutlineBox.Type || HudMarker.GetMarkerColor(detection) != OutlineBox.Color)
             {
                 RemoveChild(OutlineBox);
                 OutlineBox = new HudMarker(this, detection);
@@ -130,12 +132,13 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             private const string RwrTargetTexture = "TargetTri";
 
             public readonly MarkerType Type;
-            private Color _color = Color.Red;
+            public readonly Color Color;
 
             public HudMarker(HudParentBase parent, WorldDetectionInfo detection) : base(parent)
             {
                 Size = Vector2.One * MinBoxSize * 2;
                 string material;
+                Color = GetMarkerColor(detection);
                 Type = GetMarkerType(detection);
 
                 switch (Type)
@@ -157,28 +160,28 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                     case MarkerType.Full:
                         new TexturedBox(this)
                         {
-                            Color = _color,
+                            Color = Color,
                             Size = Vector2.One * MinBoxSize,
                             Material = new Material(material + "_LT", Vector2.One * 32),
                             ParentAlignment = ParentAlignments.Inner | ParentAlignments.Left | ParentAlignments.Top,
                         };
                         new TexturedBox(this)
                         {
-                            Color = _color,
+                            Color = Color,
                             Size = Vector2.One * MinBoxSize,
                             Material = new Material(material + "_RT", Vector2.One * 32),
                             ParentAlignment = ParentAlignments.Inner | ParentAlignments.Right | ParentAlignments.Top,
                         };
                         new TexturedBox(this)
                         {
-                            Color = _color,
+                            Color = Color,
                             Size = Vector2.One * MinBoxSize,
                             Material = new Material(material + "_RB", Vector2.One * 32),
                             ParentAlignment = ParentAlignments.Inner | ParentAlignments.Right | ParentAlignments.Bottom,
                         };
                         new TexturedBox(this)
                         {
-                            Color = _color,
+                            Color = Color,
                             Size = Vector2.One * MinBoxSize,
                             Material = new Material(material + "_LB", Vector2.One * 32),
                             ParentAlignment = ParentAlignments.Inner | ParentAlignments.Left | ParentAlignments.Bottom,
@@ -188,7 +191,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                         Size = Vector2.One * 32;
                         new TexturedBox(this)
                         {
-                            Color = _color,
+                            Color = Color,
                             Size = Vector2.One * MinBoxSize,
                             Material = new Material(material, Vector2.One * 32),
                             ParentAlignment = ParentAlignments.Center,
@@ -239,6 +242,20 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 if (info.DetectionType == SensorDefinition.SensorType.PassiveRadar)
                     return MarkerType.Rwr;
                 return MarkerType.NoIff;
+            }
+
+            public static Color GetMarkerColor(WorldDetectionInfo info)
+            {
+                switch (info.Relations)
+                {
+                    case MyRelationsBetweenPlayers.Allies:
+                    case MyRelationsBetweenPlayers.Self:
+                        return Color.Green;
+                    case MyRelationsBetweenPlayers.Enemies:
+                        return Color.Red;
+                    default:
+                        return Color.White;
+                }
             }
 
             public enum MarkerType

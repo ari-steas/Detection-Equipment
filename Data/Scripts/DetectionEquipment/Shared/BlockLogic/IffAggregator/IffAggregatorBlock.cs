@@ -3,6 +3,7 @@ using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
+using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
@@ -35,7 +36,11 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
         public override MyRelationsBetweenPlayers GetInfoRelations(WorldDetectionInfo info)
         {
             if (info.IffCodes.Length == 0)
+            {
+                if (info.DetectionType == SensorDefinition.SensorType.PassiveRadar) // Radar locks are probably enemies
+                    return MyRelationsBetweenPlayers.Enemies;
                 return MyRelationsBetweenPlayers.Neutral;
+            }
 
             string[] ownIffCodes = null;
             if (AutoSelfIff.Value)

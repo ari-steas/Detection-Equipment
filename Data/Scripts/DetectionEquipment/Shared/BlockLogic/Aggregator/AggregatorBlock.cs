@@ -10,6 +10,7 @@ using System.Linq;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
@@ -78,6 +79,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         public virtual MyRelationsBetweenPlayers GetInfoRelations(WorldDetectionInfo info)
         {
+            // TODO: Script API for this
+            if (info.DetectionType == SensorDefinition.SensorType.PassiveRadar) // Radar locks are probably enemies
+                return MyRelationsBetweenPlayers.Enemies;
             return MyRelationsBetweenPlayers.Neutral; // we just don't know...
         }
 

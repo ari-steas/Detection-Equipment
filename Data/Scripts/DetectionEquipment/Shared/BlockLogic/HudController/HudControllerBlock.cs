@@ -68,16 +68,17 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
             Detections.EnsureCapacity(SourceAggregator.DetectionSet.Count);
             foreach (var item in SourceAggregator.DetectionSet)
             {
+                var newInfo = WorldDetectionInfo.Create(item);
+                newInfo.Relations = SourceAggregator.GetInfoRelations(item);
                 if (item.VelocityVariance != null && item.VelocityVariance > SourceAggregator.VelocityErrorThreshold)
                 {
                     // Don't show velocity if we can't tell what it is.
-                    var newInfo = WorldDetectionInfo.Create(item);
                     newInfo.Velocity = null;
                     newInfo.VelocityVariance = null;
                     Detections.Add(newInfo);
                 }
                 else
-                    Detections.Add(item);
+                    Detections.Add(newInfo);
             }
             
             // Only send to players in relevant cockpits

@@ -24,6 +24,7 @@ namespace DetectionEquipment.Shared.Structs
         [ProtoMember(6)] public double? VelocityVariance;
         [ProtoMember(7)] public SensorDefinition.SensorType DetectionType;
         [ProtoMember(8)] public string[] IffCodes;
+        [ProtoMember(9)] public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
 
         public static WorldDetectionInfo Create(DetectionInfo info)
@@ -46,6 +47,7 @@ namespace DetectionEquipment.Shared.Structs
             wInfo.Velocity = null;
             wInfo.VelocityVariance = null;
             wInfo.IffCodes = info.IffCodes ?? Array.Empty<string>();
+            wInfo.Relations = null;
             return wInfo;
         }
 
