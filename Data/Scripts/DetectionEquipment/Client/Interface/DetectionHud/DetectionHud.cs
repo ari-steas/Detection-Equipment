@@ -1,18 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DetectionEquipment.Shared.Definitions;
+﻿using System.Collections.Generic;
 using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
-using RichHudFramework;
-using RichHudFramework.UI;
 using RichHudFramework.UI.Client;
-using Sandbox.ModAPI;
-using VRage.ModAPI;
-using VRageMath;
 
 namespace DetectionEquipment.Client.Interface.DetectionHud
 {

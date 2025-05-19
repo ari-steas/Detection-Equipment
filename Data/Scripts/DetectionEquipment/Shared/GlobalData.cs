@@ -3,7 +3,6 @@ using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Ingame.Utilities;
 
@@ -111,7 +110,6 @@ namespace DetectionEquipment.Shared
 
             if (MyAPIGateway.Session.IsServer)
             {
-                Log.Info("GlobalData", "Reading/writing config data to disk.");
                 ReadSettings();
                 WriteSettings();
                 MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(DataNetworkId, ServerMessageHandler);
@@ -119,7 +117,7 @@ namespace DetectionEquipment.Shared
             }
             else if (!IsReady)
             {
-                Log.Info("GlobalData", "Reading config data from network. Default configs will be temporarily used.");
+                Log.Info("GlobalData", "Reading config data from network. Default configs will temporarily be used.");
                 MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(DataNetworkId, ClientMessageHandler);
                 MyAPIGateway.Multiplayer.SendMessageToServer(DataNetworkId, Array.Empty<byte>());
             }

@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.ExternalApis;
-using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;

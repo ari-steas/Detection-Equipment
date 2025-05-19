@@ -1,7 +1,6 @@
 ﻿using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic;
-using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;

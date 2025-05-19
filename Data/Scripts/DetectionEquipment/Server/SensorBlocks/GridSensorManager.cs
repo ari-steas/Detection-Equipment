@@ -8,7 +8,6 @@ using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;

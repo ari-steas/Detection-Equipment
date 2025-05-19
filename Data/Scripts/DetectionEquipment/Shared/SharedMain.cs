@@ -4,11 +4,7 @@ using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Utils;
-using Sandbox.ModAPI;
 using VRage.Game.Components;
-using VRage.Game.ModAPI;
-using VRage.ModAPI;
-using VRageMath;
 
 namespace DetectionEquipment.Shared
 {

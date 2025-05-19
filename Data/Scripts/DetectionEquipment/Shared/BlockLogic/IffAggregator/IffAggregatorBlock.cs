@@ -1,5 +1,4 @@
 ﻿using System;
-using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
@@ -7,7 +6,6 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
-using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 

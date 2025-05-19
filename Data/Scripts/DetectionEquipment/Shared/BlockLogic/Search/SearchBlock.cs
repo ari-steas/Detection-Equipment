@@ -1,5 +1,4 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Common.ObjectBuilders;

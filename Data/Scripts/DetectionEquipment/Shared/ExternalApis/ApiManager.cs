@@ -1,7 +1,6 @@
 ﻿using System;
 using DetectionEquipment.Shared.Utils;
 using RichHudFramework.Client;
-using RichHudFramework.Internal;
 
 namespace DetectionEquipment.Shared.ExternalApis
 {

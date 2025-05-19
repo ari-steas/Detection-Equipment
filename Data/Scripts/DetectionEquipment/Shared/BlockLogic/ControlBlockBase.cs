@@ -4,14 +4,12 @@ using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;
-using DetectionEquipment.Client.Interface;
 using DetectionEquipment.Shared.Utils;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Network;
 using VRage.ObjectBuilders;
-using DetectionEquipment.Shared.BlockLogic.Aggregator;
 
 namespace DetectionEquipment.Shared.BlockLogic
 {

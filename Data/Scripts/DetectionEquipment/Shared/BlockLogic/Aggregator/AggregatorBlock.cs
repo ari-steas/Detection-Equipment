@@ -6,7 +6,6 @@ using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;

@@ -1,11 +1,6 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Shared.ExternalApis;
+﻿using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Utils;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using DetectionEquipment.Shared;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;

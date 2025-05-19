@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using VRage;
 using VRage.Game.Entity;
