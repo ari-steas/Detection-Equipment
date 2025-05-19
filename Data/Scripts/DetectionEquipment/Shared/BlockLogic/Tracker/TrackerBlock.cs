@@ -8,6 +8,7 @@ using System.Linq;
 using DetectionEquipment.Shared.Networking;
 using VRage.Game.Components;
 using VRageMath;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
@@ -43,13 +44,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         public Dictionary<BlockSensor, float> LockDecay = new Dictionary<BlockSensor, float>();
 
         protected override ControlBlockSettingsBase GetSettings => new TrackerSettings(this);
+        protected override ITerminalControlAdder GetControls => new TrackerControls();
 
         public override void UpdateOnceBeforeFrame()
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
             ResetAngleTime = new SimpleSync<float>(this, 4);
-            new TrackerControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
         }
 

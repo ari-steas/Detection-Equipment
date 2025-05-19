@@ -14,6 +14,7 @@ using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using VRage.Game.Entity;
 using DetectionEquipment.Client.Interface.DetectionHud;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
 {
@@ -28,13 +29,13 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         internal List<WorldDetectionInfo> Detections = new List<WorldDetectionInfo>();
 
         protected override ControlBlockSettingsBase GetSettings => new HudControllerSettings(this);
+        protected override ITerminalControlAdder GetControls => new HudControllerControls();
 
         public override void UpdateOnceBeforeFrame()
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
             
-            new HudControllerControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
         }
 

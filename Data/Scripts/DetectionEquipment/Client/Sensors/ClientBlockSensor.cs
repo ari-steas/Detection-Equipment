@@ -1,6 +1,8 @@
 ﻿using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
@@ -17,6 +19,7 @@ namespace DetectionEquipment.Client.Sensors
     {
         public readonly Dictionary<uint, ClientSensorData> Sensors = new Dictionary<uint, ClientSensorData>();
         protected override ControlBlockSettingsBase GetSettings => null; // A seperate system is used for syncing sensor data.
+        protected override ITerminalControlAdder GetControls => new SensorControls();
 
         public uint CurrentSensorId = uint.MaxValue;
         public float CurrentAperture
@@ -79,8 +82,6 @@ namespace DetectionEquipment.Client.Sensors
             {
                 ClientNetwork.SendToServer(new SensorInitPacket(Block.EntityId));
             }
-
-            new SensorControls().DoOnce(this);
         }
 
         public override void UpdateAfterSimulation()

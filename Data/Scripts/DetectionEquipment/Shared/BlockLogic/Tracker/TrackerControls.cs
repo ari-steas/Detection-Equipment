@@ -17,12 +17,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         public static BlockSelectControl<TrackerBlock, IMyConveyorSorter> ActiveAggregatorSelect;
         public static Dictionary<TrackerBlock, AggregatorBlock> ActiveAggregators = new Dictionary<TrackerBlock, AggregatorBlock>();
 
-        public override void DoOnce(TrackerBlock thisLogic)
+        public override void DoOnce(IControlBlockBase thisLogic)
         {
             base.DoOnce(thisLogic);
 
-            ActiveAggregators[thisLogic] = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.CubeBlock.CubeGrid == thisLogic.Block.CubeGrid);
-            ActiveSensors[thisLogic] = new HashSet<BlockSensor>();
+            ActiveAggregators[(TrackerBlock) thisLogic] = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.CubeBlock.CubeGrid == thisLogic.CubeBlock.CubeGrid);
+            ActiveSensors[(TrackerBlock) thisLogic] = new HashSet<BlockSensor>();
         }
 
         protected override void CreateTerminalActions()

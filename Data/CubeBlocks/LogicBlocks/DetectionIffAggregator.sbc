@@ -4,9 +4,9 @@
 		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
             <Id>
                 <TypeId>ConveyorSorter</TypeId>
-                <SubtypeId>DetectionSimpleIffBlock</SubtypeId>
+                <SubtypeId>DetectionIffAggregatorBlock</SubtypeId>
             </Id>
-            <DisplayName>Detection Simple IFF</DisplayName>
+            <DisplayName>Detection Simple IFF Aggregator</DisplayName>
             <Icon>Textures\GUI\Icons\Cubes\ProgrammingBlock.dds</Icon>
             <Description>Description_ProgrammableBlock</Description>
             <CubeSize>Large</CubeSize>

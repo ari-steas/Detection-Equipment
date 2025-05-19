@@ -11,7 +11,7 @@ using DetectionEquipment.Client.Interface.DetectionHud;
 
 namespace DetectionEquipment.Client
 {
-    [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation)]
+    [MySessionComponentDescriptor(MyUpdateOrder.AfterSimulation | MyUpdateOrder.BeforeSimulation)]
     // ReSharper disable once UnusedType.Global
     internal class ClientMain : MySessionComponentBase
     {
@@ -40,6 +40,21 @@ namespace DetectionEquipment.Client
             catch (Exception ex)
             {
                 Log.Exception("ClientMain", ex, true);
+            }
+        }
+
+        public override void UpdateBeforeSimulation()
+        {
+            if (MyAPIGateway.Utilities.IsDedicated)
+                return;
+
+            try
+            {
+                DetectionHud.UpdateBeforeSimulation();
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("ClientMain", ex);
             }
         }
 

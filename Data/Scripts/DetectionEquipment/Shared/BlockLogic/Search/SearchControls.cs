@@ -13,10 +13,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
         public static BlockSelectControl<SearchBlock, IMyConveyorSorter> ActiveSensorSelect;
         public static Dictionary<SearchBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<SearchBlock, HashSet<BlockSensor>>();
 
-        public override void DoOnce(SearchBlock thisLogic)
+        public override void DoOnce(IControlBlockBase thisLogic)
         {
             base.DoOnce(thisLogic);
-            ActiveSensors[thisLogic] = new HashSet<BlockSensor>();
+            ActiveSensors[(SearchBlock) thisLogic] = new HashSet<BlockSensor>();
         }
 
         protected override void CreateTerminalActions()

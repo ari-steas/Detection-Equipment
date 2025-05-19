@@ -270,7 +270,7 @@ namespace DetectionEquipment.Server.PBApi
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return;
             IffReflectorBlock reflector = (IffReflectorBlock)control;
-            reflector.IffCode.Value = value;
+            reflector.IffCode.Value = value.Replace(",", "").Trim();
         }
         private static bool GetIffReturnHashed(IMyCubeBlock block)
         {

@@ -21,13 +21,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public static Dictionary<AggregatorBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<AggregatorBlock, HashSet<BlockSensor>>();
         public static Dictionary<AggregatorBlock, HashSet<IMyTerminalBlock>> ActiveWeapons = new Dictionary<AggregatorBlock, HashSet<IMyTerminalBlock>>();
 
-        public override void DoOnce(AggregatorBlock thisLogic)
+        public override void DoOnce(IControlBlockBase thisLogic)
         {
             if (!_isDone)
                 ActiveSensors.Clear();
             base.DoOnce(thisLogic);
-            ActiveSensors[thisLogic] = new HashSet<BlockSensor>();
-            ActiveWeapons[thisLogic] = new HashSet<IMyTerminalBlock>();
+            ActiveSensors[(AggregatorBlock) thisLogic] = new HashSet<BlockSensor>();
+            ActiveWeapons[(AggregatorBlock) thisLogic] = new HashSet<IMyTerminalBlock>();
         }
 
         protected override void CreateTerminalActions()

@@ -11,6 +11,7 @@ using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Network;
 using VRage.ObjectBuilders;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
 
 namespace DetectionEquipment.Shared.BlockLogic
 {
@@ -23,6 +24,7 @@ namespace DetectionEquipment.Shared.BlockLogic
         public static ITerminalControlAdder Controls { get; internal set; } = null;
         public Action OnClose { get; set; }
         protected abstract ControlBlockSettingsBase GetSettings { get; }
+        protected abstract ITerminalControlAdder GetControls { get; }
 
         public override void Init(MyObjectBuilder_EntityBase objectBuilder)
         {
@@ -50,6 +52,7 @@ namespace DetectionEquipment.Shared.BlockLogic
                     GridSensors = ServerMain.I.GridSensorMangers[Block.CubeGrid];
                 }
 
+                GetControls.DoOnce(this);
                 GetSettings?.LoadSettings();
                 NeedsUpdate |= MyEntityUpdateEnum.EACH_FRAME;
             }

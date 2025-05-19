@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using DetectionEquipment.Shared.Networking;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
@@ -16,6 +17,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
         public string IffCodeCache { get; private set; } = "";
         protected override ControlBlockSettingsBase GetSettings => new IffReflectorSettings(this);
+        protected override ITerminalControlAdder GetControls => new IffControls();
 
         public override void UpdateOnceBeforeFrame()
         {
@@ -24,14 +26,13 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
             IffCode = new SimpleSync<string>(this, Block.CubeGrid.CustomName, (value, fromNetwork) =>
             {
-                IffCodeCache = ReturnHash.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value;
+                IffCodeCache = ReturnHash.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value; // note that commas aren't allowed.
             });
             ReturnHash = new SimpleSync<bool>(this, false, (value, fromNetwork) =>
             {
                 IffCodeCache = ReturnHash.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value;
             });
             
-            new IffControls().DoOnce(this);
             base.UpdateOnceBeforeFrame();
 
             if (!_iffMap.ContainsKey(Block.CubeGrid))

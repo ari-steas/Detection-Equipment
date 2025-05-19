@@ -19,7 +19,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         protected static Func<IMyTerminalBlock, bool> VisibleFunc = (block) => block.GameLogic.GetAs<TLogicType>() != null;
         public static string IdPrefix { get; protected set; }= typeof(TLogicType).Name + "_";
 
-        public virtual void DoOnce(TLogicType thisLogic)
+        public virtual void DoOnce(IControlBlockBase thisLogic)
         {
             if (_isDone) return;
 
@@ -371,8 +371,8 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
     /// <summary>
     /// Mildly useless interface to ensure that ControlBlockBase can statically store its controls.
     /// </summary>
-    public interface ITerminalControlAdder
+    internal interface ITerminalControlAdder
     {
-
+        void DoOnce(IControlBlockBase thisLogic);
     }
 }

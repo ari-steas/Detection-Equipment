@@ -11,10 +11,10 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         public static BlockSelectControl<HudControllerBlock, IMyConveyorSorter> ActiveAggregatorSelect;
         public static Dictionary<HudControllerBlock, AggregatorBlock> ActiveAggregators = new Dictionary<HudControllerBlock, AggregatorBlock>();
 
-        public override void DoOnce(HudControllerBlock thisLogic)
+        public override void DoOnce(IControlBlockBase thisLogic)
         {
             base.DoOnce(thisLogic);
-            ActiveAggregators[thisLogic] = null;
+            ActiveAggregators[(HudControllerBlock) thisLogic] = null;
         }
 
         protected override void CreateTerminalActions()

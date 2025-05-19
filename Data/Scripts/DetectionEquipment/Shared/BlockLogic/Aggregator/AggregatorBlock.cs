@@ -9,11 +9,13 @@ using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using VRage.Game;
 using VRage.Game.Components;
+using VRage.Game.Entity;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 using VRage.ModAPI;
@@ -42,6 +44,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             new Dictionary<int, HashSet<AggregatorBlock>>();
 
         protected override ControlBlockSettingsBase GetSettings => new AggregatorSettings(this);
+        protected override ITerminalControlAdder GetControls => new AggregatorControls();
 
         internal HashSet<BlockSensor> ActiveSensors => AggregatorControls.ActiveSensors[this];
         internal HashSet<IMyTerminalBlock> ActiveWeapons => AggregatorControls.ActiveWeapons[this];
@@ -63,34 +66,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             }
         }
 
-        public override void UpdateOnceBeforeFrame()
-        {
-            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
-                return;
-
-            DatalinkInShareType = new SimpleSync<int>(this, 1);
-            DatalinkOutChannel.ValueChanged += sync =>
-            {
-                DatalinkManager.RegisterAggregator(this, sync.Value, _prevDatalinkOutChannel);
-                _prevDatalinkOutChannel = sync.Value;
-            };
-            DoWcTargeting = new SimpleSync<bool>(this, true);
-            UseAllWeapons = new SimpleSync<bool>(this, true);
-
-            new AggregatorControls().DoOnce(this);
-            base.UpdateOnceBeforeFrame();
-            NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
-
-            DatalinkManager.RegisterAggregator(this, DatalinkOutChannel.Value, _prevDatalinkOutChannel);
-            _prevDatalinkOutChannel = DatalinkOutChannel.Value;
-        }
-
-        public override void MarkForClose()
-        {
-            base.MarkForClose();
-            DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
-        }
-
         public HashSet<WorldDetectionInfo> DetectionSet
         {
             get
@@ -99,6 +74,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     return UpdateAggregatedDetections();
                 return _lastDetectionSet;
             }
+        }
+
+        public virtual MyRelationsBetweenPlayers GetInfoRelations(WorldDetectionInfo info)
+        {
+            return MyRelationsBetweenPlayers.Neutral; // we just don't know...
         }
 
         private int _lastDetectionSetUpdate = -1;
@@ -167,6 +147,33 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
                 return _lastDetectionSet;
             }
+        }
+
+        public override void UpdateOnceBeforeFrame()
+        {
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+                return;
+
+            DatalinkInShareType = new SimpleSync<int>(this, 1);
+            DatalinkOutChannel.ValueChanged += sync =>
+            {
+                DatalinkManager.RegisterAggregator(this, sync.Value, _prevDatalinkOutChannel);
+                _prevDatalinkOutChannel = sync.Value;
+            };
+            DoWcTargeting = new SimpleSync<bool>(this, true);
+            UseAllWeapons = new SimpleSync<bool>(this, true);
+
+            base.UpdateOnceBeforeFrame();
+            NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
+
+            DatalinkManager.RegisterAggregator(this, DatalinkOutChannel.Value, _prevDatalinkOutChannel);
+            _prevDatalinkOutChannel = DatalinkOutChannel.Value;
+        }
+
+        public override void MarkForClose()
+        {
+            base.MarkForClose();
+            DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
         }
 
         private bool _isProcessing = false;
