@@ -28,9 +28,9 @@ namespace DetectionEquipment.Shared
         /// </summary>
         public static double MaxVisualSensorRange = Math.Max(MaxSensorRange, 50000);
         /// <summary>
-        /// Required for extended-range WeaponCore integration. Increases sync distance to <see cref="MaxSensorRange"/>.
+        /// Required for extended-range WeaponCore integration. Increases sync distance; set to 0 or a negative number to disable.
         /// </summary>
-        public static bool OverrideSyncDistance = true;
+        public static int OverrideSyncDistance = (int) MaxSensorRange;
         /// <summary>
         /// Should aggregators be able to provide targeting to WeaponCore guns?
         /// </summary>
@@ -74,11 +74,11 @@ namespace DetectionEquipment.Shared
                 Log.Info("GlobalData", $"{LowRcsSubtypes.Length} low-RCS block definitions found.");
             }
 
-            if (OverrideSyncDistance)
+            if (OverrideSyncDistance > 0)
             {
                 double prevDist = SyncRange;
-                MyAPIGateway.Session.SessionSettings.SyncDistance = (int)Math.Abs(MaxSensorRange);
-                Log.Info("GlobalData", $"Sync distance overriden from {prevDist/1000d:N1}km to {Math.Abs(MaxSensorRange)/1000d:N1}km.\n" +
+                MyAPIGateway.Session.SessionSettings.SyncDistance = OverrideSyncDistance;
+                Log.Info("GlobalData", $"Sync distance overriden from {prevDist/1000d:N1}km to {OverrideSyncDistance/1000d:N1}km.\n" +
                                        "If you're using this for WeaponCore interaction, make sure to increase MaxHudFocusDistance in the world settings!");
             }
             else
