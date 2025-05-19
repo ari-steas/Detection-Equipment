@@ -21,12 +21,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
 
         protected override void AssignData()
         {
+            base.AssignData();
             AttachedLogic.AutoSelfIff.Value = _autoSelfIff;
             AttachedLogic.FriendlyIffCodes.Value = _friendlyIffCodes;
         }
 
         protected override void RetrieveData()
         {
+            base.RetrieveData();
             _autoSelfIff = AttachedLogic.AutoSelfIff.Value;
             _friendlyIffCodes = AttachedLogic.FriendlyIffCodes.Value;
         }

@@ -36,7 +36,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             Log.Info("DetectionHud", "Closed.");
         }
 
-        public static void UpdateBeforeSimulation()
+        public static void UpdateAfterSimulation()
         {
             // Remove hud items not updated in the last tick.
             foreach (var deadItem in _deadItems)

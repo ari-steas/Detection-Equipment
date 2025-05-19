@@ -15,6 +15,7 @@ using ProtoBuf;
 using VRage.Game.Entity;
 using DetectionEquipment.Client.Interface.DetectionHud;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using MyAPIGateway = Sandbox.ModAPI.MyAPIGateway;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
 {
@@ -78,8 +79,13 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 else
                     Detections.Add(item);
             }
-                
-            ServerNetwork.SendToEveryoneInSync(new HudUpdatePacket(this), Block.WorldMatrix.Translation);
+            
+            // Only send to players in relevant cockpits
+            var topmostParent = Block.GetTopMostParent();
+            var updatePacket = new HudUpdatePacket(this);
+            foreach (var player in GlobalData.Players)
+                if (player.Controller.ControlledEntity?.Entity.GetTopMostParent() == topmostParent)
+                    ServerNetwork.SendToPlayer(updatePacket, player.SteamUserId);
         }
 
         protected void UpdateClient()
@@ -92,7 +98,9 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 Detections[i] = detection;
             }
 
-            DetectionHud.UpdateDetections(Detections);
+            // Only show HUD blocks on controlled grid.
+            if (MyAPIGateway.Session.Player?.Controller.ControlledEntity?.Entity.GetTopMostParent() == Block.GetTopMostParent())
+                DetectionHud.UpdateDetections(Detections);
         }
 
         public override void MarkForClose()
