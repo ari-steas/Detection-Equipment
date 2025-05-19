@@ -39,21 +39,19 @@ namespace DetectionEquipment.Client.External
                 return;
             }
 
-            if (GlobalData.ContributeWcTargeting)
+            GlobalData.ContributeWcTargeting.AddOnChanged(contributeTargeting =>
             {
-                ApiManager.WcApi.AddScanTargetsAction(ScanTargetsAction);
-                ApiManager.WcApi.SetValidateWeaponTargetFunc(ValidateWeaponTarget);
-                Log.Info("WcInteractionManager", "WeaponCore targeting overridden.");
-            }
-            else
-            {
-                Log.Info("WcInteractionManager", "WeaponCore targeting not overridden.");
-            }
-        }
-
-        private static bool ValidateWeaponTarget(IMyTerminalBlock weapon, int weaponId, MyEntity target)
-        {
-            return true;
+                if (contributeTargeting)
+                {
+                    ApiManager.WcApi.AddScanTargetsAction(ScanTargetsAction);
+                    Log.Info("WcInteractionManager", "WeaponCore targeting overridden.");
+                }
+                else
+                {
+                    ApiManager.WcApi.RemoveScanTargetsAction(ScanTargetsAction);
+                    Log.Info("WcInteractionManager", "WeaponCore targeting not overridden.");
+                }
+            });
         }
 
         private static void ScanTargetsAction(MyCubeGrid grid, BoundingSphereD sphere, List<MyEntity> targets)

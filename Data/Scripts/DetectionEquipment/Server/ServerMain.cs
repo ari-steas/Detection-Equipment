@@ -148,16 +148,21 @@ namespace DetectionEquipment.Server
 
         private void OnWcApiReady()
         {
-            if (GlobalData.ContributeWcTargeting)
+            GlobalData.ContributeWcTargeting.AddOnChanged(contributeTargeting =>
             {
-                ApiManager.WcApi.AddScanTargetsAction(GridSensorManager.ScanTargetsAction);
-                ApiManager.WcApi.SetValidateWeaponTargetFunc(GridSensorManager.ValidateWeaponTarget);
-                Log.Info("ServerMain", "WeaponCore targeting overridden.");
-            }
-            else
-            {
-                Log.Info("ServerMain", "WeaponCore targeting not overriden.");
-            }
+                if (contributeTargeting)
+                {
+                    ApiManager.WcApi.AddScanTargetsAction(GridSensorManager.ScanTargetsAction);
+                    ApiManager.WcApi.SetValidateWeaponTargetFunc(GridSensorManager.ValidateWeaponTarget);
+                    Log.Info("ServerMain", "WeaponCore targeting overridden.");
+                }
+                else
+                {
+                    ApiManager.WcApi.RemoveScanTargetsAction(GridSensorManager.ScanTargetsAction);
+                    ApiManager.WcApi.SetValidateWeaponTargetFunc(null);
+                    Log.Info("ServerMain", "WeaponCore targeting override disabled.");
+                }
+            });
         }
 
         private void OnEntityAdd(IMyEntity obj)
