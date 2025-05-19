@@ -12,14 +12,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
                 "IffCode",
                 "IFF Code",
                 "IFF code returned when a radar pings this grid",
-                b => new StringBuilder(b.GameLogic.GetAs<IffReflectorBlock>()?.IffCode),
-                (b, v) => b.GameLogic.GetAs<IffReflectorBlock>().IffCode.Value = v.ToString().Replace(",", "").Trim()
+                b => new StringBuilder(b.GameLogic.GetAs<IffReflectorBlock>()?.IffCode.Value),
+                (b, v) => b.GameLogic.GetAs<IffReflectorBlock>().IffCode.Value = v?.ToString().Replace(",", "").Trim()
                 );
             CreateToggle(
                 "ReturnHash",
                 "Return Hashed IFF Code",
                 "Whether the IFF code should be returned as a hash or a plain string.",
-                b => b.GameLogic.GetAs<IffReflectorBlock>()?.ReturnHash ?? false,
+                b => b.GameLogic.GetAs<IffReflectorBlock>()?.ReturnHash.Value ?? false,
                 (b, v) => b.GameLogic.GetAs<IffReflectorBlock>().ReturnHash.Value = v
                 );
         }

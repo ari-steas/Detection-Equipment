@@ -104,7 +104,7 @@ namespace DetectionEquipment.Server.Sensors
 
             if (signalToNoiseRatio < 0)
             {
-                DebugDraw.AddLine(Position, visibilitySet.Position, Color.Blue, 0);
+                //DebugDraw.AddLine(Position, visibilitySet.Position, Color.Blue, 0);
                 return null;
             }
 

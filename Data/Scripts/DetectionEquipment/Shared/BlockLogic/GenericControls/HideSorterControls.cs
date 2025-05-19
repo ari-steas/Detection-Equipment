@@ -40,7 +40,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                     case "addToSelectionButton":
                     case "ShowInInventory":
                     case "SearchField":
-                    case "": // keen doesn't name their terminal control separators. :(
+                    //case "": // keen doesn't name their terminal control separators. :(
                         //c.Enabled = TerminalChainedDelegate.Create(c.Enabled, AppendedCondition); // grays out
                         c.Visible = TerminalChainedDelegate.Create(c.Visible, AppendedCondition); // hides
                         break;
