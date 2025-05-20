@@ -108,41 +108,39 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         private WorldDetectionInfo[] AggregateInfos(ICollection<WorldDetectionInfo> infos)
         {
-            GroupInfos(infos);
-            var aggregated = new WorldDetectionInfo[_groupsCache.Count];
+            Dictionary<long, List<WorldDetectionInfo>> groupCache;
+            if (!GroupsCacheBuffer.TryPop(out groupCache))
+                groupCache = new Dictionary<long, List<WorldDetectionInfo>>();
+
+            // Group infos together
+            foreach (var info in infos)
+            {
+                if (!groupCache.ContainsKey(info.EntityId))
+                {
+                    List<WorldDetectionInfo> set;
+                    if (!GroupInfoBuffer.TryPop(out set))
+                        set = new List<WorldDetectionInfo>();
+                    groupCache[info.EntityId] = set;
+                }
+                groupCache[info.EntityId].Add(info);
+            }
+
+            var aggregated = new WorldDetectionInfo[groupCache.Count];
             int i = 0;
-            foreach (var set in _groupsCache.Values)
+            foreach (var set in groupCache.Values)
             {
                 aggregated[i++] = WorldDetectionInfo.Average(set);
                 set.Clear();
                 GroupInfoBuffer.Push(set);
             }
 
-            _groupsCache.Clear();
+            groupCache.Clear();
+            GroupsCacheBuffer.Push(groupCache);
         
             return aggregated;
         }
 
-        private Dictionary<long, List<WorldDetectionInfo>> _groupsCache = new Dictionary<long, List<WorldDetectionInfo>>();
+        public static volatile ConcurrentStack<Dictionary<long, List<WorldDetectionInfo>>> GroupsCacheBuffer = new ConcurrentStack<Dictionary<long, List<WorldDetectionInfo>>>();
         public static volatile ConcurrentStack<List<WorldDetectionInfo>> GroupInfoBuffer = new ConcurrentStack<List<WorldDetectionInfo>>();
-
-        /// <summary>
-        /// Groups detection info from a single moment in time.
-        /// </summary>
-        /// <param name="infos"></param>
-        private void GroupInfos(ICollection<WorldDetectionInfo> infos)
-        {
-            foreach (var info in infos)
-            {
-                if (!_groupsCache.ContainsKey(info.EntityId))
-                {
-                    List<WorldDetectionInfo> set;
-                    if (!GroupInfoBuffer.TryPop(out set))
-                        set = new List<WorldDetectionInfo>();
-                    _groupsCache[info.EntityId] = set;
-                }
-                _groupsCache[info.EntityId].Add(info);
-            }
-        }
     }
 }

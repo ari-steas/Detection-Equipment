@@ -19,16 +19,17 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI.Network;
 using VRage.Sync;
 using VRage.ModAPI;
+using Sandbox.Game.Multiplayer;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock")]
     internal partial class AggregatorBlock : ControlBlockBase<IMyConveyorSorter>
     {
-        public MySync<float, SyncDirection.BothWays> AggregationTime;
-        public MySync<float, SyncDirection.BothWays> VelocityErrorThreshold; // Standard Deviation at which to ignore velocity estimation
-        public MySync<bool, SyncDirection.BothWays> UseAllSensors;
-        public MySync<int, SyncDirection.BothWays> DatalinkOutChannel;
+        public SimpleSync<float> AggregationTime;
+        public SimpleSync<float> VelocityErrorThreshold; // Standard Deviation at which to ignore velocity estimation
+        public SimpleSync<bool> UseAllSensors;
+        public SimpleSync<int> DatalinkOutChannel;
         public SimpleSync<int> DatalinkInShareType;
         public SimpleSync<bool> DoWcTargeting;
         public SimpleSync<bool> UseAllWeapons;
@@ -157,12 +158,15 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            DatalinkInShareType = new SimpleSync<int>(this, 1);
-            DatalinkOutChannel.ValueChanged += sync =>
+            AggregationTime = new SimpleSync<float>(this, 1);
+            VelocityErrorThreshold = new SimpleSync<float>(this, 32);
+            UseAllSensors = new SimpleSync<bool>(this, true);
+            DatalinkOutChannel = new SimpleSync<int>(this, 0, (value, fromNetwork) =>
             {
-                DatalinkManager.RegisterAggregator(this, sync.Value, _prevDatalinkOutChannel);
-                _prevDatalinkOutChannel = sync.Value;
-            };
+                DatalinkManager.RegisterAggregator(this, value, _prevDatalinkOutChannel);
+                _prevDatalinkOutChannel = value;
+            });
+            DatalinkInShareType = new SimpleSync<int>(this, 1);
             DoWcTargeting = new SimpleSync<bool>(this, true);
             UseAllWeapons = new SimpleSync<bool>(this, true);
 
