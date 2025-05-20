@@ -33,7 +33,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AttachedLogic.UseAllSensors.Value = _useAllSensors;
 
             AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
-            AggregatorControls.ActiveWeaponSelect.UpdateSelected(AttachedLogic, _selectedWeapons ?? Array.Empty<long>());
+            AggregatorControls.ActiveWeaponSelect?.UpdateSelected(AttachedLogic, _selectedWeapons ?? Array.Empty<long>()); // this might be null if WC isn't loaded
 
             AttachedLogic.DatalinkOutChannel.Value = _datalinkOutChannel;
             AttachedLogic.DatalinkInChannels = _datalinkInChannels;
@@ -50,7 +50,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             if (!AggregatorControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedSensors))
                 _selectedSensors = Array.Empty<long>();
-            if (!AggregatorControls.ActiveWeaponSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedWeapons))
+            if (!AggregatorControls.ActiveWeaponSelect?.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedWeapons) ?? true)
                 _selectedWeapons = Array.Empty<long>();
 
             _datalinkOutChannel = AttachedLogic.DatalinkOutChannel.Value;

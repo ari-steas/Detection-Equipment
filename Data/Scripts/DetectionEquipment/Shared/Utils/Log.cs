@@ -70,7 +70,7 @@ namespace DetectionEquipment.Shared.Utils
             if (MyAPIGateway.Utilities.IsDedicated)
                 MyLog.Default.WriteLineToConsole($"{source}\n{exception.Message}\n{exception.StackTrace}");
             if (fatal)
-                CustomCrashModContext.Throw(exception);
+                CustomCrashModContext.Throw(source, exception);
         }
 
         public static void IncreaseIndent()
@@ -119,7 +119,7 @@ namespace DetectionEquipment.Shared.Utils
                 ModItem = context.ModItem;
             }
 
-            public static void Throw(Exception ex)
+            public static void Throw(string source, Exception ex)
             {
                 Log.Info("CustomCrashModContext", "Generating custom exception message and closing log...");
                 Log.Close();
@@ -127,7 +127,7 @@ namespace DetectionEquipment.Shared.Utils
                     "Please reach out to @aristeas. on discord with logs for help.\n\n" +
                     "Mod: %AppData%\\SpaceEngineers\\Storage\\DetectionEquipment.log \n" +
                     "Game: %AppData%\\SpaceEngineers\\SpaceEngineers_*_*.log\n\n" +
-                    $"Reason: {ex.Message}\n{ex.InnerException?.Message}\n"
+                    $"{source}: {ex.Message}\n{ex.InnerException?.Message}\n"
                     );
                 // Invoking on main thread to guarantee the hard-crash message
                 MyAPIGateway.Utilities.InvokeOnGameThread(() =>
