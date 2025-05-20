@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Server.Tracking;
+﻿using System;
+using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Serialization;
 using Sandbox.ModAPI;
@@ -190,45 +191,59 @@ namespace DetectionEquipment.Server.SensorBlocks
             var cubeBlock = obj.FatBlock as IMyFunctionalBlock;
             if (cubeBlock == null) return;
 
-            List<uint> ids = new List<uint>();
-            var sensors = DefinitionManager.TryCreateSensors(cubeBlock);
-            foreach (var newSensor in sensors)
+            try
             {
-                Sensors.Add(newSensor);
-                ids.Add(newSensor.Sensor.Id);
+                List<uint> ids = new List<uint>();
+                var sensors = DefinitionManager.TryCreateSensors(cubeBlock);
+                foreach (var newSensor in sensors)
+                {
+                    Sensors.Add(newSensor);
+                    ids.Add(newSensor.Sensor.Id);
 
-                HasRadar |= newSensor.Sensor is RadarSensor || newSensor.Sensor is PassiveRadarSensor;
+                    HasRadar |= newSensor.Sensor is RadarSensor || newSensor.Sensor is PassiveRadarSensor;
+                }
+
+                if (ids.Count > 0)
+                {
+                    BlockSensorIdMap[cubeBlock] = ids.ToArray();
+                    BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
+                    BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
+                }
+
+                var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
+                if (aggregator != null)
+                {
+                    Aggregators.Add(aggregator);
+                }
             }
-
-            if (ids.Count > 0)
+            catch (Exception ex)
             {
-                BlockSensorIdMap[cubeBlock] = ids.ToArray();
-                BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
-                BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
-            }
-
-            var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
-            if (aggregator != null)
-            {
-                Aggregators.Add(aggregator);
+                Log.Exception("GridSensorManager", ex, true);
             }
         }
 
         private void OnBlockRemoved(IMySlimBlock obj)
         {
-            var cubeBlock = obj.FatBlock;
-            if (cubeBlock != null)
+            try
             {
-                Sensors.RemoveWhere(sensor => sensor.Block == cubeBlock);
-                BlockSensorIdMap.Remove(cubeBlock);
-
-                HasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
-
-                var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
-                if (aggregator != null)
+                var cubeBlock = obj.FatBlock;
+                if (cubeBlock != null)
                 {
-                    Aggregators.Remove(aggregator);
+                    Sensors.RemoveWhere(sensor => sensor.Block == cubeBlock);
+                    BlockSensorIdMap.Remove(cubeBlock);
+
+                    HasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
+
+                    var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
+                    if (aggregator != null)
+                    {
+                        Aggregators.Remove(aggregator);
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("GridSensorManager", ex, true);
             }
         }
 

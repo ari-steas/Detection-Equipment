@@ -1,13 +1,24 @@
-﻿using System;
+﻿#define MAINMOD
+using System;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Definitions
 {
+    /// <summary>
+    /// Definition for a countermeasure emitter; i.e. the block countermeasures are launched from.
+    /// </summary>
     [ProtoContract]
     public class CountermeasureEmitterDefinition
     {
+        #if MAINMOD
         [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
+        #else
+        /// <summary>
+        /// Unique name for this definition.
+        /// </summary>
+        [ProtoIgnore] public string Name;
+        #endif
 
         /// <summary>
         /// Subtypes this emitter is attached to.
@@ -34,15 +45,20 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(5)] public float ShotsPerSecond;
 
-        ///// <summary>
-        ///// Number of shots in the magazine. Set less than or equal to 0 to ignore.
-        ///// </summary>
-        //[ProtoMember(6)] public int MagazineSize;
-        //
-        ///// <summary>
-        ///// Reload time. Set to less than or equal to 1/60f to ignore.
-        ///// </summary>
-        //[ProtoMember(7)] public float ReloadTime;
+        /// <summary>
+        /// Number of shots in the magazine. Set less than or equal to 0 to ignore.
+        /// </summary>
+        [ProtoMember(6)] public int MagazineSize;
+        
+        /// <summary>
+        /// Reload time. Set to less than or equal to 1/60f to ignore.
+        /// </summary>
+        [ProtoMember(7)] public float ReloadTime;
+
+        /// <summary>
+        /// Magazine item consumed on reload.
+        /// </summary>
+        [ProtoMember(10)] public string MagazineItem;
 
         /// <summary>
         /// Additive ejection velocity.
@@ -55,8 +71,7 @@ namespace DetectionEquipment.Shared.Definitions
         [ProtoMember(9)] public string FireParticle;
 
 
-        //[ProtoIgnore] public bool ContinuousMagazine => MagazineSize <= 0 || ReloadTime <= 1/60f;
-
+        #if MAINMOD
         public static bool Verify(CountermeasureEmitterDefinition def)
         {
             bool isValid = true;
@@ -84,5 +99,6 @@ namespace DetectionEquipment.Shared.Definitions
 
             return isValid;
         }
+        #endif
     }
 }

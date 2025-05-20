@@ -93,6 +93,18 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 case 0:
                     var definition = DefinitionApi.GetDefinition<SensorDefinition>(definitionId);
+
+                    Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
+                    Log.IncreaseIndent();
+                    bool valid = SensorDefinition.Verify(definition);
+                    Log.DecreaseIndent();
+                    if (!valid)
+                    {
+                        Log.Info("DefinitionManager", $"Did not register definition {definitionId}.");
+                        MyAPIGateway.Utilities.ShowMessage("Detection Equipment", $"Definition {definitionId} failed validation! Check logs for more info.");
+                        return;
+                    }
+
                     definition.Id = definitionId.GetHashCode();
                     SensorDefinitions[definition.Id] = definition;
                     if (!MyAPIGateway.Utilities.IsDedicated)
@@ -118,12 +130,14 @@ namespace DetectionEquipment.Shared.Definitions
                 case 0:
                     var definition = DefinitionApi.GetDefinition<CountermeasureDefinition>(definitionId);
 
+                    Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
                     Log.IncreaseIndent();
                     bool valid = CountermeasureDefinition.Verify(definition);
                     Log.DecreaseIndent();
                     if (!valid)
                     {
                         Log.Info("DefinitionManager", $"Did not register definition {definitionId}.");
+                        MyAPIGateway.Utilities.ShowMessage("Detection Equipment", $"Definition {definitionId} failed validation! Check logs for more info.");
                         return;
                     }
 
@@ -150,12 +164,14 @@ namespace DetectionEquipment.Shared.Definitions
                 case 0:
                     var definition = DefinitionApi.GetDefinition<CountermeasureEmitterDefinition>(definitionId);
 
+                    Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
                     Log.IncreaseIndent();
                     bool valid = CountermeasureEmitterDefinition.Verify(definition);
                     Log.DecreaseIndent();
                     if (!valid)
                     {
                         Log.Info("DefinitionManager", $"Did not register definition {definitionId}.");
+                        MyAPIGateway.Utilities.ShowMessage("Detection Equipment", $"Definition {definitionId} failed validation! Check logs for more info.");
                         return;
                     }
 
@@ -183,6 +199,8 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
                     continue;
+                if (!(block is IMyCameraBlock))
+                    throw new Exception($"Sensor with subtype \"{block.BlockDefinition.SubtypeId}\" is not a camera block!");
                 sensors.Add(new BlockSensor(block, definition));
             }
             return sensors;

@@ -1,4 +1,6 @@
-﻿using ProtoBuf;
+﻿#define MAINMOD
+using DetectionEquipment.Shared.Utils;
+using ProtoBuf;
 using System;
 using VRage;
 using SensorDefTuple = VRage.MyTuple<int, double, double, VRage.MyTuple<double, double, double, double, double, double>?, double, double>;
@@ -11,7 +13,15 @@ namespace DetectionEquipment.Shared.Definitions
     [ProtoContract]
     public class SensorDefinition
     {
+        #if MAINMOD
         [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
+        #else
+        /// <summary>
+        /// Unique name for this definition.
+        /// </summary>
+        [ProtoIgnore] public string Name;
+        #endif
+
         /// <summary>
         /// Subtypes this sensor is attached to.
         /// </summary>
@@ -48,6 +58,9 @@ namespace DetectionEquipment.Shared.Definitions
         /// Multiplier for range error
         /// </summary>
         [ProtoMember(9)] public double RangeErrorModifier = 1;
+        /// <summary>
+        /// Radar properties. Set to null if unused.
+        /// </summary>
         [ProtoMember(10)] public RadarPropertiesDefinition RadarProperties = new RadarPropertiesDefinition();
 
         /// <summary>
@@ -127,6 +140,7 @@ namespace DetectionEquipment.Shared.Definitions
             Infrared = 4,
         }
 
+        #if MAINMOD
         // TODO: Add new properties
         public static explicit operator SensorDefTuple(SensorDefinition d) => new SensorDefTuple(
                 (int) d.Type,
@@ -143,5 +157,35 @@ namespace DetectionEquipment.Shared.Definitions
                 d.DetectionThreshold,
                 d.MaxPowerDraw
                 );
+
+        public static bool Verify(SensorDefinition def)
+        {
+            bool isValid = true;
+
+            if (def == null)
+            {
+                Log.Info("SensorDefinition", "Definition null!");
+                return false;
+            }
+            if (def.BlockSubtypes == null || def.BlockSubtypes.Length == 0)
+            {
+                Log.Info("SensorDefinition", "BlockSubtypes unset!");
+                isValid = false;
+            }
+            if (def.MinAperture > def.MaxAperture || def.MinAperture < 0 || def.MaxAperture < 0)
+            {
+                Log.Info("SensorDefinition", "Aperture invalid! Make sure both Min and Max are greater than zero, and min is less than max.");
+                isValid = false;
+            }
+            if (def.RadarProperties == null && def.Type == SensorType.Radar)
+            {
+                Log.Info("SensorDefinition", "Radar properties are null on a radar sensor!");
+                isValid = false;
+            }
+            // TODO: more & better validation
+
+            return isValid;
+        }
+        #endif
     }
 }

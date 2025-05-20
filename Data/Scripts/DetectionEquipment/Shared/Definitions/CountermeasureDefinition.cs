@@ -1,13 +1,24 @@
-﻿using ProtoBuf;
+﻿#define MAINMOD
+using ProtoBuf;
 using System;
 using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.Definitions
 {
+    /// <summary>
+    /// Definition for a countermeasure; i.e. an object that adds noise to sensors that can see it.
+    /// </summary>
     [ProtoContract]
     public class CountermeasureDefinition
     {
+        #if MAINMOD
         [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
+        #else
+        /// <summary>
+        /// Unique name for this definition.
+        /// </summary>
+        [ProtoIgnore] public string Name;
+        #endif
 
         /// <summary>
         /// Sensor types this countermeasure affects.
@@ -73,6 +84,7 @@ namespace DetectionEquipment.Shared.Definitions
             Quadratic = 2,
         }
 
+        #if MAINMOD
         public static bool Verify(CountermeasureDefinition def)
         {
             bool isValid = true;
@@ -91,5 +103,6 @@ namespace DetectionEquipment.Shared.Definitions
 
             return isValid;
         }
+        #endif
     }
 }
