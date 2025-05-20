@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System;
 using System.Linq;
+using System.Threading;
 using VRage.Game.ModAPI;
 using VRageMath;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Shared.Networking;
+using VRage.Utils;
 
 namespace DetectionEquipment.Server.Networking
 {
@@ -73,6 +75,13 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToPlayerInternal(PacketBase packet, ulong playerSteamId)
         {
+            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId)
+            {
+                // avoid thread contention
+                MyAPIGateway.Utilities.InvokeOnGameThread(() => SendToPlayerInternal(packet, playerSteamId));
+                return;
+            }
+
             if (playerSteamId == MyAPIGateway.Multiplayer.ServerId || playerSteamId == 0)
             {
                 if (!MyAPIGateway.Utilities.IsDedicated)
@@ -96,6 +105,13 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToEveryoneInternal(PacketBase packet)
         {
+            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId)
+            {
+                // avoid thread contention
+                MyAPIGateway.Utilities.InvokeOnGameThread(() => SendToEveryoneInternal(packet));
+                return;
+            }
+
             foreach (IMyPlayer p in GlobalData.Players)
             {
                 // skip sending to self (server player) or back to sender
@@ -123,6 +139,13 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToEveryoneInSyncInternal(PacketBase packet, Vector3D position)
         {
+            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId)
+            {
+                // avoid thread contention
+                MyAPIGateway.Utilities.InvokeOnGameThread(() => SendToEveryoneInSyncInternal(packet, position));
+                return;
+            }
+
             List<ulong> toSend = new List<ulong>();
             foreach (var player in GlobalData.Players)
                 if (Vector3D.DistanceSquared(player.GetPosition(), position) <= GlobalData.SyncRangeSq) // TODO: Sync this based on camera position

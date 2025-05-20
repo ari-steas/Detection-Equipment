@@ -1,5 +1,4 @@
-﻿#define MAINMOD
-using ProtoBuf;
+﻿using ProtoBuf;
 using System;
 using DetectionEquipment.Shared.Utils;
 
@@ -11,14 +10,12 @@ namespace DetectionEquipment.Shared.Definitions
     [ProtoContract]
     public class CountermeasureDefinition
     {
-        #if MAINMOD
+        // can't define preprocessor directives, otherwise would have
         [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
-        #else
-        /// <summary>
-        /// Unique name for this definition.
-        /// </summary>
-        [ProtoIgnore] public string Name;
-        #endif
+        // /// <summary>
+        // /// Unique name for this definition.
+        // /// </summary>
+        // [ProtoIgnore] public string Name;
 
         /// <summary>
         /// Sensor types this countermeasure affects.
@@ -84,7 +81,6 @@ namespace DetectionEquipment.Shared.Definitions
             Quadratic = 2,
         }
 
-        #if MAINMOD
         public static bool Verify(CountermeasureDefinition def)
         {
             bool isValid = true;
@@ -103,6 +99,5 @@ namespace DetectionEquipment.Shared.Definitions
 
             return isValid;
         }
-        #endif
     }
 }

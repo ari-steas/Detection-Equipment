@@ -59,6 +59,13 @@ namespace DetectionEquipment.Client.Networking
 
         private void SendToServerInternal(PacketBase packet)
         {
+            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId)
+            {
+                // avoid thread contention
+                MyAPIGateway.Utilities.InvokeOnGameThread(() => SendToServerInternal(packet));
+                return;
+            }
+
             if (MyAPIGateway.Session.IsServer)
             {
                 try

@@ -16,6 +16,7 @@ namespace DetectionEquipment.Shared
         public const ushort ServerNetworkId = 15289;
         public const ushort DataNetworkId = 15288;
         public const ushort ClientNetworkId = 15287;
+        public static int MainThreadId;
         public static double SyncRange => MyAPIGateway.Session.SessionSettings.SyncDistance;
         public static double SyncRangeSq => MyAPIGateway.Session.SessionSettings.SyncDistance * MyAPIGateway.Session.SessionSettings.SyncDistance;
         public static readonly Guid SettingsGuid = new Guid("b4e33a2c-0406-4aea-bf0a-d1ad04266a14");
@@ -131,6 +132,11 @@ namespace DetectionEquipment.Shared
                                        $"\tName: {ModContext.ModName}\n" +
                                        $"\tItem: {(long.TryParse(modId, out discard) ? "https://steamcommunity.com/workshop/filedetails/?id=" : "LocalMod ")}{modId}\n" +
                                        $"\tService: {ModContext.ModServiceName} (if this isn't steam, please report the mod)");
+            }
+
+            {
+                MainThreadId = Environment.CurrentManagedThreadId;
+                Log.Info("GlobalData", $"Main thread ID: {MainThreadId}");
             }
             
             {

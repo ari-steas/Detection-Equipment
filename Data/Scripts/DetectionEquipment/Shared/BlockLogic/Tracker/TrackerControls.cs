@@ -35,7 +35,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 10,
                 b => b.GameLogic.GetAs<TrackerBlock>()?.ResetAngleTime,
                 (b, v) => b.GameLogic.GetAs<TrackerBlock>().ResetAngleTime.Value = v,
-                (b, sb) => sb.Append(b.GameLogic.GetAs<TrackerBlock>().ResetAngleTime.Value.ToString("F1") + "s")
+                (b, sb) => sb?.Append(b?.GameLogic?.GetAs<TrackerBlock>()?.ResetAngleTime?.Value.ToString("F1") + "s")
                 );
 
             ActiveSensorSelect = new BlockSelectControl<TrackerBlock, IMyConveyorSorter>(

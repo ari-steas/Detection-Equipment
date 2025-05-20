@@ -1,5 +1,4 @@
-﻿#define MAINMOD
-using System;
+﻿using System;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 
@@ -11,14 +10,12 @@ namespace DetectionEquipment.Shared.Definitions
     [ProtoContract]
     public class CountermeasureEmitterDefinition
     {
-        #if MAINMOD
+        // can't define preprocessor directives, otherwise would have
         [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
-        #else
-        /// <summary>
-        /// Unique name for this definition.
-        /// </summary>
-        [ProtoIgnore] public string Name;
-        #endif
+        // /// <summary>
+        // /// Unique name for this definition.
+        // /// </summary>
+        // [ProtoIgnore] public string Name;
 
         /// <summary>
         /// Subtypes this emitter is attached to.
@@ -70,8 +67,7 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(9)] public string FireParticle;
 
-
-        #if MAINMOD
+        
         public static bool Verify(CountermeasureEmitterDefinition def)
         {
             bool isValid = true;
@@ -99,6 +95,5 @@ namespace DetectionEquipment.Shared.Definitions
 
             return isValid;
         }
-        #endif
     }
 }

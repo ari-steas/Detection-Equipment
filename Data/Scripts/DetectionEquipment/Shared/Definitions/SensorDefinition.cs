@@ -1,5 +1,4 @@
-﻿#define MAINMOD
-using DetectionEquipment.Shared.Utils;
+﻿using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using System;
 using VRage;
@@ -13,14 +12,12 @@ namespace DetectionEquipment.Shared.Definitions
     [ProtoContract]
     public class SensorDefinition
     {
-        #if MAINMOD
+        // can't define preprocessor directives, otherwise would have
         [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
-        #else
-        /// <summary>
-        /// Unique name for this definition.
-        /// </summary>
-        [ProtoIgnore] public string Name;
-        #endif
+        // /// <summary>
+        // /// Unique name for this definition.
+        // /// </summary>
+        // [ProtoIgnore] public string Name;
 
         /// <summary>
         /// Subtypes this sensor is attached to.
@@ -140,7 +137,6 @@ namespace DetectionEquipment.Shared.Definitions
             Infrared = 4,
         }
 
-        #if MAINMOD
         // TODO: Add new properties
         public static explicit operator SensorDefTuple(SensorDefinition d) => new SensorDefTuple(
                 (int) d.Type,
@@ -186,6 +182,5 @@ namespace DetectionEquipment.Shared.Definitions
 
             return isValid;
         }
-        #endif
     }
 }
