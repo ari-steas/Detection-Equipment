@@ -28,6 +28,34 @@ namespace DetectionEquipment.Shared.Definitions
                 Movement = null,
             },
 
+            // Gimbal Camera
+            ["DetEq_Internal_GimbalCamera"] = new SensorDefinition
+            {
+                BlockSubtypes = new[]
+                {
+                    "GimbalCamera",
+                },
+                Type = SensorType.Optical,
+                MaxAperture = MathHelper.ToRadians(30),
+                MinAperture = MathHelper.ToRadians(1),
+                DetectionThreshold = 0.001,
+                BearingErrorModifier = 0.1,
+                RangeErrorModifier = 1,
+                MaxPowerDraw = -1,
+                Movement = new SensorMovementDefinition
+                {
+                    AzimuthPart = "gimbalcam_azimuth",
+                    AzimuthRate = 2 * Math.PI,
+                    MaxAzimuth = Math.PI,
+                    MinAzimuth = -Math.PI,
+
+                    ElevationPart = "gimbalcam_elevation",
+                    ElevationRate = 1 * Math.PI,
+                    MaxElevation = Math.PI/2,
+                    MinElevation = -Math.PI/8,
+                },
+            },
+
             // SimpleActiveRadar
             ["DetEq_Internal_SimpleActiveRadar"] = new SensorDefinition
             {

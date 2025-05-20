@@ -1,9 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Runtime.Serialization;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Definitions;
+using Sandbox.Game.Gui;
+using Sandbox.ModAPI;
 using VRage.Game;
+using VRage.Utils;
 
 namespace DetectionEquipment.Client.Interface
 {

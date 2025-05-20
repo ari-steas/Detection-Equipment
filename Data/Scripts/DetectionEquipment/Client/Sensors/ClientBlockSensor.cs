@@ -8,6 +8,7 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
@@ -137,6 +138,17 @@ namespace DetectionEquipment.Client.Sensors
                     _aziPart = _subpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
                     _elevPart = _subpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
                     _baseLocalMatrix = block.LocalMatrix;
+
+                    if (_aziPart == null)
+                    {
+                        Log.Info("ClientSensorData", $"Failed to get sensor w/ DefId {Definition.Id} azimuth part {Definition.Movement.AzimuthPart}!\n" +
+                                                     $"Valid subparts:\n\t{string.Join("\n\t", SubpartManager.GetAllSubpartsDict(block).Values)}");
+                    }
+                    if (_elevPart == null)
+                    {
+                        Log.Info("ClientSensorData", $"Failed to get sensor w/ DefId {Definition.Id} elevation part {Definition.Movement.AzimuthPart}!\n" +
+                                                     $"Valid subparts:\n\t{string.Join("\n\t", SubpartManager.GetAllSubpartsDict(block).Values)}");
+                    }
                     //Log.Info("ClientBlockSensor", "Inited subparts for " + block.BlockDefinition.SubtypeName);
                 }
 

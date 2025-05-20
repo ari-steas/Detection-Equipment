@@ -12,6 +12,7 @@ namespace DetectionEquipment.Shared.Utils
 
         public MyEntitySubpart GetSubpart(IMyEntity entity, string name)
         {
+            // TODO this is stupid, make it cleaner.
             if (entity == null) return null;
 
             // Add entity if missing
@@ -55,13 +56,26 @@ namespace DetectionEquipment.Shared.Utils
         /// <returns></returns>
         public MyEntitySubpart RecursiveGetSubpart(IMyEntity entity, string name)
         {
-            if (entity == null) return null;
+            if (entity == null)
+                return null;
+            var myEnt = (MyEntity)entity;
+            if (myEnt.Subparts.Count == 0)
+                return GetSubpart(entity, name);
 
-            MyEntitySubpart desiredSubpart = GetSubpart(entity, name);
-            if (desiredSubpart == null)
-                foreach (var subpart in ((MyEntity)entity).Subparts.Values)
-                    return RecursiveGetSubpart(subpart, name);
-            return desiredSubpart;
+            var toCheck = new Queue<MyEntity>();
+            toCheck.Enqueue(myEnt);
+
+            while (toCheck.Count > 0)
+            {
+                var next = toCheck.Dequeue();
+                var chk = GetSubpart(next, name);
+                if (chk != null)
+                    return chk;
+                foreach (var item in next.Subparts.Values)
+                    toCheck.Enqueue(item);
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -82,7 +96,44 @@ namespace DetectionEquipment.Shared.Utils
             toCheck.Enqueue(myEnt);
 
             while (toCheck.Count > 0)
-                subparts.AddRange(toCheck.Dequeue().Subparts.Values);
+            {
+                var all = toCheck.Dequeue().Subparts.Values;
+                foreach (var item in all)
+                {
+                    subparts.Add(item);
+                    toCheck.Enqueue(item);
+                }
+            }
+
+            return subparts;
+        }
+
+        /// <summary>
+        /// Returns a list of every subpart below this entity in its hierarchy.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        public static Dictionary<string, MyEntitySubpart> GetAllSubpartsDict(IMyEntity entity)
+        {
+            if (entity == null)
+                return new Dictionary<string, MyEntitySubpart>(0);
+            var myEnt = (MyEntity)entity;
+            if (myEnt.Subparts.Count == 0)
+                return myEnt.Subparts;
+
+            var subparts = new Dictionary<string, MyEntitySubpart>();
+            var toCheck = new Queue<MyEntity>();
+            toCheck.Enqueue(myEnt);
+
+            while (toCheck.Count > 0)
+            {
+                var all = toCheck.Dequeue().Subparts;
+                foreach (var item in all)
+                {
+                    subparts[item.Key] = item.Value;
+                    toCheck.Enqueue(item.Value);
+                }
+            }
 
             return subparts;
         }
