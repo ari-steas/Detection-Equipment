@@ -10,21 +10,20 @@ namespace DetectionEquipment.Shared.Utils
     public static class Log
     {
         private static IMyModContext _modContext;
-        private static string _modName;
+        private const string ModName = "Detection Equipment";
         private static TextWriter _writer;
         private static string _indent = "";
 
         public static void Init(IMyModContext context)
         {
             _modContext = context;
-            _modName = _modContext.ModName;
             try
             {
-                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(_modName.Replace(" ", "") + ".log");
+                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(ModName.Replace(" ", "") + ".log");
 
                 int utcOffset = (DateTime.Now - DateTime.UtcNow).Hours;
 
-                _writer.WriteLine($"{_modName} Debug Log");
+                _writer.WriteLine($"{ModName} Debug Log");
                 _writer.WriteLine( "  by Aristeas");
                 _writer.WriteLine($"Local DateTime: {DateTime.Now:G} (UTC {(utcOffset > 0 ? "+" : "")}{utcOffset:00}:{(DateTime.Now - DateTime.UtcNow).Minutes:00})");
                 _writer.WriteLine( "");
@@ -39,7 +38,7 @@ namespace DetectionEquipment.Shared.Utils
                 throw new Exception("Failed to open log writer - did the previous session unload properly?", ex);
             }
 
-            MyLog.Default.WriteLineAndConsole($@"[{_modName}] - Debug log can be found in %AppData%\Roaming\SpaceEngineers\Storage\DetectionEquipment.log");
+            MyLog.Default.WriteLineAndConsole($@"[{ModName}] - Debug log can be found in %AppData%\Roaming\SpaceEngineers\Storage\DetectionEquipment.log");
         }
 
         public static void Close()
@@ -99,7 +98,7 @@ namespace DetectionEquipment.Shared.Utils
                 // we really don't want to throw any exceptions early
                 if (context == null)
                 {
-                    ModName = Log._modName;
+                    ModName = Log.ModName;
                     ModId = "HANDLER FAIL";
                     ModServiceName = "HANDLER FAIL)\n" + customInfo + "\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
                     ModPath = "HANDLER FAIL";
