@@ -1,9 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Structs;
+using ProtoBuf;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using VRage;
+using VRage.Game.Entity;
 using VRage.Scripting.MemorySafeTypes;
 using VRageMath;
 
@@ -381,10 +386,11 @@ namespace IngameScript
 
             public enum SensorType
             {
-                Radar = 0,
-                PassiveRadar = 1,
-                Optical = 2,
-                Infrared = 3,
+                None = 0,
+                Radar = 1,
+                PassiveRadar = 2,
+                Optical = 3,
+                Infrared = 4,
             }
 
             public static explicit operator PbSensorDefinition(MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double> tuple) => new PbSensorDefinition
@@ -464,8 +470,16 @@ namespace IngameScript
         /// <summary>
         /// Generic single-target detection information, processed by a controller block.
         /// </summary>
-        public struct PbWorldDetectionInfo
+        public struct PbWorldDetectionInfo : IComparable<PbWorldDetectionInfo>
         {
+            public double CrossSection;
+            public double Error;
+            public Vector3D Position;
+            public Vector3D? Velocity;
+            public double? VelocityVariance;
+            public PbSensorDefinition.SensorType DetectionType;
+            public string[] IffCodes;
+
             public PbWorldDetectionInfo(PbDetectionInfo info, PbSensorBlock sensor)
             {
                 CrossSection = info.CrossSection;
@@ -494,102 +508,72 @@ namespace IngameScript
                 IffCodes = tuple.Item6;
             }
 
-            public double CrossSection, Error;
-            public Vector3D Position;
-            public Vector3D? Velocity;
-            public double? VelocityVariance;
-            public PbSensorDefinition.SensorType DetectionType;
-            public string[] IffCodes;
+            public override bool Equals(object obj) => obj is WorldDetectionInfo && Position.Equals(((WorldDetectionInfo)obj).Position);
+            public override int GetHashCode() => Position.GetHashCode();
 
             public override string ToString()
             {
-                return $"Position: {Position.ToString("N0")} +- {Error:N1}m\nVelocity: {Velocity?.ToString("N0")} R^2={VelocityVariance:F1}\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
+                return $"Position: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
             }
+
+            public static PbWorldDetectionInfo Average(params PbWorldDetectionInfo[] args) => Average((ICollection<PbWorldDetectionInfo>) args);
 
             public static PbWorldDetectionInfo Average(ICollection<PbWorldDetectionInfo> args)
             {
                 if (args.Count == 0)
                     throw new Exception("No detection infos provided!");
 
-                double totalError = 0;
+                if (args.Count == 1)
+                    return args.First();
 
+                PbSensorDefinition.SensorType? proposedType = null;
+                double totalError = 0;
+                double minError = double.MaxValue;
+                var allCodes = new List<string>();
                 foreach (var info in args)
                 {
                     totalError += info.Error;
+                    if (info.Error < minError) minError = info.Error;
+                    foreach (var code in info.IffCodes)
+                        if (!allCodes.Contains(code))
+                            allCodes.Add(code);
+                    if (proposedType == null)
+                        proposedType = info.DetectionType;
+                    else if (proposedType != info.DetectionType)
+                        proposedType = PbSensorDefinition.SensorType.None;
                 }
 
                 Vector3D averagePos = Vector3D.Zero;
                 double totalCrossSection = 0;
+                double pctSum = 0;
                 foreach (var info in args)
                 {
+                    pctSum += 1 - (info.Error / totalError);
                     if (totalError > 0)
-                        averagePos += info.Position * (info.Error / totalError);
+                        averagePos += info.Position * (1 - (info.Error / totalError));
                     else
                         averagePos += info.Position;
                     totalCrossSection += info.CrossSection;
                 }
 
-                if (totalError <= 0)
+                if (totalError > 0)
+                    averagePos /= pctSum;
+                else
                     averagePos /= args.Count;
 
-                double avgDiff = 0;
-                foreach (var info in args)
-                    avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
-                avgDiff = Math.Sqrt(avgDiff) / args.Count;
-
-                PbWorldDetectionInfo result = new PbWorldDetectionInfo
+                return new PbWorldDetectionInfo
                 {
                     CrossSection = totalCrossSection / args.Count,
                     Position = averagePos,
-                    Error = avgDiff,
-                    DetectionType = 0,
+                    Error = minError,
+                    DetectionType = proposedType ?? PbSensorDefinition.SensorType.None,
+                    IffCodes = allCodes.ToArray(),
                 };
-
-                return result;
             }
 
-            public static PbWorldDetectionInfo AverageWeighted(ICollection<KeyValuePair<PbWorldDetectionInfo, int>> args)
+            public int CompareTo(PbWorldDetectionInfo other)
             {
-                if (args.Count == 0)
-                    throw new Exception("No detection infos provided!");
-
-                double totalError = 0;
-                double totalWeight = 0;
-                double highestError = 0;
-
-                foreach (var info in args)
-                {
-                    totalError += info.Key.Error;
-                    totalWeight += info.Value;
-                    if (info.Key.Error > highestError)
-                        highestError = info.Key.Error;
-                }
-
-                Vector3D averagePos = Vector3D.Zero;
-                double avgCrossSection = 0;
-                foreach (var info in args)
-                {
-                    double infoWeightPct = info.Value / totalWeight;
-
-                    averagePos += info.Key.Position * infoWeightPct;
-
-                    avgCrossSection += info.Key.CrossSection * infoWeightPct;
-                }
-
-                double avgDiff = 0;
-                foreach (var info in args)
-                    avgDiff += Vector3D.Distance(info.Key.Position, averagePos);
-                avgDiff /= args.Count;
-
-                PbWorldDetectionInfo result = new PbWorldDetectionInfo
-                {
-                    CrossSection = avgCrossSection,
-                    Position = averagePos,
-                    Error = avgDiff,
-                    DetectionType = 0,
-                };
-
-                return result;
+                return other.CrossSection.CompareTo(this.CrossSection);
             }
         }
 
