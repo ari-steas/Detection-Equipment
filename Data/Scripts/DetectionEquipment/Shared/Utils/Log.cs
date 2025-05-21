@@ -66,8 +66,7 @@ namespace DetectionEquipment.Shared.Utils
         {
             _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}");
             _writer?.Flush();
-            if (MyAPIGateway.Utilities.IsDedicated)
-                MyLog.Default.WriteLineToConsole($"{source}\n{exception.Message}\n{exception.StackTrace}");
+            MyLog.Default.WriteLineAndConsole($"DetectionEquipment - [{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}");
             if (fatal)
                 CustomCrashModContext.Throw(source, exception);
         }
