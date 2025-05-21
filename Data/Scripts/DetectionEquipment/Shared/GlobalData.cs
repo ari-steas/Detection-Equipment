@@ -72,7 +72,7 @@ namespace DetectionEquipment.Shared
         public static IniSetting<float> MinLockForWcTarget = new IniSetting<float>(
             "MinLockForWcTarget",
             "Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance",
-            1.0f);
+            0.25f);
 
 
 

@@ -2,9 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Xml;
 using DetectionEquipment.Server.Tracking;
 using ProtoBuf;
-using VRage;
 using VRage.Game.Entity;
 using VRageMath;
 
@@ -13,7 +13,6 @@ namespace DetectionEquipment.Shared.Structs
     [ProtoContract]
     internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>
     {
-        [ProtoMember(0)] public int UniqueId;
         [ProtoMember(1)] public long EntityId;
         [ProtoMember(2)] public double CrossSection;
         [ProtoMember(3)] public double Error;
@@ -30,7 +29,6 @@ namespace DetectionEquipment.Shared.Structs
         {
             var wInfo = new WorldDetectionInfo
             {
-                UniqueId = NextId++,
                 EntityId = info.Track.EntityId,
                 Entity = (info.Track as EntityTrack)?.Entity,
                 CrossSection = info.CrossSection,
@@ -54,7 +52,6 @@ namespace DetectionEquipment.Shared.Structs
         {
             return new WorldDetectionInfo
             {
-                UniqueId = NextId++,
                 Entity = info.Entity,
                 EntityId = info.EntityId,
                 CrossSection = info.CrossSection,
@@ -68,16 +65,16 @@ namespace DetectionEquipment.Shared.Structs
         }
 
         public override bool Equals(object obj) => obj is WorldDetectionInfo && Position.Equals(((WorldDetectionInfo)obj).Position);
-        public override int GetHashCode() => UniqueId;
+        public override int GetHashCode() => EntityId.GetHashCode();
 
         public override string ToString()
         {
-            return $"UID: {UniqueId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
+            return $"UID: {EntityId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
         }
 
         public object[] DataSet => new object[]
         {
-            UniqueId,
+            EntityId,
             DetectionType,
             CrossSection,
             Error,
@@ -142,7 +139,6 @@ namespace DetectionEquipment.Shared.Structs
 
             return new WorldDetectionInfo
             {
-                UniqueId = NextId++,
                 Entity = entity,
                 EntityId = entity?.EntityId ?? -1,
                 CrossSection = totalCrossSection / args.Count,

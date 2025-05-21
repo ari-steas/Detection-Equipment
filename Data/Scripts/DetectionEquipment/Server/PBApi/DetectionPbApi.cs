@@ -462,7 +462,7 @@ namespace IngameScript
         /// </summary>
         public struct PbWorldDetectionInfo : IComparable<PbWorldDetectionInfo>
         {
-            public int UniqueId;
+            public long UniqueId;
             public double CrossSection;
             public double Error;
             public Vector3D Position;
@@ -502,7 +502,7 @@ namespace IngameScript
             }
 
             public override bool Equals(object obj) => obj is PbWorldDetectionInfo && Position.Equals(((PbWorldDetectionInfo)obj).Position);
-            public override int GetHashCode() => UniqueId;
+            public override int GetHashCode() => UniqueId.GetHashCode();
 
             public override string ToString()
             {
