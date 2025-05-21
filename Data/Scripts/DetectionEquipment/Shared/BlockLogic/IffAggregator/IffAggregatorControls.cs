@@ -1,7 +1,9 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using System.Text;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
@@ -21,14 +23,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
                 "AutoSelfIff",
                 "Auto-add Grid IFF",
                 "Should IFF codes in reflectors on this grid be marked as friendly?",
-                b => b.GameLogic.GetAs<IffAggregatorBlock>().AutoSelfIff.Value,
+                b => b.GameLogic.GetAs<IffAggregatorBlock>()?.AutoSelfIff.Value ?? false,
                 (b, v) => b.GameLogic.GetAs<IffAggregatorBlock>().AutoSelfIff.Value = v
             );
             CreateTextbox(
                 "FriendlyIffCodes",
                 "Friendly IFF Codes",
                 "Known friendly IFF codes, comma-separated.",
-                b => new StringBuilder(string.Join(",", b.GameLogic.GetAs<IffAggregatorBlock>().FriendlyIffCodes.Value)),
+                b => new StringBuilder(string.Join(",", b.GameLogic.GetAs<IffAggregatorBlock>()?.FriendlyIffCodes.Value ?? Array.Empty<string>())),
                 (b, v) => b.GameLogic.GetAs<IffAggregatorBlock>().FriendlyIffCodes.Value = v.ToString().Split(',').Select(code => code.Trim()).ToArray()
             );
         }

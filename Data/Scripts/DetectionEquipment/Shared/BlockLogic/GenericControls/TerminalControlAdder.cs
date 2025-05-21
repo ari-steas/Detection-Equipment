@@ -23,8 +23,6 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         {
             if (_isDone) return;
 
-            ControlBlockBase<TBlockType>.Controls = this;
-
             CreateTerminalActions();
             CreateTerminalProperties();
 
@@ -40,9 +38,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             var toggle = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlOnOffSwitch, TBlockType>(IdPrefix + id);
             toggle.Title = MyStringId.GetOrCompute(displayName);
             toggle.Tooltip = MyStringId.GetOrCompute(toolTip);
-            toggle.SupportsMultipleBlocks = true; // wether this control should be visible when multiple blocks are selected (as long as they all have this control).
-                                                  // callbacks to determine if the control should be visible or not-grayed-out(Enabled) depending on whatever custom condition you want, given a block instance.
-                                                  // optional, they both default to true.
+            toggle.SupportsMultipleBlocks = true;
             toggle.Visible = VisibleFunc;
             //c.Enabled = CustomVisibleCondition;
             toggle.OnText = MySpaceTexts.SwitchText_On;
@@ -82,7 +78,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             var slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlSlider, TBlockType>(IdPrefix + id);
             slider.Title = MyStringId.GetOrCompute(displayName);
             slider.Tooltip = MyStringId.GetOrCompute(toolTip);
-            slider.SetLimits(min, max); // Set the minimum and maximum values for the slider
+            slider.SetLimits(min, max);
             slider.Getter = tb =>
             {
                 try

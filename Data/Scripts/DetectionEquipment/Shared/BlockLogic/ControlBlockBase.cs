@@ -19,7 +19,6 @@ namespace DetectionEquipment.Shared.BlockLogic
         public TBlock Block;
         public IMyCubeBlock CubeBlock => Block;
         public GridSensorManager GridSensors { get; private set; }
-        public static ITerminalControlAdder Controls { get; internal set; } = null;
         public Action OnClose { get; set; }
         protected abstract ControlBlockSettingsBase GetSettings { get; }
         protected abstract ITerminalControlAdder GetControls { get; }
