@@ -1,14 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared.Definitions;
-using DetectionEquipment.Shared.Structs;
-using ProtoBuf;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using VRage;
-using VRage.Game.Entity;
 using VRage.Scripting.MemorySafeTypes;
 using VRageMath;
 
@@ -64,22 +59,22 @@ namespace IngameScript
         #region Public Methods
 
         /// <summary>
-        /// Retrieves a list of all sensors on a given block.
+        /// Retrieves a MemorySafeList of all sensors on a given block.
         /// <para>
         ///     Blocks can have multiple sensors! They are delineated by unique id.
         /// </para>
         /// </summary>
         /// <param name="block"></param>
         /// <returns></returns>
-        public List<PbSensorBlock> GetSensors(IMyCubeBlock block)
+        public MemorySafeList<PbSensorBlock> GetSensors(IMyCubeBlock block)
         {
             if (!_hasSensor.Invoke(block))
-                return new List<PbSensorBlock>(0);
+                return new MemorySafeList<PbSensorBlock>(0);
 
-            List<PbSensorBlock> list = new List<PbSensorBlock>();
+            MemorySafeList<PbSensorBlock> MemorySafeList = new MemorySafeList<PbSensorBlock>();
             foreach (uint id in _getSensorIds.Invoke(block))
-                list.Add(new PbSensorBlock(block, id));
-            return list;
+                MemorySafeList.Add(new PbSensorBlock(block, id));
+            return MemorySafeList;
         }
 
         /// <summary>
@@ -144,10 +139,10 @@ namespace IngameScript
         private Action<uint, double> _setSensorAzimuth;
         private Func<uint, double> _getSensorElevation;
         private Action<uint, double> _setSensorElevation;
-        private Func<uint, MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double>> _getSensorDefinition;
-        private Func<uint, MyTuple<double, double, double, double, Vector3D, string[]>[]> _getSensorDetections;
-        private Action<uint, Action<MyTuple<double, double, double, double, Vector3D, string[]>>> _registerInvokeOnDetection;
-        private Action<uint, Action<MyTuple<double, double, double, double, Vector3D, string[]>>> _unregisterInvokeOnDetection;
+        private Func<uint, object[]> _getSensorDefinition;
+        private Func<uint, object[][]> _getSensorDetections;
+        private Action<uint, Action<object[]>> _registerInvokeOnDetection;
+        private Action<uint, Action<object[]>> _unregisterInvokeOnDetection;
 
         // Aggregator
         private Func<IMyCubeBlock, bool> _hasAggregator;
@@ -155,7 +150,7 @@ namespace IngameScript
         private Action<IMyCubeBlock, float> _setAggregatorTime;
         private Func<IMyCubeBlock, float> _getAggregatorVelocity;
         private Action<IMyCubeBlock, float> _setAggregatorVelocity;
-        private Func<IMyCubeBlock, MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]>[]> _getAggregatorInfo;
+        private Func<IMyCubeBlock, object[][]> _getAggregatorInfo;
         private Func<IMyCubeBlock, bool> _getAggregatorUseAllSensors;
         private Action<IMyCubeBlock, bool> _setAggregatorUseAllSensors;
         private Func<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>> _getAggregatorActiveSensors;
@@ -236,6 +231,11 @@ namespace IngameScript
             method = _methodMap[methodTag] as T;
         }
 
+        private static void SetField<T>(object dataSet, out T field)
+        {
+            field = (T) dataSet;
+        }
+
         #endregion
 
         #region Classes
@@ -259,7 +259,7 @@ namespace IngameScript
             {
                 Id = id;
                 Block = block;
-                Definition = (PbSensorDefinition)I._getSensorDefinition.Invoke(Id);
+                Definition = new PbSensorDefinition(I._getSensorDefinition.Invoke(Id));
 
                 if (Definition == null)
                     throw new Exception($"No sensor exists for block {block.DisplayName}!");
@@ -271,10 +271,10 @@ namespace IngameScript
             /// <returns></returns>
             public PbDetectionInfo[] GetDetections()
             {
-                var tuples = I._getSensorDetections.Invoke(Id);
-                var detections = new PbDetectionInfo[tuples.Length];
-                for (int i = 0; i < tuples.Length; i++)
-                    detections[i] = (PbDetectionInfo)tuples[i];
+                var dataSets = I._getSensorDetections.Invoke(Id);
+                var detections = new PbDetectionInfo[dataSets.Length];
+                for (int i = 0; i < dataSets.Length; i++)
+                    detections[i] = new PbDetectionInfo(dataSets[i]);
                 return detections;
             }
 
@@ -356,7 +356,7 @@ namespace IngameScript
             /// Converts tuple data into a pb-usable format.
             /// </summary>
             /// <param name="tuple"></param>
-            private void InvokeOnDetection(MyTuple<double, double, double, double, Vector3D, string[]> tuple) => _onDetection?.Invoke((PbDetectionInfo)tuple);
+            private void InvokeOnDetection(object[] dataSet) => _onDetection?.Invoke(new PbDetectionInfo(dataSet));
         }
 
         /// <summary>
@@ -364,24 +364,62 @@ namespace IngameScript
         /// </summary>
         public class PbSensorDefinition
         {
-            public SensorType Type;
-            public double MaxAperture;
-            public double MinAperture;
-            public SensorMovementDefinition Movement;
-            public double DetectionThreshold;
-            public double MaxPowerDraw;
+            public readonly string[] BlockSubtypes;
+            public readonly SensorType Type;
+            public readonly double MaxAperture, MinAperture;
+            public readonly SensorMovementDefinition Movement = null;
+            public readonly double DetectionThreshold, MaxPowerDraw, BearingErrorModifier, RangeErrorModifier;
+            public readonly RadarPropertiesDefinition RadarProperties = null;
+
+            public PbSensorDefinition(object[] dataSet)
+            {
+                SetField(dataSet[0], out BlockSubtypes);
+                SetField(dataSet[1], out Type);
+                SetField(dataSet[2], out MaxAperture);
+                SetField(dataSet[3], out MinAperture);
+                if (dataSet[4] != null)
+                    Movement = new SensorMovementDefinition((object[]) dataSet[4]);
+                SetField(dataSet[5], out DetectionThreshold);
+                SetField(dataSet[6], out MaxPowerDraw);
+                SetField(dataSet[7], out BearingErrorModifier);
+                SetField(dataSet[8], out RangeErrorModifier);
+                if (dataSet[9] != null)
+                    RadarProperties = new RadarPropertiesDefinition((object[]) dataSet[9]);
+            }
 
             public class SensorMovementDefinition
             {
-                public double MinAzimuth;
-                public double MaxAzimuth;
-                public double MinElevation;
-                public double MaxElevation;
-                public double AzimuthRate;
-                public double ElevationRate;
+                public readonly string AzimuthPart, ElevationPart;
+                public readonly double MinAzimuth, MaxAzimuth, MinElevation, MaxElevation, AzimuthRate, ElevationRate;
+
+                public SensorMovementDefinition(object[] dataSet)
+                {
+                    SetField(dataSet[0], out AzimuthPart);
+                    SetField(dataSet[1], out ElevationPart);
+                    SetField(dataSet[2], out MinAzimuth);
+                    SetField(dataSet[3], out MaxAzimuth);
+                    SetField(dataSet[4], out MinElevation);
+                    SetField(dataSet[5], out MaxElevation);
+                    SetField(dataSet[6], out AzimuthRate);
+                    SetField(dataSet[7], out ElevationRate);
+                }
 
                 public bool CanRotateFull => MaxAzimuth >= Math.PI && MinAzimuth <= -Math.PI;
                 public bool CanElevateFull => MaxElevation >= Math.PI && MinElevation <= -Math.PI;
+
+            }
+
+            public class RadarPropertiesDefinition
+            {
+                public readonly double ReceiverArea, PowerEfficiencyModifier, Bandwidth, Frequency;
+
+                public RadarPropertiesDefinition(object[] dataSet)
+                {
+                    SetField(dataSet[0], out ReceiverArea);
+                    SetField(dataSet[1], out PowerEfficiencyModifier);
+                    SetField(dataSet[2], out Bandwidth);
+                    SetField(dataSet[3], out Frequency);
+                }
             }
 
             public enum SensorType
@@ -392,24 +430,6 @@ namespace IngameScript
                 Optical = 3,
                 Infrared = 4,
             }
-
-            public static explicit operator PbSensorDefinition(MyTuple<int, double, double, MyTuple<double, double, double, double, double, double>?, double, double> tuple) => new PbSensorDefinition
-            {
-                Type = (SensorType)tuple.Item1,
-                MaxAperture = tuple.Item2,
-                MinAperture = tuple.Item3,
-                Movement = tuple.Item4 == null ? null : new SensorMovementDefinition
-                {
-                    MinAzimuth = tuple.Item4.Value.Item1,
-                    MaxAzimuth = tuple.Item4.Value.Item2,
-                    MinElevation = tuple.Item4.Value.Item3,
-                    MaxElevation = tuple.Item4.Value.Item4,
-                    AzimuthRate = tuple.Item4.Value.Item5,
-                    ElevationRate = tuple.Item4.Value.Item6,
-                },
-                DetectionThreshold = tuple.Item5,
-                MaxPowerDraw = tuple.Item6,
-            };
         }
 
         /// <summary>
@@ -419,47 +439,17 @@ namespace IngameScript
         {
             public double CrossSection, Range, RangeError, BearingError;
             public Vector3D Bearing;
-            public Vector3D Position => Bearing * Range;
             public string[] IffCodes;
 
-            /// <summary>
-            /// Averages out a set of detection infos.
-            /// </summary>
-            /// <param name="args"></param>
-            /// <returns></returns>
-            public static PbDetectionInfo AverageDetection(ICollection<PbDetectionInfo> args)
+            public PbDetectionInfo(object[] dataSet)
             {
-                double totalBearingError = args.Sum(info => info.BearingError);
-                double totalRangeError = args.Sum(info => info.RangeError);
-
-                Vector3D averageBearing = Vector3D.Zero;
-                double averageRange = 0;
-                foreach (var info in args)
-                {
-                    averageBearing += info.Bearing * (info.BearingError / totalBearingError);
-                    averageRange += info.Range * (info.RangeError / totalRangeError);
-                }
-
-                PbDetectionInfo result = new PbDetectionInfo
-                {
-                    Bearing = averageBearing.Normalized(),
-                    BearingError = totalBearingError / args.Count,
-                    Range = averageRange,
-                    RangeError = totalRangeError / args.Count,
-                };
-
-                return result;
+                SetField(dataSet[0], out CrossSection);
+                SetField(dataSet[1], out Range);
+                SetField(dataSet[2], out RangeError);
+                SetField(dataSet[3], out BearingError);
+                SetField(dataSet[4], out Bearing);
+                SetField(dataSet[5], out IffCodes);
             }
-
-            public static explicit operator PbDetectionInfo(MyTuple<double, double, double, double, Vector3D, string[]> tuple) => new PbDetectionInfo
-            {
-                CrossSection = tuple.Item1,
-                Range = tuple.Item2,
-                RangeError = tuple.Item3,
-                BearingError = tuple.Item4,
-                Bearing = tuple.Item5,
-                IffCodes = tuple.Item6,
-            };
 
             public override string ToString()
             {
@@ -472,6 +462,7 @@ namespace IngameScript
         /// </summary>
         public struct PbWorldDetectionInfo : IComparable<PbWorldDetectionInfo>
         {
+            public int UniqueId;
             public double CrossSection;
             public double Error;
             public Vector3D Position;
@@ -482,6 +473,7 @@ namespace IngameScript
 
             public PbWorldDetectionInfo(PbDetectionInfo info, PbSensorBlock sensor)
             {
+                UniqueId = info.GetHashCode();
                 CrossSection = info.CrossSection;
                 Position = sensor.Position + info.Bearing * info.Range;
 
@@ -497,23 +489,24 @@ namespace IngameScript
                 IffCodes = info.IffCodes;
             }
 
-            public PbWorldDetectionInfo(MyTuple<int, double, double, Vector3D, MyTuple<Vector3D, double>?, string[]> tuple)
+            public PbWorldDetectionInfo(object[] dataSet)
             {
-                DetectionType = (PbSensorDefinition.SensorType)tuple.Item1;
-                CrossSection = tuple.Item2;
-                Error = tuple.Item3;
-                Position = tuple.Item4;
-                Velocity = tuple.Item5?.Item1;
-                VelocityVariance = tuple.Item5?.Item2;
-                IffCodes = tuple.Item6;
+                SetField(dataSet[0], out UniqueId);
+                SetField(dataSet[1], out DetectionType);
+                SetField(dataSet[2], out CrossSection);
+                SetField(dataSet[3], out Error);
+                SetField(dataSet[4], out Position);
+                SetField(dataSet[5], out Velocity);
+                SetField(dataSet[6], out VelocityVariance);
+                SetField(dataSet[7], out IffCodes);
             }
 
-            public override bool Equals(object obj) => obj is WorldDetectionInfo && Position.Equals(((WorldDetectionInfo)obj).Position);
-            public override int GetHashCode() => Position.GetHashCode();
+            public override bool Equals(object obj) => obj is PbWorldDetectionInfo && Position.Equals(((PbWorldDetectionInfo)obj).Position);
+            public override int GetHashCode() => UniqueId;
 
             public override string ToString()
             {
-                return $"Position: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
+                return $"UID: {UniqueId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
             }
 
             public static PbWorldDetectionInfo Average(params PbWorldDetectionInfo[] args) => Average((ICollection<PbWorldDetectionInfo>) args);
@@ -529,7 +522,7 @@ namespace IngameScript
                 PbSensorDefinition.SensorType? proposedType = null;
                 double totalError = 0;
                 double minError = double.MaxValue;
-                var allCodes = new List<string>();
+                var allCodes = new MemorySafeList<string>();
                 foreach (var info in args)
                 {
                     totalError += info.Error;
@@ -656,11 +649,11 @@ namespace IngameScript
             /// <returns></returns>
             public PbWorldDetectionInfo[] GetAggregatedInfo()
             {
-                var tupleSet = I._getAggregatorInfo.Invoke(Block);
-                var toReturn = new PbWorldDetectionInfo[tupleSet.Length];
+                var dataSet = I._getAggregatorInfo.Invoke(Block);
+                var toReturn = new PbWorldDetectionInfo[dataSet.Length];
                 for (int i = 0; i < toReturn.Length; i++)
                 {
-                    toReturn[i] = new PbWorldDetectionInfo(tupleSet[i]);
+                    toReturn[i] = new PbWorldDetectionInfo(dataSet[i]);
                 }
                 return toReturn;
             }

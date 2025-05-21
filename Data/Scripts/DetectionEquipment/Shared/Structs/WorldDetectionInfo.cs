@@ -8,13 +8,12 @@ using VRage;
 using VRage.Game.Entity;
 using VRageMath;
 
-using WorldDetTuple = VRage.MyTuple<int, double, double, VRageMath.Vector3D, VRage.MyTuple<VRageMath.Vector3D, double>?, string[]>;
-
 namespace DetectionEquipment.Shared.Structs
 {
     [ProtoContract]
     internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>
     {
+        [ProtoMember(0)] public int UniqueId;
         [ProtoMember(1)] public long EntityId;
         [ProtoMember(2)] public double CrossSection;
         [ProtoMember(3)] public double Error;
@@ -26,27 +25,28 @@ namespace DetectionEquipment.Shared.Structs
         [ProtoMember(9)] public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
 
+        private static int NextId = 0;
         public static WorldDetectionInfo Create(DetectionInfo info)
         {
-            var wInfo = new WorldDetectionInfo();
-            wInfo.EntityId = info.Track.EntityId;
-            var eTrack = info.Track as EntityTrack;
-            wInfo.Entity = eTrack?.Entity;
-
-            wInfo.CrossSection = info.CrossSection;
-            wInfo.Position = info.Sensor.Position + info.Bearing * info.Range;
+            var wInfo = new WorldDetectionInfo
+            {
+                UniqueId = NextId++,
+                EntityId = info.Track.EntityId,
+                Entity = (info.Track as EntityTrack)?.Entity,
+                CrossSection = info.CrossSection,
+                Position = info.Sensor.Position + info.Bearing * info.Range,
+                DetectionType = info.Sensor.Definition.Type,
+                Velocity = null,
+                VelocityVariance = null,
+                IffCodes = info.IffCodes ?? Array.Empty<string>(),
+                Relations = null,
+            };
 
             wInfo.Error = Math.Tan(info.BearingError) * info.Range; // planar error; base width of right triangle
             wInfo.Error *= wInfo.Error;
             wInfo.Error += info.RangeError * info.RangeError; // normal error
             wInfo.Error = Math.Sqrt(wInfo.Error);
 
-            wInfo.DetectionType = info.Sensor.Definition.Type;
-
-            wInfo.Velocity = null;
-            wInfo.VelocityVariance = null;
-            wInfo.IffCodes = info.IffCodes ?? Array.Empty<string>();
-            wInfo.Relations = null;
             return wInfo;
         }
 
@@ -54,6 +54,7 @@ namespace DetectionEquipment.Shared.Structs
         {
             return new WorldDetectionInfo
             {
+                UniqueId = NextId++,
                 Entity = info.Entity,
                 EntityId = info.EntityId,
                 CrossSection = info.CrossSection,
@@ -67,21 +68,24 @@ namespace DetectionEquipment.Shared.Structs
         }
 
         public override bool Equals(object obj) => obj is WorldDetectionInfo && Position.Equals(((WorldDetectionInfo)obj).Position);
-        public override int GetHashCode() => Position.GetHashCode();
+        public override int GetHashCode() => UniqueId;
 
         public override string ToString()
         {
-            return $"Position: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
+            return $"UID: {UniqueId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
         }
 
-        public WorldDetTuple Tuple => new WorldDetTuple(
-            (int)DetectionType,
+        public object[] DataSet => new object[]
+        {
+            UniqueId,
+            DetectionType,
             CrossSection,
             Error,
             Position,
-            Velocity == null ? null : new MyTuple<Vector3D, double>?(new MyTuple<Vector3D, double>(Velocity.Value, VelocityVariance ?? 0)),
-            IffCodes
-            );
+            Velocity,
+            VelocityVariance,
+            IffCodes,
+        };
 
         public static WorldDetectionInfo Average(params WorldDetectionInfo[] args) => Average((ICollection<WorldDetectionInfo>) args);
 
@@ -138,8 +142,9 @@ namespace DetectionEquipment.Shared.Structs
 
             return new WorldDetectionInfo
             {
-                EntityId = entity?.EntityId ?? -1,
+                UniqueId = NextId++,
                 Entity = entity,
+                EntityId = entity?.EntityId ?? -1,
                 CrossSection = totalCrossSection / args.Count,
                 Position = averagePos,
                 Error = minError,

@@ -12,7 +12,7 @@ namespace DetectionEquipment.Server.Sensors
     {
         public uint Id { get; private set; }
         public SensorDefinition Definition { get; private set; }
-        public Action<MyTuple<double, double, double, double, Vector3D, string[]>> OnDetection { get; set; } = null;
+        public Action<object[]> OnDetection { get; set; } = null;
 
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
@@ -64,9 +64,7 @@ namespace DetectionEquipment.Server.Sensors
             double maxRangeError = Math.Sqrt(range) * Definition.RangeErrorModifier * errorScalar + CountermeasureNoise/100;
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(visibility, range, maxRangeError, maxBearingError, bearing, Array.Empty<string>()));
-
-            return new DetectionInfo
+            var detection = new DetectionInfo
             {
                 Track = visibilitySet.Track,
                 Sensor = this,
@@ -77,6 +75,10 @@ namespace DetectionEquipment.Server.Sensors
                 RangeError = maxRangeError,
                 IffCodes = Array.Empty<string>(),
             };
+
+            OnDetection?.Invoke(detection.DataSet);
+
+            return detection;
         }
     }
 }

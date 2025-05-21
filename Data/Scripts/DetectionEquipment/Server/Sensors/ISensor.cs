@@ -3,7 +3,6 @@ using DetectionEquipment.Shared.Structs;
 using System;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
-using LocalDetTuple = VRage.MyTuple<double, double, double, double, VRageMath.Vector3D, string[]>;
 
 
 namespace DetectionEquipment.Server.Sensors
@@ -28,7 +27,7 @@ namespace DetectionEquipment.Server.Sensors
 
         double CountermeasureNoise { get; set; }
 
-        Action<LocalDetTuple> OnDetection { get; set; }
+        Action<object[]> OnDetection { get; set; }
 
         DetectionInfo? GetDetectionInfo(VisibilitySet visibility);
         void Close();

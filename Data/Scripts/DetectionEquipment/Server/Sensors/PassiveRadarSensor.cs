@@ -16,7 +16,7 @@ namespace DetectionEquipment.Server.Sensors
         public uint Id { get; private set; }
         public readonly IMyEntity AttachedEntity;
         public SensorDefinition Definition { get; private set; }
-        public Action<MyTuple<double, double, double, double, Vector3D, string[]>> OnDetection { get; set; } = null;
+        public Action<object[]> OnDetection { get; set; } = null;
         public Vector3D Position { get; set; }
         public Vector3D Direction { get; set; }
 
@@ -63,7 +63,7 @@ namespace DetectionEquipment.Server.Sensors
             _queuedRadarHits.Remove(track.EntityId);
             data.Track = track;
 
-            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(data.CrossSection, data.Range, data.RangeError, data.BearingError, data.Bearing, data.IffCodes));
+            OnDetection?.Invoke(data.DataSet);
             //MyAPIGateway.Utilities.ShowMessage($"{data.CrossSection:N0}", data.ToString());
 
             return data;

@@ -101,6 +101,18 @@ namespace DetectionEquipment.Shared.Definitions
 
             [ProtoIgnore] public bool CanRotateFull => MaxAzimuth >= Math.PI && MinAzimuth <= -Math.PI;
             [ProtoIgnore] public bool CanElevateFull => MaxElevation >= Math.PI && MinElevation <= -Math.PI;
+
+            [ProtoIgnore] public object[] DataSet => new object[]
+            {
+                AzimuthPart,
+                ElevationPart,
+                MinAzimuth,
+                MaxAzimuth,
+                MinElevation,
+                MaxElevation,
+                AzimuthRate,
+                ElevationRate,
+            };
         }
 
         /// <summary>
@@ -125,6 +137,14 @@ namespace DetectionEquipment.Shared.Definitions
             /// Radar frequency. Only applies to active radars.
             /// </summary>
             [ProtoMember(4)] public double Frequency = 2800E6;
+
+            [ProtoIgnore] public object[] DataSet => new object[]
+            {
+                ReceiverArea,
+                PowerEfficiencyModifier,
+                Bandwidth,
+                Frequency,
+            };
         }
 
         [ProtoContract]
@@ -137,22 +157,19 @@ namespace DetectionEquipment.Shared.Definitions
             Infrared = 4,
         }
 
-        // TODO: Add new properties
-        public static explicit operator SensorDefTuple(SensorDefinition d) => new SensorDefTuple(
-                (int) d.Type,
-                d.MaxAperture,
-                d.MinAperture,
-                d.Movement == null ? null : new MyTuple<double, double, double, double, double, double>?(new MyTuple<double, double, double, double, double, double>(
-                    d.Movement.MinAzimuth,
-                    d.Movement.MaxAzimuth,
-                    d.Movement.MinElevation,
-                    d.Movement.MaxElevation,
-                    d.Movement.AzimuthRate,
-                    d.Movement.ElevationRate
-                    )),
-                d.DetectionThreshold,
-                d.MaxPowerDraw
-                );
+        [ProtoIgnore] public object[] DataSet => new object[]
+        {
+            BlockSubtypes,
+            (int) Type,
+            MaxAperture,
+            MinAperture,
+            Movement?.DataSet,
+            DetectionThreshold,
+            MaxPowerDraw,
+            BearingErrorModifier,
+            RangeErrorModifier,
+            RadarProperties?.DataSet,
+        };
 
         public static bool Verify(SensorDefinition def)
         {

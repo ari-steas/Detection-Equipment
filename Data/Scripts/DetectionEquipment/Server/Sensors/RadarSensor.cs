@@ -48,7 +48,7 @@ namespace DetectionEquipment.Server.Sensors
         }
 
         public SensorDefinition Definition { get; private set; }
-        public Action<MyTuple<double, double, double, double, Vector3D, string[]>> OnDetection { get; set; } = null;
+        public Action<object[]> OnDetection { get; set; } = null;
 
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
         public double CountermeasureNoise { get; set; } = 0;
@@ -116,9 +116,7 @@ namespace DetectionEquipment.Server.Sensors
 
             var iffCodes = track is GridTrack ? IffReflectorBlock.GetIffCodes(((GridTrack)track).Grid) : Array.Empty<string>();
 
-            OnDetection?.Invoke(new MyTuple<double, double, double, double, Vector3D, string[]>(visibilitySet.RadarVisibility, range, maxRangeError, maxBearingError, bearing, iffCodes));
-
-            return new DetectionInfo
+            var detection = new DetectionInfo
             {
                 Track = track,
                 Sensor = this,
@@ -129,6 +127,10 @@ namespace DetectionEquipment.Server.Sensors
                 RangeError = maxRangeError,
                 IffCodes = iffCodes
             };
+
+            OnDetection?.Invoke(detection.DataSet);
+
+            return detection;
         }
 
         public double SignalRatioAtTarget(Vector3D targetPos, double crossSection)
