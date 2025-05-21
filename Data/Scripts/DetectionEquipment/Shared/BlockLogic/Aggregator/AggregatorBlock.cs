@@ -177,10 +177,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             _prevDatalinkOutChannel = DatalinkOutChannel.Value;
         }
 
-        public override void MarkForClose()
+        public override void Close()
         {
-            base.MarkForClose();
-            DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
+            base.Close();
+            if (DatalinkOutChannel != null)
+                DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
         }
 
         private bool _isProcessing = false;
