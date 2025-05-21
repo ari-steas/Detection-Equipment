@@ -12,8 +12,8 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector")]
     internal class IffReflectorBlock : ControlBlockBase<IMyConveyorSorter>
     {
-        public SimpleSync<string> IffCode;
-        public SimpleSync<bool> ReturnHash;
+        public readonly SimpleSync<string> IffCode = new SimpleSync<string>("");
+        public readonly SimpleSync<bool> ReturnHash = new SimpleSync<bool>(false);
 
         public string IffCodeCache { get; private set; } = "";
         protected override ControlBlockSettingsBase GetSettings => new IffReflectorSettings(this);
@@ -24,14 +24,20 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            IffCode = new SimpleSync<string>(this, Block.CubeGrid.CustomName, (value, fromNetwork) =>
+            IffCode.Value = Block.CubeGrid.CustomName;
+            IffCode.Component = this;
+            IffCode.OnValueChanged = (value, fromNetwork) =>
             {
-                IffCodeCache = ReturnHash.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value; // note that commas aren't allowed.
-            });
-            ReturnHash = new SimpleSync<bool>(this, false, (value, fromNetwork) =>
+                IffCodeCache =
+                    ReturnHash.Value
+                        ? "H" + IffCode.Value.GetHashCode()
+                        : "S" + IffCode.Value; // note that commas aren't allowed.
+            };
+            ReturnHash.Component = this;
+            ReturnHash.OnValueChanged = (value, fromNetwork) =>
             {
                 IffCodeCache = ReturnHash.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value;
-            });
+            };
             
             base.UpdateOnceBeforeFrame();
 

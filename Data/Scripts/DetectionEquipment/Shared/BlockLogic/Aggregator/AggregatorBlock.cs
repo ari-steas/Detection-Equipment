@@ -16,23 +16,20 @@ using ProtoBuf;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
-using VRage.Game.ModAPI.Network;
-using VRage.Sync;
 using VRage.ModAPI;
-using Sandbox.Game.Multiplayer;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock")]
     internal partial class AggregatorBlock : ControlBlockBase<IMyConveyorSorter>
     {
-        public SimpleSync<float> AggregationTime;
-        public SimpleSync<float> VelocityErrorThreshold; // Standard Deviation at which to ignore velocity estimation
-        public SimpleSync<bool> UseAllSensors;
-        public SimpleSync<int> DatalinkOutChannel;
-        public SimpleSync<int> DatalinkInShareType;
-        public SimpleSync<bool> DoWcTargeting;
-        public SimpleSync<bool> UseAllWeapons;
+        public readonly SimpleSync<float> AggregationTime = new SimpleSync<float>(1);
+        public readonly SimpleSync<float> VelocityErrorThreshold = new SimpleSync<float>(32); // Standard Deviation at which to ignore velocity estimation
+        public readonly SimpleSync<bool> UseAllSensors = new SimpleSync<bool>(true);
+        public readonly SimpleSync<int> DatalinkOutChannel = new SimpleSync<int>(0);
+        public readonly SimpleSync<int> DatalinkInShareType = new SimpleSync<int>(1);
+        public readonly SimpleSync<bool> DoWcTargeting = new SimpleSync<bool>(true);
+        public readonly SimpleSync<bool> UseAllWeapons = new SimpleSync<bool>(true);
         private int _prevDatalinkOutChannel = -1;
 
         public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
@@ -158,17 +155,18 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            AggregationTime = new SimpleSync<float>(this, 1);
-            VelocityErrorThreshold = new SimpleSync<float>(this, 32);
-            UseAllSensors = new SimpleSync<bool>(this, true);
-            DatalinkOutChannel = new SimpleSync<int>(this, 0, (value, fromNetwork) =>
+            AggregationTime.Component = this;
+            VelocityErrorThreshold.Component = this;
+            UseAllSensors.Component = this;
+            DatalinkOutChannel.Component = this;
+            DatalinkOutChannel.OnValueChanged = (value, fromNetwork) =>
             {
                 DatalinkManager.RegisterAggregator(this, value, _prevDatalinkOutChannel);
                 _prevDatalinkOutChannel = value;
-            });
-            DatalinkInShareType = new SimpleSync<int>(this, 1);
-            DoWcTargeting = new SimpleSync<bool>(this, true);
-            UseAllWeapons = new SimpleSync<bool>(this, true);
+            };
+            DatalinkInShareType.Component = this;
+            DoWcTargeting.Component = this;
+            UseAllWeapons.Component = this;
 
             base.UpdateOnceBeforeFrame();
             NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;

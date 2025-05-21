@@ -6,6 +6,7 @@ using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using VRage.Game.Components;
+using VRage.Game.Components.Interfaces;
 
 namespace DetectionEquipment.Shared.Networking
 {
@@ -24,7 +25,35 @@ namespace DetectionEquipment.Shared.Networking
         /// </summary>
         public Action<TValue, bool> OnValueChanged = null;
 
-        public MyGameLogicComponent Component { get; }
+        private MyGameLogicComponent _component;
+        public MyGameLogicComponent Component
+        {
+            get
+            {
+                return _component;
+            }
+            set
+            {
+                if (value == _component)
+                    return;
+
+                if (_component != null)
+                {
+                    SimpleSyncManager.UnregisterSync(this);
+                    _component.BeforeRemovedFromContainer -= OnComponentOnBeforeRemovedFromContainer;
+                }
+
+                _component = value;
+                SimpleSyncManager.RegisterSync(this, _component.Entity.EntityId);
+                _component.BeforeRemovedFromContainer += OnComponentOnBeforeRemovedFromContainer;
+
+                if (MyAPIGateway.Session.IsServer)
+                    SendUpdate();
+            }
+        }
+
+        private void OnComponentOnBeforeRemovedFromContainer(IMyEntityComponentBase comp) => SimpleSyncManager.UnregisterSync(this);
+
         private TValue _value;
 
         public TValue Value
@@ -39,34 +68,19 @@ namespace DetectionEquipment.Shared.Networking
                     return;
                 _value = value;
 
-                if (MyAPIGateway.Multiplayer.MultiplayerActive)
-                {
-                    var packet = new SimpleSyncManager.InternalSimpleSyncBothWays
-                    {
-                        SyncId = SyncId,
-                        Contents = MyAPIGateway.Utilities.SerializeToBinary(_value)
-                    };
-                    if (MyAPIGateway.Session.IsServer)
-                        ServerNetwork.SendToEveryoneInSync(packet, Component.Entity.GetPosition());
-                    else
-                        ClientNetwork.SendToServer(packet);
-                }
-                
+                SendUpdate();
                 OnValueChanged?.Invoke(value, false);
             }
         }
 
-        public SimpleSync(MyGameLogicComponent component, TValue value, Action<TValue, bool> onValueChanged) : this(component, value)
+        public SimpleSync(TValue value, Action<TValue, bool> onValueChanged) : this(value)
         {
             OnValueChanged = onValueChanged;
         }
 
-        public SimpleSync(MyGameLogicComponent component, TValue value)
+        public SimpleSync(TValue value)
         {
-            Component = component;
             _value = value;
-            SimpleSyncManager.RegisterSync(this, component.Entity.EntityId);
-            component.BeforeRemovedFromContainer += comp => SimpleSyncManager.UnregisterSync(this);
         }
 
         /// <summary>
@@ -77,6 +91,22 @@ namespace DetectionEquipment.Shared.Networking
         {
             _value = MyAPIGateway.Utilities.SerializeFromBinary<TValue>(contents);
             OnValueChanged?.Invoke(_value, true);
+        }
+
+        private void SendUpdate()
+        {
+            if (!MyAPIGateway.Multiplayer.MultiplayerActive || Component == null)
+                return;
+
+            var packet = new SimpleSyncManager.InternalSimpleSyncBothWays
+            {
+                SyncId = SyncId,
+                Contents = MyAPIGateway.Utilities.SerializeToBinary(_value)
+            };
+            if (MyAPIGateway.Session.IsServer)
+                ServerNetwork.SendToEveryoneInSync(packet, Component.Entity.GetPosition());
+            else
+                ClientNetwork.SendToServer(packet);
         }
 
         public static implicit operator TValue(SimpleSync<TValue> sync) => sync._value;

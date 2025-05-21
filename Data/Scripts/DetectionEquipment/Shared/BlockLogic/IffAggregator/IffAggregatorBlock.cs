@@ -18,16 +18,16 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
         protected override ControlBlockSettingsBase GetSettings => new IffAggregatorSettings(this);
         protected override ITerminalControlAdder GetControls => new IffAggregatorControls();
 
-        public SimpleSync<bool> AutoSelfIff;
-        public SimpleSync<string[]> FriendlyIffCodes;
+        public readonly SimpleSync<bool> AutoSelfIff = new SimpleSync<bool>(true);
+        public readonly SimpleSync<string[]> FriendlyIffCodes = new SimpleSync<string[]>( Array.Empty<string>());
 
         public override void UpdateOnceBeforeFrame()
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            AutoSelfIff = new SimpleSync<bool>(this, true);
-            FriendlyIffCodes = new SimpleSync<string[]>(this, Array.Empty<string>());
+            AutoSelfIff.Component = this;
+            FriendlyIffCodes.Component = this;
             base.UpdateOnceBeforeFrame();
         }
 

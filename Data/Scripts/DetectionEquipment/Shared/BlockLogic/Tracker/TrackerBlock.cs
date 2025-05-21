@@ -38,7 +38,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 TrackerControls.ActiveSensorSelect.UpdateSelected(this, value.Select(sensor => sensor.Block.EntityId).ToArray());
             }
         }
-        public SimpleSync<float> ResetAngleTime;
+        public SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
 
         private SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
         public Dictionary<BlockSensor, float> LockDecay = new Dictionary<BlockSensor, float>();
@@ -50,7 +50,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
-            ResetAngleTime = new SimpleSync<float>(this, 4);
+            ResetAngleTime.Component = this;
             base.UpdateOnceBeforeFrame();
         }
 
