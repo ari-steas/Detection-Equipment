@@ -3,6 +3,7 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using VRage;
 using VRage.ModAPI;
@@ -20,7 +21,7 @@ namespace DetectionEquipment.Server.Sensors
         public Vector3D Position { get; set; }
         public Vector3D Direction { get; set; }
 
-        private Dictionary<long, DetectionInfo> _queuedRadarHits = new Dictionary<long, DetectionInfo>();
+        private ConcurrentDictionary<long, DetectionInfo> _queuedRadarHits = new ConcurrentDictionary<long, DetectionInfo>();
         public double CountermeasureNoise { get; set; } = 0;
 
 
