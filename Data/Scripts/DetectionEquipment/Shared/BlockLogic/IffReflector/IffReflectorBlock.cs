@@ -30,13 +30,13 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             {
                 IffCodeCache =
                     ReturnHash.Value
-                        ? "H" + IffCode.Value.GetHashCode()
-                        : "S" + IffCode.Value; // note that commas aren't allowed.
+                        ? "#" + IffCode.Value.GetHashCode()
+                        : "&" + IffCode.Value; // note that commas aren't allowed.
             };
             ReturnHash.Component = this;
             ReturnHash.OnValueChanged = (value, fromNetwork) =>
             {
-                IffCodeCache = ReturnHash.Value ? "H" + IffCode.Value.GetHashCode() : "S" + IffCode.Value;
+                IffCodeCache = ReturnHash.Value ? "#" + IffCode.Value.GetHashCode() : "&" + IffCode.Value;
             };
             
             base.UpdateOnceBeforeFrame();

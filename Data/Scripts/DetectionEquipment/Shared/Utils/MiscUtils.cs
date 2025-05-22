@@ -22,5 +22,10 @@ namespace DetectionEquipment.Shared.Utils
 
             return null;
         }
+
+        public static string RemoveChars(this string str, params char[] excluded)
+        {
+            return str == null ? null : string.Join("", str.Split(excluded));
+        }
     }
 }

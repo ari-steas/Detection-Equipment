@@ -11,6 +11,7 @@ using DetectionEquipment.Shared.BlockLogic;
 using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 using VRage.Scripting.MemorySafeTypes;
+using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -267,7 +268,7 @@ namespace DetectionEquipment.Server.PBApi
             if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) || !(control is IffReflectorBlock))
                 return;
             IffReflectorBlock reflector = (IffReflectorBlock)control;
-            reflector.IffCode.Value = value.Replace(",", "").Trim();
+            reflector.IffCode.Value = value.RemoveChars(',', '#', '&').Trim();
         }
         private static bool GetIffReturnHashed(IMyCubeBlock block)
         {
