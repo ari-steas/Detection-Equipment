@@ -43,6 +43,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                             if (sensor.Block.EntityId != selected[i])
                                 continue;
                             ActiveSensors[logic].Add(sensor);
+                            sensor.DesiredAzimuth = 0;
+                            sensor.DesiredElevation = 0;
                             logic.DirectionSigns[sensor] = Vector2I.One;
                             break;
                         }
