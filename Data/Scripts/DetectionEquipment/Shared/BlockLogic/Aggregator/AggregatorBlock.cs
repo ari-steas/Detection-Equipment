@@ -215,7 +215,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 {
                     foreach (var sensorDetection in sensor.Detections)
                     {
-                        var detection = WorldDetectionInfo.Create(sensorDetection);
+                        var detection = WorldDetectionInfo.Create(sensorDetection, this);
                         //DebugDraw.AddLine(sensor.Sensor.Position, detection.Position, Color.Red, 0);
                         infosCache.Add(detection);
                     }

@@ -4,6 +4,7 @@ using System.Linq;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
 using VRage;
+using VRage.Game.Entity;
 using VRage.Scripting.MemorySafeTypes;
 using VRageMath;
 
@@ -470,6 +471,7 @@ namespace IngameScript
             public double? VelocityVariance;
             public PbSensorDefinition.SensorType DetectionType;
             public string[] IffCodes;
+            public PbRelationBetweenPlayers? Relations;
 
             public PbWorldDetectionInfo(PbDetectionInfo info, PbSensorBlock sensor)
             {
@@ -487,6 +489,7 @@ namespace IngameScript
                 Velocity = null;
                 VelocityVariance = null;
                 IffCodes = info.IffCodes;
+                Relations = null;
             }
 
             public PbWorldDetectionInfo(object[] dataSet)
@@ -499,6 +502,9 @@ namespace IngameScript
                 SetField(dataSet[5], out Velocity);
                 SetField(dataSet[6], out VelocityVariance);
                 SetField(dataSet[7], out IffCodes);
+                int? tmpRelations;
+                SetField(dataSet[8], out tmpRelations);
+                Relations = (PbRelationBetweenPlayers?) tmpRelations;
             }
 
             public override bool Equals(object obj) => obj is PbWorldDetectionInfo && Position.Equals(((PbWorldDetectionInfo)obj).Position);
@@ -506,7 +512,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"UID: {UniqueId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
+                return $"UID: {UniqueId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}\nRelations: {Relations?.ToString() ?? "N/A"}";
             }
 
             public static PbWorldDetectionInfo Average(params PbWorldDetectionInfo[] args) => Average((ICollection<PbWorldDetectionInfo>) args);
@@ -567,6 +573,14 @@ namespace IngameScript
             public int CompareTo(PbWorldDetectionInfo other)
             {
                 return other.CrossSection.CompareTo(this.CrossSection);
+            }
+
+            public enum PbRelationBetweenPlayers
+            {
+                Self = 0,
+                Allies = 1,
+                Neutral = 2,
+                Enemies = 3,
             }
         }
 

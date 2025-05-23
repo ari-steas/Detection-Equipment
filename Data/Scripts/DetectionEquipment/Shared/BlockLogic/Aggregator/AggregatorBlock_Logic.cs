@@ -88,7 +88,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     velVariation /= velocities.Length;
                 }
 
-                var averagedInfo = WorldDetectionInfo.Average(toCombine);
+                var averagedInfo = WorldDetectionInfo.Average(toCombine, this);
                 if (velVariation <= VelocityErrorThreshold * VelocityErrorThreshold)
                     averagedInfo.Position += averageVelocity * AggregationTime / 2;
 
@@ -129,7 +129,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             int i = 0;
             foreach (var set in groupCache.Values)
             {
-                aggregated[i++] = WorldDetectionInfo.Average(set);
+                aggregated[i++] = WorldDetectionInfo.Average(set, this);
                 set.Clear();
                 GroupInfoBuffer.Push(set);
             }

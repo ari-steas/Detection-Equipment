@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Xml;
 using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using ProtoBuf;
 using VRage.Game.Entity;
 using VRageMath;
@@ -24,8 +25,7 @@ namespace DetectionEquipment.Shared.Structs
         [ProtoMember(9)] public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
 
-        private static int NextId = 0;
-        public static WorldDetectionInfo Create(DetectionInfo info)
+        public static WorldDetectionInfo Create(DetectionInfo info, AggregatorBlock aggregator = null)
         {
             var wInfo = new WorldDetectionInfo
             {
@@ -37,13 +37,13 @@ namespace DetectionEquipment.Shared.Structs
                 Velocity = null,
                 VelocityVariance = null,
                 IffCodes = info.IffCodes ?? Array.Empty<string>(),
-                Relations = null,
             };
 
             wInfo.Error = Math.Tan(info.BearingError) * info.Range; // planar error; base width of right triangle
             wInfo.Error *= wInfo.Error;
             wInfo.Error += info.RangeError * info.RangeError; // normal error
             wInfo.Error = Math.Sqrt(wInfo.Error);
+            wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
 
             return wInfo;
         }
@@ -52,7 +52,6 @@ namespace DetectionEquipment.Shared.Structs
         {
             return new WorldDetectionInfo
             {
-                Entity = info.Entity,
                 EntityId = info.EntityId,
                 CrossSection = info.CrossSection,
                 Error = info.Error,
@@ -61,6 +60,8 @@ namespace DetectionEquipment.Shared.Structs
                 VelocityVariance = info.VelocityVariance,
                 DetectionType = info.DetectionType,
                 IffCodes = info.IffCodes,
+                Relations = info.Relations,
+                Entity = info.Entity,
             };
         }
 
@@ -82,11 +83,12 @@ namespace DetectionEquipment.Shared.Structs
             Velocity,
             VelocityVariance,
             IffCodes,
+            (int?) Relations,
         };
 
-        public static WorldDetectionInfo Average(params WorldDetectionInfo[] args) => Average((ICollection<WorldDetectionInfo>) args);
+        public static WorldDetectionInfo Average(AggregatorBlock aggregator, params WorldDetectionInfo[] args) => Average(args, aggregator);
 
-        public static WorldDetectionInfo Average(ICollection<WorldDetectionInfo> args)
+        public static WorldDetectionInfo Average(ICollection<WorldDetectionInfo> args, AggregatorBlock aggregator)
         {
             if (args.Count == 0)
                 throw new Exception("No detection infos provided!");
@@ -137,7 +139,7 @@ namespace DetectionEquipment.Shared.Structs
             //    avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
             //avgDiff = Math.Sqrt(avgDiff) / args.Count;
 
-            return new WorldDetectionInfo
+            var wInfo = new WorldDetectionInfo
             {
                 Entity = entity,
                 EntityId = entity?.EntityId ?? -1,
@@ -147,6 +149,9 @@ namespace DetectionEquipment.Shared.Structs
                 DetectionType = proposedType ?? SensorDefinition.SensorType.None,
                 IffCodes = allCodes.ToArray(),
             };
+            wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
+
+            return wInfo;
         }
 
         public int CompareTo(WorldDetectionInfo other)
