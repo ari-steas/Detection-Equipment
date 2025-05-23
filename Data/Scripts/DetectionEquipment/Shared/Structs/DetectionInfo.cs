@@ -21,6 +21,7 @@ namespace DetectionEquipment.Shared.Structs
             Bearing,
             IffCodes,
             Track.EntityId,
+            Sensor.Id,
         };
 
         public override string ToString()

@@ -442,6 +442,7 @@ namespace IngameScript
             public readonly double CrossSection, Range, RangeError, BearingError;
             public readonly Vector3D Bearing;
             public readonly string[] IffCodes;
+            public readonly uint SensorId;
 
             public PbDetectionInfo(object[] dataSet)
             {
@@ -452,6 +453,7 @@ namespace IngameScript
                 SetField(dataSet[4], out Bearing);
                 SetField(dataSet[5], out IffCodes);
                 SetField(dataSet[6], out UniqueId);
+                SetField(dataSet[7], out SensorId);
             }
 
             public override string ToString()
