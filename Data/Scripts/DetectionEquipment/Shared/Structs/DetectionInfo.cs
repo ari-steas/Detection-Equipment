@@ -20,6 +20,7 @@ namespace DetectionEquipment.Shared.Structs
             BearingError,
             Bearing,
             IffCodes,
+            Track.EntityId,
         };
 
         public override string ToString()

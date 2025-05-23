@@ -438,9 +438,10 @@ namespace IngameScript
         /// </summary>
         public struct PbDetectionInfo
         {
-            public double CrossSection, Range, RangeError, BearingError;
-            public Vector3D Bearing;
-            public string[] IffCodes;
+            public readonly long UniqueId;
+            public readonly double CrossSection, Range, RangeError, BearingError;
+            public readonly Vector3D Bearing;
+            public readonly string[] IffCodes;
 
             public PbDetectionInfo(object[] dataSet)
             {
@@ -450,6 +451,7 @@ namespace IngameScript
                 SetField(dataSet[3], out BearingError);
                 SetField(dataSet[4], out Bearing);
                 SetField(dataSet[5], out IffCodes);
+                SetField(dataSet[6], out UniqueId);
             }
 
             public override string ToString()
