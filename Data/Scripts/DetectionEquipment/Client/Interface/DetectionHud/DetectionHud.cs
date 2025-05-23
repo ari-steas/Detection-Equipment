@@ -5,6 +5,7 @@ using DetectionEquipment.Shared.Utils;
 using RichHudFramework.UI.Client;
 using Sandbox.ModAPI;
 using VRage.Input;
+using VRageMath;
 
 namespace DetectionEquipment.Client.Interface.DetectionHud
 {
@@ -12,6 +13,24 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
     {
         private static Dictionary<long, DetectionHudItem> _hudItems;
         private static HashSet<long> _deadItems;
+
+        private static bool _alwaysShow = false;
+
+        public static bool AlwaysShow
+        {
+            get
+            {
+                return _alwaysShow;
+            }
+            set
+            {
+                if (value == _alwaysShow)
+                    return;
+                _alwaysShow = value;
+                UpdateVisible(_alwaysShow || MyAPIGateway.Session?.Config?.HudState != 0);
+            }
+        }
+        public static float CombineAngle = (float) MathHelper.ToRadians(2.5); // TODO make this do anything
 
         public static void Init()
         {
@@ -42,19 +61,24 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         public static void Draw()
         {
             // Pulling the current HudState is SLOOOOWWWW, so we only pull it when tab is just pressed.
-            if (MyAPIGateway.Input.IsNewKeyPressed(MyKeys.Tab))
-            {
-                bool hudVisible = MyAPIGateway.Session?.Config?.HudState != 0;
-                foreach (var item in _hudItems)
-                {
-                    item.Value.SetVisible(hudVisible);
-                }
-            }
+            if (!AlwaysShow && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.Tab))
+                UpdateVisible(MyAPIGateway.Session?.Config?.HudState != 0);
 
             foreach (var item in _hudItems)
             {
-                item.Value.Update();
+                if (_visible)
+                    item.Value.Update();
                 _deadItems.Add(item.Key);
+            }
+        }
+
+        private static bool _visible = true;
+        private static void UpdateVisible(bool visible)
+        {
+            _visible = visible;
+            foreach (var item in _hudItems)
+            {
+                item.Value.SetVisible(_visible);
             }
         }
 
@@ -69,7 +93,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 }
                 else
                 {
-                    _hudItems[detection.EntityId] = new DetectionHudItem(HudMain.HighDpiRoot, detection);
+                    _hudItems[detection.EntityId] = new DetectionHudItem(HudMain.HighDpiRoot, detection, _visible);
                 }
             }
         }

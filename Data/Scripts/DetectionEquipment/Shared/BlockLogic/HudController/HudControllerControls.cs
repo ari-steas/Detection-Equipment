@@ -3,6 +3,7 @@ using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
+using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
 {
@@ -19,6 +20,23 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
         protected override void CreateTerminalActions()
         {
+            CreateToggle(
+                "AlwaysDisplay",
+                "Always Display",
+                "Should targets always display, regardless of HUD state?",
+                b => b.GameLogic.GetAs<HudControllerBlock>().AlwaysDisplay.Value,
+                (b, v) => b.GameLogic.GetAs<HudControllerBlock>().AlwaysDisplay.Value = v
+            );
+            CreateSlider(
+                "CombineAngle",
+                "Combine Angle",
+                "Angle at which to combine close targets.",
+                0,
+                10,
+                b => MathHelper.ToDegrees(b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value),
+                (b, v) => b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value = MathHelper.ToRadians(v),
+                (b, sb) => sb.Append($"{MathHelper.ToDegrees(b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value):F}°")
+            );
             ActiveAggregatorSelect = new BlockSelectControl<HudControllerBlock, IMyConveyorSorter>(
                 "SourceAggregator",
                 "Source Aggregator",

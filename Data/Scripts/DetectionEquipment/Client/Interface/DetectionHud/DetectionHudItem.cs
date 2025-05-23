@@ -29,7 +29,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         public const int MaxBoxSize = 400, MinBoxSize = 25;
 
-        public DetectionHudItem(HudParentBase parent, WorldDetectionInfo info) : base(parent)
+        public DetectionHudItem(HudParentBase parent, WorldDetectionInfo info, bool visible) : base(parent)
         {
             Detection = info;
 
@@ -37,6 +37,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             InfoLabel = NewInfoLabel;
 
             Update();
+            SetVisible(visible);
         }
 
         public void SetVisible(bool value)
@@ -52,6 +53,8 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         public void Update(WorldDetectionInfo detection)
         {
+            bool isVisible = OutlineBox.Visible;
+
             Detection = detection;
             if (HudMarker.GetMarkerType(detection) != OutlineBox.Type || HudMarker.GetMarkerColor(detection) != OutlineBox.Color)
             {
@@ -60,6 +63,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 InfoLabel = NewInfoLabel;
             }
             Update();
+            SetVisible(isVisible);
         }
 
         public void Update()

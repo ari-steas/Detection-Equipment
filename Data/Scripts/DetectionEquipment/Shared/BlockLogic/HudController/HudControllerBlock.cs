@@ -12,6 +12,7 @@ using ProtoBuf;
 using VRage.Game.Entity;
 using DetectionEquipment.Client.Interface.DetectionHud;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using VRageMath;
 using MyAPIGateway = Sandbox.ModAPI.MyAPIGateway;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
@@ -26,6 +27,9 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         internal AggregatorBlock SourceAggregator => HudControllerControls.ActiveAggregators[this];
         internal List<WorldDetectionInfo> Detections = new List<WorldDetectionInfo>();
 
+        public SimpleSync<bool> AlwaysDisplay = new SimpleSync<bool>(false);
+        public SimpleSync<float> CombineAngle = new SimpleSync<float>((float) MathHelper.ToRadians(2.5));
+
         protected override ControlBlockSettingsBase GetSettings => new HudControllerSettings(this);
         protected override ITerminalControlAdder GetControls => new HudControllerControls();
 
@@ -33,6 +37,9 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         {
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
+
+            AlwaysDisplay.Component = this;
+            CombineAngle.Component = this;
             
             base.UpdateOnceBeforeFrame();
         }
@@ -96,8 +103,13 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
             }
 
             // Only show HUD blocks on controlled grid.
-            if (MyAPIGateway.Session.Player?.Controller.ControlledEntity?.Entity.GetTopMostParent() == Block.GetTopMostParent())
+            if (MyAPIGateway.Session.Player?.Controller.ControlledEntity?.Entity.GetTopMostParent() ==
+                Block.GetTopMostParent())
+            {
+                DetectionHud.AlwaysShow = AlwaysDisplay.Value;
+                DetectionHud.CombineAngle = CombineAngle.Value;
                 DetectionHud.UpdateDetections(Detections);
+            }
         }
 
         public override void MarkForClose()
