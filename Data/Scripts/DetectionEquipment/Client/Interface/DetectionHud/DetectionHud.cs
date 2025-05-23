@@ -3,6 +3,8 @@ using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using RichHudFramework.UI.Client;
+using Sandbox.ModAPI;
+using VRage.Input;
 
 namespace DetectionEquipment.Client.Interface.DetectionHud
 {
@@ -39,6 +41,16 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         public static void Draw()
         {
+            // Pulling the current HudState is SLOOOOWWWW, so we only pull it when tab is just pressed.
+            if (MyAPIGateway.Input.IsNewKeyPressed(MyKeys.Tab))
+            {
+                bool hudVisible = MyAPIGateway.Session?.Config?.HudState != 0;
+                foreach (var item in _hudItems)
+                {
+                    item.Value.SetVisible(hudVisible);
+                }
+            }
+
             foreach (var item in _hudItems)
             {
                 item.Value.Update();

@@ -39,6 +39,17 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             Update();
         }
 
+        public void SetVisible(bool value)
+        {
+            // don't set visible if we don't have to
+            if (OutlineBox.Visible == value)
+                return;
+
+            OutlineBox.Visible = value;
+            InfoLabel.Visible = value;
+            Visible = value;
+        }
+
         public void Update(WorldDetectionInfo detection)
         {
             Detection = detection;
