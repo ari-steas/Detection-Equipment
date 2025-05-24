@@ -2,8 +2,8 @@
 <Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
 	<CubeBlocks>
 		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
-            <Id>
-                <TypeId>ConveyorSorter</TypeId>
+			<Id>
+				<TypeId>ConveyorSorter</TypeId>
 				<SubtypeId>IffReflector</SubtypeId>
 			</Id>
 			<DisplayName>IFF Reflector</DisplayName>

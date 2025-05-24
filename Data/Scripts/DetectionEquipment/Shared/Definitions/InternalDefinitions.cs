@@ -91,6 +91,41 @@ namespace DetectionEquipment.Shared.Definitions
                 }
             },
 
+            // Small Gimbal Radar
+            ["DetEq_SmallFixedRadar"] = new SensorDefinition
+            {
+                BlockSubtypes = new[]
+                {
+                    "SmallFixedRadar",
+                },
+                Type = SensorType.Radar,
+                MaxAperture = MathHelper.ToRadians(15),
+                MinAperture = MathHelper.ToRadians(1),
+                DetectionThreshold = 30,
+                MaxPowerDraw = 1000000,
+                BearingErrorModifier = 0.1,
+                RangeErrorModifier = 0.0001,
+                Movement = new SensorMovementDefinition
+                {
+                    AzimuthPart = "smallfixedradar_azimuth",
+                    AzimuthRate = 2 * Math.PI,
+                    MaxAzimuth = MathHelper.ToRadians(35),
+                    MinAzimuth = -MathHelper.ToRadians(35),
+
+                    ElevationPart = "smallfixedradar_elevation",
+                    ElevationRate = 2 * Math.PI,
+                    MaxElevation = MathHelper.ToRadians(35),
+                    MinElevation = -MathHelper.ToRadians(35),
+                },
+                RadarProperties = new RadarPropertiesDefinition
+                {
+                    ReceiverArea = 0.5 * 0.5,
+                    PowerEfficiencyModifier = 0.00000000000000025,
+                    Bandwidth = 1.67E6,
+                    Frequency = 2800E6,
+                }
+            },
+
             // SimplePassiveRadar
             ["DetEq_SimplePassiveRadar"] = new SensorDefinition
             {

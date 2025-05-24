@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+	<CubeBlocks>
+		<Definition xsi:type="MyObjectBuilder_CameraBlockDefinition">
+			<Id>
+				<TypeId>CameraBlock</TypeId>
+				<SubtypeId>SmallFixedRadar</SubtypeId>
+			</Id>
+			<DisplayName>Small Gimballed Radar</DisplayName>
+			<Description>{LOC:Description_SmallFixedRadar}</Description>
+			<Icon>Textures\GUI\Icons\Cubes\SmallFixedRadar.dds</Icon>
+			<CubeSize>Small</CubeSize>
+			<BlockTopology>TriangleMesh</BlockTopology>
+			<Size x="1" y="1" z="2"/>
+			<ModelOffset x="0" y="0" z="0"/>
+			<Model>Models\SmallFixedRadar.mwm</Model>
+			<Components>
+				<Component Subtype="SteelPlate" Count="10"/>
+			</Components>
+			<CriticalComponent Subtype="SteelPlate" Index="0"/>
+			<MountPoints>
+				<MountPoint Side="Back" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
+				<MountPoint Side="Left" StartX="0.94" StartY="0.00" EndX="2.00" EndY="1.00"/>
+				<MountPoint Side="Right" StartX="0.00" StartY="0.00" EndX="1.06" EndY="1.00"/>
+				<MountPoint Side="Top" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.06"/>
+				<MountPoint Side="Bottom" StartX="0.00" StartY="0.94" EndX="1.00" EndY="2.00"/>
+			</MountPoints>
+			<BlockPairName>ActiveRadar_Simple</BlockPairName>
+		</Definition>
+	</CubeBlocks>
+</Definitions>
