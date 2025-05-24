@@ -16,7 +16,9 @@ namespace DetectionEquipment.Shared.Definitions
                 BlockSubtypes = new[]
                 {
                     "LargeCameraBlock",
+                    "LargeCameraTopMounted",
                     "SmallCameraBlock",
+                    "SmallCameraTopMounted",
                 },
                 Type = SensorType.Infrared,
                 MaxAperture = Math.PI/4,
