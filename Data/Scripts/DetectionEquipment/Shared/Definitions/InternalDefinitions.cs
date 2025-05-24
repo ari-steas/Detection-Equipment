@@ -22,7 +22,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxAperture = Math.PI/4,
                 MinAperture = Math.PI/16,
                 DetectionThreshold = 0.001,
-                BearingErrorModifier = 0.1,
+                BearingErrorModifier = 0.05,
                 RangeErrorModifier = 2.5,
                 MaxPowerDraw = -1,
                 Movement = null,
@@ -39,7 +39,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxAperture = MathHelper.ToRadians(30),
                 MinAperture = MathHelper.ToRadians(1),
                 DetectionThreshold = 0.001,
-                BearingErrorModifier = 0.1,
+                BearingErrorModifier = 0.05,
                 RangeErrorModifier = 1,
                 MaxPowerDraw = -1,
                 Movement = new SensorMovementDefinition
@@ -85,7 +85,7 @@ namespace DetectionEquipment.Shared.Definitions
                 RadarProperties = new RadarPropertiesDefinition
                 {
                     ReceiverArea = 4.9 * 2.7,
-                    PowerEfficiencyModifier = 0.00000000000000025,
+                    PowerEfficiencyModifier = 0.00000000000025,
                     Bandwidth = 1.67E6,
                     Frequency = 2800E6,
                 }
@@ -120,7 +120,7 @@ namespace DetectionEquipment.Shared.Definitions
                 RadarProperties = new RadarPropertiesDefinition
                 {
                     ReceiverArea = 0.5 * 0.5,
-                    PowerEfficiencyModifier = 0.00000000000000025,
+                    PowerEfficiencyModifier = 0.00000000000025,
                     Bandwidth = 1.67E6,
                     Frequency = 2800E6,
                 }
