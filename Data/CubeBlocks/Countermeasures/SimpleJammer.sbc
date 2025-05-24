@@ -22,6 +22,7 @@
 				<MountPoint Side="Bottom" StartX="0.00" StartY="0.00" EndX="3.00" EndY="3.00"/>
 			</MountPoints>
 			<BlockPairName>SimpleJammer</BlockPairName>
+			<MirroringY>Z</MirroringY>
 		</Definition>
 	</CubeBlocks>
 </Definitions>

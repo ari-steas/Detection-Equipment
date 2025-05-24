@@ -26,6 +26,8 @@
 				<MountPoint Side="Bottom" StartX="0.00" StartY="0.94" EndX="1.00" EndY="2.00"/>
 			</MountPoints>
 			<BlockPairName>ActiveRadar_Simple</BlockPairName>
+			<MirroringY>Z</MirroringY>
+			<MirroringZ>Y</MirroringZ>
 		</Definition>
 	</CubeBlocks>
 </Definitions>
