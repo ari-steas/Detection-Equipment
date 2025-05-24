@@ -22,6 +22,11 @@ namespace DetectionEquipment.Client.Interface
             }
         }
 
+        public static void Hide()
+        {
+            _displayTime = 0;
+        }
+
         public static void Update()
         {
             if (!_isDisplaying) return;

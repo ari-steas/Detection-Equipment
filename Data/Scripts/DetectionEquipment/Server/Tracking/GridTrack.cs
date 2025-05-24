@@ -66,14 +66,18 @@ namespace DetectionEquipment.Server.Tracking
         public override double InfraredVisibility(Vector3D source)
         {
             // Retrieve power draw and add to base visibility. Scale by inverse of base visibility to simulate heat distribution; a smaller object with the same power draw as a larger object is hotter.
-            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid);
-            return base.InfraredVisibility(source) + powerDraw * ProjectedArea(source, VisibilityType.Optical);
+            // in MW by default, convert to watts
+            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid) * 1000000;
+            // base visibility + radiative visibility
+            return base.InfraredVisibility(source) + (powerDraw/Grid.LocalAABB.SurfaceArea() * ProjectedArea(source, VisibilityType.Optical));
         }
 
         public override double InfraredVisibility(Vector3D source, double opticalVisibility)
         {
-            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid);
-            return base.InfraredVisibility(source) + powerDraw * opticalVisibility;
+            // in MW by default, convert to watts
+            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid) * 1000000;
+            // base visibility + radiative visibility
+            return base.InfraredVisibility(source, opticalVisibility) + (powerDraw/Grid.LocalAABB.SurfaceArea() * opticalVisibility);
         }
 
         // TODO: Scale visible and infrared visibility by thrust output.
@@ -198,7 +202,8 @@ namespace DetectionEquipment.Server.Tracking
 
         public virtual void CalculateRcs(Vector3D globalDirection, out double radarCrossSection, out double visualCrossSection)
         {
-            Vector3D direction = -Vector3D.Rotate(globalDirection, MatrixD.Invert(Grid.WorldMatrix));
+            globalDirection.Normalize();
+            Vector3D direction = Vector3D.Rotate(globalDirection, MatrixD.Invert(Grid.WorldMatrix));
 
             // Estimate the max cast size
             Vector3D minCheck = Vector3D.MaxValue, maxCheck = Vector3D.MinValue;
@@ -244,9 +249,13 @@ namespace DetectionEquipment.Server.Tracking
             // Cast for occupied cells, if there's a hit then do a physics cast.
             HashSet<Vector3I> visited = new HashSet<Vector3I>();
             double maxCastLength = Grid.LocalAABB.HalfExtents.Length();
-            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize * 2) // Check every two blocks for performance's sake
+
+            double checkArea = (maxCheck.X - minCheck.X) * (maxCheck.Y - minCheck.Y);
+            int scaleMultiplier = (int) MathUtils.Clamp(Math.Round(Math.Pow(checkArea / 500, 1/3d)), 1, double.MaxValue);
+
+            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize * scaleMultiplier) // Check every two blocks for performance's sake
             {
-                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize * 2) // Check every two blocks for performance's sake
+                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize * scaleMultiplier) // Check every two blocks for performance's sake
                 {
                     var vecOffset = Vector3D.Rotate(new Vector3D(x, y, 0), rotationMatrix);
 
@@ -279,19 +288,27 @@ namespace DetectionEquipment.Server.Tracking
                 //DebugDraw.AddLine(hitInfo.Position, hitInfo.Position + hitInfo.Normal, Color.Green, 0);
                 // Armor blocks have half the RCS of components, and light armor has half the RCS of heavy armor.
                 totalVcs += 1;
+                double scaledRcs = Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
                 if (block?.FatBlock == null)
                 {
                     if (GlobalData.LowRcsSubtypes.Contains(block?.BlockDefinition.Id.SubtypeName))
-                        totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal)) / 2;
+                        totalRcs += scaledRcs / 2;
                     else
-                        totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
+                        totalRcs += scaledRcs;
                 }
                 else
-                    totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal)) * 2;
+                    totalRcs += scaledRcs * 2;
             });
 
-            radarCrossSection = totalRcs * Grid.GridSize * Grid.GridSize;
-            visualCrossSection = totalVcs * Grid.GridSize * Grid.GridSize;
+            radarCrossSection = totalRcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier;
+            visualCrossSection = totalVcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier;
+
+            // Failsafe for all raycasts missing
+            if (radarCrossSection == 0 || visualCrossSection == 0)
+            {
+                radarCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Radar);
+                visualCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Optical);
+            }
         }
     }
 }

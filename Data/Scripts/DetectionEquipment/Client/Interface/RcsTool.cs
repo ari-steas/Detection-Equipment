@@ -31,12 +31,13 @@ namespace DetectionEquipment.Client.Interface
             // Updating every tick to prevent flashing
             if (_shouldShow)
             {
+                ModderNotification.Hide();
                 MyVisualScriptLogicProvider.SetQuestlogLocal(true,
                     $"Detection Equipment - Visibility Tool");
 
                 MyVisualScriptLogicProvider.AddQuestlogDetailLocal(
                     $"{_name}\n" +
-                    $"    RCS: {_rcs:N0} m^2\n" +
+                    $"    RCS: {_rcs:N} m^2\n" +
                     $"    VCS: {_vcs:N} m^2\n" +
                     $"    IRS: {_irs:N} Wm^2",
                     false, false);
@@ -69,7 +70,8 @@ namespace DetectionEquipment.Client.Interface
             if (castEnt == null)
                 return true;
 
-            Vector3D position = MyAPIGateway.Session.Camera.WorldMatrix.Translation - MyAPIGateway.Session.Camera.WorldMatrix.Forward * 500;
+            //Vector3D position = MyAPIGateway.Session.Camera.WorldMatrix.Translation - MyAPIGateway.Session.Camera.WorldMatrix.Forward * 500;
+            Vector3D position = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
 
             var castGrid = castEnt as IMyCubeGrid;
             if (castGrid != null)
