@@ -52,7 +52,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_GETTER", ex, true);
                     return false;
                 }
             };
@@ -64,7 +64,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_SETTER", ex, true);
                 }
             };
 
@@ -87,7 +87,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_GETTER", ex, true);
                     return 0;
                 }
             };
@@ -99,10 +99,20 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_SETTER", ex, true);
                 }
             };
-            slider.Writer = writer;
+            slider.Writer = (b, sb) =>
+            {
+                try
+                {
+                    writer.Invoke(b, sb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_WRITER", ex, true);
+                }
+            };
 
             slider.Visible = VisibleFunc;
             slider.SupportsMultipleBlocks = true;
@@ -128,7 +138,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_ACTION", ex, true);
                 }
             };
 
@@ -153,7 +163,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_GETTER", ex, true);
                     return false;
                 }
             };
@@ -165,7 +175,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_SETTER", ex, true);
                 }
             };
 
@@ -181,7 +191,17 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             box.SupportsMultipleBlocks = true;
 
             box.Visible = VisibleFunc;
-            box.ComboBoxContent = content;
+            box.ComboBoxContent = (contentList) =>
+            {
+                try
+                {
+                    content.Invoke(contentList);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_CONTENT", ex, true);
+                }
+            };
             box.Getter = tb =>
             {
                 try
@@ -190,7 +210,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_GETTER", ex, true);
                     return 0;
                 }
             };
@@ -202,7 +222,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_SETTER", ex, true);
                 }
             };
 
@@ -227,7 +247,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_CONTENT", ex, true);
                 }
             };
             box.ItemSelected = (tb, selectedList) =>
@@ -238,7 +258,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_ITEMSELECTED", ex, true);
                 }
             };
 
@@ -265,7 +285,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_GETTER", ex, true);
                     return new StringBuilder();
                 }
             };
@@ -277,7 +297,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_SETTER", ex, true);
                 }
             };
 
@@ -333,7 +353,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
                 catch (Exception ex)
                 {
-                    Log.Exception("TerminalControlAdder::" + IdPrefix + id, ex, true);
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_ACTION", ex, true);
                     return false;
                 }
             };
