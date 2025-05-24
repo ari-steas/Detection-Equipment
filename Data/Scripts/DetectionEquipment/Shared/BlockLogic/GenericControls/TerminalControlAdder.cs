@@ -16,8 +16,8 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         where TBlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
         protected static bool _isDone = false;
-        protected static Func<IMyTerminalBlock, bool> VisibleFunc = (block) => block.GameLogic.GetAs<TLogicType>() != null;
-        public static string IdPrefix { get; protected set; }= typeof(TLogicType).Name + "_";
+        private static readonly Func<IMyTerminalBlock, bool> VisibleFunc = (block) => block.GameLogic.GetAs<TLogicType>() != null;
+        public static readonly string IdPrefix = typeof(TLogicType).Name + "_";
 
         public virtual void DoOnce(IControlBlockBase thisLogic)
         {

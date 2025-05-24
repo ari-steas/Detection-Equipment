@@ -65,7 +65,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
         protected void UpdateServer()
         {
-            if (MyAPIGateway.Session.GameplayFrameCounter % 7 != 0 || SourceAggregator == null)
+            if (MyAPIGateway.Session.GameplayFrameCounter % 3 != 0 || SourceAggregator == null)
                 return;
 
             Detections.Clear();
