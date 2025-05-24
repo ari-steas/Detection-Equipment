@@ -46,7 +46,7 @@ namespace DetectionEquipment.Client.Sensors
                 }
                 );
             currentSensorSet.VisibleRowsCount = 4;
-            currentSensorSet.Visible = b => b.GameLogic.GetAs<ClientBlockSensor>().Sensors.Count > 1;
+            currentSensorSet.Visible = b => (b.GameLogic.GetAs<ClientBlockSensor>()?.Sensors.Count ?? 0) > 1;
             currentSensorSet.SupportsMultipleBlocks = false;
 
             _apeSlider = CreateSlider(
