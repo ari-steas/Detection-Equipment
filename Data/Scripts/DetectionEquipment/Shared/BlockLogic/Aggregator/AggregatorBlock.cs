@@ -17,6 +17,7 @@ using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.ModAPI;
+using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -68,7 +69,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         {
             get
             {
-                if (_lastDetectionSetUpdate + 1 < MyAPIGateway.Session.GameplayFrameCounter)
+                if (_lastDetectionSetUpdate + 1 <= MyAPIGateway.Session.GameplayFrameCounter)
                     return UpdateAggregatedDetections();
                 return _lastDetectionSet;
             }
@@ -140,8 +141,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             {
                 _lastDetectionSetUpdate = MyAPIGateway.Session.GameplayFrameCounter;
                 _lastDetectionSet.Clear();
-                foreach (var item in AggregateInfos(infosCache))
+                foreach (var info in AggregateInfos(infosCache))
+                {
+                    var item = info;
+                    if (item.Entity?.Physics != null)
+                        item.Position += item.Entity.Physics.LinearVelocity / 60;
                     _lastDetectionSet.Add(item);
+                }
 
                 infosCache.Clear();
                 GroupInfoBuffer.Push(infosCache);
@@ -191,22 +197,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             try
             {
-                if (!_isProcessing)
-                {
-                    _isProcessing = true;
-
-                    _parallelCache.Clear();
-                    _parallelCache.EnsureCapacity(DetectionCache.Count + 1);
-                    foreach (var item in DetectionCache)
-                        _parallelCache.Add(item);
-
-                    MyAPIGateway.Parallel.Start(() =>
-                    {
-                        CalculateDetections(_parallelCache);
-                        _isProcessing = false;
-                    });
-                }
-
                 List<WorldDetectionInfo> infosCache;
                 if (!GroupInfoBuffer.TryPop(out infosCache))
                     infosCache = new List<WorldDetectionInfo>();
@@ -226,6 +216,22 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 GroupInfoBuffer.Push(infosCache);
                 while (DetectionCache.Count > AggregationTime * 60)
                     DetectionCache.Dequeue();
+
+                if (!_isProcessing)
+                {
+                    _isProcessing = true;
+
+                    _parallelCache.Clear();
+                    _parallelCache.EnsureCapacity(DetectionCache.Count + 1);
+                    foreach (var item in DetectionCache)
+                        _parallelCache.Add(item);
+
+                    MyAPIGateway.Parallel.Start(() =>
+                    {
+                        CalculateDetections(_parallelCache);
+                        _isProcessing = false;
+                    });
+                }
 
                 // testing //
                 //MyAPIGateway.Utilities.ShowNotification($"Det: {AggregatedDetections.Count} Cache: {DetectionCache.Count}", 1000/60);
