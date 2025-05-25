@@ -119,7 +119,7 @@ namespace DetectionEquipment.Shared.Structs
             Vector3D averagePos = Vector3D.Zero;
             double totalCrossSection = 0;
             double pctSum = 0;
-            foreach (var info in args)
+            foreach (var info in args) // TODO weighted average error
             {
                 pctSum += 1 - (info.Error / totalError);
                 if (totalError > 0)

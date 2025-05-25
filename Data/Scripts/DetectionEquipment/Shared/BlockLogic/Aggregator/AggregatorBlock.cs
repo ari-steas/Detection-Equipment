@@ -141,7 +141,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 _lastDetectionSetUpdate = MyAPIGateway.Session.GameplayFrameCounter;
                 _lastDetectionSet.Clear();
                 foreach (var item in AggregateInfos(infosCache))
-                    _lastDetectionSet.Add(item);
+                {
+                    var info = item;
+                    if (item.Entity?.Physics != null)
+                        info.Position = item.Entity.Physics.LinearVelocity / 60; // TODO scale by last aggregation time
+                    _lastDetectionSet.Add(info);
+                }
 
                 infosCache.Clear();
                 GroupInfoBuffer.Push(infosCache);
