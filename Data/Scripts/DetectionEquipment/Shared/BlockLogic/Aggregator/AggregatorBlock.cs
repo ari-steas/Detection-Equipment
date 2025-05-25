@@ -143,7 +143,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 foreach (var item in AggregateInfos(infosCache))
                 {
                     var info = item;
-                    if (item.Entity?.Physics != null)
+                    if (item.Entity?.Physics != null && item.Entity.Physics.LinearVelocity.IsValid())
                         info.Position = item.Entity.Physics.LinearVelocity / 60; // TODO scale by last aggregation time
                     _lastDetectionSet.Add(info);
                 }
