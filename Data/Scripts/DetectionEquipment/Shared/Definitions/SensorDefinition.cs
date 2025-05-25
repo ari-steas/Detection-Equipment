@@ -1,8 +1,6 @@
 ﻿using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using System;
-using VRage;
-using SensorDefTuple = VRage.MyTuple<int, double, double, VRage.MyTuple<double, double, double, double, double, double>?, double, double>;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -35,6 +33,10 @@ namespace DetectionEquipment.Shared.Definitions
         /// Minimum aperture cone radius, in radians.
         /// </summary>
         [ProtoMember(4)] public double MinAperture;
+        /// <summary>
+        /// 
+        /// </summary>
+        [ProtoMember(11)] public string SensorEmpty;
         /// <summary>
         /// Movement definition. Set to null if unused.
         /// </summary>
@@ -98,6 +100,14 @@ namespace DetectionEquipment.Shared.Definitions
             /// Elevation rotation rate, in radians per second.
             /// </summary>
             [ProtoMember(8)] public double ElevationRate = 8 * Math.PI / 60;
+            /// <summary>
+            /// Rest azimuth for this sensor
+            /// </summary>
+            [ProtoMember(9)] public double HomeAzimuth = 0;
+            /// <summary>
+            /// Rest elevation for this sensor
+            /// </summary>
+            [ProtoMember(10)] public double HomeElevation = 0;
 
             [ProtoIgnore] public bool CanRotateFull => MaxAzimuth >= Math.PI && MinAzimuth <= -Math.PI;
             [ProtoIgnore] public bool CanElevateFull => MaxElevation >= Math.PI && MinElevation <= -Math.PI;
@@ -194,6 +204,20 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 Log.Info("SensorDefinition", "Radar properties are null on a radar sensor!");
                 isValid = false;
+            }
+
+            if (def.Movement != null)
+            {
+                if (def.Movement.AzimuthPart.StartsWith("subpart"))
+                {
+                    Log.Info("SensorDefinition", "Azimuth subpart starts with \"subpart_\" - this will likely result in part location failure.");
+                    isValid = false;
+                }
+                if (def.Movement.ElevationPart.StartsWith("subpart"))
+                {
+                    Log.Info("SensorDefinition", "Elevation subpart starts with \"subpart_\" - this will likely result in part location failure.");
+                    isValid = false;
+                }
             }
             // TODO: more & better validation
 

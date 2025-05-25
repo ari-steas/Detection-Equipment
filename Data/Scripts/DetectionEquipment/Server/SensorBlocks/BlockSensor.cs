@@ -94,6 +94,8 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 _aziPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
                 _elevPart = SubpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
+                _desiredAzimuth = Definition.Movement.HomeAzimuth;
+                _desiredElevation = Definition.Movement.HomeElevation;
             }
 
             switch (definition.Type)
