@@ -97,7 +97,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         private string DistanceStr()
         {
             var dist = Vector3D.Distance(MyAPIGateway.Session.Player.Character.GetPosition(), Detection.Position);
-            return $"{(dist > 1000 ? dist / 1000 : dist):N1}{(dist > 1000 ? "km" : "m")} \u00b1{Detection.Error / dist * 100d:N0}%\n";
+            return $"{(dist > 1000 ? dist / 1000 : dist):N1}{(dist > 1000 ? "km" : "m")} \u00b1{(Detection.Error > 1000 ? Detection.Error / 1000 : Detection.Error):N1}{(Detection.Error > 1000 ? "km" : "m")}\n";
         }
 
         private string IffStr =>
