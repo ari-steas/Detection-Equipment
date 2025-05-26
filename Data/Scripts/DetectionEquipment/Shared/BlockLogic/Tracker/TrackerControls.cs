@@ -43,9 +43,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 "Active Sensors",
                 "Sensors this block should direct. Ctrl+Click to select multiple.",
                 true,
-                logic => MyAPIGateway.Session.IsServer ?
+                logic => (MyAPIGateway.Session.IsServer ?
                          logic.GridSensors.BlockSensorIdMap.Keys :
-                         (IEnumerable<IMyCubeBlock>) SensorBlockManager.GridBlockSensorsMap[logic.CubeBlock.CubeGrid],
+                         (IEnumerable<IMyCubeBlock>) SensorBlockManager.GridBlockSensorsMap[logic.CubeBlock.CubeGrid])
+                    // BRIMSTONE LINQ HELL
+                    .Where(sb => sb.GameLogic.GetAs<ClientBlockSensor>().Sensors.Values.Any(s => s.Definition.Movement != null)),
                 (logic, selected) =>
                 {
                     if (!MyAPIGateway.Session.IsServer)

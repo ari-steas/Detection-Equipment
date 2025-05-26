@@ -73,8 +73,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 {
                     if (LockDecay[sensor] <= 0)
                     {
-                        sensor.DesiredAzimuth = 0;
-                        sensor.DesiredElevation = 0;
+                        sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
+                        sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
                     }
                     else
                     {

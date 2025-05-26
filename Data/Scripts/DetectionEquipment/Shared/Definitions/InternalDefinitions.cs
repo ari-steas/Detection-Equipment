@@ -38,6 +38,7 @@ namespace DetectionEquipment.Shared.Definitions
                     "GimbalCamera",
                 },
                 Type = SensorType.Optical,
+                SensorEmpty = "GimbalCameraEmpty",
                 MaxAperture = MathHelper.ToRadians(30),
                 MinAperture = MathHelper.ToRadians(1),
                 DetectionThreshold = 0.001,

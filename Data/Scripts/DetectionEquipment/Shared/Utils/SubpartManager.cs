@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
+using VRageRender.Import;
 
 namespace DetectionEquipment.Shared.Utils
 {
@@ -76,6 +78,49 @@ namespace DetectionEquipment.Shared.Utils
             }
 
             return null;
+        }
+
+        /// <summary>
+        /// Recursively find a dummy
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public static IMyModelDummy RecursiveGetDummy(IMyEntity entity, string name, out MyEntity parent)
+        {
+            var myEnt = (MyEntity)entity;
+            parent = myEnt;
+            if (entity == null)
+                return null;
+            Dictionary<string, IMyModelDummy> dummies = new Dictionary<string, IMyModelDummy>();
+            if (myEnt.Subparts.Count == 0)
+            {
+                entity.Model.GetDummies(dummies);
+                return dummies.GetValueOrDefault(name, null);
+            }
+
+            var toCheck = new Queue<MyEntity>();
+            toCheck.Enqueue(myEnt);
+
+            IMyModelDummy dummy = null;
+            while (toCheck.Count > 0)
+            {
+                var all = toCheck.Dequeue().Subparts.Values;
+                foreach (var item in all)
+                {
+                    toCheck.Enqueue(item);
+                    ((IMyEntity)item).Model.GetDummies(dummies);
+                    if (dummies.TryGetValue(name, out dummy))
+                    {
+                        toCheck.Clear();
+                        parent = item;
+                        break;
+                    }
+                    dummies.Clear();
+                }
+            }
+
+            return dummy;
         }
 
         /// <summary>

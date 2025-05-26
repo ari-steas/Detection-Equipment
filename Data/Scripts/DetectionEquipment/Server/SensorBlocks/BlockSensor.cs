@@ -12,7 +12,9 @@ using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
 using VRage.Game;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRageMath;
+using VRageRender.Import;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
 
@@ -27,6 +29,8 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public HashSet<DetectionInfo> Detections = new HashSet<DetectionInfo>();
 
+        private IMyModelDummy _sensorDummy = null;
+        private MyEntity _dummyParent = null;
         
         MyDefinitionId _electricityId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Electricity");
 
@@ -98,6 +102,9 @@ namespace DetectionEquipment.Server.SensorBlocks
                 _desiredElevation = Definition.Movement.HomeElevation;
             }
 
+            if (!string.IsNullOrEmpty(Definition.SensorEmpty))
+                _sensorDummy = SubpartManager.RecursiveGetDummy(Block, Definition.SensorEmpty, out _dummyParent);
+
             switch (definition.Type)
             {
                 case SensorType.Radar:
@@ -128,18 +135,10 @@ namespace DetectionEquipment.Server.SensorBlocks
         {
             if (_aziPart != null && Azimuth != DesiredAzimuth)
                 SubpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
-            if (_elevPart != null)
-            {
-                if (Elevation != DesiredElevation)
-                    SubpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
-                Sensor.Position = _elevPart.WorldMatrix.Translation;
-                Sensor.Direction = _elevPart.WorldMatrix.Forward;
-            }
-            else
-            {
-                Sensor.Position = Block.WorldAABB.Center;
-                Sensor.Direction = (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * Block.WorldMatrix).Forward;
-            }
+            if (_elevPart != null && Elevation != DesiredElevation)
+                SubpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
+
+            UpdateSensorMatrix();
 
             if (!Block.IsWorking)
                 return;
@@ -160,6 +159,26 @@ namespace DetectionEquipment.Server.SensorBlocks
                 {
                     DebugDraw.AddLine(Sensor.Position, Sensor.Position + detection.Bearing * detection.Range, Color.Red, 0);
                 }
+            }
+        }
+
+        private void UpdateSensorMatrix()
+        {
+            if (_sensorDummy != null)
+            {
+                var sensorMatrix = _sensorDummy.Matrix * _dummyParent.WorldMatrix;
+                Sensor.Position = sensorMatrix.Translation;
+                Sensor.Direction = sensorMatrix.Forward;
+            }
+            else if (_elevPart != null)
+            {
+                Sensor.Position = _elevPart.WorldMatrix.Translation;
+                Sensor.Direction = _elevPart.WorldMatrix.Forward;
+            }
+            else
+            {
+                Sensor.Position = Block.WorldAABB.Center;
+                Sensor.Direction = (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * Block.WorldMatrix).Forward;
             }
         }
 

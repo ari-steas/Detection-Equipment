@@ -34,10 +34,6 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(4)] public double MinAperture;
         /// <summary>
-        /// 
-        /// </summary>
-        [ProtoMember(11)] public string SensorEmpty;
-        /// <summary>
         /// Movement definition. Set to null if unused.
         /// </summary>
         [ProtoMember(5)] public SensorMovementDefinition Movement = null;
@@ -61,6 +57,10 @@ namespace DetectionEquipment.Shared.Definitions
         /// Radar properties. Set to null if unused.
         /// </summary>
         [ProtoMember(10)] public RadarPropertiesDefinition RadarProperties = new RadarPropertiesDefinition();
+        /// <summary>
+        /// Dummy empty name for the sensor. If blank or invalid, defaults to the elevation subpart.
+        /// </summary>
+        [ProtoMember(11)] public string SensorEmpty;
 
         /// <summary>
         /// Defines properties for subpart-based movement.

@@ -8,9 +8,9 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using VRage.Game;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Client.Sensors
@@ -96,11 +96,11 @@ namespace DetectionEquipment.Client.Sensors
 
         public void RegisterSensor(SensorInitPacket packet)
         {
-            Sensors[packet.Id] = new ClientSensorData
-            {
-                Id = packet.Id,
-                Definition = DefinitionManager.GetSensorDefinition(packet.DefinitionId),
-            };
+            Sensors[packet.Id] = new ClientSensorData(
+                packet.Id,
+                DefinitionManager.GetSensorDefinition(packet.DefinitionId),
+                Block
+            );
             if (CurrentSensorId == uint.MaxValue)
                 CurrentSensorId = packet.Id;
             SensorBlockManager.BlockSensorIdMap[packet.Id] = this;
@@ -129,63 +129,62 @@ namespace DetectionEquipment.Client.Sensors
 
             private MyEntitySubpart _aziPart, _elevPart;
             private Matrix _baseLocalMatrix;
+            private Matrix _baseMuzzleLocalMatrix = Matrix.Identity;
             private SubpartManager _subpartManager = new SubpartManager();
 
-            public void Update(IMyCameraBlock block, bool isPrimarySensor)
+            private IMyModelDummy _sensorDummy = null;
+            private MyEntity _dummyParent = null;
+
+            public ClientSensorData(uint id, SensorDefinition definition, IMyCubeBlock block)
             {
-                if (_aziPart == null && _elevPart == null && Definition.Movement != null)
+                Id = id;
+                Definition = definition;
+
+                if (Definition.Movement != null)
                 {
                     _aziPart = _subpartManager.RecursiveGetSubpart(block, Definition.Movement.AzimuthPart);
                     _elevPart = _subpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
                     _baseLocalMatrix = block.LocalMatrix;
 
                     if (_aziPart == null)
-                    {
                         Log.Info("ClientSensorData", $"Failed to get sensor w/ DefId {Definition.Id} azimuth part {Definition.Movement.AzimuthPart}!\n" +
                                                      $"Valid subparts:\n\t{string.Join("\n\t", SubpartManager.GetAllSubpartsDict(block).Keys)}");
-                    }
                     if (_elevPart == null)
-                    {
                         Log.Info("ClientSensorData", $"Failed to get sensor w/ DefId {Definition.Id} elevation part {Definition.Movement.AzimuthPart}!\n" +
                                                      $"Valid subparts:\n\t{string.Join("\n\t", SubpartManager.GetAllSubpartsDict(block).Keys)}");
-                    }
                     //Log.Info("ClientBlockSensor", "Inited subparts for " + block.BlockDefinition.SubtypeName);
                 }
 
-                // Sensor Movement
-                if (_aziPart != null && Azimuth != DesiredAzimuth)
-                    if (!MyAPIGateway.Session.IsServer) // Server rotates parts too
-                        _subpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
-                if (_elevPart != null)
+                _dummyParent = (MyEntity) block;
+                if (!string.IsNullOrEmpty(Definition.SensorEmpty))
+                    _sensorDummy = SubpartManager.RecursiveGetDummy(block, Definition.SensorEmpty, out _dummyParent);
+
+                if (_sensorDummy != null)
                 {
-                    if (Elevation != DesiredElevation)
-                        if (!MyAPIGateway.Session.IsServer) // Server rotates parts too
-                            _subpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
-                    Position = _elevPart.WorldMatrix.Translation;
-                    Direction = _elevPart.WorldMatrix.Forward;
-
-                    // Hide/show & rotate block based on whether a player is in the camera. TODO: This doesn't quite work.
-                    if (isPrimarySensor)
+                    _baseMuzzleLocalMatrix = _sensorDummy.Matrix;
+                    var next = _dummyParent;
+                    while (next != block)
                     {
-                        if (block.IsActive)
-                        {
-                            block.Visible = false;
-                            block.LocalMatrix = MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _baseLocalMatrix;
-
-                            Direction = block.WorldMatrix.Forward;
-                        }
-                        else if (!block.Visible)
-                        {
-                            block.Visible = true;
-                            block.LocalMatrix = _baseLocalMatrix;
-                        }
+                        _baseMuzzleLocalMatrix *= next.PositionComp.LocalMatrixRef;
+                        next = next.Parent;
                     }
                 }
-                else
+            }
+
+            public void Update(IMyCameraBlock block, bool isPrimarySensor)
+            {
+                // Sensor Movement
+                if (!MyAPIGateway.Session.IsServer) // Server already rotates parts, don't interfere with that
                 {
-                    Position = block.WorldAABB.Center;
-                    Direction = (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * block.WorldMatrix).Forward;
+                    if (_aziPart != null && Azimuth != DesiredAzimuth)
+                        _subpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
+                    if (_elevPart != null && Elevation != DesiredElevation)
+                        _subpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
                 }
+
+                UpdateSensorMatrix(block);
+                if (isPrimarySensor)
+                    UpdateCameraView(block);
 
                 // HUD
                 if (block.ShowOnHUD)
@@ -195,6 +194,57 @@ namespace DetectionEquipment.Client.Sensors
 
                     if (Aperture < Math.PI)
                         MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(Aperture) * MyAPIGateway.Session.SessionSettings.SyncDistance, MyAPIGateway.Session.SessionSettings.SyncDistance, ref color, 8, DebugDraw.MaterialSquare);
+                }
+            }
+
+            private void UpdateSensorMatrix(IMyCameraBlock block)
+            {
+                if (_sensorDummy != null)
+                {
+                    var sensorMatrix = _sensorDummy.Matrix * _dummyParent.WorldMatrix;
+                    Position = sensorMatrix.Translation;
+                    Direction = sensorMatrix.Forward;
+                }
+                else if (_elevPart != null)
+                {
+                    Position = _elevPart.WorldMatrix.Translation;
+                    Direction = _elevPart.WorldMatrix.Forward;
+                }
+                else
+                {
+                    Position = block.WorldAABB.Center;
+                    Direction = (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * block.WorldMatrix).Forward;
+                }
+            }
+
+            private void UpdateCameraView(IMyCameraBlock block)
+            {
+                // Hide/show & rotate block based on whether a player is in the camera. TODO: This doesn't quite work.
+                if (block.IsActive)
+                {
+                    block.Visible = false;
+
+                    if (_sensorDummy != null)
+                    {
+                        var muzzleLocalMatrix = _sensorDummy.Matrix;
+                        var next = _dummyParent;
+                        while (next != block)
+                        {
+                            muzzleLocalMatrix *= next.PositionComp.LocalMatrixRef;
+                            next = next.Parent;
+                        }
+
+                        block.LocalMatrix = muzzleLocalMatrix * _baseLocalMatrix;
+                    }
+                    else
+                    {
+                        block.LocalMatrix = Matrix.CreateFromYawPitchRoll((float) Math.PI - Azimuth, Elevation, 0) * _baseLocalMatrix;
+                    }
+                }
+                else if (!block.Visible)
+                {
+                    block.Visible = true;
+                    block.LocalMatrix = _baseLocalMatrix;
                 }
             }
 
