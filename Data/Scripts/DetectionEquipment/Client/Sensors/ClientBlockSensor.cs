@@ -68,6 +68,8 @@ namespace DetectionEquipment.Client.Sensors
             }
         }
 
+        private Queue<Color> _colorSet = new Queue<Color>();
+
         public ClientBlockSensor(IMyCameraBlock block)
         {
             block.GameLogic.Container.Add(this);
@@ -79,9 +81,10 @@ namespace DetectionEquipment.Client.Sensors
             base.UpdateOnceBeforeFrame();
 
             if (Sensors.Count == 0)
-            {
                 ClientNetwork.SendToServer(new SensorInitPacket(Block.EntityId));
-            }
+
+            OnCustomDataChanged(Block);
+            Block.CustomDataChanged += OnCustomDataChanged;
         }
 
         public override void UpdateAfterSimulation()
@@ -99,7 +102,8 @@ namespace DetectionEquipment.Client.Sensors
             Sensors[packet.Id] = new ClientSensorData(
                 packet.Id,
                 DefinitionManager.GetSensorDefinition(packet.DefinitionId),
-                Block
+                Block,
+                _colorSet.Count > 0 ? (Color?)_colorSet.Dequeue() : null
             );
             if (CurrentSensorId == uint.MaxValue)
                 CurrentSensorId = packet.Id;
@@ -112,6 +116,38 @@ namespace DetectionEquipment.Client.Sensors
             data.Aperture = packet.Aperture;
             data.DesiredAzimuth = packet.Azimuth;
             data.DesiredElevation = packet.Elevation;
+        }
+
+        private void OnCustomDataChanged(IMyTerminalBlock obj)
+        {
+            // TODO custom data change isn't ever invoked lol lmao
+            _colorSet.Clear();
+            foreach (var line in obj.CustomData.Split('\n'))
+            {
+                if (!line.StartsWith("<"))
+                    continue;
+                var split = line.RemoveChars('<', '>').Split(',');
+
+                if (split.Length < 3)
+                    continue;
+                int r, g, b, a;
+                if (!int.TryParse(split[0], out r) || !int.TryParse(split[1], out g) || !int.TryParse(split[2], out b))
+                    continue;
+                if (split.Length >= 4 && int.TryParse(split[3], out a))
+                    _colorSet.Enqueue(new Color(r, g, b, a));
+                else
+                    _colorSet.Enqueue(new Color(r, g, b, 26));
+            }
+
+            if (Sensors.Count > 0)
+            {
+                foreach (var sensor in Sensors.Values)
+                {
+                    if (_colorSet.Count == 0)
+                        break;
+                    sensor.Color = _colorSet.Dequeue();
+                }
+            }
         }
 
         public class ClientSensorData
@@ -129,13 +165,13 @@ namespace DetectionEquipment.Client.Sensors
 
             private MyEntitySubpart _aziPart, _elevPart;
             private Matrix _baseLocalMatrix;
-            private Matrix _baseMuzzleLocalMatrix = Matrix.Identity;
             private SubpartManager _subpartManager = new SubpartManager();
 
             private IMyModelDummy _sensorDummy = null;
             private MyEntity _dummyParent = null;
+            public Color Color;
 
-            public ClientSensorData(uint id, SensorDefinition definition, IMyCubeBlock block)
+            public ClientSensorData(uint id, SensorDefinition definition, IMyCubeBlock block, Color? color)
             {
                 Id = id;
                 Definition = definition;
@@ -159,16 +195,7 @@ namespace DetectionEquipment.Client.Sensors
                 if (!string.IsNullOrEmpty(Definition.SensorEmpty))
                     _sensorDummy = SubpartManager.RecursiveGetDummy(block, Definition.SensorEmpty, out _dummyParent);
 
-                if (_sensorDummy != null)
-                {
-                    _baseMuzzleLocalMatrix = _sensorDummy.Matrix;
-                    var next = _dummyParent;
-                    while (next != block)
-                    {
-                        _baseMuzzleLocalMatrix *= next.PositionComp.LocalMatrixRef;
-                        next = next.Parent;
-                    }
-                }
+                Color = color ?? new Color((uint) ((50 + Id) * block.EntityId)).Alpha(0.1f);
             }
 
             public void Update(IMyCameraBlock block, bool isPrimarySensor)
@@ -189,11 +216,10 @@ namespace DetectionEquipment.Client.Sensors
                 // HUD
                 if (block.ShowOnHUD)
                 {
-                    var color = new Color((uint) ((50 + Id) * block.EntityId)).Alpha(0.1f);
                     var matrix = MatrixD.CreateWorld(Position, Direction, Vector3D.CalculatePerpendicularVector(Direction));
 
                     if (Aperture < Math.PI)
-                        MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(Aperture) * MyAPIGateway.Session.SessionSettings.SyncDistance, MyAPIGateway.Session.SessionSettings.SyncDistance, ref color, 8, DebugDraw.MaterialSquare);
+                        MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(Aperture) * MyAPIGateway.Session.SessionSettings.SyncDistance, MyAPIGateway.Session.SessionSettings.SyncDistance, ref Color, 8, DebugDraw.MaterialSquare);
                 }
             }
 
