@@ -2,27 +2,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Xml;
 using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using ProtoBuf;
 using VRage.Game.Entity;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.Structs
 {
-    [ProtoContract]
     internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>
     {
-        [ProtoMember(1)] public long EntityId;
-        [ProtoMember(2)] public double CrossSection;
-        [ProtoMember(3)] public double Error;
-        [ProtoMember(4)] public Vector3D Position;
-        [ProtoMember(5)] public Vector3D? Velocity;
-        [ProtoMember(6)] public double? VelocityVariance;
-        [ProtoMember(7)] public SensorDefinition.SensorType DetectionType;
-        [ProtoMember(8)] public string[] IffCodes;
-        [ProtoMember(9)] public MyRelationsBetweenPlayers? Relations;
+        public long EntityId;
+        public double CrossSection;
+        public double Error;
+        public Vector3D Position;
+        public Vector3D? Velocity;
+        public double? VelocityVariance;
+        public SensorDefinition.SensorType DetectionType;
+        public string[] IffCodes;
+        public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
 
         public static WorldDetectionInfo Create(DetectionInfo info, AggregatorBlock aggregator = null)

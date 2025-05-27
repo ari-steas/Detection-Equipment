@@ -4,6 +4,8 @@ using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using Sandbox.Game.Entities;
+using VRage;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -29,10 +31,25 @@ namespace DetectionEquipment.Server.Tracking
         /// </summary>
         protected int NextCacheUpdate = 0;
 
+        private HashSet<IMyThrust> ThrusterCache = new HashSet<IMyThrust>();
+        private Dictionary<Vector3, float> ThrustCache = new Dictionary<Vector3, float>();
+        private int LastThrustCacheUpdate = -1;
 
         public GridTrack(IMyCubeGrid grid) : base((MyEntity)grid)
         {
             Grid = grid;
+            foreach (var thrust in Grid.GetFatBlocks<IMyThrust>())
+                ThrusterCache.Add(thrust);
+            Grid.OnBlockAdded += block =>
+            {
+                if (block.FatBlock is IMyThrust)
+                    ThrusterCache.Add((IMyThrust)block.FatBlock);
+            };
+            Grid.OnBlockRemoved += block =>
+            {
+                if (block.FatBlock is IMyThrust)
+                    ThrusterCache.Remove((IMyThrust)block.FatBlock);
+            };
         }
 
         public override double ProjectedArea(Vector3D source, VisibilityType type)
@@ -65,19 +82,39 @@ namespace DetectionEquipment.Server.Tracking
 
         public override double InfraredVisibility(Vector3D source)
         {
-            // Retrieve power draw and add to base visibility. Scale by inverse of base visibility to simulate heat distribution; a smaller object with the same power draw as a larger object is hotter.
-            // in MW by default, convert to watts
-            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid) * 1000000;
-            // base visibility + radiative visibility
-            return base.InfraredVisibility(source) + (powerDraw/Grid.LocalAABB.SurfaceArea() * ProjectedArea(source, VisibilityType.Optical));
+            return InfraredVisibility(source, ProjectedArea(source, VisibilityType.Optical));
         }
 
         public override double InfraredVisibility(Vector3D source, double opticalVisibility)
         {
-            // in MW by default, convert to watts
-            float powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid) * 1000000;
-            // base visibility + radiative visibility
-            return base.InfraredVisibility(source, opticalVisibility) + (powerDraw/Grid.LocalAABB.SurfaceArea() * opticalVisibility);
+            // Combine:
+            // -   Base visibility (sun heating).
+            // -   Power usage per surface area times visible area; a smaller object with the same power draw as a larger object is hotter.
+            // -   Thruster wattage for visible thrust directions, times the dot product (thruster facing the sensor is more visible)
+
+            double heatWattage;
+            {
+                // Grid power is in MW by default, convert to watts
+                double powerDraw = Grid.ResourceDistributor.TotalRequiredInputByType(MyResourceDistributorComponent.ElectricityId, Grid) * 1000000;
+                heatWattage = powerDraw / Grid.LocalAABB.SurfaceArea() * opticalVisibility;
+            }
+
+            double thrustWattage = 0;
+            {
+                var normal = Vector3D.Normalize(Position - source);
+                var gridThrust = GetGridThrust();
+                foreach (var direction in gridThrust)
+                {
+                    var dotProduct = MathHelper.Clamp(Vector3D.Rotate(-direction.Key, Grid.WorldMatrix).Dot(normal), 0, 1);
+                    // Direction.Value is in Newtons. We want to find N*m/s.
+                    // To get meters, divide force by mass (and multiply seconds squared, which is one, ignored.)
+                    // Time interval is one second - divide by 1, ignored.
+                    var thisWattage = direction.Value * direction.Value / Grid.Physics.Mass;
+                    thrustWattage += dotProduct * thisWattage;
+                }
+            }
+            
+            return base.InfraredVisibility(source, opticalVisibility) + heatWattage + thrustWattage;
         }
 
         // TODO: Scale visible and infrared visibility by thrust output.
@@ -198,6 +235,25 @@ namespace DetectionEquipment.Server.Tracking
             OpticalVisibilityCache.SetValue(index, totalVcs);
 
             MyAPIGateway.Utilities.ShowNotification($"Side RCS: {totalRcs:N0} m^2", 1000);
+        }
+
+        private Dictionary<Vector3, float> GetGridThrust()
+        {
+            if (MyAPIGateway.Session.GameplayFrameCounter == LastThrustCacheUpdate)
+                return ThrustCache;
+
+            ThrustCache.Clear();
+
+            foreach (var thrust in ThrusterCache) // TODO cache thruster blocks
+            {
+                if (ThrustCache.ContainsKey(thrust.LocalMatrix.Forward))
+                    ThrustCache[thrust.LocalMatrix.Forward] += thrust.CurrentThrust;
+                else
+                    ThrustCache.Add(thrust.LocalMatrix.Forward, thrust.CurrentThrust);
+            }
+
+            LastThrustCacheUpdate = MyAPIGateway.Session.GameplayFrameCounter;
+            return ThrustCache;
         }
 
         public virtual void CalculateRcs(Vector3D globalDirection, out double radarCrossSection, out double visualCrossSection)

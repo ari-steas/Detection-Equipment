@@ -215,7 +215,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
                 if (detection.Entity == null)
                 {
-                    Size = Vector2.One * 50;
+                    Size = Vector2.One * MinBoxSize;
                     return;
                 }
 

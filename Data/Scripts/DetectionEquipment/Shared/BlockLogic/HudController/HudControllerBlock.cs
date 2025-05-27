@@ -122,14 +122,16 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         public class HudUpdatePacket : PacketBase
         {
             [ProtoMember(1)] private long _thisBlockId;
-            [ProtoMember(2)] private List<WorldDetectionInfo> _detections;
+            [ProtoMember(2)] private HudDetectionInfo[] _detections;
 
             private HudUpdatePacket() { }
 
             public HudUpdatePacket(HudControllerBlock controller)
             {
                 _thisBlockId = controller.Block.EntityId;
-                _detections = controller.Detections;
+                _detections = new HudDetectionInfo[controller.Detections.Count];
+                for (var i = 0; i < controller.Detections.Count; i++)
+                    _detections[i] = (HudDetectionInfo)controller.Detections[i];
             }
 
             public override void Received(ulong senderSteamId, bool fromServer)
@@ -139,18 +141,13 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 var controller = MyAPIGateway.Entities.GetEntityById(_thisBlockId)?.GameLogic?.GetAs<HudControllerBlock>();
                 if (controller == null)
                     return;
-                if (_detections == null)
-                    controller.Detections.Clear();
-                else
-                {
-                    for (var i = 0; i < _detections.Count; i++)
-                    {
-                        var info = _detections[i];
-                        info.Entity = (MyEntity) MyAPIGateway.Entities.GetEntityById(info.EntityId);
-                        _detections[i] = info;
-                    }
 
-                    controller.Detections = _detections;
+                controller.Detections.Clear();
+
+                if (_detections != null)
+                {
+                    foreach (var info in _detections)
+                        controller.Detections.Add((WorldDetectionInfo)info);
                 }
             }
         }
