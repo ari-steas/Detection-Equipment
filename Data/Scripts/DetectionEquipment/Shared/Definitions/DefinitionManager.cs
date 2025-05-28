@@ -3,6 +3,8 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using DetectionEquipment.Server;
 using DetectionEquipment.Server.Countermeasures;
 using VRage.Game.ModAPI;
 
@@ -201,7 +203,17 @@ namespace DetectionEquipment.Shared.Definitions
                     continue;
                 if (!(block is IMyCameraBlock))
                     throw new Exception($"Sensor with subtype \"{block.BlockDefinition.SubtypeId}\" is not a camera block!");
-                sensors.Add(new BlockSensor(block, definition));
+
+                BlockSensor newSensor = null;
+                foreach (var sensor in ServerMain.I.BlockSensorIdMap.Values)
+                {
+                    if (!(sensor.Block == block && sensor.Definition == definition))
+                        continue;
+                    newSensor = sensor;
+                    break;
+                }
+
+                sensors.Add(newSensor ?? new BlockSensor(block, definition));
             }
             return sensors;
         }

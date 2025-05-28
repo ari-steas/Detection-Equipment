@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using DetectionEquipment.Server.SensorBlocks;
 using VRageMath;
 
 using DetectionEquipment.Shared.BlockLogic.IffReflector;

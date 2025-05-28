@@ -8,7 +8,7 @@ namespace DetectionEquipment.Server.PBApi
 {
     internal static class PbApiInitializer
     {
-        public static void Init()
+        public static void DelayedInit()
         {
             var property = MyAPIGateway.TerminalControls.CreateProperty<IReadOnlyDictionary<string, Delegate>, IMyProgrammableBlock>("DetectionPbApi");
             property.Getter = b => PbApiMethods.SafeMethods;

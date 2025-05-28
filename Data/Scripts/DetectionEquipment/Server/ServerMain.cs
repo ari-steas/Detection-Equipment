@@ -73,7 +73,7 @@ namespace DetectionEquipment.Server
 
         public void DelayedInit()
         {
-            PbApiInitializer.Init();
+            PbApiInitializer.DelayedInit();
             ApiManager.WcOnLoadRegisterOrInvoke(OnWcApiReady);
 
             _doneDelayedInit = true;
