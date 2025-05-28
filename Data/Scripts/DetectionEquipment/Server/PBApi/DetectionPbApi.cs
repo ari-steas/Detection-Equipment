@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Sandbox.ModAPI.Ingame;
 using Sandbox.ModAPI.Interfaces;
-using VRage;
-using VRage.Game.Entity;
 using VRage.Scripting.MemorySafeTypes;
 using VRageMath;
 
@@ -55,6 +53,7 @@ namespace IngameScript
                 throw new Exception("Failed to get DetectionPbApi!"); // This is expected to occur once on world load; Detection Equipment automatically recompiles affected programmable blocks.
             InitializeApi();
             _methodMap = null;
+            program.Echo("DetectionPbApi loaded!");
         }
 
         #region Public Methods

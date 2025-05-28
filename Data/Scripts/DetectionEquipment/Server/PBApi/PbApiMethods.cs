@@ -66,7 +66,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static bool HasSensor(IMyCubeBlock block)
         {
-            return ((MyCubeBlock)block).GameLogic.GetAs<BlockSensor>() != null;
+            return ServerMain.I.GridSensorMangers[(MyCubeGrid) block.CubeGrid].BlockSensorIdMap.ContainsKey((MyCubeBlock) block);
         }
 
         private static Vector3D GetSensorPosition(uint id)
