@@ -14,7 +14,6 @@ using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
-using VRageRender.Import;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
 
@@ -133,6 +132,14 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)
         {
+            Sensor.Enabled = Block.IsWorking;
+            Detections.Clear();
+            if (!Block.IsWorking)
+            {
+                UpdateSensorMatrix();
+                return;
+            }
+
             if (_aziPart != null && Azimuth != DesiredAzimuth)
                 SubpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
             if (_elevPart != null && Elevation != DesiredElevation)
@@ -140,10 +147,6 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             UpdateSensorMatrix();
 
-            if (!Block.IsWorking)
-                return;
-
-            Detections.Clear();
             Sensor.CountermeasureNoise = CountermeasureManager.GetNoise(Sensor);
 
             foreach (var track in cachedVisibility)

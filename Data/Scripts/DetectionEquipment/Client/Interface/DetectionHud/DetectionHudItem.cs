@@ -29,7 +29,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         public const int MaxBoxSize = 400, MinBoxSize = 25;
 
-        public DetectionHudItem(HudParentBase parent, WorldDetectionInfo info, bool visible) : base(parent)
+        public DetectionHudItem(HudParentBase parent, WorldDetectionInfo info, int visible) : base(parent)
         {
             Detection = info;
 
@@ -40,21 +40,19 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             SetVisible(visible);
         }
 
-        public void SetVisible(bool value)
+        public void SetVisible(int value)
         {
             // don't set visible if we don't have to
-            if (OutlineBox.Visible == value)
+            if ((OutlineBox.Visible == (value != 0)) && (InfoLabel.Visible == (value == 1)))
                 return;
 
-            OutlineBox.Visible = value;
-            InfoLabel.Visible = value;
-            Visible = value;
+            OutlineBox.Visible = value != 0;
+            InfoLabel.Visible = value == 1;
+            Visible = value != 0;
         }
 
         public void Update(WorldDetectionInfo detection)
         {
-            bool isVisible = OutlineBox.Visible;
-
             Detection = detection;
             if (HudMarker.GetMarkerType(detection) != OutlineBox.Type || HudMarker.GetMarkerColor(detection) != OutlineBox.Color)
             {
@@ -63,7 +61,6 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 InfoLabel = NewInfoLabel;
             }
             Update();
-            SetVisible(isVisible);
         }
 
         public void Update()
@@ -96,6 +93,8 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         private string DistanceStr()
         {
+            if (MyAPIGateway.Session.Player?.Character == null)
+                return "";
             var dist = Vector3D.Distance(MyAPIGateway.Session.Player.Character.GetPosition(), Detection.Position);
             return $"{(dist > 1000 ? dist / 1000 : dist):N1}{(dist > 1000 ? "km" : "m")} \u00b1{(Detection.Error > 1000 ? Detection.Error / 1000 : Detection.Error):N1}{(Detection.Error > 1000 ? "km" : "m")}\n";
         }

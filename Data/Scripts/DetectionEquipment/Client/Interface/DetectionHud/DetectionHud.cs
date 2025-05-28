@@ -27,7 +27,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 if (value == _alwaysShow)
                     return;
                 _alwaysShow = value;
-                UpdateVisible(_alwaysShow || MyAPIGateway.Session?.Config?.HudState != 0);
+                UpdateVisible(_alwaysShow ? 1 : MyAPIGateway.Session?.Config?.HudState ?? 1);
             }
         }
         public static float CombineAngle = (float) MathHelper.ToRadians(2.5); // TODO make this do anything
@@ -62,18 +62,18 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         {
             // Pulling the current HudState is SLOOOOWWWW, so we only pull it when tab is just pressed.
             if (!AlwaysShow && MyAPIGateway.Input.IsNewKeyPressed(MyKeys.Tab))
-                UpdateVisible(MyAPIGateway.Session?.Config?.HudState != 0);
+                UpdateVisible(MyAPIGateway.Session?.Config?.HudState ?? 1);
 
             foreach (var item in _hudItems)
             {
-                if (_visible)
+                if (_visible != 0)
                     item.Value.Update();
                 _deadItems.Add(item.Key);
             }
         }
 
-        private static bool _visible = true;
-        private static void UpdateVisible(bool visible)
+        private static int _visible = MyAPIGateway.Session?.Config?.HudState ?? 1;
+        private static void UpdateVisible(int visible)
         {
             _visible = visible;
             foreach (var item in _hudItems)

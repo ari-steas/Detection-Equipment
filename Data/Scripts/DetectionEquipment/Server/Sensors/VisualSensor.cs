@@ -2,7 +2,6 @@
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
-using VRage;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
@@ -10,6 +9,7 @@ namespace DetectionEquipment.Server.Sensors
 {
     internal class VisualSensor : ISensor
     {
+        public bool Enabled { get; set; } = true;
         public uint Id { get; private set; }
         public SensorDefinition Definition { get; private set; }
         public Action<object[]> OnDetection { get; set; } = null;
@@ -40,6 +40,9 @@ namespace DetectionEquipment.Server.Sensors
 
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
         {
+            if (!Enabled)
+                return null;
+
             var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
 
             double targetAngle = 0;

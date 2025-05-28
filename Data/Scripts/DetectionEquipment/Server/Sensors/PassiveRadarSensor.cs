@@ -5,7 +5,6 @@ using DetectionEquipment.Shared.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using VRage;
 using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
@@ -14,6 +13,7 @@ namespace DetectionEquipment.Server.Sensors
 {
     internal class PassiveRadarSensor : ISensor
     {
+        public bool Enabled { get; set; } = true;
         public uint Id { get; private set; }
         public readonly IMyEntity AttachedEntity;
         public SensorDefinition Definition { get; private set; }
@@ -46,18 +46,12 @@ namespace DetectionEquipment.Server.Sensors
 
         public double Aperture { get; set; } = Math.PI;
 
-        public DetectionInfo? GetDetectionInfo(ITrack track)
-        {
-            return GetDetectionInfo(track, 0);
-        }
-
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
         {
-            return GetDetectionInfo(visibilitySet.Track, 0);
-        }
+            var track = visibilitySet.Track;
+            if (!Enabled || track == null)
+                return null;
 
-        public DetectionInfo? GetDetectionInfo(ITrack track, double visibility)
-        {
             if (!_queuedRadarHits.ContainsKey(track.EntityId))
                 return null;
             var data = _queuedRadarHits[track.EntityId];

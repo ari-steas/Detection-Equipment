@@ -4,7 +4,6 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
-using VRage;
 using VRage.Game.Entity;
 using VRage.ModAPI;
 using VRageMath;
@@ -14,6 +13,7 @@ namespace DetectionEquipment.Server.Sensors
 {
     internal class RadarSensor : ISensor
     {
+        public bool Enabled { get; set; } = true;
         public uint Id { get; private set; }
         public readonly Func<long> AttachedEntityId;
         public Vector3D Position { get; set; } = Vector3D.Zero;
@@ -55,6 +55,9 @@ namespace DetectionEquipment.Server.Sensors
 
         public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
         {
+            if (!Enabled)
+                return null;
+
             var track = visibilitySet.Track;
             if (track == null) return null;
 

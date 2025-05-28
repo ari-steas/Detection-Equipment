@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Shared.Definitions;
+﻿using System;
+using DetectionEquipment.Shared.Definitions;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
@@ -9,30 +10,30 @@ namespace DetectionEquipment.Shared.Structs
     [ProtoContract(UseProtoMembersOnly = true)]
     internal struct HudDetectionInfo
     {
-        [ProtoMember(0)] private long _entityId;
-        [ProtoMember(1)] private float _crossSection;
-        [ProtoMember(2)] private float _error;
+        [ProtoMember(1)] private long _entityId;
+        [ProtoMember(2)] private float _crossSection;
+        [ProtoMember(3)] private float _error;
 
         private Vector3D Position => new Vector3D(_posX, _posY, _posZ);
-        [ProtoMember(3)] private float _posX;
-        [ProtoMember(4)] private float _posY;
-        [ProtoMember(5)] private float _posZ;
+        [ProtoMember(4)] private float _posX;
+        [ProtoMember(5)] private float _posY;
+        [ProtoMember(6)] private float _posZ;
 
         private Vector3D? Velocity => _velX == short.MaxValue ? (Vector3D?) null : new Vector3D(_velX, _velY, _velZ);
-        [ProtoMember(6)] private short _velX;
-        [ProtoMember(7)] private short _velY;
-        [ProtoMember(8)] private short _velZ;
+        [ProtoMember(7)] private short _velX;
+        [ProtoMember(8)] private short _velY;
+        [ProtoMember(9)] private short _velZ;
 
         private double? VelocityVariance => float.IsPositiveInfinity(_velocityVariance) ? (double?)null : _velocityVariance;
-        [ProtoMember(9)] private float _velocityVariance;
+        [ProtoMember(10)] private float _velocityVariance;
         private SensorDefinition.SensorType SensorType => (SensorDefinition.SensorType) _sensorType;
-        [ProtoMember(10)] private byte _sensorType;
-        [ProtoMember(11)] private string[] _iffCodes; // TODO: Cache this between server and client.
+        [ProtoMember(11)] private byte _sensorType;
+        [ProtoMember(12)] private string[] _iffCodes; // TODO: Cache this between server and client.
 
         private MyRelationsBetweenPlayers? Relations => _relations == byte.MaxValue
             ? null
             : (MyRelationsBetweenPlayers?) _relations;
-        [ProtoMember(12)] private byte _relations;
+        [ProtoMember(13)] private byte _relations;
 
         public static explicit operator WorldDetectionInfo(HudDetectionInfo info) => new WorldDetectionInfo
         {
@@ -44,7 +45,7 @@ namespace DetectionEquipment.Shared.Structs
             Velocity = info.Velocity,
             VelocityVariance = info.VelocityVariance,
             DetectionType = info.SensorType,
-            IffCodes = info._iffCodes,
+            IffCodes = info._iffCodes ?? Array.Empty<string>(),
             Relations = info.Relations,
         };
 

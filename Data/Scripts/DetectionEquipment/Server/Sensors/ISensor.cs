@@ -9,6 +9,7 @@ namespace DetectionEquipment.Server.Sensors
 {
     internal interface ISensor
     {
+        bool Enabled { get; set; }
         uint Id { get; }
 
         /// <summary>
