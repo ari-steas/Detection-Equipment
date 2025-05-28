@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using DetectionEquipment.Server.SensorBlocks;
 using VRageMath;
 
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
@@ -65,7 +66,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static bool HasSensor(IMyCubeBlock block)
         {
-            return ServerMain.I.GridSensorMangers[(MyCubeGrid) block.CubeGrid].BlockSensorIdMap.ContainsKey((MyCubeBlock) block);
+            return ((MyCubeBlock)block).GameLogic.GetAs<BlockSensor>() != null;
         }
 
         private static Vector3D GetSensorPosition(uint id)
@@ -141,7 +142,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static bool HasAggregator(IMyCubeBlock block)
         {
-            return ControlBlockManager.I.Blocks.ContainsKey((MyCubeBlock) block) && ControlBlockManager.I.Blocks[(MyCubeBlock) block] is AggregatorBlock;
+            return ((MyCubeBlock)block).GameLogic.GetAs<AggregatorBlock>() != null;
         }
         private static float GetAggregatorTime(IMyCubeBlock block)
         {
@@ -251,8 +252,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static bool HasReflector(IMyCubeBlock block)
         {
-            IControlBlockBase control;
-            return ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control) && control is IffReflectorBlock;
+            return ((MyCubeBlock)block).GameLogic.GetAs<IffReflectorBlock>() != null;
         }
         private static string GetIffCode(IMyCubeBlock block)
         {
