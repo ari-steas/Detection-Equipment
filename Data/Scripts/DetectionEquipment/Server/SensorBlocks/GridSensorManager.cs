@@ -273,7 +273,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 }
                 InfraredVisibility = track.InfraredVisibility(thisGrid.WorldAABB.Center, OpticalVisibility);
                 ClosestCorner = Track.BoundingBox.ClosestCorner(thisGrid.WorldAABB.Center);
-                Position = Track.Position + ((track as EntityTrack)?.Entity?.Physics?.LinearVelocity / 60 ?? Vector3D.Zero);
+                Position = Track.Position + ((track as EntityTrack)?.Entity?.Physics?.LinearVelocity / 30 ?? Vector3D.Zero);
                 BoundingBox = Track.BoundingBox;
             }
 
