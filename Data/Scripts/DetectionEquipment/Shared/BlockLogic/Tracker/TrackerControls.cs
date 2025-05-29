@@ -62,7 +62,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                             if (sensor.Block.EntityId != selected[i])
                                 continue;
                             ActiveSensors[logic].Add(sensor);
-                            logic.LockDecay[sensor] = 0;
                             break;
                         }
                     }

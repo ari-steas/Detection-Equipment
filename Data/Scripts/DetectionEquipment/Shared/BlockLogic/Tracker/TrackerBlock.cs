@@ -5,6 +5,7 @@ using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.Networking;
 using VRage.Game.Components;
 using VRageMath;
@@ -41,7 +42,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         public SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
 
         private SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
-        public Dictionary<BlockSensor, float> LockDecay = new Dictionary<BlockSensor, float>();
+        public Dictionary<BlockSensor, LockSet> LockDecay = new Dictionary<BlockSensor, LockSet>();
 
         protected override ControlBlockSettingsBase GetSettings => new TrackerSettings(this);
         protected override ITerminalControlAdder GetControls => new TrackerControls();
@@ -68,32 +69,53 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
             foreach (var sensor in ControlledSensors)
             {
-                var target = GetFirstTarget(sensor, _detectionTrackDict);
+                var target = GetFirstTarget(sensor);
                 if (target == null)
                 {
-                    if (LockDecay[sensor] <= 0)
+                    if (!LockDecay.ContainsKey(sensor) || LockDecay[sensor].RemainingDecayTime <= 0)
                     {
                         sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
                         sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
+                        LockDecay.Remove(sensor);
                     }
                     else
                     {
-                        LockDecay[sensor] -= 1 / 60f;
+                        LockDecay[sensor].RemainingDecayTime -= 1 / 60f;
                     }
                     continue;
                 }
                 _detectionTrackDict[target.Value]++;
                 sensor.AimAt(target.Value.Position);
-                LockDecay[sensor] = ResetAngleTime;
+                LockDecay[sensor] = new LockSet(target.Value.EntityId, ResetAngleTime);
             }
         }
 
-        private WorldDetectionInfo? GetFirstTarget(BlockSensor sensor, IDictionary<WorldDetectionInfo, int> targetDict)
+        private WorldDetectionInfo? GetFirstTarget(BlockSensor sensor)
         {
+            LockSet prevLockSet;
+            if (LockDecay.TryGetValue(sensor, out prevLockSet))
+            {
+                int min = int.MaxValue;
+                bool hasValue = false;
+                var prevTrack = new KeyValuePair<WorldDetectionInfo, int>();
+                foreach (var info in _detectionTrackDict)
+                {
+                    if (info.Value < min)
+                        min = info.Value;
+                    if (info.Key.EntityId != prevLockSet.TrackId)
+                        continue;
+                    prevTrack = info;
+                    hasValue = true;
+                }
+
+                if (hasValue && sensor.CanAimAt(prevTrack.Key.Position) && prevTrack.Value <= min)
+                    return prevTrack.Key;
+            }
+
             int numLocks = int.MaxValue;
             WorldDetectionInfo? bestTarget = null;
             var sensorGridSize = sensor.Block.CubeGrid.LocalAABB.Size.Length();
-            foreach (var target in targetDict.Reverse())
+            foreach (var target in _detectionTrackDict.Reverse())
             {
                 if (!sensor.CanAimAt(target.Key.Position))
                     continue;
@@ -103,11 +125,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 if (thisGridHit != sensor.Block.Position)
                     continue;
 
-                if (Vector3D.Angle(sensor.Sensor.Direction, target.Key.Position - sensor.Sensor.Position) < 0.5)
-                {
-                    bestTarget = target.Key;
-                    break;
-                }
+                //if (Vector3D.Angle(sensor.Sensor.Direction, target.Key.Position - sensor.Sensor.Position) < sensor.Sensor.Aperture && target.Value <= targetDict.Values.Min())
+                //{
+                //    bestTarget = target.Key;
+                //    break;
+                //}
 
                 if (target.Value < numLocks)
                 {
@@ -117,6 +139,18 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             }
 
             return bestTarget;
+        }
+
+        internal class LockSet
+        {
+            public long TrackId;
+            public float RemainingDecayTime;
+
+            public LockSet(long trackId, float remainingDecayTime)
+            {
+                TrackId = trackId;
+                RemainingDecayTime = remainingDecayTime;
+            }
         }
     }
 }
