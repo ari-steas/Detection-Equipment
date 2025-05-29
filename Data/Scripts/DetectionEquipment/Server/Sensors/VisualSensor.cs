@@ -43,8 +43,6 @@ namespace DetectionEquipment.Server.Sensors
             if (!Enabled)
                 return null;
 
-            var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
-
             double targetAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
                 targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
@@ -53,6 +51,7 @@ namespace DetectionEquipment.Server.Sensors
 
             Vector3D bearing = visibilitySet.Position - Position;
             double range = bearing.Normalize();
+            var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
             double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);

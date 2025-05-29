@@ -91,6 +91,7 @@ namespace DetectionEquipment.Server.Tracking
             // -   Base visibility (sun heating).
             // -   Power usage per surface area times visible area; a smaller object with the same power draw as a larger object is hotter.
             // -   Thruster wattage for visible thrust directions, times the dot product (thruster facing the sensor is more visible)
+            // Then divide by distance squared (inverse square falloff).
 
             double heatWattage;
             {
@@ -110,11 +111,16 @@ namespace DetectionEquipment.Server.Tracking
                     // To get meters, divide force by mass (and multiply seconds squared, which is one, ignored.)
                     // Time interval is one second - divide by 1, ignored.
                     var thisWattage = direction.Value * direction.Value / Grid.Physics.Mass;
+
+                    // However, this doesn't work on static grids because their mass is infinite. In this case, we just convert from newtons to watts by scaling by a small ion thruster's efficiency. yikes.
+                    if (float.IsNaN(thisWattage) || float.IsInfinity(thisWattage))
+                        thisWattage = direction.Value*9.72222222f;
+
                     thrustWattage += dotProduct * thisWattage;
                 }
             }
-            
-            return base.InfraredVisibility(source, opticalVisibility) + heatWattage + thrustWattage;
+            // base visibility is already divided by distancesq
+            return base.InfraredVisibility(source, opticalVisibility) + (heatWattage + thrustWattage) / Vector3D.DistanceSquared(source, Position);
         }
 
         // TODO: Scale visible and infrared visibility by thrust output.

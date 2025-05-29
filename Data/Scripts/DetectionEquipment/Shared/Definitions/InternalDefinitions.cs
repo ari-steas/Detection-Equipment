@@ -25,7 +25,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MinAperture = Math.PI/16,
                 DetectionThreshold = 0.001,
                 BearingErrorModifier = 0.05,
-                RangeErrorModifier = 2.5,
+                RangeErrorModifier = 0.05,
                 MaxPowerDraw = -1,
                 Movement = null,
             },

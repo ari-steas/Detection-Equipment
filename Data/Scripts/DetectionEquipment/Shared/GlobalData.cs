@@ -3,8 +3,10 @@ using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Ingame.Utilities;
+using VRage.Game.ObjectBuilders.Definitions;
 
 namespace DetectionEquipment.Shared
 {
@@ -23,6 +25,8 @@ namespace DetectionEquipment.Shared
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
         public static string[] LowRcsSubtypes;
+        public static readonly MyDefinitionId ElectricityId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Electricity");
+        public static readonly MyDefinitionId HydrogenId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Hydrogen");
 
         /// <summary>
         /// Furthest distance (in meters) a radar can lock onto a target. Don't increase this too high or syncing will break.

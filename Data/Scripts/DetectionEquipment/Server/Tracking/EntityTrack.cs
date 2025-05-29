@@ -23,13 +23,13 @@ namespace DetectionEquipment.Server.Tracking
         public virtual double InfraredVisibility(Vector3D source)
         {
             // Returns a value from 0.01 to 0.25 depending on the angle to the sun. If the source can see the lit side, the visibility approaches 0.5.
-            return OpticalVisibility(source) * (0.135 + Vector3D.Dot(Vector3D.Normalize(Position - source), -TrackingUtils.GetSunDirection()) / 8);
+            return InfraredVisibility(source, OpticalVisibility(source));
         }
 
         public virtual double InfraredVisibility(Vector3D source, double opticalVisibility)
         {
             // Returns a value from 0.01 to 0.25 depending on the angle to the sun. If the source can see the lit side, the visibility approaches 0.5.
-            return opticalVisibility * (0.135 + Vector3D.Dot(Vector3D.Normalize(Position - source), -TrackingUtils.GetSunDirection()) / 8);
+            return (opticalVisibility * (0.135 + Vector3D.Dot(Vector3D.Normalize(Position - source), -TrackingUtils.GetSunDirection()) / 8)) / Vector3D.DistanceSquared(source, Position);
         }
 
         public virtual double OpticalVisibility(Vector3D source)
