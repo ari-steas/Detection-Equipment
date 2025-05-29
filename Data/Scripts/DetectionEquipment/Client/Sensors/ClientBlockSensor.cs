@@ -93,7 +93,7 @@ namespace DetectionEquipment.Client.Sensors
                 return;
             foreach (var sensor in Sensors.Values)
             {
-                sensor.Update(Block, sensor.Id == CurrentSensorId);
+                sensor.Update(sensor.Id == CurrentSensorId);
             }
         }
 
@@ -152,8 +152,8 @@ namespace DetectionEquipment.Client.Sensors
 
         public class ClientSensorData
         {
-            public uint Id;
-            public SensorDefinition Definition;
+            public readonly uint Id;
+            public readonly SensorDefinition Definition;
             public float Aperture = 0;
             public float DesiredAzimuth = 0;
             public float DesiredElevation = 0;
@@ -163,18 +163,28 @@ namespace DetectionEquipment.Client.Sensors
             public Vector3D Position { get; private set; } = Vector3D.Zero;
             public Vector3D Direction { get; private set; } = Vector3D.Forward;
 
-            private MyEntitySubpart _aziPart, _elevPart;
-            private Matrix _baseLocalMatrix;
-            private SubpartManager _subpartManager = new SubpartManager();
+            private readonly MyEntitySubpart _aziPart, _elevPart;
+            private readonly Matrix _baseLocalMatrix;
+            private readonly SubpartManager _subpartManager = new SubpartManager();
 
-            private IMyModelDummy _sensorDummy = null;
-            private MyEntity _dummyParent = null;
+            private readonly IMyModelDummy _sensorDummy = null;
+            private readonly MyEntity _dummyParent = null;
+            private readonly IMyCameraBlock _block;
             public Color Color;
 
-            public ClientSensorData(uint id, SensorDefinition definition, IMyCubeBlock block, Color? color)
+            private MatrixD SensorMatrix => _sensorDummy == null
+                ? (_elevPart == null ? (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _block.WorldMatrix) : _elevPart.WorldMatrix)
+                : SensorDummyMatrix;
+
+            private MatrixD SensorDummyMatrix => (_elevPart == null && Definition.Movement != null)
+                ? MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _sensorDummy.Matrix * _dummyParent.WorldMatrix
+                : _sensorDummy.Matrix * _dummyParent.WorldMatrix;
+
+            public ClientSensorData(uint id, SensorDefinition definition, IMyCameraBlock block, Color? color)
             {
                 Id = id;
                 Definition = definition;
+                _block = block;
 
                 if (Definition.Movement != null)
                 {
@@ -198,79 +208,70 @@ namespace DetectionEquipment.Client.Sensors
                 Color = color ?? new Color((uint) ((50 + Id) * block.EntityId)).Alpha(0.1f);
             }
 
-            public void Update(IMyCameraBlock block, bool isPrimarySensor)
+            public void Update(bool isPrimarySensor)
             {
-                // Sensor Movement
-                if (!MyAPIGateway.Session.IsServer) // Server already rotates parts, don't interfere with that
-                {
-                    if (_aziPart != null && Azimuth != DesiredAzimuth)
-                        _subpartManager.LocalRotateSubpartAbs(_aziPart, GetAzimuthMatrix(1/60f));
-                    if (_elevPart != null && Elevation != DesiredElevation)
-                        _subpartManager.LocalRotateSubpartAbs(_elevPart, GetElevationMatrix(1/60f));
-                }
-
-                UpdateSensorMatrix(block);
+                UpdateSensorMatrix();
                 if (isPrimarySensor)
-                    UpdateCameraView(block);
+                    UpdateCameraView();
 
                 // HUD
-                if (block.ShowOnHUD)
+                if (_block.ShowOnHUD)
                 {
-                    var matrix = MatrixD.CreateWorld(Position, Direction, Vector3D.CalculatePerpendicularVector(Direction));
-
+                    var matrix = SensorMatrix;
                     if (Aperture < Math.PI)
                         MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(Aperture) * MyAPIGateway.Session.SessionSettings.SyncDistance, MyAPIGateway.Session.SessionSettings.SyncDistance, ref Color, 8, DebugDraw.MaterialSquare);
                 }
             }
 
-            private void UpdateSensorMatrix(IMyCameraBlock block)
+            private void UpdateSensorMatrix()
             {
-                if (_sensorDummy != null)
+                if (Azimuth != DesiredAzimuth)
                 {
-                    var sensorMatrix = _sensorDummy.Matrix * _dummyParent.WorldMatrix;
-                    Position = sensorMatrix.Translation;
-                    Direction = sensorMatrix.Forward;
+                    var matrix = GetAzimuthMatrix(1 / 60f);
+                    if (_aziPart != null && !MyAPIGateway.Session.IsServer) // Server already rotates parts, don't interfere with that
+                        _subpartManager.LocalRotateSubpartAbs(_aziPart, matrix);
                 }
-                else if (_elevPart != null)
+
+                if (Elevation != DesiredElevation)
                 {
-                    Position = _elevPart.WorldMatrix.Translation;
-                    Direction = _elevPart.WorldMatrix.Forward;
+                    var matrix = GetElevationMatrix(1 / 60f);
+                    if (_elevPart != null && !MyAPIGateway.Session.IsServer)
+                        _subpartManager.LocalRotateSubpartAbs(_elevPart, matrix);
                 }
-                else
-                {
-                    Position = block.WorldAABB.Center;
-                    Direction = (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * block.WorldMatrix).Forward;
-                }
+
+                var sensorMatrix = SensorMatrix;
+                Position = sensorMatrix.Translation;
+                Direction = sensorMatrix.Forward;
             }
 
-            private void UpdateCameraView(IMyCameraBlock block)
+            private void UpdateCameraView()
             {
                 // Hide/show & rotate block based on whether a player is in the camera. TODO: This doesn't quite work.
-                if (block.IsActive)
+                if (_block.IsActive)
                 {
-                    block.Visible = false;
+                    _block.Visible = false;
 
                     if (_sensorDummy != null)
                     {
                         var muzzleLocalMatrix = _sensorDummy.Matrix;
                         var next = _dummyParent;
-                        while (next != block)
+                        while (next != _block)
                         {
                             muzzleLocalMatrix *= next.PositionComp.LocalMatrixRef;
                             next = next.Parent;
                         }
 
-                        block.LocalMatrix = muzzleLocalMatrix * _baseLocalMatrix;
+                        _block.LocalMatrix = muzzleLocalMatrix * _baseLocalMatrix;
                     }
                     else
                     {
-                        block.LocalMatrix = Matrix.CreateFromYawPitchRoll((float) Math.PI - Azimuth, Elevation, 0) * _baseLocalMatrix;
+                        _block.LocalMatrix = Matrix.CreateFromYawPitchRoll((float) Math.PI - Azimuth, Elevation, 0) * _baseLocalMatrix;
                     }
                 }
-                else if (!block.Visible)
+                else if (!_block.Visible)
                 {
-                    block.Visible = true;
-                    block.LocalMatrix = _baseLocalMatrix;
+                    _block.Visible = true;
+                    _block.LocalMatrix = _baseLocalMatrix;
                 }
             }
 
