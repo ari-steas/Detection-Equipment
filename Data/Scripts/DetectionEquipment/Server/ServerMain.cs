@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.ExternalApis;
+using Sandbox.Game.Entities;
+using Sandbox.Game.Entities.Debris;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -184,7 +186,14 @@ namespace DetectionEquipment.Server
                     });
                 }
                 else
+                {
+                    // Ignore planet voxel maps
+                    if (obj is MyVoxelMap && obj.Name == "") return;
+                    if (GlobalData.IgnoredEntityTypes.Contains(obj.GetType().Name))
+                        return;
+
                     Tracks.Add(obj, new EntityTrack((MyEntity)obj));
+                }
             }
             catch (Exception ex)
             {

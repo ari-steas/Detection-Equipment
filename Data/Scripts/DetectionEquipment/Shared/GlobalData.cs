@@ -25,6 +25,11 @@ namespace DetectionEquipment.Shared
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
         public static string[] LowRcsSubtypes;
+
+        public static string[] IgnoredEntityTypes = {
+            "MyVoxelPhysics",
+            "MyDebrisTree"
+        };
         public static readonly MyDefinitionId ElectricityId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Electricity");
         public static readonly MyDefinitionId HydrogenId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Hydrogen");
 
