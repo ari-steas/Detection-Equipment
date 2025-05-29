@@ -246,27 +246,15 @@ namespace DetectionEquipment.Client.Sensors
 
             private void UpdateCameraView()
             {
+                if (MyAPIGateway.Session.IsServer)
+                    return;
+
                 // Hide/show & rotate block based on whether a player is in the camera. TODO: This doesn't quite work.
                 if (_block.IsActive)
                 {
                     _block.Visible = false;
 
-                    if (_sensorDummy != null)
-                    {
-                        var muzzleLocalMatrix = _sensorDummy.Matrix;
-                        var next = _dummyParent;
-                        while (next != _block)
-                        {
-                            muzzleLocalMatrix *= next.PositionComp.LocalMatrixRef;
-                            next = next.Parent;
-                        }
-
-                        _block.LocalMatrix = muzzleLocalMatrix * _baseLocalMatrix;
-                    }
-                    else
-                    {
-                        _block.LocalMatrix = Matrix.CreateFromYawPitchRoll((float) Math.PI - Azimuth, Elevation, 0) * _baseLocalMatrix;
-                    }
+                    _block.LocalMatrix = SensorMatrix * MatrixD.Invert(_block.CubeGrid.WorldMatrix);
                 }
                 else if (!_block.Visible)
                 {
