@@ -23,7 +23,7 @@ namespace DetectionEquipment.Shared.Definitions
                 Type = SensorType.Infrared,
                 MaxAperture = Math.PI/4,
                 MinAperture = Math.PI/16,
-                DetectionThreshold = 0.001,
+                DetectionThreshold = 0.00001,
                 BearingErrorModifier = 0.05,
                 RangeErrorModifier = 0.05,
                 MaxPowerDraw = -1,
