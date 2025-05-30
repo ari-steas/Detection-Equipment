@@ -164,7 +164,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         private void UpdateSensorMatrix()
         {
-            if (Block.IsWorking)
+            if (Block.IsWorking && Definition.Movement != null)
             {
                 if (Azimuth != DesiredAzimuth)
                 {

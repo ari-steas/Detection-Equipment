@@ -225,18 +225,21 @@ namespace DetectionEquipment.Client.Sensors
 
             private void UpdateSensorMatrix()
             {
-                if (Azimuth != DesiredAzimuth)
+                if (Definition.Movement != null)
                 {
-                    var matrix = GetAzimuthMatrix(1 / 60f);
-                    if (_aziPart != null && !MyAPIGateway.Session.IsServer) // Server already rotates parts, don't interfere with that
-                        _subpartManager.LocalRotateSubpartAbs(_aziPart, matrix);
-                }
+                    if (Azimuth != DesiredAzimuth)
+                    {
+                        var matrix = GetAzimuthMatrix(1 / 60f);
+                        if (_aziPart != null && !MyAPIGateway.Session.IsServer) // Server already rotates parts, don't interfere with that
+                            _subpartManager.LocalRotateSubpartAbs(_aziPart, matrix);
+                    }
 
-                if (Elevation != DesiredElevation)
-                {
-                    var matrix = GetElevationMatrix(1 / 60f);
-                    if (_elevPart != null && !MyAPIGateway.Session.IsServer)
-                        _subpartManager.LocalRotateSubpartAbs(_elevPart, matrix);
+                    if (Elevation != DesiredElevation)
+                    {
+                        var matrix = GetElevationMatrix(1 / 60f);
+                        if (_elevPart != null && !MyAPIGateway.Session.IsServer)
+                            _subpartManager.LocalRotateSubpartAbs(_elevPart, matrix);
+                    }
                 }
 
                 var sensorMatrix = SensorMatrix;
