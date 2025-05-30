@@ -79,9 +79,11 @@ namespace DetectionEquipment.Server.Countermeasures
         {
             if (!Definition.IsCountermeasureAttached || !(_attachedCountermeasures[CurrentMuzzleIdx]?.IsActive ?? false)) // Only spawn a new countermeasure if needed.
             {
+                var counterDefName = Definition.CountermeasureIds[_currentSequenceIdx++];
                 var counterDef =
-                    DefinitionManager.GetCountermeasureDefinition(Definition.CountermeasureIds[_currentSequenceIdx++]
-                        .GetHashCode());
+                    DefinitionManager.GetCountermeasureDefinition(counterDefName.GetHashCode());
+                if (counterDef == null)
+                    throw new Exception($"Invalid countermeasure definition {counterDefName}");
                 if (_currentSequenceIdx >= Definition.CountermeasureIds.Length)
                     _currentSequenceIdx = 0;
 

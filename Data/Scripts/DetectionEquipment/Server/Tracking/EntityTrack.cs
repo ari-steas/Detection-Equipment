@@ -15,7 +15,6 @@ namespace DetectionEquipment.Server.Tracking
         public EntityTrack(MyEntity entity)
         {
             Entity = entity;
-            Log.Info("ServerMain", $"New entity track of type {Entity.GetType().FullName}");
         }
 
         // Multiplying the projected area by 2 because grids inherently have an absurdly high RCS
