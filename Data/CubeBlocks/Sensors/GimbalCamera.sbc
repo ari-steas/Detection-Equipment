@@ -7,7 +7,9 @@
 				<SubtypeId>GimbalCamera</SubtypeId>
 			</Id>
 			<DisplayName>Gimballed Camera</DisplayName>
-			<Description>{LOC:Description_GimbalCamera}</Description>
+			<Description>
+				Detects nearby targets in a wide cone. Can rotate.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\GimbalCamera.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>

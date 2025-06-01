@@ -7,7 +7,9 @@
 				<SubtypeId>ChaffLauncher</SubtypeId>
 			</Id>
 			<DisplayName>Simple Chaff Launcher</DisplayName>
-			<Description>{LOC:Description_ChaffLauncher}</Description>
+			<Description>
+				While active, launches radar-confusing chaff with a short lifetime.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\FlareLauncher.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>

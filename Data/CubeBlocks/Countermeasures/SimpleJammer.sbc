@@ -7,7 +7,9 @@
 				<SubtypeId>SimpleJammer</SubtypeId>
 			</Id>
 			<DisplayName>Simple Radar Jammer</DisplayName>
-			<Description>{LOC:Description_SimpleJammer}</Description>
+			<Description>
+				While active, continuously jams radars detecting this block.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\SimpleJammer.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>

@@ -7,7 +7,9 @@
 				<SubtypeId>ActiveRadar_Simple</SubtypeId>
 			</Id>
 			<DisplayName>Simple Active Radar</DisplayName>
-			<Description>{LOC:Description_ActiveRadar_Simple}</Description>
+			<Description>
+				Accurately detects targets in a narrow cone in front of the radar dish. Can rotate.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\ActiveRadar_Simple.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>

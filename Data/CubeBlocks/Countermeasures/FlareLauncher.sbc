@@ -7,7 +7,9 @@
 				<SubtypeId>FlareLauncher</SubtypeId>
 			</Id>
 			<DisplayName>Simple Flare Launcher</DisplayName>
-			<Description>{LOC:Description_FlareLauncher}</Description>
+			<Description>
+				While active, launches infrared-confusing flares with a short lifetime.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\FlareLauncher.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>

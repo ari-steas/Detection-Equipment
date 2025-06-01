@@ -7,7 +7,9 @@
 				<SubtypeId>PassiveRadar_Simple</SubtypeId>
 			</Id>
 			<DisplayName>Simple Passive Radar</DisplayName>
-			<Description>{LOC:Description_PassiveRadar_Simple}</Description>
+			<Description>
+				Detects radars painting this grid from long range. Fixed, can detect from any angle.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\PassiveRadar_Simple.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>

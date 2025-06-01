@@ -8,7 +8,11 @@
             </Id>
             <DisplayName>Detection Aggregator</DisplayName>
             <Icon>Textures\GUI\Icons\Cubes\ProgrammingBlock.dds</Icon>
-            <Description>Description_ProgrammableBlock</Description>
+            <Description>
+				Combines tracking data from selected sensors over an interval.
+				Can direct trackers, HUD controllers, and WeaponCore weapons if applicable.
+				May use DataLink to send and receive tracking data from friendly aggregators on the same antenna network.
+			</Description>
             <CubeSize>Large</CubeSize>
             <BlockTopology>TriangleMesh</BlockTopology>
             <Size x="1" y="1" z="1" />
