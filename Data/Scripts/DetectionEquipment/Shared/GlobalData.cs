@@ -18,7 +18,7 @@ namespace DetectionEquipment.Shared
         public const ushort ServerNetworkId = 15289;
         public const ushort DataNetworkId = 15288;
         public const ushort ClientNetworkId = 15287;
-        public static int MainThreadId;
+        public static int MainThreadId = -1;
         public static double SyncRange => MyAPIGateway.Session.SessionSettings.SyncDistance;
         public static double SyncRangeSq => (double) MyAPIGateway.Session.SessionSettings.SyncDistance * MyAPIGateway.Session.SessionSettings.SyncDistance;
         public static readonly Guid SettingsGuid = new Guid("b4e33a2c-0406-4aea-bf0a-d1ad04266a14");

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Components;
@@ -57,6 +58,7 @@ namespace DetectionEquipment.Shared
 
         protected override void UnloadData()
         {
+            Log.GameUnloading = true;
             I = null;
         }
 

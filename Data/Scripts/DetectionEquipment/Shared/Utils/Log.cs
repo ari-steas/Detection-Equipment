@@ -13,6 +13,7 @@ namespace DetectionEquipment.Shared.Utils
         private const string ModName = "Detection Equipment";
         private static TextWriter _writer;
         private static string _indent = "";
+        public static bool GameUnloading = false;
 
         public static void Init(IMyModContext context)
         {
@@ -119,17 +120,26 @@ namespace DetectionEquipment.Shared.Utils
 
             public static void Throw(string source, Exception ex)
             {
-                Log.Info("CustomCrashModContext", "Generating custom exception message and closing log...");
-                Log.Close();
+                Log.Info("CustomCrashModContext", "Generating custom exception message...");
+                Log.Info("CustomCrashModContext", "If you can see this and the game is still running, it's Build Vision's fault. WHY DON'T YOU CHECK CONTROL.VISIBLE???");
                 var context = new CustomCrashModContext(Log._modContext,
                     "Please reach out to @aristeas. on discord with logs for help.\n\n" +
                     "Mod: %AppData%\\SpaceEngineers\\Storage\\DetectionEquipment.log \n" +
                     "Game: %AppData%\\SpaceEngineers\\SpaceEngineers_*_*.log\n\n" +
                     $"{source}: {ex.Message}\n{ex.InnerException?.Message}\n"
                     );
+
+                if ((GlobalData.MainThreadId == -1 || Environment.CurrentManagedThreadId == GlobalData.MainThreadId) &&
+                    (MyAPIGateway.Session?.GameplayFrameCounter > 0 && !GameUnloading))
+                {
+                    // should close the log here too but build vision needs an exception to hide controls. why?????
+                    throw new ModCrashedException(ex, context);
+                }
+
                 // Invoking on main thread to guarantee the hard-crash message
                 MyAPIGateway.Utilities.InvokeOnGameThread(() =>
                 {
+                    Log.Close();
                     throw new ModCrashedException(ex, context);
                 });
             }

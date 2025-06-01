@@ -51,23 +51,6 @@ namespace DetectionEquipment.Shared
                     GlobalData.UpdatePlayers();
                 }
 
-                //if (_ticks % 600 == 0)
-                //{
-                //    Log.Info("", "");
-                //    Log.Info("Sync Distance", MyAPIGateway.Session.SessionSettings.SyncDistance.ToString());
-                //    Log.Info("View Distance", MyAPIGateway.Session.SessionSettings.ViewDistance.ToString());
-                //    MyAPIGateway.Entities.GetEntities(null, e =>
-                //    {
-                //        var grid = e as IMyCubeGrid;
-                //        if (grid == null)
-                //            return false;
-                //        //if (e is IMyCubeGrid)
-                //        //    e.Flags |= EntityFlags.DrawOutsideViewDistance;
-                //        Log.Info(grid.DisplayName, $"{(MyAPIGateway.Utilities.IsDedicated ? "" : $"Distance: {Vector3D.Distance(MyAPIGateway.Session.Player.Character.GetPosition(), e.GetPosition()):N0} | ")}Flags: {e.Flags}");
-                //        return false;
-                //    });
-                //}
-
                 _ticks++;
             }
             catch (Exception ex)
@@ -78,6 +61,8 @@ namespace DetectionEquipment.Shared
 
         protected override void UnloadData()
         {
+            Log.GameUnloading = true;
+
             try
             {
                 Log.Info("SharedMain", "Start unload...");
