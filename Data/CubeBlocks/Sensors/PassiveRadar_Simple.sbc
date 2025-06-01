@@ -17,9 +17,14 @@
 			<ModelOffset x="0" y="0" z="0"/>
 			<Model>Models\PassiveRadar_Simple.mwm</Model>
 			<Components>
-				<Component Subtype="SteelPlate" Count="10"/>
+				<Component Subtype="SteelPlate" Count="25"/>
+				<Component Subtype="SmallTube" Count="10"/>
+				<Component Subtype="MetalGrid" Count="10"/>
+				<Component Subtype="Detector" Count="10"/>
+				<Component Subtype="Computer" Count="50"/>
+				<Component Subtype="SteelPlate" Count="50"/>
 			</Components>
-			<CriticalComponent Subtype="SteelPlate" Index="0"/>
+			<CriticalComponent Subtype="Computer" Index="0"/>
 			<BlockPairName>PassiveRadar_Simple</BlockPairName>
 			<IsAirTight>false</IsAirTight>
 			<OverlayTexture></OverlayTexture>
