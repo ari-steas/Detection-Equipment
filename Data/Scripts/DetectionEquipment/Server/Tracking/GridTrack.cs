@@ -343,7 +343,7 @@ namespace DetectionEquipment.Server.Tracking
                 if (GlobalData.Debug)
                     DebugDraw.AddPoint(globalHitPos, Color.Gray.SetAlphaPct(0.1f), 0);
                 Vector3D from = globalHitPos - globalDirection * Grid.GridSize * 3;
-                Vector3D to = globalHitPos + globalDirection * Grid.GridSize * 3; // cast 3 blocks deep to limit certain cheese tactics
+                Vector3D to = globalHitPos + globalDirection * maxCastLength; // cast several blocks deep to limit certain cheese tactics
             
                 IHitInfo hitInfo;
                 if (!MyAPIGateway.Physics.CastRay(from, to, out hitInfo, 15) || hitInfo == null ||
