@@ -4,6 +4,7 @@ using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using RichHudFramework;
 using Sandbox.Game.Entities;
 using VRage;
 using VRage.Game.Entity;
@@ -324,8 +325,8 @@ namespace DetectionEquipment.Server.Tracking
                     var from = Vector3D.Rotate(direction * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
                     var to = Vector3D.Rotate(direction * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
 
-                    if (GlobalData.Debug)
-                        DebugDraw.AddLine(from, to, Color.Red, 0);
+                    //if (GlobalData.Debug)
+                    //    DebugDraw.AddLine(from, to, Color.Gray.SetAlphaPct(0.05f), 0);
 
                     var result = Grid.RayCastBlocks(from, to);
                     if (result != null)
@@ -338,20 +339,25 @@ namespace DetectionEquipment.Server.Tracking
 
             MyAPIGateway.Parallel.ForEach(visited, hitPos =>
             {
-                Vector3D from = Vector3D.Transform(hitPos * Grid.GridSize, Grid.WorldMatrix) - globalDirection * maxCastLength;
-                Vector3D to = globalDirection * maxCastLength + from;
+                var globalHitPos = Vector3D.Transform(hitPos * Grid.GridSize, Grid.WorldMatrix);
+                if (GlobalData.Debug)
+                    DebugDraw.AddPoint(globalHitPos, Color.Gray.SetAlphaPct(0.1f), 0);
+                Vector3D from = globalHitPos - globalDirection * Grid.GridSize * 3;
+                Vector3D to = globalHitPos + globalDirection * Grid.GridSize * 3; // cast 3 blocks deep to limit certain cheese tactics
             
                 IHitInfo hitInfo;
-                if (!MyAPIGateway.Physics.CastRay(from, to, out hitInfo, 15))
+                if (!MyAPIGateway.Physics.CastRay(from, to, out hitInfo, 15) || hitInfo == null ||
+                    hitInfo.HitEntity != Grid)
+                {
+                    if (GlobalData.Debug)
+                        DebugDraw.AddLine(from, to, Color.Red, 0);
                     return;
-
-                if (hitInfo == null || hitInfo.HitEntity != Grid)
-                    return;
+                }
 
                 var block = Grid.GetCubeBlock(hitPos);
 
                 if (GlobalData.Debug)
-                    DebugDraw.AddLine(hitInfo.Position, hitInfo.Position + hitInfo.Normal, Color.Green, 0);
+                    DebugDraw.AddLine(from, to, Color.Green, 0);
                 // Armor blocks have half the RCS of components, and light armor has half the RCS of heavy armor.
                 totalVcs += 1;
                 double scaledRcs = Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
