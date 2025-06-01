@@ -7,6 +7,7 @@ using DetectionEquipment.Client.Interface;
 using System;
 using Sandbox.ModAPI;
 using DetectionEquipment.Client.External;
+using DetectionEquipment.Client.Interface.Commands;
 using DetectionEquipment.Client.Interface.DetectionHud;
 
 namespace DetectionEquipment.Client
@@ -33,6 +34,7 @@ namespace DetectionEquipment.Client
                 WcInteractionManager.Init();
                 ModderNotification.Init();
                 DetectionHud.Init();
+                CommandHandler.Init();
 
                 Log.DecreaseIndent();
                 Log.Info("ClientMain", "Initialized.");
@@ -88,6 +90,7 @@ namespace DetectionEquipment.Client
                 Log.Info("ClientMain", "Start unload...");
                 Log.IncreaseIndent();
 
+                CommandHandler.Close();
                 DetectionHud.Close();
                 WcInteractionManager.Close();
                 RcsTool.Close();

@@ -55,8 +55,12 @@ namespace DetectionEquipment.Server.SensorBlocks
                         {
                             var err = target.Error / Vector3D.Distance(gridPos, target.Position);
 
-                            //DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
-                            //MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}% err", 100000/60);
+                            if (GlobalData.Debug)
+                            {
+                                DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
+                                MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}/{GlobalData.MinLockForWcTarget*100:F}% err", 100000/60);
+                            }
+
                             if (err > GlobalData.MinLockForWcTarget)
                                 continue;
                             if (target.Entity != null && !targets.Contains(target.Entity))

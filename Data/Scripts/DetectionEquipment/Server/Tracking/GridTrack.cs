@@ -324,6 +324,9 @@ namespace DetectionEquipment.Server.Tracking
                     var from = Vector3D.Rotate(direction * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
                     var to = Vector3D.Rotate(direction * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
 
+                    if (GlobalData.Debug)
+                        DebugDraw.AddLine(from, to, Color.Red, 0);
+
                     var result = Grid.RayCastBlocks(from, to);
                     if (result != null)
                         visited.Add(result.Value);
@@ -347,7 +350,8 @@ namespace DetectionEquipment.Server.Tracking
 
                 var block = Grid.GetCubeBlock(hitPos);
 
-                //DebugDraw.AddLine(hitInfo.Position, hitInfo.Position + hitInfo.Normal, Color.Green, 0);
+                if (GlobalData.Debug)
+                    DebugDraw.AddLine(hitInfo.Position, hitInfo.Position + hitInfo.Normal, Color.Green, 0);
                 // Armor blocks have half the RCS of components, and light armor has half the RCS of heavy armor.
                 totalVcs += 1;
                 double scaledRcs = Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));

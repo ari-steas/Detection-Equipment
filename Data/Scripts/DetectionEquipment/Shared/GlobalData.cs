@@ -25,6 +25,7 @@ namespace DetectionEquipment.Shared
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
         public static string[] LowRcsSubtypes;
+        public static bool Debug = false;
 
         public static string[] IgnoredEntityTypes = {
             "MyVoxelPhysics",

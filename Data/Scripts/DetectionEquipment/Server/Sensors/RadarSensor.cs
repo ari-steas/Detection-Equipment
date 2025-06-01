@@ -81,9 +81,9 @@ namespace DetectionEquipment.Server.Sensors
                 // If the aperture is more than 180 degrees, assume that it's a spheroid.
                 double receiverAreaAtAngle = Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
 
-                //            4 * pi * receiverArea
-                // ------------------------------------------------
-                //  lambda^2 * angleOffsetScalar * outputDensity^3
+                //   4 * pi * receiverArea * angleOffsetScalar * outputDensity^3
+                // ---------------------------------------------------------------
+                //                            lambda^2
                 double gain = 4 * Math.PI * receiverAreaAtAngle / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
 
                 // Can make this fancier if I want later.
