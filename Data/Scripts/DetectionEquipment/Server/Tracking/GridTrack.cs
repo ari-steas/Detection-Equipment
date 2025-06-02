@@ -33,7 +33,6 @@ namespace DetectionEquipment.Server.Tracking
         protected int NextCacheUpdate = 0;
 
         private HashSet<IMyThrust> ThrusterCache = new HashSet<IMyThrust>();
-        private Dictionary<Vector3, float> ThrustCache = new Dictionary<Vector3, float>();
         private int LastThrustCacheUpdate = -1;
 
         public GridTrack(IMyCubeGrid grid) : base((MyEntity)grid)
@@ -246,21 +245,22 @@ namespace DetectionEquipment.Server.Tracking
 
         private Dictionary<Vector3, float> GetGridThrust()
         {
+            var thrustCache = new Dictionary<Vector3, float>(6);
             if (MyAPIGateway.Session.GameplayFrameCounter == LastThrustCacheUpdate)
-                return ThrustCache;
+                return thrustCache;
 
-            ThrustCache.Clear();
+            thrustCache.Clear();
 
-            foreach (var thrust in ThrusterCache) // TODO cache thruster blocks
+            foreach (var thrust in ThrusterCache)
             {
-                if (ThrustCache.ContainsKey(thrust.LocalMatrix.Forward))
-                    ThrustCache[thrust.LocalMatrix.Forward] += thrust.CurrentThrust;
+                if (thrustCache.ContainsKey(thrust.LocalMatrix.Forward))
+                    thrustCache[thrust.LocalMatrix.Forward] += thrust.CurrentThrust;
                 else
-                    ThrustCache.Add(thrust.LocalMatrix.Forward, thrust.CurrentThrust);
+                    thrustCache.Add(thrust.LocalMatrix.Forward, thrust.CurrentThrust);
             }
 
             LastThrustCacheUpdate = MyAPIGateway.Session.GameplayFrameCounter;
-            return ThrustCache;
+            return thrustCache;
         }
 
         public virtual void CalculateRcs(Vector3D globalDirection, out double radarCrossSection, out double visualCrossSection)
