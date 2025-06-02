@@ -7,7 +7,9 @@
 				<SubtypeId>GimbalCamera</SubtypeId>
 			</Id>
 			<DisplayName>Gimballed Camera</DisplayName>
-			<Description>{LOC:Description_GimbalCamera}</Description>
+			<Description>
+				Detects nearby targets in a wide cone. Can rotate.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\GimbalCamera.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>
@@ -15,9 +17,14 @@
 			<ModelOffset x="0" y="0" z="0"/>
 			<Model>Models\GimbalCamera.mwm</Model>
 			<Components>
-				<Component Subtype="SteelPlate" Count="10"/>
+				<Component Subtype="SteelPlate" Count="25"/>
+				<Component Subtype="SmallTube" Count="10"/>
+				<Component Subtype="Motor" Count="10"/>
+				<Component Subtype="Computer" Count="25"/>
+				<Component Subtype="BulletproofGlass" Count="10"/>
+				<Component Subtype="SteelPlate" Count="50"/>
 			</Components>
-			<CriticalComponent Subtype="SteelPlate" Index="0"/>
+			<CriticalComponent Subtype="Computer" Index="0"/>
 			<BlockPairName>GimbalCamera</BlockPairName>
 			<MirroringY>Z</MirroringY>
 			<MirroringZ>Y</MirroringZ>

@@ -7,7 +7,9 @@
 				<SubtypeId>SmallFixedRadar</SubtypeId>
 			</Id>
 			<DisplayName>Small Gimballed Radar</DisplayName>
-			<Description>{LOC:Description_SmallFixedRadar}</Description>
+			<Description>
+				Detects targets in a narrow cone. Can rotate.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\SmallFixedRadar.dds</Icon>
 			<CubeSize>Small</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>
@@ -15,9 +17,14 @@
 			<ModelOffset x="0" y="0" z="0"/>
 			<Model>Models\SmallFixedRadar.mwm</Model>
 			<Components>
-				<Component Subtype="SteelPlate" Count="10"/>
+				<Component Subtype="SteelPlate" Count="2"/>
+				<Component Subtype="SmallTube" Count="1"/>
+				<Component Subtype="MetalGrid" Count="1"/>
+				<Component Subtype="Motor" Count="1"/>
+				<Component Subtype="Computer" Count="2"/>
+				<Component Subtype="SteelPlate" Count="5"/>
 			</Components>
-			<CriticalComponent Subtype="SteelPlate" Index="0"/>
+			<CriticalComponent Subtype="Computer" Index="0"/>
 			<MountPoints>
 				<MountPoint Side="Back" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
 				<MountPoint Side="Left" StartX="0.94" StartY="0.00" EndX="2.00" EndY="1.00"/>

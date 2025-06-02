@@ -8,7 +8,13 @@
             </Id>
             <DisplayName>Detection Simple IFF Aggregator</DisplayName>
             <Icon>Textures\GUI\Icons\Cubes\ProgrammingBlock.dds</Icon>
-            <Description>Description_ProgrammableBlock</Description>
+            <Description>
+				Combines tracking data from selected sensors over an interval.
+				Can direct trackers, HUD controllers, and WeaponCore weapons if applicable.
+				May use DataLink to send and receive tracking data from friendly aggregators on the same antenna network.
+				
+				Tracks with selected IFF codes are marked as friendly. Tracks with non-friendly IFF codes are marked as enemies; otherwise neutral.
+			</Description>
             <CubeSize>Large</CubeSize>
             <BlockTopology>TriangleMesh</BlockTopology>
             <Size x="1" y="1" z="1" />

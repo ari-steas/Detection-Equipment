@@ -7,7 +7,10 @@
 				<SubtypeId>IffReflector</SubtypeId>
 			</Id>
 			<DisplayName>IFF Reflector</DisplayName>
-			<Description>{LOC:Description_IffReflector}</Description>
+			<Description>
+				When this grid is painted by a radar, adds selected IFF code to the track.
+				Can display either a plaintext code or a hashed string - the latter is more secure, and the former is human-readable.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\IffReflector.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>

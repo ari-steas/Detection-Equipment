@@ -8,7 +8,9 @@
             </Id>
             <DisplayName>Detection Searcher</DisplayName>
             <Icon>Textures\GUI\Icons\Cubes\ProgrammingBlock.dds</Icon>
-            <Description>Description_ProgrammableBlock</Description>
+            <Description>
+				Directs selected sensors in a search pattern.
+			</Description>
             <CubeSize>Large</CubeSize>
             <BlockTopology>TriangleMesh</BlockTopology>
             <Size x="1" y="1" z="1" />

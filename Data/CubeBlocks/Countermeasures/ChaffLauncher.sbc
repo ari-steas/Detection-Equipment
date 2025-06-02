@@ -7,7 +7,9 @@
 				<SubtypeId>ChaffLauncher</SubtypeId>
 			</Id>
 			<DisplayName>Simple Chaff Launcher</DisplayName>
-			<Description>{LOC:Description_ChaffLauncher}</Description>
+			<Description>
+				While active, launches radar-confusing chaff with a short lifetime.
+			</Description>
 			<Icon>Textures\GUI\Icons\Cubes\FlareLauncher.dds</Icon>
 			<CubeSize>Large</CubeSize>
 			<BlockTopology>TriangleMesh</BlockTopology>
@@ -16,8 +18,11 @@
 			<Model>Models\FlareLauncher.mwm</Model>
 			<Components>
 				<Component Subtype="SteelPlate" Count="10"/>
+                <Component Subtype="LargeTube" Count="25" />
+				<Component Subtype="Construction" Count="15" />
+				<Component Subtype="SteelPlate" Count="15"/>
 			</Components>
-			<CriticalComponent Subtype="SteelPlate" Index="0"/>
+			<CriticalComponent Subtype="LargeTube" Index="0"/>
 			<BlockPairName>ChaffLauncher</BlockPairName>
 			<MountPoints>
 				<MountPoint Side="Back" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>

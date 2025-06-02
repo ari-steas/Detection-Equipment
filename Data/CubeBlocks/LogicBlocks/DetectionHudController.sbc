@@ -8,7 +8,9 @@
             </Id>
             <DisplayName>Detection HUD Controller</DisplayName>
             <Icon>Textures\GUI\Icons\Cubes\ProgrammingBlock.dds</Icon>
-            <Description>Description_ProgrammableBlock</Description>
+            <Description>
+				Displays aggregator tracks on the HUD of players controlling this ship.
+			</Description>
             <CubeSize>Large</CubeSize>
             <BlockTopology>TriangleMesh</BlockTopology>
             <Size x="1" y="1" z="1" />
