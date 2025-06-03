@@ -97,8 +97,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
             for (var i = 0; i < Detections.Count; i++)
             {
                 var detection = Detections[i];
-                if (detection.Velocity != null)
-                    detection.Position += detection.Velocity.Value / 60f;
+                detection.Position += (detection.Entity?.Physics?.LinearVelocity ?? detection.Velocity ?? Vector3.Zero) / 60f;
                 Detections[i] = detection;
             }
 

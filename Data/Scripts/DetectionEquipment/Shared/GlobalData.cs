@@ -77,6 +77,14 @@ namespace DetectionEquipment.Shared
             WcTargetingUpdated);
 
         /// <summary>
+        /// Maximum range for WeaponCore magic targeting, in meters. Only applies if OverrideWcTargeting is false. Set to zero or less to disable.
+        /// </summary>
+        public static IniSetting<float> MaxWcMagicTargetingRange = new IniSetting<float>(
+            "MaxWcMagicTargetingRange",
+            "Maximum range for WeaponCore magic targeting, in meters. Only applies if OverrideWcTargeting is false. Set to zero or less to disable.",
+            -1f);
+
+        /// <summary>
         /// Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance
         /// </summary>
         public static IniSetting<float> MinLockForWcTarget = new IniSetting<float>(
