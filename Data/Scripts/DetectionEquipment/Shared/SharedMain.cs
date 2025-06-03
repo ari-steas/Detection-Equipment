@@ -1,6 +1,6 @@
 ﻿using System;
-using DetectionEquipment.Shared.BlockLogic;
-using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks.Aggregator.Datalink;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Utils;

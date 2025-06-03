@@ -1,4 +1,4 @@
-﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
+﻿using DetectionEquipment.Shared.BlockLogic.ControlBlocks.GenericControls;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using System.Linq;

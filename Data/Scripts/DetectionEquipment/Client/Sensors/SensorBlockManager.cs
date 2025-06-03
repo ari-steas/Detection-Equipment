@@ -4,9 +4,9 @@ using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
-using DetectionEquipment.Shared.BlockLogic;
 using Sandbox.Game.Entities;
 using VRage.Game.ModAPI;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks;
 
 namespace DetectionEquipment.Client.Sensors
 {

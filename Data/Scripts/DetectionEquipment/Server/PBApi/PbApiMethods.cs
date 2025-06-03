@@ -3,15 +3,15 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using VRageMath;
-
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using DetectionEquipment.Shared.BlockLogic;
 
 using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 using VRage.Scripting.MemorySafeTypes;
 using DetectionEquipment.Shared.Utils;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks.IffReflector;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks.Aggregator;
 
 namespace DetectionEquipment.Server.PBApi
 {

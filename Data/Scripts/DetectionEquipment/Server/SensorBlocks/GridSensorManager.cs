@@ -16,6 +16,7 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks.Aggregator;
 
 namespace DetectionEquipment.Server.SensorBlocks
 {
@@ -36,7 +37,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             // Vanilla WC targeting
             if (!GlobalData.OverrideWcTargeting)
             {
-                if (GlobalData.MaxWcMagicTargetingRange > 0)
+                if (GlobalData.MaxWcMagicTargetingRange > 0 && sphere.Radius > GlobalData.MaxWcMagicTargetingRange)
                     sphere.Radius = GlobalData.MaxWcMagicTargetingRange;
                 MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref sphere, targets);
             }

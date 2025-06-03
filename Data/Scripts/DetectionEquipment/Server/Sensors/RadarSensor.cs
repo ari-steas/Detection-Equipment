@@ -1,5 +1,5 @@
 ﻿using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks.IffReflector;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;

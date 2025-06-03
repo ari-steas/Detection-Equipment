@@ -1,6 +1,6 @@
 ﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.HudController;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks.GenericControls;
+using DetectionEquipment.Shared.BlockLogic.ControlBlocks.HudController;
 using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Networking
