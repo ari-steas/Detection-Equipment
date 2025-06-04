@@ -103,6 +103,7 @@ namespace DetectionEquipment.Client.BlockLogic
                         continue;
 
                     logic.UpdateFromNetwork(updatePacket);
+                    Log.Info("BlockLogicManager", $"Updated {logic.GetType().Name} from network on {blockId}.");
                     updateSet.RemoveAt(i);
                     // todo optimize this, there should only be one logic of each type per block!
                 }
@@ -120,6 +121,7 @@ namespace DetectionEquipment.Client.BlockLogic
                     DelayedUpdateLogics[blockId].Add(packet);
                 else
                     DelayedUpdateLogics[blockId] = new List<BlockLogicUpdatePacket> { packet };
+                Log.Info("BlockLogicManager", $"Delayed updating {typeof(TLogic).Name} on {blockId}...");
                 return false;
             }
 

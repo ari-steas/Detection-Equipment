@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using VRage.Game.ModAPI;
 using VRageMath;
 using DetectionEquipment.Client.Networking;
-using VRageRender;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
@@ -26,7 +25,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             set
             {
                 Sensors[CurrentSensorId].Aperture = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
             }
         }
         public float CurrentDesiredAzimuth
@@ -38,7 +37,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             set
             {
                 Sensors[CurrentSensorId].DesiredAzimuth = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
             }
         }
         public float CurrentDesiredElevation
@@ -50,7 +49,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             set
             {
                 Sensors[CurrentSensorId].DesiredElevation = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
             }
         }
         public SensorDefinition CurrentDefinition

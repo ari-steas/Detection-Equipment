@@ -1,8 +1,11 @@
 ﻿using System.Collections.Generic;
 using DetectionEquipment.Server;
+using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using VRageMath;
+using static VRage.Game.MyObjectBuilder_BehaviorTreeDecoratorNode;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
@@ -11,6 +14,10 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
     {
         [ProtoMember(2)] public List<uint> Ids;
         [ProtoMember(3)] public List<int> DefinitionIds;
+
+        public SensorInitPacket()
+        {
+        }
 
         protected override IBlockLogic CreateClientLogic()
         {
@@ -23,6 +30,9 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             if (block == null)
                 return null;
 
+
+
+            // send the actual init packet
             var ids = new List<uint>();
             var defIds = new List<int>();
             foreach (var sensor in ServerMain.I.GridSensorMangers[block.CubeGrid].Sensors)
@@ -31,6 +41,9 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                     continue;
                 ids.Add(sensor.Sensor.Id);
                 defIds.Add(sensor.Definition.Id);
+
+                // prep and send update packets, receive order doesn't matter
+                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(sensor), sensor.Block.GetPosition());
             }
             return new SensorInitPacket
             {
@@ -49,20 +62,26 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         [ProtoMember(4)] public float Elevation;
         [ProtoMember(5)] public float Aperture;
 
-        public SensorUpdatePacket(ClientSensorData sensor)
+        public SensorUpdatePacket(long blockId, ClientSensorData sensor)
         {
+            AttachedBlockId = blockId;
             Id = sensor.Id;
-            Azimuth = sensor.Azimuth;
-            Elevation = sensor.Elevation;
+            Azimuth = sensor.DesiredAzimuth;
+            Elevation = sensor.DesiredElevation;
             Aperture = sensor.Aperture;
         }
 
         public SensorUpdatePacket(Server.SensorBlocks.BlockSensor sensor)
         {
+            AttachedBlockId = sensor.Block.EntityId;
             Id = sensor.Sensor.Id;
-            Azimuth = (float) sensor.Azimuth;
-            Elevation = (float) sensor.Elevation;
+            Azimuth = (float) sensor.DesiredAzimuth;
+            Elevation = (float) sensor.DesiredElevation;
             Aperture = (float) sensor.Aperture;
+        }
+
+        private SensorUpdatePacket()
+        {
         }
 
         protected override void TryUpdateLogicClient()
@@ -71,10 +90,12 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             if (!BlockLogicManager.CanUpdateLogic(AttachedBlockId, this, out logic))
                 return;
             logic.UpdateFromNetwork(this);
+            Log.Info("SensorUpdatePacket", $"Updated {logic.GetType().Name} from network on {AttachedBlockId}.");
         }
 
         protected override Vector3D TryUpdateLogicServer()
         {
+            Log.Info("SensorUpdatePacket", $"Updating server sensor from network on {AttachedBlockId}.");
             Server.SensorBlocks.BlockSensor blockSensor;
             if (!ServerMain.I.BlockSensorIdMap.TryGetValue(Id, out blockSensor))
                 return Vector3D.PositiveInfinity;
