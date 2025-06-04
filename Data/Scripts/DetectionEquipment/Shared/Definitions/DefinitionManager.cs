@@ -230,7 +230,6 @@ namespace DetectionEquipment.Shared.Definitions
                     Ids = sensorIds,
                     DefinitionIds = definitionIds
                 }, block.GetPosition());
-                Log.Info("DefinitionManager", $"Created - IDs: {sensorIds.Count}");
             }
 
             return sensors;

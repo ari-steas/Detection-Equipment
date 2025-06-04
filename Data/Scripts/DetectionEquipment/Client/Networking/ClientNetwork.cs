@@ -34,7 +34,15 @@ namespace DetectionEquipment.Client.Networking
         {
             if (_packetQueue.Count > 0)
             {
-                MyAPIGateway.Multiplayer.SendMessageToServer(GlobalData.ServerNetworkId, MyAPIGateway.Utilities.SerializeToBinary(_packetQueue.ToArray()));
+                try
+                {
+                    MyAPIGateway.Multiplayer.SendMessageToServer(GlobalData.ServerNetworkId,
+                        MyAPIGateway.Utilities.SerializeToBinary(_packetQueue.ToArray()));
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("ClientNetwork", new Exception($"Failed to serialize packet containing {string.Join(", ", _packetQueue.Select(p => p.GetType().Name).Distinct())}.", ex));
+                }
                 _packetQueue.Clear();
             }
         }
@@ -59,6 +67,9 @@ namespace DetectionEquipment.Client.Networking
 
         private void SendToServerInternal(PacketBase packet)
         {
+            if (packet == null)
+                return;
+
             if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId)
             {
                 // avoid thread contention

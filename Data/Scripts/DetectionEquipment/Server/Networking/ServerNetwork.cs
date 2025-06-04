@@ -42,8 +42,16 @@ namespace DetectionEquipment.Server.Networking
                 if (queuePair.Value.Count == 0)
                     continue;
 
-                MyAPIGateway.Multiplayer.SendMessageTo(GlobalData.ClientNetworkId, MyAPIGateway.Utilities.SerializeToBinary(queuePair.Value.ToArray()), queuePair.Key);
-                queuePair.Value.Clear();
+                try
+                {
+                    MyAPIGateway.Multiplayer.SendMessageTo(GlobalData.ClientNetworkId,
+                        MyAPIGateway.Utilities.SerializeToBinary(queuePair.Value.ToArray()), queuePair.Key);
+                    queuePair.Value.Clear();
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("ServerNetwork", new Exception($"Failed to serialize packet containing {string.Join(", ", queuePair.Value.Select(p => p.GetType().Name).Distinct())}.", ex));
+                }
             }
         }
 
@@ -75,6 +83,9 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToPlayerInternal(PacketBase packet, ulong playerSteamId)
         {
+            if (packet == null)
+                return;
+
             if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId || SharedMain.I.Ticks == 0)
             {
                 // avoid thread contention and zero players connected on world load
@@ -105,6 +116,9 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToEveryoneInternal(PacketBase packet)
         {
+            if (packet == null)
+                return;
+
             if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId || SharedMain.I.Ticks == 0)
             {
                 // avoid thread contention and zero players connected on world load
@@ -139,6 +153,9 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToEveryoneInSyncInternal(PacketBase packet, Vector3D position)
         {
+            if (packet == null)
+                return;
+
             if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId || SharedMain.I.Ticks == 0)
             {
                 // avoid thread contention and zero players connected on world load
