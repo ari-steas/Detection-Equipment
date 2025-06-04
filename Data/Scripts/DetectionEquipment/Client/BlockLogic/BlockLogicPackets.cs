@@ -1,5 +1,6 @@
 ﻿using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
@@ -14,11 +15,12 @@ namespace DetectionEquipment.Client.BlockLogic
         [ProtoMember(1)] public long AttachedBlockId;
 
         protected abstract IBlockLogic CreateClientLogic();
-        protected abstract BlockLogicInitPacket CreateServerInitPacket(long blockEntityId);
+        protected abstract BlockLogicInitPacket CreateServerInitPacket(long blockEntityId, ulong requesterId);
 
         public override void Received(ulong senderSteamId, bool fromServer)
         {
-            Log.Info("BlockLogicInitPacket", "Received BlockLogicInitPacket from " + (fromServer ? "server" : "client"));
+            if (GlobalData.Debug)
+                Log.Info("BlockLogicInitPacket", "Received BlockLogicInitPacket from " + (fromServer ? "server" : "client"));
 
             if (fromServer)
             {
@@ -28,9 +30,7 @@ namespace DetectionEquipment.Client.BlockLogic
             }
             else
             {
-                ServerNetwork.SendToPlayer(CreateServerInitPacket(AttachedBlockId), senderSteamId);
-
-                Log.Info("BlockLogicInitPacket", "Sent requested init packets to " + senderSteamId);
+                ServerNetwork.SendToPlayer(CreateServerInitPacket(AttachedBlockId, senderSteamId), senderSteamId);
             }
         }
     }
@@ -43,9 +43,13 @@ namespace DetectionEquipment.Client.BlockLogic
 
         protected abstract void TryUpdateLogicClient();
         protected abstract Vector3D TryUpdateLogicServer();
+        public abstract bool CanUpdate(IBlockLogic logic);
 
         public override void Received(ulong senderSteamId, bool fromServer)
         {
+            if (GlobalData.Debug)
+                Log.Info("BlockLogicUpdatePacket", "Received BlockLogicUpdatePacket from " + (fromServer ? "server" : "client"));
+
             if (fromServer)
             {
                 TryUpdateLogicClient();

@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
@@ -63,6 +64,13 @@ namespace DetectionEquipment.Client.BlockLogic
 
         public static bool RegisterLogic<TLogic>(long blockId, TLogic logic) where TLogic : class, IBlockLogic
         {
+            lock (Logics)
+            {
+                // don't double up on logics
+                if ((Logics.ContainsKey(blockId) && Logics[blockId].Contains(logic)) || (DelayedInitLogics.ContainsKey(blockId) && DelayedInitLogics[blockId].Contains(logic)))
+                    return false;
+            }
+
             if (TryRegisterLogicInternal(blockId, logic))
                 return true;
 
@@ -79,7 +87,8 @@ namespace DetectionEquipment.Client.BlockLogic
             var block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyCubeBlock;
             if (block == null)
             {
-                Log.Info("BlockLogicManager", $"Delayed registering {logic.GetType().Name} on {blockId}...");
+                if (GlobalData.Debug)
+                    Log.Info("BlockLogicManager", $"Delayed registering {logic.GetType().Name} on {blockId}...");
                 return false;
             }
 
@@ -95,20 +104,21 @@ namespace DetectionEquipment.Client.BlockLogic
             List<BlockLogicUpdatePacket> updateSet;
             if (DelayedUpdateLogics.TryGetValue(blockId, out updateSet))
             {
-                var logicType = typeof(TLogic);
                 for (int i = updateSet.Count - 1; i >= 0; i--)
                 {
                     var updatePacket = updateSet[i];
-                    if (logicType != logic.GetType())
+                    if (!updatePacket.CanUpdate(logic))
                         continue;
 
                     logic.UpdateFromNetwork(updatePacket);
-                    Log.Info("BlockLogicManager", $"Updated {logic.GetType().Name} from network on {blockId}.");
+                    if (GlobalData.Debug)
+                        Log.Info("BlockLogicManager", $"Updated {logic.GetType().Name} from network on {blockId}.");
                     updateSet.RemoveAt(i);
                     // todo optimize this, there should only be one logic of each type per block!
                 }
             }
-            Log.Info("BlockLogicManager", $"Registered {logic.GetType().Name} on {blockId}.");
+            if (GlobalData.Debug)
+                Log.Info("BlockLogicManager", $"Registered {logic.GetType().Name} on {blockId}.");
             return true;
         }
 
@@ -121,7 +131,8 @@ namespace DetectionEquipment.Client.BlockLogic
                     DelayedUpdateLogics[blockId].Add(packet);
                 else
                     DelayedUpdateLogics[blockId] = new List<BlockLogicUpdatePacket> { packet };
-                Log.Info("BlockLogicManager", $"Delayed updating {typeof(TLogic).Name} on {blockId}...");
+                if (GlobalData.Debug)
+                    Log.Info("BlockLogicManager", $"Delayed updating {typeof(TLogic).Name} on {blockId}...");
                 return false;
             }
 

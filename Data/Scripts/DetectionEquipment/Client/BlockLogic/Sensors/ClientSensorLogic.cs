@@ -113,7 +113,6 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         public void RegisterSensor(uint sensorId, int definitionId)
         {
-            Log.Info("ClientSensorLogic", $"Registering sensor {sensorId}...");
             Sensors[sensorId] = new ClientSensorData(
                 sensorId,
                 DefinitionManager.GetSensorDefinition(definitionId),

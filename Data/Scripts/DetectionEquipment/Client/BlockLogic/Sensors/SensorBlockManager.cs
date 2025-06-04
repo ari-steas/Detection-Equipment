@@ -1,7 +1,6 @@
 ﻿using System.Collections.Generic;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Shared.Definitions;
-using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -36,7 +35,18 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         private static void OnEntityAdd(IMyEntity ent)
         {
-            var block = ent as IMyCubeBlock;
+            var grid = ent as IMyCubeGrid;
+            if (grid == null)
+                return;
+
+            grid.OnBlockAdded += OnBlockAdded;
+            foreach (var block in grid.GetFatBlocks<IMyCubeBlock>())
+                OnBlockAdded(block.SlimBlock);
+        }
+
+        private static void OnBlockAdded(IMySlimBlock slim)
+        {
+            var block = slim.FatBlock;
             if (block == null)
                 return;
 

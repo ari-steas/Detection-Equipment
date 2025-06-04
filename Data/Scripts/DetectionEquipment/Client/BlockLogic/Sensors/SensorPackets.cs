@@ -1,11 +1,9 @@
 ﻿using System.Collections.Generic;
 using DetectionEquipment.Server;
 using DetectionEquipment.Server.Networking;
-using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using VRageMath;
-using static VRage.Game.MyObjectBuilder_BehaviorTreeDecoratorNode;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
@@ -24,7 +22,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             return new ClientSensorLogic(Ids, DefinitionIds);
         }
 
-        protected override BlockLogicInitPacket CreateServerInitPacket(long blockEntityId)
+        protected override BlockLogicInitPacket CreateServerInitPacket(long blockEntityId, ulong requesterId)
         {
             var block = MyAPIGateway.Entities.GetEntityById(blockEntityId) as IMyCameraBlock;
             if (block == null)
@@ -43,7 +41,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 defIds.Add(sensor.Definition.Id);
 
                 // prep and send update packets, receive order doesn't matter
-                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(sensor), sensor.Block.GetPosition());
+                ServerNetwork.SendToPlayer(new SensorUpdatePacket(sensor), requesterId);
             }
             return new SensorInitPacket
             {
@@ -90,17 +88,20 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             if (!BlockLogicManager.CanUpdateLogic(AttachedBlockId, this, out logic))
                 return;
             logic.UpdateFromNetwork(this);
-            Log.Info("SensorUpdatePacket", $"Updated {logic.GetType().Name} from network on {AttachedBlockId}.");
         }
 
         protected override Vector3D TryUpdateLogicServer()
         {
-            Log.Info("SensorUpdatePacket", $"Updating server sensor from network on {AttachedBlockId}.");
             Server.SensorBlocks.BlockSensor blockSensor;
             if (!ServerMain.I.BlockSensorIdMap.TryGetValue(Id, out blockSensor))
                 return Vector3D.PositiveInfinity;
             blockSensor.UpdateFromPacket(this);
             return blockSensor.Block.GetPosition();
+        }
+
+        public override bool CanUpdate(IBlockLogic logic)
+        {
+            return logic is ClientSensorLogic;
         }
     }
 }
