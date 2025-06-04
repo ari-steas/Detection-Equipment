@@ -54,7 +54,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             set
             {
                 _desiredAzimuth = MathUtils.NormalizeAngle(value);
-                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
+                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
                 BlockSensorSettings.SaveBlockSettings(Block);
             }
         }
@@ -67,7 +67,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             set
             {
                 _desiredElevation = MathUtils.NormalizeAngle(value);
-                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
+                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
                 BlockSensorSettings.SaveBlockSettings(Block);
             }
         }
@@ -80,12 +80,12 @@ namespace DetectionEquipment.Server.SensorBlocks
             set
             {
                 Sensor.Aperture = MathHelper.Clamp(value, Definition.MinAperture, Definition.MaxAperture);
-                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this), Block.GetPosition());
+                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
                 BlockSensorSettings.SaveBlockSettings(Block);
             }
         }
 
-        public void UpdateFromPacket(SensorUpdatePacket packet)
+        public void UpdateFromPacket(Client.BlockLogic.Sensors.SensorUpdatePacket packet)
         {
             _desiredAzimuth = packet.Azimuth;
             _desiredElevation = packet.Elevation;
@@ -134,8 +134,6 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 Block.ResourceSink.SetMaxRequiredInputByType(_electricityId, (float) Definition.MaxPowerDraw);
             }
-
-            ServerNetwork.SendToEveryoneInSync(new SensorInitPacket(this), Block.GetPosition());
         }
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)

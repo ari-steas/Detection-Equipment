@@ -16,7 +16,6 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
-using DetectionEquipment.Shared.BlockLogic.ControlBlocks.Aggregator;
 
 namespace DetectionEquipment.Server.SensorBlocks
 {

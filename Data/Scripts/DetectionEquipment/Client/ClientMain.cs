@@ -1,10 +1,10 @@
 ﻿using DetectionEquipment.Client.Countermeasures;
 using VRage.Game.Components;
-using DetectionEquipment.Client.Sensors;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Client.Interface;
 using System;
+using DetectionEquipment.Client.BlockLogic;
 using Sandbox.ModAPI;
 using DetectionEquipment.Client.External;
 using DetectionEquipment.Client.Interface.Commands;
@@ -26,7 +26,7 @@ namespace DetectionEquipment.Client
                 Log.Info("ClientMain", "Start initialize...");
                 Log.IncreaseIndent();
 
-                SensorBlockManager.Init();
+                BlockLogicManager.Load();
                 new ClientNetwork().LoadData();
                 BlockCategoryManager.Init();
                 CountermeasureManager.Init();
@@ -53,7 +53,7 @@ namespace DetectionEquipment.Client
             try
             {
                 ClientNetwork.I.Update();
-                SensorBlockManager.Update();
+                BlockLogicManager.UpdateAfterSimulation();
                 CountermeasureManager.Update();
                 RcsTool.Update();
                 ModderNotification.Update();
@@ -98,7 +98,7 @@ namespace DetectionEquipment.Client
                 CountermeasureManager.Close();
                 BlockCategoryManager.Close();
                 ClientNetwork.I.UnloadData();
-                SensorBlockManager.Unload();
+                BlockLogicManager.Unload();
 
                 Log.DecreaseIndent();
                 Log.Info("ClientMain", "Unloaded.");

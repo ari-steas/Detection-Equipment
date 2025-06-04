@@ -1,5 +1,4 @@
-﻿using DetectionEquipment.Client.Sensors;
-using DetectionEquipment.Server;
+﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
@@ -8,6 +7,7 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Client.BlockLogic.Sensors;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.Serialization
@@ -22,7 +22,7 @@ namespace DetectionEquipment.Shared.Serialization
 
         private BlockSensorSettings() { }
 
-        internal BlockSensorSettings(ClientBlockSensor sensorBlock)
+        internal BlockSensorSettings(ClientSensorLogic sensorBlock)
         {
             var sensors = sensorBlock.Sensors.Values.ToList();
 

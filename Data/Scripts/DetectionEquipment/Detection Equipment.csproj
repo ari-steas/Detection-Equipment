@@ -34,7 +34,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Shared\BlockLogic\ControlBlocks\Aggregator\Datalink\" />
     <Folder Include="Shared\ExternalApis\RichHud\" />
   </ItemGroup>
 

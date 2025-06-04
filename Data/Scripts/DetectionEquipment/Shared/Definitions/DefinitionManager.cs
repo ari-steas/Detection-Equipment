@@ -7,6 +7,7 @@ using System.Linq;
 using DetectionEquipment.Server;
 using DetectionEquipment.Server.Countermeasures;
 using VRage.Game.ModAPI;
+using DetectionEquipment.Server.Networking;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -197,6 +198,8 @@ namespace DetectionEquipment.Shared.Definitions
         public static List<BlockSensor> TryCreateSensors(IMyFunctionalBlock block)
         {
             var sensors = new List<BlockSensor>();
+            var sensorIds = new List<uint>();
+            var definitionIds = new List<int>();
             foreach (var definition in SensorDefinitions.Values)
             {
                 if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
@@ -213,8 +216,23 @@ namespace DetectionEquipment.Shared.Definitions
                     break;
                 }
 
-                sensors.Add(newSensor ?? new BlockSensor(block, definition));
+                newSensor = newSensor ?? new BlockSensor(block, definition);
+                sensors.Add(newSensor);
+                sensorIds.Add(newSensor.Sensor.Id);
+                definitionIds.Add(newSensor.Definition.Id);
             }
+
+            if (sensors.Count > 0)
+            {
+                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorInitPacket
+                {
+                    AttachedBlockId = block.EntityId,
+                    Ids = sensorIds,
+                    DefinitionIds = definitionIds
+                }, block.GetPosition());
+                Log.Info("DefinitionManager", $"Created - IDs: {sensorIds.Count}");
+            }
+
             return sensors;
         }
 

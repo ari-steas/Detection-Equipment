@@ -75,9 +75,9 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToPlayerInternal(PacketBase packet, ulong playerSteamId)
         {
-            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId)
+            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId || SharedMain.I.Ticks == 0)
             {
-                // avoid thread contention
+                // avoid thread contention and zero players connected on world load
                 MyAPIGateway.Utilities.InvokeOnGameThread(() => SendToPlayerInternal(packet, playerSteamId));
                 return;
             }
@@ -105,9 +105,9 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToEveryoneInternal(PacketBase packet)
         {
-            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId)
+            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId || SharedMain.I.Ticks == 0)
             {
-                // avoid thread contention
+                // avoid thread contention and zero players connected on world load
                 MyAPIGateway.Utilities.InvokeOnGameThread(() => SendToEveryoneInternal(packet));
                 return;
             }
@@ -139,9 +139,9 @@ namespace DetectionEquipment.Server.Networking
 
         private void SendToEveryoneInSyncInternal(PacketBase packet, Vector3D position)
         {
-            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId)
+            if (Environment.CurrentManagedThreadId != GlobalData.MainThreadId || SharedMain.I.Ticks == 0)
             {
-                // avoid thread contention
+                // avoid thread contention and zero players connected on world load
                 MyAPIGateway.Utilities.InvokeOnGameThread(() => SendToEveryoneInSyncInternal(packet, position));
                 return;
             }
@@ -150,6 +150,7 @@ namespace DetectionEquipment.Server.Networking
             foreach (var player in GlobalData.Players)
                 if (Vector3D.DistanceSquared(player.GetPosition(), position) <= GlobalData.SyncRangeSq) // TODO: Sync this based on camera position
                     toSend.Add(player.SteamUserId);
+                
 
             if (toSend.Count == 0)
                 return;

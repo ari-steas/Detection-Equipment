@@ -9,9 +9,8 @@ using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 using VRage.Scripting.MemorySafeTypes;
 using DetectionEquipment.Shared.Utils;
-using DetectionEquipment.Shared.BlockLogic.ControlBlocks;
-using DetectionEquipment.Shared.BlockLogic.ControlBlocks.IffReflector;
-using DetectionEquipment.Shared.BlockLogic.ControlBlocks.Aggregator;
+using DetectionEquipment.Shared.BlockLogic;
+using DetectionEquipment.Shared.BlockLogic.IffReflector;
 
 namespace DetectionEquipment.Server.PBApi
 {

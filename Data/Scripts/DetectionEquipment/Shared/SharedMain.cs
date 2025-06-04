@@ -1,6 +1,6 @@
 ﻿using System;
-using DetectionEquipment.Shared.BlockLogic.ControlBlocks;
-using DetectionEquipment.Shared.BlockLogic.ControlBlocks.Aggregator.Datalink;
+using DetectionEquipment.Shared.BlockLogic;
+using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Utils;
@@ -39,19 +39,19 @@ namespace DetectionEquipment.Shared
             }
         }
 
-        private int _ticks = 0;
+        public int Ticks = 0;
 
         public override void UpdateAfterSimulation()
         {
             try
             {
-                if (_ticks % 10 == 0)
+                if (Ticks % 10 == 0)
                 {
                     DefinitionManager.Update();
                     GlobalData.UpdatePlayers();
                 }
 
-                _ticks++;
+                Ticks++;
             }
             catch (Exception ex)
             {
