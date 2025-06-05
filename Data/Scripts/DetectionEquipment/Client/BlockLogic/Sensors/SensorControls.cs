@@ -17,6 +17,78 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         protected override void CreateTerminalActions()
         {
+            CreateAction(
+                "IncAzimuth",
+                "Increase Azimuth",
+                b =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    logic.CurrentDesiredAzimuth = (float) MathHelper.Clamp(logic.CurrentDesiredAzimuth + 0.0175, logic.CurrentDefinition.Movement.MinAzimuth, logic.CurrentDefinition.Movement.MaxAzimuth);
+                },
+                (b, sb) => sb.Append($"AZ  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDesiredAzimuth):N0}°"),
+                @"Textures\GUI\Icons\Actions\Increase.dds"
+                ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
+            CreateAction(
+                "DecAzimuth",
+                "Decrease Azimuth",
+                b =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    logic.CurrentDesiredAzimuth = (float) MathHelper.Clamp(logic.CurrentDesiredAzimuth - 0.0175, logic.CurrentDefinition.Movement.MinAzimuth, logic.CurrentDefinition.Movement.MaxAzimuth);
+                },
+                (b, sb) => sb.Append($"AZ  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDesiredAzimuth):N0}°"),
+                @"Textures\GUI\Icons\Actions\Decrease.dds"
+            ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
+
+            CreateAction(
+                "IncElevation",
+                "Increase Elevation",
+                b =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    logic.CurrentDesiredElevation = (float) MathHelper.Clamp(logic.CurrentDesiredElevation + 0.0175, logic.CurrentDefinition.Movement.MinElevation, logic.CurrentDefinition.Movement.MaxElevation);
+                },
+                (b, sb) => sb.Append($"EV  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDesiredElevation):N0}°"),
+                @"Textures\GUI\Icons\Actions\Increase.dds"
+            ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
+            CreateAction(
+                "DecElevation",
+                "Decrease Elevation",
+                b =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    logic.CurrentDesiredElevation = (float) MathHelper.Clamp(logic.CurrentDesiredElevation - 0.0175, logic.CurrentDefinition.Movement.MinElevation, logic.CurrentDefinition.Movement.MaxElevation);
+                },
+                (b, sb) => sb.Append($"EV  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDesiredElevation):N0}°"),
+                @"Textures\GUI\Icons\Actions\Decrease.dds"
+            ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
+
+            CreateAction(
+                "IncAperture",
+                "Increase Aperture",
+                b =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    logic.CurrentAperture = (float) MathHelper.Clamp(logic.CurrentAperture + 0.0175, logic.CurrentDefinition.MinAperture, logic.CurrentDefinition.MaxAperture);
+                },
+                (b, sb) => sb.Append($"AP  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentAperture):N0}°"),
+                @"Textures\GUI\Icons\Actions\Increase.dds"
+            ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition != null;
+            CreateAction(
+                "DecAperture",
+                "Decrease Aperture",
+                b =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    logic.CurrentAperture = (float) MathHelper.Clamp(logic.CurrentAperture - 0.0175, logic.CurrentDefinition.MinAperture, logic.CurrentDefinition.MaxAperture);
+                },
+                (b, sb) => sb.Append($"AP  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentAperture):N0}°"),
+                @"Textures\GUI\Icons\Actions\Decrease.dds"
+            ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition != null;
+        }
+
+        protected override void CreateTerminalProperties()
+        {
             var currentSensorSet = CreateListbox(
                 "CurrentSensor",
                 "Current Sensor",
@@ -115,11 +187,6 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                     b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxElevation ?? 0)
                 );
             _eleSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
-        }
-
-        protected override void CreateTerminalProperties()
-        {
-
         }
     }
 }
