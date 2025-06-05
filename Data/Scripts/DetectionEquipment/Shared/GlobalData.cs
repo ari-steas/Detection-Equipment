@@ -3,6 +3,7 @@ using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Ingame.Utilities;
@@ -24,7 +25,7 @@ namespace DetectionEquipment.Shared
         public static readonly Guid SettingsGuid = new Guid("b4e33a2c-0406-4aea-bf0a-d1ad04266a14");
         public static readonly List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
-        public static string[] LowRcsSubtypes;
+        public static HashSet<string> LowRcsSubtypes;
         public static bool Debug = false;
 
         public static string[] IgnoredEntityTypes = {
@@ -158,16 +159,15 @@ namespace DetectionEquipment.Shared
             }
             
             {
-                var lowRcsBlocksBuffer = new List<string>();
+                LowRcsSubtypes = new HashSet<string>();
                 foreach (var definition in MyDefinitionManager.Static.GetAllDefinitions())
                 {
                     MyCubeBlockDefinition block = definition as MyCubeBlockDefinition;
                     if (block == null || !block.DisplayNameText.Contains("Light Armor"))
                         continue;
-                    lowRcsBlocksBuffer.Add(block.Id.SubtypeName);
+                    LowRcsSubtypes.Add(block.Id.SubtypeName);
                 }
-                LowRcsSubtypes = lowRcsBlocksBuffer.ToArray();
-                Log.Info("GlobalData", $"{LowRcsSubtypes.Length} low-RCS block definitions found.");
+                Log.Info("GlobalData", $"{LowRcsSubtypes.Count} low-RCS block definitions found.");
             }
 
             Log.DecreaseIndent();
@@ -239,6 +239,7 @@ namespace DetectionEquipment.Shared
         internal static void Unload()
         {
             Players.Clear();
+            LowRcsSubtypes = null;
             if (MyAPIGateway.Session.IsServer)
                 MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(DataNetworkId, ServerMessageHandler);
             Log.Info("GlobalData", "Data cleared.");

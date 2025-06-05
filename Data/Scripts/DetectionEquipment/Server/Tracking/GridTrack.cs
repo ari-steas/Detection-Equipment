@@ -361,13 +361,11 @@ namespace DetectionEquipment.Server.Tracking
                 // Armor blocks have half the RCS of components, and light armor has half the RCS of heavy armor.
                 totalVcs += 1;
                 double scaledRcs = Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
-                if (block?.FatBlock == null)
-                {
-                    if (GlobalData.LowRcsSubtypes.Contains(block?.BlockDefinition.Id.SubtypeName))
-                        totalRcs += scaledRcs / 2;
-                    else
-                        totalRcs += scaledRcs;
-                }
+
+                if (GlobalData.LowRcsSubtypes.Contains(block?.BlockDefinition.Id.SubtypeName))
+                    totalRcs += scaledRcs / 2;
+                else if (block?.FatBlock == null)
+                    totalRcs += scaledRcs;
                 else
                     totalRcs += scaledRcs * 2;
             });
