@@ -33,7 +33,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             // send the actual init packet
             var ids = new List<uint>();
             var defIds = new List<int>();
-            foreach (var sensor in ServerMain.I.GridSensorMangers[block.CubeGrid].Sensors)
+            foreach (var sensor in ServerMain.I.BlockSensorIdMap.Values)
             {
                 if (sensor.Block != block)
                     continue;

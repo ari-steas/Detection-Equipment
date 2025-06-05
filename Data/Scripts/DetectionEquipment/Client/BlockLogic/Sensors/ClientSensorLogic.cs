@@ -96,9 +96,12 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             foreach (var sensorId in Sensors.Keys)
                 SensorBlockManager.BlockSensorIdMap.Remove(sensorId);
 
-            SensorBlockManager.SensorBlocks[Block.CubeGrid].Remove(Block);
-            if (SensorBlockManager.SensorBlocks[Block.CubeGrid].Count == 0)
-                SensorBlockManager.SensorBlocks.Remove(Block.CubeGrid);
+            if (SensorBlockManager.SensorBlocks.ContainsKey(Block.CubeGrid))
+            {
+                SensorBlockManager.SensorBlocks[Block.CubeGrid].Remove(Block);
+                if (SensorBlockManager.SensorBlocks[Block.CubeGrid].Count == 0)
+                    SensorBlockManager.SensorBlocks.Remove(Block.CubeGrid);
+            }
         }
 
         public void UpdateAfterSimulation()
