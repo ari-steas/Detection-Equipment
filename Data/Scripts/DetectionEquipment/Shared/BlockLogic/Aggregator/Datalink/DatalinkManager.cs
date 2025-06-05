@@ -104,8 +104,19 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
                 }
                 subSet.Add(logic);
 
-                //Log.Info("DatalinkManager", "Registered aggregator with ID " + id);
+                //Log.Info("DatalinkManager", $"Registered aggregator {logic.Block.EntityId} with ID " + id);
             }
+        }
+
+        public static void UnregisterAggregator(AggregatorBlock logic)
+        {
+            //Log.Info("DatalinkManager", "Unregistered aggregator " + logic.Block.EntityId);
+            if (logic == null)
+                return;
+
+            foreach (var channel in ActiveDatalinkChannels.Values)
+                foreach (var idSet in channel.Values)
+                    idSet.Remove(logic);
         }
     }
 }

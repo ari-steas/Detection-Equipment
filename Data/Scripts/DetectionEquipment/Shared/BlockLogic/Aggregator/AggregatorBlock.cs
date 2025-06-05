@@ -106,7 +106,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     continue;
                 foreach (var aggregator in channel.Value)
                 {
-                    if (aggregator == this) continue;
+                    if (aggregator == this || !aggregator.Block.IsWorking) continue;
 
                     var relations = Block.GetUserRelationToOwner(aggregator.Block.OwnerId);
                     if (relations == MyRelationsBetweenPlayerAndBlock.Enemies)
@@ -178,11 +178,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             _prevDatalinkOutChannel = DatalinkOutChannel.Value;
         }
 
-        public override void Close()
+        public override void MarkForClose()
         {
-            base.Close();
-            if (DatalinkOutChannel != null)
-                DatalinkManager.RegisterAggregator(this, -1, DatalinkOutChannel);
+            base.MarkForClose();
+            DetectionCache.Clear();
+            _parallelCache.Clear();
+
+            DatalinkManager.UnregisterAggregator(this);
         }
 
         private bool _isProcessing = false;
@@ -191,6 +193,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         {
             if (!MyAPIGateway.Session.IsServer)
                 return;
+
+            if (!Block.IsWorking)
+            {
+                DetectionCache.Clear();
+                _parallelCache.Clear();
+            }
 
             try
             {
