@@ -52,10 +52,10 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 _elevPart = _subpartManager.RecursiveGetSubpart(block, Definition.Movement.ElevationPart);
                 _baseLocalMatrix = block.LocalMatrix;
 
-                if (_aziPart == null)
+                if (_aziPart == null && !string.IsNullOrEmpty(Definition.Movement.AzimuthPart))
                     Log.Info("ClientSensorData", $"Failed to get sensor w/ DefId {Definition.Id} azimuth part {Definition.Movement.AzimuthPart}!\n" +
                                                  $"Valid subparts:\n\t{string.Join("\n\t", SubpartManager.GetAllSubpartsDict(block).Keys)}");
-                if (_elevPart == null)
+                if (_elevPart == null && !string.IsNullOrEmpty(Definition.Movement.ElevationPart))
                     Log.Info("ClientSensorData", $"Failed to get sensor w/ DefId {Definition.Id} elevation part {Definition.Movement.AzimuthPart}!\n" +
                                                  $"Valid subparts:\n\t{string.Join("\n\t", SubpartManager.GetAllSubpartsDict(block).Keys)}");
                 //Log.Info("ClientBlockSensor", "Inited subparts for " + block.BlockDefinition.SubtypeName);
