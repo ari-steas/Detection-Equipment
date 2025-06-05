@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DetectionEquipment.Client.BlockLogic.Countermeasures;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
@@ -21,11 +22,13 @@ namespace DetectionEquipment.Client.BlockLogic
             MyAPIGateway.Entities.OnEntityRemove += OnEntityRemoved;
 
             SensorBlockManager.Load();
+            CountermeasureBlockManager.Load();
         }
 
         public static void Unload()
         {
             SensorBlockManager.Unload();
+            CountermeasureBlockManager.Unload();
 
             MyAPIGateway.Entities.OnEntityRemove -= OnEntityRemoved;
             _ = null;
@@ -184,10 +187,19 @@ namespace DetectionEquipment.Client.BlockLogic
                     return (TLogic)logic;
             return null;
         }
+
+        public static bool HasLogic(long blockId)
+        {
+            lock (Logics)
+            {
+                return Logics.ContainsKey(blockId);
+            }
+        }
     }
 
     internal static class BlockLogicHelpers
     {
         public static TLogic GetLogic<TLogic>(this IMyCubeBlock block) where TLogic : class, IBlockLogic => BlockLogicManager.GetLogic<TLogic>(block.EntityId);
+        public static bool HasLogic(this IMyCubeBlock block) => BlockLogicManager.HasLogic(block.EntityId);
     }
 }

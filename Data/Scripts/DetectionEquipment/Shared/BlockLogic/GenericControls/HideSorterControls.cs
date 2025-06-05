@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DetectionEquipment.Client.BlockLogic;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
@@ -21,7 +22,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             Log.Info("HideSorterControls", "Removed sorter controls.");
         }
 
-        static bool AppendedCondition(IMyTerminalBlock block) => block?.GameLogic?.GetAs<IControlBlockBase>() == null;
+        static bool AppendedCondition(IMyTerminalBlock block) => block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic();
 
         static void EditControls()
         {

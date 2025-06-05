@@ -4,6 +4,7 @@ using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
+using DetectionEquipment.Shared.Serialization;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRage.Game;
@@ -25,6 +26,35 @@ namespace DetectionEquipment.Server.Countermeasures
         private int _currentSequenceIdx = 0;
         private float _shotAggregator = 0;
 
+        private bool _firing = false;
+        public bool Firing
+        {
+            get
+            {
+                return _firing;
+            }
+            set
+            {
+                _firing = value;
+                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Countermeasures.CountermeasureUpdatePacket(this), Block.GetPosition());
+            }
+        }
+
+        private bool _reloading = false;
+
+        public bool Reloading
+        {
+            get
+            {
+                return _reloading;
+            }
+            set
+            {
+                _reloading = value;
+                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Countermeasures.CountermeasureUpdatePacket(this), Block.GetPosition());
+            }
+        }
+
         private Countermeasure[] _attachedCountermeasures;
 
         public MatrixD MuzzleMatrix => Muzzles[CurrentMuzzleIdx].GetMatrix();
@@ -40,27 +70,38 @@ namespace DetectionEquipment.Server.Countermeasures
             SetupMuzzles();
         }
 
+        public void UpdateFromPacket(Client.BlockLogic.Countermeasures.CountermeasureUpdatePacket packet)
+        {
+            _firing = packet.Firing;
+            _reloading = packet.Reloading;
+        }
+
         private bool _didCloseAttached = false;
         public void Update()
         {
-            if (!Block.IsWorking)
+            if (!Block.IsWorking || !Firing)
             {
                 if (!Definition.IsCountermeasureAttached || _didCloseAttached)
                     return;
                 foreach (var counter in _attachedCountermeasures)
                     counter?.Close();
                 _didCloseAttached = true;
-                return;
             }
             _didCloseAttached = false;
 
-            _shotAggregator += Definition.ShotsPerSecond / 60f;
-            int startMuzzleIdx = CurrentMuzzleIdx;
-            while (_shotAggregator >= 1)
+            if (!Block.IsWorking)
+                return;
+
+            if (Firing)
             {
-                FireOnce();
-                if (CurrentMuzzleIdx == startMuzzleIdx) // Prevent infinite loop if all muzzles are in use.
-                    break;
+                _shotAggregator += Definition.ShotsPerSecond / 60f;
+                int startMuzzleIdx = CurrentMuzzleIdx;
+                while (_shotAggregator >= 1)
+                {
+                    FireOnce();
+                    if (CurrentMuzzleIdx == startMuzzleIdx) // Prevent infinite loop if all muzzles are in use.
+                        break;
+                }
             }
 
             if (Block.ShowOnHUD && Definition.IsCountermeasureAttached)

@@ -8,6 +8,7 @@ using DetectionEquipment.Server;
 using DetectionEquipment.Server.Countermeasures;
 using VRage.Game.ModAPI;
 using DetectionEquipment.Server.Networking;
+using VRageRender;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -238,12 +239,28 @@ namespace DetectionEquipment.Shared.Definitions
         public static List<CountermeasureEmitterBlock> TryCreateCountermeasureEmitters(IMyConveyorSorter block)
         {
             var emitters = new List<CountermeasureEmitterBlock>();
+            var emitterIds = new List<uint>();
+            var definitionIds = new List<int>();
             foreach (var definition in CountermeasureEmitterDefinitions.Values)
             {
                 if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
                     continue;
-                emitters.Add(new CountermeasureEmitterBlock(block, definition));
+                var newEmitter = new CountermeasureEmitterBlock(block, definition);
+                emitters.Add(newEmitter);
+                emitterIds.Add(newEmitter.Id);
+                definitionIds.Add(newEmitter.Definition.Id);
             }
+
+            if (emitters.Count > 0)
+            {
+                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Countermeasures.CountermeasureInitPacket
+                {
+                    AttachedBlockId = block.EntityId,
+                    Ids = emitterIds,
+                    DefinitionIds = definitionIds
+                }, block.GetPosition());
+            }
+
             return emitters;
         }
 
