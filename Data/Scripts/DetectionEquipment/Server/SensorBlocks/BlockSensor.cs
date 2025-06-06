@@ -41,6 +41,8 @@ namespace DetectionEquipment.Server.SensorBlocks
         
         MyDefinitionId _electricityId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Electricity");
 
+        private bool _settingsUpdated = false;
+
         public double Azimuth { get; private set;} = 0;
         public double Elevation { get; private set; } = 0;
 
@@ -55,7 +57,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 _desiredAzimuth = MathUtils.NormalizeAngle(value);
                 ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
-                BlockSensorSettings.SaveBlockSettings(Block);
+                _settingsUpdated = true;
             }
         }
         public double DesiredElevation
@@ -68,7 +70,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 _desiredElevation = MathUtils.NormalizeAngle(value);
                 ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
-                BlockSensorSettings.SaveBlockSettings(Block);
+                _settingsUpdated = true;
             }
         }
         public double Aperture
@@ -81,7 +83,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 Sensor.Aperture = MathHelper.Clamp(value, Definition.MinAperture, Definition.MaxAperture);
                 ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
-                BlockSensorSettings.SaveBlockSettings(Block);
+                _settingsUpdated = true;
             }
         }
 
@@ -90,7 +92,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             _desiredAzimuth = packet.Azimuth;
             _desiredElevation = packet.Elevation;
             Sensor.Aperture = packet.Aperture;
-            BlockSensorSettings.SaveBlockSettings(Block);
+            _settingsUpdated = true;
         }
 
         private MyEntitySubpart _aziPart, _elevPart;
@@ -142,6 +144,12 @@ namespace DetectionEquipment.Server.SensorBlocks
             Detections.Clear();
 
             UpdateSensorMatrix();
+
+            if (_settingsUpdated && MyAPIGateway.Session.GameplayFrameCounter % 9 == 0)
+            {
+                BlockSensorSettings.SaveBlockSettings(Block);
+                _settingsUpdated = false;
+            }
 
             if (!Block.IsWorking)
                 return;
