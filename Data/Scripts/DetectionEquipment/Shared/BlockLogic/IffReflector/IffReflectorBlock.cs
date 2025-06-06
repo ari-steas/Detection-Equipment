@@ -10,7 +10,7 @@ using DetectionEquipment.Shared.BlockLogic.IffReflector;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector", "TorpIFF")]
     internal class IffReflectorBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public readonly SimpleSync<string> IffCode = new SimpleSync<string>("");
