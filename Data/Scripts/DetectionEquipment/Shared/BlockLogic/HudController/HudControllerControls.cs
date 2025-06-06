@@ -37,6 +37,13 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 (b, v) => b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value = MathHelper.ToRadians(v),
                 (b, sb) => sb.Append($"{MathHelper.ToDegrees(b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value):F}°")
             );
+            CreateToggle(
+                "DisplaySelf",
+                "Display Self",
+                "Should this grid's track be visible if detected over datalink?",
+                b => b.GameLogic.GetAs<HudControllerBlock>().ShowSelf.Value,
+                (b, v) => b.GameLogic.GetAs<HudControllerBlock>().ShowSelf.Value = v
+            );
             ActiveAggregatorSelect = new BlockSelectControl<HudControllerBlock, IMyConveyorSorter>(
                 this,
                 "SourceAggregator",

@@ -14,6 +14,7 @@ using VRageMath;
 using MyAPIGateway = Sandbox.ModAPI.MyAPIGateway;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.HudController;
+using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
 {
@@ -29,6 +30,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
         public SimpleSync<bool> AlwaysDisplay = new SimpleSync<bool>(false);
         public SimpleSync<float> CombineAngle = new SimpleSync<float>((float)MathHelper.ToRadians(2.5));
+        public SimpleSync<bool> ShowSelf = new SimpleSync<bool>(false);
 
         protected override ControlBlockSettingsBase GetSettings => new HudControllerSettings(this);
         protected override ITerminalControlAdder GetControls => new HudControllerControls();
@@ -70,8 +72,12 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
             Detections.Clear();
             Detections.EnsureCapacity(SourceAggregator.DetectionSet.Count);
+            var blockParent = ShowSelf.Value ? null : Block.CubeGrid.GetTopMostParent(typeof(IMyCubeGrid));
             foreach (var item in SourceAggregator.DetectionSet)
             {
+                if (!ShowSelf.Value && item.Entity is IMyCubeGrid && item.Entity.GetTopMostParent(typeof(IMyCubeGrid)) == blockParent)
+                    continue;
+
                 var newInfo = WorldDetectionInfo.Create(item);
                 if (item.VelocityVariance != null && item.VelocityVariance > SourceAggregator.VelocityErrorThreshold)
                 {
