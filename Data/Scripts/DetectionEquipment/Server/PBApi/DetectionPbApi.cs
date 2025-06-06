@@ -279,6 +279,16 @@ namespace IngameScript
             }
 
             /// <summary>
+            /// Gets sensor detections made in the last tick. Populates an existing collection - CLEAR MANUALLY!
+            /// </summary>
+            /// <returns></returns>
+            public void GetDetections(ICollection<PbDetectionInfo> collection)
+            {
+                foreach (var infoArray in I._getSensorDetections.Invoke(Id))
+                    collection.Add(new PbDetectionInfo(infoArray));
+            }
+
+            /// <summary>
             /// Action invoked whenever the sensor detects something.
             /// </summary>
             public Action<PbDetectionInfo> OnDetection
@@ -661,7 +671,7 @@ namespace IngameScript
             }
 
             /// <summary>
-            /// Retreieve aggregated detection info from a block.
+            /// Retrieve aggregated detection info from a block.
             /// </summary>
             /// <returns></returns>
             public PbWorldDetectionInfo[] GetAggregatedInfo()
@@ -669,10 +679,18 @@ namespace IngameScript
                 var dataSet = I._getAggregatorInfo.Invoke(Block);
                 var toReturn = new PbWorldDetectionInfo[dataSet.Length];
                 for (int i = 0; i < toReturn.Length; i++)
-                {
                     toReturn[i] = new PbWorldDetectionInfo(dataSet[i]);
-                }
                 return toReturn;
+            }
+
+            /// <summary>
+            /// Retrieve aggregated detection info from a block. Populates an existing collection - CLEAR MANUALLY!
+            /// </summary>
+            /// <returns></returns>
+            public void GetAggregatedInfo(ICollection<PbWorldDetectionInfo> collection)
+            {
+                foreach (var infoArray in I._getAggregatorInfo.Invoke(Block))
+                    collection.Add(new PbWorldDetectionInfo(infoArray));
             }
         }
 
