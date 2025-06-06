@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
@@ -84,7 +85,7 @@ namespace DetectionEquipment.Server.Countermeasures
             double totalNoise = 0;
             foreach (var counter in CountermeasureIdMap.Values)
                 totalNoise += counter.GetSensorNoise(sensor);
-            if (totalNoise > 0)
+            if (GlobalData.Debug && totalNoise > 0)
                 MyAPIGateway.Utilities.ShowNotification($"{sensor.GetType().Name}: {MathUtils.ToDecibels(totalNoise):F}dB noise ({CountermeasureIdMap.Count} source[s])", 1000/60);
             return totalNoise;
         }
