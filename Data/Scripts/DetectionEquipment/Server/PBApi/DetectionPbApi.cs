@@ -11,16 +11,12 @@ using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 
 namespace IngameScript
 {
-    #region mdk preserve
-
     /// <summary>
     /// Programmable Block interface for Aristeas's Detection Equipment mod.
     /// <para>
     ///     To use, copy this class into your script and instantiate it. See <see href="https://github.com/ari-steas/Detection-Equipment"/> for detailed instructions.
     /// </para>
     /// </summary>
-
-    #endregion
     public class DetectionPbApi
     {
         /*
@@ -268,7 +264,6 @@ namespace IngameScript
             /// <summary>
             /// Gets sensor detections made in the last tick.
             /// </summary>
-            /// <returns></returns>
             public PbDetectionInfo[] GetDetections()
             {
                 var dataSets = I._getSensorDetections.Invoke(Id);
@@ -281,7 +276,7 @@ namespace IngameScript
             /// <summary>
             /// Gets sensor detections made in the last tick. Populates an existing collection - CLEAR MANUALLY!
             /// </summary>
-            /// <returns></returns>
+            /// <param name="collection"></param>
             public void GetDetections(ICollection<PbDetectionInfo> collection)
             {
                 foreach (var infoArray in I._getSensorDetections.Invoke(Id))
@@ -686,7 +681,7 @@ namespace IngameScript
             /// <summary>
             /// Retrieve aggregated detection info from a block. Populates an existing collection - CLEAR MANUALLY!
             /// </summary>
-            /// <returns></returns>
+            /// <param name="collection"></param>
             public void GetAggregatedInfo(ICollection<PbWorldDetectionInfo> collection)
             {
                 foreach (var infoArray in I._getAggregatorInfo.Invoke(Block))
