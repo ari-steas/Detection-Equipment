@@ -1,14 +1,15 @@
 ﻿using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using System;
+using DetectionEquipment.Shared.Structs;
 
 namespace DetectionEquipment.Shared.Definitions
 {
     /// <summary>
     /// Basic definition for a single sensor.
     /// </summary>
-    [ProtoContract]
-    public class SensorDefinition
+    [ProtoContract(UseProtoMembersOnly = true)]
+    public class SensorDefinition : IPackageable
     {
         // can't define preprocessor directives, otherwise would have
         [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
@@ -66,7 +67,7 @@ namespace DetectionEquipment.Shared.Definitions
         /// Defines properties for subpart-based movement.
         /// </summary>
         [ProtoContract]
-        public class SensorMovementDefinition
+        public class SensorMovementDefinition : IPackageable
         {
             /// <summary>
             /// Azimuth subpart name. Can be anywhere in hierarchy.
@@ -123,13 +124,27 @@ namespace DetectionEquipment.Shared.Definitions
                 AzimuthRate,
                 ElevationRate,
             };
+
+
+            public int FieldCount => 8;
+            public void Package(object[] fieldArray)
+            {
+                fieldArray[0] = AzimuthPart;
+                fieldArray[1] = ElevationPart;
+                fieldArray[2] = MinAzimuth;
+                fieldArray[3] = MaxAzimuth;
+                fieldArray[4] = MinElevation;
+                fieldArray[5] = MaxElevation;
+                fieldArray[6] = AzimuthRate;
+                fieldArray[7] = ElevationRate;
+            }
         }
 
         /// <summary>
         /// Defines radar-specific properties for passive and active radars.
         /// </summary>
-        [ProtoContract]
-        public class RadarPropertiesDefinition
+        [ProtoContract(UseProtoMembersOnly = true)]
+        public class RadarPropertiesDefinition : IPackageable
         {
             /// <summary>
             /// Receiver area, in square meters.
@@ -148,13 +163,14 @@ namespace DetectionEquipment.Shared.Definitions
             /// </summary>
             [ProtoMember(4)] public double Frequency = 2800E6;
 
-            [ProtoIgnore] public object[] DataSet => new object[]
+            public int FieldCount => 4;
+            public void Package(object[] fieldArray)
             {
-                ReceiverArea,
-                PowerEfficiencyModifier,
-                Bandwidth,
-                Frequency,
-            };
+                fieldArray[0] = ReceiverArea;
+                fieldArray[1] = PowerEfficiencyModifier;
+                fieldArray[2] = Bandwidth;
+                fieldArray[3] = Frequency;
+            }
         }
 
         [ProtoContract]
@@ -167,19 +183,20 @@ namespace DetectionEquipment.Shared.Definitions
             Infrared = 4,
         }
 
-        [ProtoIgnore] public object[] DataSet => new object[]
+        public int FieldCount => 10;
+        public void Package(object[] fieldArray)
         {
-            BlockSubtypes,
-            (int) Type,
-            MaxAperture,
-            MinAperture,
-            Movement?.DataSet,
-            DetectionThreshold,
-            MaxPowerDraw,
-            BearingErrorModifier,
-            RangeErrorModifier,
-            RadarProperties?.DataSet,
-        };
+            fieldArray[0] = BlockSubtypes;
+            fieldArray[1] = (int) Type;
+            fieldArray[2] = MaxAperture;
+            fieldArray[3] = MinAperture;
+            fieldArray[4] = ObjectPackager.Package(Movement);
+            fieldArray[5] = DetectionThreshold;
+            fieldArray[6] = MaxPowerDraw;
+            fieldArray[7] = BearingErrorModifier;
+            fieldArray[8] = RangeErrorModifier;
+            fieldArray[9] = ObjectPackager.Package(RadarProperties);
+        }
 
         public static bool Verify(SensorDefinition def)
         {

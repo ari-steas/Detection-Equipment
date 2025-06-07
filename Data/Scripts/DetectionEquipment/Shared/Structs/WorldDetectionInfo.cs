@@ -9,7 +9,7 @@ using VRageMath;
 
 namespace DetectionEquipment.Shared.Structs
 {
-    internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>
+    internal struct WorldDetectionInfo : IComparable<WorldDetectionInfo>, IPackageable
     {
         public long EntityId;
         public double CrossSection;
@@ -69,19 +69,6 @@ namespace DetectionEquipment.Shared.Structs
         {
             return $"UID: {EntityId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
         }
-
-        public object[] DataSet => new object[]
-        {
-            EntityId,
-            DetectionType,
-            CrossSection,
-            Error,
-            Position,
-            Velocity,
-            VelocityVariance,
-            IffCodes,
-            (int?) Relations,
-        };
 
         public static WorldDetectionInfo Average(AggregatorBlock aggregator, params WorldDetectionInfo[] args) => Average(args, aggregator);
 
@@ -154,6 +141,20 @@ namespace DetectionEquipment.Shared.Structs
         public int CompareTo(WorldDetectionInfo other)
         {
             return other.CrossSection.CompareTo(this.CrossSection);
+        }
+
+        public int FieldCount => 9;
+        public void Package(object[] fieldArray)
+        {
+            fieldArray[0] = EntityId;
+            fieldArray[1] = DetectionType;
+            fieldArray[2] = CrossSection;
+            fieldArray[3] = Error;
+            fieldArray[4] = Position;
+            fieldArray[5] = Velocity;
+            fieldArray[6] = VelocityVariance;
+            fieldArray[7] = IffCodes;
+            fieldArray[8] = (int?) Relations;
         }
     }
 }

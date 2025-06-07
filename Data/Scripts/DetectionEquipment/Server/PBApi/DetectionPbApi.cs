@@ -124,6 +124,9 @@ namespace IngameScript
 
         #region Delegates
 
+        // Misc
+        private Action<object[]> _returnFieldArray;
+
         // Sensors
         private Func<IMyCubeBlock, uint[]> _getSensorIds;
         private Func<IMyCubeBlock, bool> _hasSensor;
@@ -169,6 +172,8 @@ namespace IngameScript
         private void InitializeApi()
         {
             I = this;
+
+            SetApiMethod("ReturnFieldArray", ref _returnFieldArray);
 
             SetApiMethod("GetSensorIds", ref _getSensorIds);
             SetApiMethod("HasSensor", ref _hasSensor);
@@ -241,7 +246,17 @@ namespace IngameScript
         /// </summary>
         public class PbSensorBlock
         {
-            public readonly PbSensorDefinition Definition;
+            private PbSensorDefinition _definition = null;
+
+            public PbSensorDefinition Definition
+            {
+                get
+                {
+                    if (_definition == null)
+                        _definition = new PbSensorDefinition(I._getSensorDefinition.Invoke(Id));
+                    return _definition;
+                }
+            }
             public readonly IMyCubeBlock Block;
             public readonly uint Id;
             private Action<PbDetectionInfo> _onDetection;
@@ -255,7 +270,6 @@ namespace IngameScript
             {
                 Id = id;
                 Block = block;
-                Definition = new PbSensorDefinition(I._getSensorDefinition.Invoke(Id));
 
                 if (Definition == null)
                     throw new Exception($"No sensor exists for block {block.DisplayName}!");
@@ -383,13 +397,20 @@ namespace IngameScript
                 SetField(dataSet[2], out MaxAperture);
                 SetField(dataSet[3], out MinAperture);
                 if (dataSet[4] != null)
+                {
                     Movement = new SensorMovementDefinition((object[]) dataSet[4]);
+                    I._returnFieldArray.Invoke((object[]) dataSet[4]);
+                }
                 SetField(dataSet[5], out DetectionThreshold);
                 SetField(dataSet[6], out MaxPowerDraw);
                 SetField(dataSet[7], out BearingErrorModifier);
                 SetField(dataSet[8], out RangeErrorModifier);
                 if (dataSet[9] != null)
+                {
                     RadarProperties = new RadarPropertiesDefinition((object[]) dataSet[9]);
+                    I._returnFieldArray.Invoke((object[]) dataSet[9]);
+                }
+                I._returnFieldArray.Invoke(dataSet);
             }
 
             public class SensorMovementDefinition
@@ -407,6 +428,7 @@ namespace IngameScript
                     SetField(dataSet[5], out MaxElevation);
                     SetField(dataSet[6], out AzimuthRate);
                     SetField(dataSet[7], out ElevationRate);
+                    I._returnFieldArray.Invoke(dataSet);
                 }
 
                 public bool CanRotateFull => MaxAzimuth >= Math.PI && MinAzimuth <= -Math.PI;
@@ -424,6 +446,7 @@ namespace IngameScript
                     SetField(dataSet[1], out PowerEfficiencyModifier);
                     SetField(dataSet[2], out Bandwidth);
                     SetField(dataSet[3], out Frequency);
+                    I._returnFieldArray.Invoke(dataSet);
                 }
             }
 
@@ -458,6 +481,7 @@ namespace IngameScript
                 SetField(dataSet[5], out IffCodes);
                 SetField(dataSet[6], out UniqueId);
                 SetField(dataSet[7], out SensorId);
+                I._returnFieldArray.Invoke(dataSet);
             }
 
             public override string ToString()
@@ -513,6 +537,7 @@ namespace IngameScript
                 int? tmpRelations;
                 SetField(dataSet[8], out tmpRelations);
                 Relations = (PbRelationBetweenPlayers?) tmpRelations;
+                I._returnFieldArray.Invoke(dataSet);
             }
 
             public override bool Equals(object obj) => obj is PbWorldDetectionInfo && Position.Equals(((PbWorldDetectionInfo)obj).Position);

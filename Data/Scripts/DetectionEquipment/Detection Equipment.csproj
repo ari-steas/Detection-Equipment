@@ -25,7 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Mal.Mdk2.ModAnalyzers" Version="*" />
+    <PackageReference Include="Mal.Mdk2.ModAnalyzers" Version="*">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Mal.Mdk2.References" Version="*" />
   </ItemGroup>
 

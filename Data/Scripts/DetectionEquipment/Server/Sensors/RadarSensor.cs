@@ -131,7 +131,7 @@ namespace DetectionEquipment.Server.Sensors
                 IffCodes = iffCodes
             };
 
-            OnDetection?.Invoke(detection.DataSet);
+            OnDetection?.Invoke(ObjectPackager.Package(detection));
 
             return detection;
         }

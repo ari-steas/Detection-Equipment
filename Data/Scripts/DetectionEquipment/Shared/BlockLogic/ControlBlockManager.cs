@@ -12,11 +12,11 @@ namespace DetectionEquipment.Shared.BlockLogic
         public Dictionary<MyCubeBlock, IControlBlockBase> Blocks = new Dictionary<MyCubeBlock, IControlBlockBase>();
         public Dictionary<string, IBlockSelectControl> BlockControls = new Dictionary<string, IBlockSelectControl>();
 
-        public ObjectPool<Dictionary<long, List<WorldDetectionInfo>>> GroupsCacheBuffer = new ObjectPool<Dictionary<long, List<WorldDetectionInfo>>>(
+        public readonly ObjectPool<Dictionary<long, List<WorldDetectionInfo>>> GroupsCacheBuffer = new ObjectPool<Dictionary<long, List<WorldDetectionInfo>>>(
             () => new Dictionary<long, List<WorldDetectionInfo>>(),
             dict => dict.Clear()
         );
-        public ObjectPool<List<WorldDetectionInfo>> GroupInfoBuffer = new ObjectPool<List<WorldDetectionInfo>>(
+        public readonly ObjectPool<List<WorldDetectionInfo>> GroupInfoBuffer = new ObjectPool<List<WorldDetectionInfo>>(
             () => new List<WorldDetectionInfo>(),
             list => list.Clear()
         );

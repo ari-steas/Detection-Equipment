@@ -58,7 +58,7 @@ namespace DetectionEquipment.Server.Sensors
             _queuedRadarHits.Remove(track.EntityId);
             data.Track = track;
 
-            OnDetection?.Invoke(data.DataSet);
+            OnDetection?.Invoke(ObjectPackager.Package(data));
             //MyAPIGateway.Utilities.ShowMessage($"{data.CrossSection:N0}", data.ToString());
 
             return data;

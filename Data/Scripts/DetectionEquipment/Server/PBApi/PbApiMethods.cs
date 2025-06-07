@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using DetectionEquipment.Server.Sensors;
 using VRageMath;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 
@@ -11,6 +12,7 @@ using VRage.Scripting.MemorySafeTypes;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
+using DetectionEquipment.Shared.Structs;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -20,6 +22,9 @@ namespace DetectionEquipment.Server.PBApi
 
         private static readonly Dictionary<string, Delegate> Methods = new Dictionary<string, Delegate>
         {
+            // Utils
+            ["ReturnFieldArray"] = new Action<object[]>(ObjectPackager.Return),
+
             // Sensors
             ["GetSensorIds"] = new Func<IMyCubeBlock, uint[]>(GetSensorIds),
             ["HasSensor"] = new Func<IMyCubeBlock, bool>(HasSensor),
@@ -109,7 +114,10 @@ namespace DetectionEquipment.Server.PBApi
 
         private static object[] GetSensorDefinition(uint id)
         {
-            return ServerMain.I.SensorIdMap[id].Definition.DataSet;
+            ISensor sensor;
+            if (!ServerMain.I.SensorIdMap.TryGetValue(id, out sensor))
+                return null;
+            return ObjectPackager.Package(sensor.Definition);
         }
 
         private static object[][] GetSensorDetections(uint id)
@@ -119,7 +127,7 @@ namespace DetectionEquipment.Server.PBApi
             int i = 0;
             foreach (var detection in detections)
             {
-                tupleSet[i] = detection.DataSet;
+                tupleSet[i] = ObjectPackager.Package(detection);
                 i++;
             }
             return tupleSet;
@@ -182,7 +190,7 @@ namespace DetectionEquipment.Server.PBApi
             int i = 0;
             foreach (var value in set)
             {
-                toReturn[i] = value.DataSet;
+                toReturn[i] = ObjectPackager.Package(value);
                 i++;
             }
 

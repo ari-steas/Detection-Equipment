@@ -78,7 +78,7 @@ namespace DetectionEquipment.Server.Sensors
                 IffCodes = Array.Empty<string>(),
             };
 
-            OnDetection?.Invoke(detection.DataSet);
+            OnDetection?.Invoke(ObjectPackager.Package(detection));
 
             return detection;
         }
