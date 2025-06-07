@@ -3,6 +3,7 @@ using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.ExternalApis;
+using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using VRage.Game.Components;
@@ -26,6 +27,7 @@ namespace DetectionEquipment.Shared
                 Log.IncreaseIndent();
 
                 GlobalData.Init();
+                PersistentBlockIdHelper.Load();
                 ObjectPackager.Load();
                 ApiManager.Init();
                 ControlBlockManager.Load();
@@ -38,6 +40,14 @@ namespace DetectionEquipment.Shared
             catch (Exception ex)
             {
                 Log.Exception("SharedMain", ex, true);
+            }
+        }
+
+        private class Test
+        {
+            ~Test()
+            {
+                Log.Info("Test", "Finalizer invoked!");
             }
         }
 
@@ -70,12 +80,13 @@ namespace DetectionEquipment.Shared
                 Log.Info("SharedMain", "Start unload...");
                 Log.IncreaseIndent();
         
-                GlobalData.Unload();
                 ApiManager.Unload();
                 DatalinkManager.Unload();
                 ControlBlockManager.Unload();
                 DefinitionManager.Unload();
+                PersistentBlockIdHelper.Unload();
                 ObjectPackager.Unload();
+                GlobalData.Unload();
 
                 I = null;
 

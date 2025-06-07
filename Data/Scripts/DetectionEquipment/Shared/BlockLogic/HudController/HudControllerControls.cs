@@ -50,6 +50,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 "Source Aggregator",
                 "Aggregator this block should use to display HUD info.",
                 true,
+                false,
                 // TODO convert this into a single yield action
                 logic => ControlBlockManager.I.Blocks.Values.Where(control => control is AggregatorBlock && control.CubeBlock.CubeGrid == logic.Block.CubeGrid).Select(c => c.CubeBlock),
                 (logic, selected) =>
@@ -59,7 +60,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
                     foreach (var control in ControlBlockManager.I.Blocks.Values)
                     {
-                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid || !selected.Contains(control.CubeBlock.EntityId))
+                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid || !selected.Contains(control.CubeBlock))
                             continue;
                         ActiveAggregators[logic] = (AggregatorBlock)control;
                     }

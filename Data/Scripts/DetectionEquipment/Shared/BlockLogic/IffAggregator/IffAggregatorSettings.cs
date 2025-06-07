@@ -8,8 +8,8 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
     [ProtoContract]
     internal class IffAggregatorSettings : AggregatorSettings
     {
-        private bool _autoSelfIff = true;
-        private string[] _friendlyIffCodes = Array.Empty<string>();
+        [ProtoMember(14)] private bool _autoSelfIff = true;
+        [ProtoMember(15)] private string[] _friendlyIffCodes = Array.Empty<string>();
 
         [ProtoIgnore] private new IffAggregatorBlock AttachedLogic => (IffAggregatorBlock)base.AttachedLogic;
 

@@ -11,6 +11,7 @@ using VRage.ModAPI;
 using VRage.Utils;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
+using DetectionEquipment.Shared.Helpers;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -69,6 +70,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Active Sensors",
                 "Sensors this aggregator should use data from. Ctrl+Click to select multiple.",
                 true,
+                false,
                 logic => MyAPIGateway.Session.IsServer ?
                          logic.GridSensors.BlockSensorIdMap.Keys :
                          (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks.GetValueOrDefault(logic.CubeBlock.CubeGrid, new List<IMyCubeBlock>()),
@@ -78,11 +80,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                         return;
 
                     ActiveSensors[logic].Clear();
-                    foreach (var sensor in logic.GridSensors.Sensors)
+
+                    foreach (var block in selected)
                     {
-                        foreach (var entId in selected)
+                        foreach (var sensor in logic.GridSensors.Sensors)
                         {
-                            if (sensor.Block.EntityId != entId)
+                            if (sensor.Block != block)
                                 continue;
                             ActiveSensors[logic].Add(sensor);
                             break;
@@ -195,6 +198,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Controlled Weapons",
                 "Weapons this aggregator should give targeting data to. Ctrl+Click to select multiple.",
                 true,
+                true,
                 logic =>
                 {
                     // awful and I hate it.
@@ -213,12 +217,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                         return;
 
                     ActiveWeapons[logic].Clear();
-                    List<IMyCubeGrid> grids = new List<IMyCubeGrid>();
-                    logic.CubeBlock.CubeGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(grids);
-                    foreach (var grid in grids)
-                        foreach (var block in grid.GetFatBlocks<IMyTerminalBlock>())
-                            if (selected.Contains(block.EntityId))
-                                ActiveWeapons[logic].Add(block);
+                    foreach (var block in selected)
+                        ActiveWeapons[logic].Add((IMyTerminalBlock) block);
                 }
             );
             ActiveWeaponSelect.ListBox.Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllWeapons.Value ?? true);

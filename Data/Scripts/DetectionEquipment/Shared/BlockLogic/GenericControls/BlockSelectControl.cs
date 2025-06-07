@@ -7,6 +7,7 @@ using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using System;
 using System.Collections.Generic;
+using DetectionEquipment.Shared.Helpers;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -31,11 +32,15 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         public readonly Dictionary<TLogicType, long[]> SelectedBlocks = new Dictionary<TLogicType, long[]>();
         public readonly IMyTerminalControlListbox ListBox;
         private readonly Func<TLogicType, IEnumerable<IMyCubeBlock>> _availableBlocks;
-        private readonly Action<TLogicType, long[]> _onListChanged;
+        private readonly Action<TLogicType, List<IMyCubeBlock>> _onListChanged;
+        private readonly bool _useSubgrids;
 
         private readonly string _id;
 
-        public BlockSelectControl(TerminalControlAdder<TLogicType, TBlockType> controlAdder, string id, string tooltip, string description, bool multiSelect, Func<TLogicType, IEnumerable<IMyCubeBlock>> availableBlocks, Action<TLogicType, long[]> onListChanged = null)
+        private readonly List<IMyCubeBlock> _selectedBuffer = new List<IMyCubeBlock>();
+        private readonly List<IMyCubeGrid> _gridBuffer = new List<IMyCubeGrid>();
+
+        public BlockSelectControl(TerminalControlAdder<TLogicType, TBlockType> controlAdder, string id, string tooltip, string description, bool multiSelect, bool useSubgrids, Func<TLogicType, IEnumerable<IMyCubeBlock>> availableBlocks, Action<TLogicType, List<IMyCubeBlock>> onListChanged = null)
         {
             ListBox = controlAdder.CreateListbox(
                 id,
@@ -47,7 +52,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 );
             _availableBlocks = availableBlocks;
             _onListChanged = onListChanged;
-
+            _useSubgrids = useSubgrids;
             _id = controlAdder.IdPrefix + id;
             ControlBlockManager.I.BlockControls[_id] = this;
         }
@@ -63,7 +68,32 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 selected = Array.Empty<long>();
 
             SelectedBlocks[thisLogic] = selected;
-            _onListChanged?.Invoke(thisLogic, selected);
+            if (_onListChanged != null)
+            {
+                if (_useSubgrids)
+                    logic.CubeBlock.CubeGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(_gridBuffer);
+                foreach (var id in selected)
+                {
+                    var block = logic.CubeBlock.CubeGrid.GetBlockByPersistentId(id);
+                    if (block == null && _useSubgrids)
+                    {
+                        foreach (var subgrid in _gridBuffer)
+                        {
+                            if (subgrid == logic.CubeBlock.CubeGrid)
+                                continue;
+                            block = subgrid.GetBlockByPersistentId(id);
+                            if (block != null)
+                                break;
+                        }
+                    }
+                    if (block != null)
+                        _selectedBuffer.Add(block);
+                }
+
+                _onListChanged?.Invoke(thisLogic, _selectedBuffer);
+                _selectedBuffer.Clear();
+                _gridBuffer.Clear();
+            }
 
             if (!fromNetwork)
             {
@@ -71,7 +101,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 {
                     ServerNetwork.SendToEveryoneInSync(new BlockSelectControlPacket
                     {
-                        BlockId = logic.CubeBlock.EntityId,
+                        BlockId = logic.CubeBlock.GetOrCreatePersistentId(),
                         ControlId = _id,
                         Selected = selected
                     }, logic.CubeBlock.GetPosition());
@@ -80,7 +110,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 {
                     ClientNetwork.SendToServer(new BlockSelectControlPacket
                     {
-                        BlockId = logic.CubeBlock.EntityId,
+                        BlockId = logic.CubeBlock.GetOrCreatePersistentId(),
                         ControlId = _id,
                         Selected = selected
                     });
@@ -97,15 +127,15 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             if (!SelectedBlocks.ContainsKey(logic))
             {
                 SelectedBlocks[logic] = Array.Empty<long>();
-                _onListChanged?.Invoke(logic, SelectedBlocks[logic]);
+                _onListChanged?.Invoke(logic, _selectedBuffer);
                 logic.OnClose += () => SelectedBlocks.Remove(logic);
             }
 
             foreach (var available in _availableBlocks.Invoke(logic))
             {
-                var item = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(available.DisplayNameText), MyStringId.NullOrEmpty, available.EntityId);
+                var item = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(available.DisplayNameText), MyStringId.NullOrEmpty, available.GetOrCreatePersistentId());
                 content.Add(item);
-                if (SelectedBlocks[logic].Contains(available.EntityId))
+                if (SelectedBlocks[logic].Contains(available.GetOrCreatePersistentId()))
                     selected.Add(item);
             }
         }

@@ -27,6 +27,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 "Active Sensors",
                 "Sensors this block should direct. Ctrl+Click to select multiple.",
                 true,
+                false,
                 logic => MyAPIGateway.Session.IsServer ?
                          logic.GridSensors.BlockSensorIdMap.Keys :
                          (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid],
@@ -37,11 +38,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
                     ActiveSensors[logic].Clear();
                     logic.DirectionSigns.Clear();
-                    foreach (var sensor in logic.GridSensors.Sensors)
+                    foreach (var item in selected)
                     {
-                        for (int i = 0; i < selected.Length; i++)
+                        foreach (var sensor in logic.GridSensors.Sensors)
                         {
-                            if (sensor.Block.EntityId != selected[i])
+                            if (sensor.Block != item)
                                 continue;
                             ActiveSensors[logic].Add(sensor);
                             sensor.DesiredAzimuth = 0;

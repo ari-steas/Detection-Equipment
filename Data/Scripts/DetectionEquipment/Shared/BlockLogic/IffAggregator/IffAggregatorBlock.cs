@@ -1,6 +1,5 @@
 ﻿using System;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using DetectionEquipment.Shared.BlockLogic.IffAggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Definitions;

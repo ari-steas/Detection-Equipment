@@ -1,10 +1,13 @@
 ﻿using ProtoBuf;
 using Sandbox.ModAPI;
 using System;
+using DetectionEquipment.Shared.BlockLogic.IffAggregator;
+using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
     [ProtoContract]
+    [ProtoInclude(101, typeof(IffAggregatorSettings))]
     internal class AggregatorSettings : ControlBlockSettingsBase
     {
         [ProtoMember(1)] private float _aggregationTime = 1f;

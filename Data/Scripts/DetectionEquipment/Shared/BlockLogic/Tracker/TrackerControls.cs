@@ -45,6 +45,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 "Active Sensors",
                 "Sensors this block should direct. Ctrl+Click to select multiple.",
                 true,
+                false,
                 logic => (MyAPIGateway.Session.IsServer ?
                          logic.GridSensors.BlockSensorIdMap.Keys :
                          (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid])
@@ -57,11 +58,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
                     ActiveSensors[logic].Clear();
                     logic.LockDecay.Clear();
-                    foreach (var sensor in logic.GridSensors.Sensors)
+                    foreach (var item in selected)
                     {
-                        for (int i = 0; i < selected.Length; i++)
+                        foreach (var sensor in logic.GridSensors.Sensors)
                         {
-                            if (sensor.Block.EntityId != selected[i])
+                            if (sensor.Block != item)
                                 continue;
                             ActiveSensors[logic].Add(sensor);
                             break;
@@ -75,6 +76,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 "Source Aggregator",
                 "Aggregator this block should use to direct sensors.",
                 false,
+                false,
                 // TODO convert this into a single yield action
                 logic => ControlBlockManager.I.Blocks.Values.Where(control => control is AggregatorBlock && control.CubeBlock.CubeGrid == logic.Block.CubeGrid).Select(c => c.CubeBlock),
                 (logic, selected) =>
@@ -84,7 +86,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
                     foreach (var control in ControlBlockManager.I.Blocks.Values)
                     {
-                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid || !selected.Contains(control.CubeBlock.EntityId))
+                        if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid || !selected.Contains(control.CubeBlock))
                             continue;
                         ActiveAggregators[logic] = (AggregatorBlock)control;
                     }
