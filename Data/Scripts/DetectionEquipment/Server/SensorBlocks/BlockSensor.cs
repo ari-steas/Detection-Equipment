@@ -55,7 +55,10 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
             set
             {
-                _desiredAzimuth = MathUtils.NormalizeAngle(value);
+                var normalized = MathUtils.NormalizeAngle(value);
+                if (_desiredAzimuth == normalized)
+                    return;
+                _desiredAzimuth = normalized;
                 ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
                 _settingsUpdated = true;
             }
@@ -68,7 +71,10 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
             set
             {
-                _desiredElevation = MathUtils.NormalizeAngle(value);
+                var normalized = MathUtils.NormalizeAngle(value);
+                if (_desiredElevation == normalized)
+                    return;
+                _desiredElevation = normalized;
                 ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
                 _settingsUpdated = true;
             }
@@ -81,7 +87,10 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
             set
             {
-                Sensor.Aperture = MathHelper.Clamp(value, Definition.MinAperture, Definition.MaxAperture);
+                var normalized = MathHelper.Clamp(value, Definition.MinAperture, Definition.MaxAperture);
+                if (Sensor.Aperture == normalized)
+                    return;
+                Sensor.Aperture = normalized;
                 ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
                 _settingsUpdated = true;
             }
@@ -134,7 +143,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             if (Definition.MaxPowerDraw > 0)
             {
-                Block.ResourceSink.SetMaxRequiredInputByType(_electricityId, (float) Definition.MaxPowerDraw);
+                Block.ResourceSink.SetRequiredInputByType(_electricityId, (float) Definition.MaxPowerDraw);
             }
         }
 
