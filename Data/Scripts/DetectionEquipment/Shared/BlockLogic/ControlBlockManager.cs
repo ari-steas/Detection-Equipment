@@ -1,8 +1,6 @@
-﻿using System.Collections.Concurrent;
-using DetectionEquipment.Shared.Utils;
+﻿using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
-using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 
@@ -14,16 +12,23 @@ namespace DetectionEquipment.Shared.BlockLogic
         public Dictionary<MyCubeBlock, IControlBlockBase> Blocks = new Dictionary<MyCubeBlock, IControlBlockBase>();
         public Dictionary<string, IBlockSelectControl> BlockControls = new Dictionary<string, IBlockSelectControl>();
 
+        public ObjectPool<Dictionary<long, List<WorldDetectionInfo>>> GroupsCacheBuffer = new ObjectPool<Dictionary<long, List<WorldDetectionInfo>>>(
+            () => new Dictionary<long, List<WorldDetectionInfo>>(),
+            dict => dict.Clear()
+        );
+        public ObjectPool<List<WorldDetectionInfo>> GroupInfoBuffer = new ObjectPool<List<WorldDetectionInfo>>(
+            () => new List<WorldDetectionInfo>(),
+            list => list.Clear()
+        );
+
         internal static void Load()
         {
             I = new ControlBlockManager();
-            AggregatorBlock.GroupInfoBuffer = new ConcurrentStack<List<WorldDetectionInfo>>();
             Log.Info("ControlBlockManager", "Ready.");
         }
 
         internal static void Unload()
         {
-            AggregatorBlock.GroupInfoBuffer = null;
             I.Blocks = null;
             I = null;
             Log.Info("ControlBlockManager", "Unloaded.");

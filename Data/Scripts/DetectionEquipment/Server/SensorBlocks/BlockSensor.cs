@@ -143,7 +143,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             if (Definition.MaxPowerDraw > 0)
             {
-                Block.ResourceSink.SetRequiredInputByType(_electricityId, (float) Definition.MaxPowerDraw);
+                Block.ResourceSink.SetRequiredInputByType(_electricityId, (float) Definition.MaxPowerDraw/1000000);
             }
         }
 

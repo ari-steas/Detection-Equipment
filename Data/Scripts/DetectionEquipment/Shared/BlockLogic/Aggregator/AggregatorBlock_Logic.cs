@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Shared.Utils;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
@@ -110,20 +111,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         private WorldDetectionInfo[] AggregateInfos(ICollection<WorldDetectionInfo> infos)
         {
-            Dictionary<long, List<WorldDetectionInfo>> groupCache;
-            if (!GroupsCacheBuffer.TryPop(out groupCache))
-                groupCache = new Dictionary<long, List<WorldDetectionInfo>>();
+            var groupCache = ControlBlockManager.I.GroupsCacheBuffer.Pull();
 
             // Group infos together
             foreach (var info in infos)
             {
                 if (!groupCache.ContainsKey(info.EntityId))
-                {
-                    List<WorldDetectionInfo> set;
-                    if (!GroupInfoBuffer.TryPop(out set))
-                        set = new List<WorldDetectionInfo>();
-                    groupCache[info.EntityId] = set;
-                }
+                    groupCache[info.EntityId] = ControlBlockManager.I.GroupInfoBuffer.Pull();
                 groupCache[info.EntityId].Add(info);
             }
 
@@ -132,17 +126,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             foreach (var set in groupCache.Values)
             {
                 aggregated[i++] = WorldDetectionInfo.Average(set, this);
-                set.Clear();
-                GroupInfoBuffer.Push(set);
+                ControlBlockManager.I.GroupInfoBuffer.Push(set);
             }
 
-            groupCache.Clear();
-            GroupsCacheBuffer.Push(groupCache);
+            ControlBlockManager.I.GroupsCacheBuffer.Push(groupCache);
         
             return aggregated;
         }
-
-        public static volatile ConcurrentStack<Dictionary<long, List<WorldDetectionInfo>>> GroupsCacheBuffer = new ConcurrentStack<Dictionary<long, List<WorldDetectionInfo>>>();
-        public static volatile ConcurrentStack<List<WorldDetectionInfo>> GroupInfoBuffer = new ConcurrentStack<List<WorldDetectionInfo>>();
     }
 }

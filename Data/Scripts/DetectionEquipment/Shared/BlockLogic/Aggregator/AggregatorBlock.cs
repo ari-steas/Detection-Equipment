@@ -90,9 +90,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         /// <returns></returns>
         private HashSet<WorldDetectionInfo> UpdateAggregatedDetections()
         {
-            List<WorldDetectionInfo> infosCache;
-            if (!GroupInfoBuffer.TryPop(out infosCache))
-                infosCache = new List<WorldDetectionInfo>();
+            var infosCache = ControlBlockManager.I.GroupInfoBuffer.Pull();
 
             lock (_bufferDetections)
             {
@@ -146,8 +144,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     _lastDetectionSet.Add(item);
                 }
 
-                infosCache.Clear();
-                GroupInfoBuffer.Push(infosCache);
+                ControlBlockManager.I.GroupInfoBuffer.Push(infosCache);
 
                 return _lastDetectionSet;
             }
@@ -202,9 +199,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             try
             {
-                List<WorldDetectionInfo> infosCache;
-                if (!GroupInfoBuffer.TryPop(out infosCache))
-                    infosCache = new List<WorldDetectionInfo>();
+                var infosCache = ControlBlockManager.I.GroupInfoBuffer.Pull();
 
                 foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensors)
                 {
@@ -216,8 +211,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 }
 
                 DetectionCache.Enqueue(AggregateInfos(infosCache));
-                infosCache.Clear();
-                GroupInfoBuffer.Push(infosCache);
+                ControlBlockManager.I.GroupInfoBuffer.Push(infosCache);
                 while (DetectionCache.Count > AggregationTime * 60)
                     DetectionCache.Dequeue();
 
