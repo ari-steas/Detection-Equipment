@@ -43,14 +43,6 @@ namespace DetectionEquipment.Shared
             }
         }
 
-        private class Test
-        {
-            ~Test()
-            {
-                Log.Info("Test", "Finalizer invoked!");
-            }
-        }
-
         public int Ticks = 0;
 
         public override void UpdateAfterSimulation()

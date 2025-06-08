@@ -1,7 +1,9 @@
 ﻿using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRageMath;
 
@@ -97,11 +99,15 @@ namespace DetectionEquipment.Server.Countermeasures
                     float ignored;
                     Velocity += MyAPIGateway.Physics.CalculateNaturalGravityAt(Position, out ignored) / 60;
                     if (Definition.DragMultiplier != 0 && Velocity != Vector3D.Zero)
-                        Velocity = Vector3D.Lerp(Velocity, Vector3D.Zero, Velocity.LengthSquared() * Definition.DragMultiplier / 60);
+                    {
+                        var airDensity = MiscUtils.GetAtmosphereDensity(Position);
+                        if (airDensity > 0)
+                            Velocity = Vector3D.Lerp(Velocity, Vector3D.Zero, Velocity.LengthSquared() * Definition.DragMultiplier * airDensity / 60);
+                    }
                 }
                 Position += Velocity / 60;
             }
-
+            DebugDraw.AddPoint(Position, Color.Red, 0);
             if (--RemainingLifetime == 0)
                 Close();
         }

@@ -3,6 +3,8 @@ using Sandbox.ModAPI;
 using System.Collections.Generic;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
+using Sandbox.Game.Entities.Planet;
+using VRageMath;
 
 namespace DetectionEquipment.Shared.Utils
 {
@@ -52,6 +54,22 @@ namespace DetectionEquipment.Shared.Utils
             long longRand = BitConverter.ToInt64(buf, 0);
 
             return (Math.Abs(longRand % (max - min)) + min);
+        }
+
+        public static float GetAtmosphereDensity(Vector3D position)
+        {
+            foreach (var planet in GlobalData.Planets)
+            {
+                if (planet.Closed || planet.MarkedForClose)
+                    continue;
+
+                if (Vector3D.DistanceSquared(position, planet.PositionComp.GetPosition()) >
+                    planet.AtmosphereRadius * planet.AtmosphereRadius)
+                    continue;
+                return planet.GetAirDensity(position);
+            }
+
+            return 0;
         }
     }
 }

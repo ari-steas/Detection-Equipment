@@ -57,7 +57,7 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(9)] public bool HasPhysics;
         /// <summary>
-        /// Drag multiplier if <see cref="HasPhysics"/> is true. Can be negative if you want to be silly.
+        /// Drag multiplier if <see cref="HasPhysics"/> is true and in atmosphere. Can be negative if you want to be silly.
         /// </summary>
         [ProtoMember(10)] public float DragMultiplier;
         /// <summary>

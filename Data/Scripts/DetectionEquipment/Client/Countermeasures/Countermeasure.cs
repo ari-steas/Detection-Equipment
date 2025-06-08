@@ -32,15 +32,24 @@ namespace DetectionEquipment.Client.Countermeasures
             {
                 float ignored;
                 _velocity += MyAPIGateway.Physics.CalculateNaturalGravityAt(_position, out ignored) / 60;
+                
                 if (_definition.DragMultiplier != 0 && _velocity != Vector3D.Zero)
-                    _velocity = Vector3D.Lerp(_velocity, Vector3D.Zero, _velocity.LengthSquared() * _definition.DragMultiplier / 60);
+                {
+                    var airDensity = MiscUtils.GetAtmosphereDensity(_position);
+                    if (airDensity > 0)
+                        _velocity = Vector3D.Lerp(_velocity, Vector3D.Zero, _velocity.LengthSquared() * _definition.DragMultiplier * airDensity / 60);
+                }
             }
             _position += _velocity / 60;
 
             if (_particle == null && !string.IsNullOrEmpty(_definition.ParticleEffect))
             {
                 var matrix = MatrixD.CreateWorld(_position, _direction, Vector3D.CalculatePerpendicularVector(_direction));
-                if (!MyParticlesManager.TryCreateParticleEffect(_definition.ParticleEffect, ref matrix, ref _position, uint.MaxValue, out _particle))
+                if (MyParticlesManager.TryCreateParticleEffect(_definition.ParticleEffect, ref matrix, ref _position, uint.MaxValue, out _particle))
+                {
+                    _particle.Velocity = _velocity;
+                }
+                else
                 {
                     Log.Exception("Countermeasure", new Exception($"Failed to create new projectile particle \"{_definition.ParticleEffect}\"!"));
                 }
