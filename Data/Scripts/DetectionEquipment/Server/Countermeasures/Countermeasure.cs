@@ -107,7 +107,7 @@ namespace DetectionEquipment.Server.Countermeasures
                 }
                 Position += Velocity / 60;
             }
-            DebugDraw.AddPoint(Position, Color.Red, 0);
+
             if (--RemainingLifetime == 0)
                 Close();
         }
