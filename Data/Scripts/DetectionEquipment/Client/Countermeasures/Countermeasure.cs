@@ -45,11 +45,7 @@ namespace DetectionEquipment.Client.Countermeasures
             if (_particle == null && !string.IsNullOrEmpty(_definition.ParticleEffect))
             {
                 var matrix = MatrixD.CreateWorld(_position, _direction, Vector3D.CalculatePerpendicularVector(_direction));
-                if (MyParticlesManager.TryCreateParticleEffect(_definition.ParticleEffect, ref matrix, ref _position, uint.MaxValue, out _particle))
-                {
-                    _particle.Velocity = _velocity;
-                }
-                else
+                if (!MyParticlesManager.TryCreateParticleEffect(_definition.ParticleEffect, ref matrix, ref _position, uint.MaxValue, out _particle))
                 {
                     Log.Exception("Countermeasure", new Exception($"Failed to create new projectile particle \"{_definition.ParticleEffect}\"!"));
                 }
@@ -58,7 +54,7 @@ namespace DetectionEquipment.Client.Countermeasures
             if (_particle != null)
             {
                 _particle.WorldMatrix = MatrixD.CreateWorld(_position, _direction, Vector3D.Up);
-                //_particle.Velocity = _velocity;
+                _particle.Velocity = _velocity;
             }
 
             if (--_remainingLifetime == 0)
