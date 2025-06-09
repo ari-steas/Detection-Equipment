@@ -5,6 +5,7 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
+using System.Reflection;
 using VRageMath;
 
 namespace DetectionEquipment.Server.Countermeasures

@@ -10,6 +10,7 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using DetectionEquipment.Server.Countermeasures;
+using Sandbox.Game.EntityComponents;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -39,10 +40,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             ? MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _sensorDummy.Matrix * _dummyParent.WorldMatrix
             : _sensorDummy.Matrix * _dummyParent.WorldMatrix;
         
-        MyDefinitionId _electricityId = MyDefinitionId.Parse("MyObjectBuilder_GasProperties/Electricity");
-
         private bool _settingsUpdated = false;
-
         public double Azimuth { get; private set;} = 0;
         public double Elevation { get; private set; } = 0;
 
@@ -139,12 +137,14 @@ namespace DetectionEquipment.Server.SensorBlocks
                     throw new Exception($"Invalid SensorType {definition.Type}");
             }
 
-            ServerMain.I.BlockSensorIdMap[Sensor.Id] = this;
+            var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
+            resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId,
+                () => Block.Enabled ? (float)Definition.MaxPowerDraw / 1000000 : 0);
+            resourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, (float)Definition.MaxPowerDraw / 1000000);
+            resourceSink.Update();
+            Block.EnabledChanged += b => resourceSink.Update();
 
-            if (Definition.MaxPowerDraw > 0)
-            {
-                Block.ResourceSink.SetRequiredInputByType(_electricityId, (float) Definition.MaxPowerDraw/1000000);
-            }
+            ServerMain.I.BlockSensorIdMap[Sensor.Id] = this;
         }
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)

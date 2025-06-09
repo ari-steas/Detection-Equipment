@@ -6,6 +6,7 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Serialization;
 using DetectionEquipment.Shared.Utils;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Entity;
@@ -36,6 +37,7 @@ namespace DetectionEquipment.Server.Countermeasures
             set
             {
                 _firing = value;
+                _resourceSink.Update();
                 ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Countermeasures.CountermeasureUpdatePacket(this), Block.GetPosition());
             }
         }
@@ -68,18 +70,28 @@ namespace DetectionEquipment.Server.Countermeasures
             Block = block;
 
             SetupMuzzles();
+
+            _resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
+            _resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () => Block.Enabled && Firing ? Definition.ActivePowerDraw : 0);
+            _resourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, Definition.ActivePowerDraw);
+            _resourceSink.Update();
+            Block.EnabledChanged += b => _resourceSink.Update();
         }
 
         public void UpdateFromPacket(Client.BlockLogic.Countermeasures.CountermeasureUpdatePacket packet)
         {
             _firing = packet.Firing;
             _reloading = packet.Reloading;
+            _resourceSink.Update();
         }
 
         private bool _didCloseAttached = false;
+        private MyResourceSinkComponent _resourceSink;
+
         public void Update()
         {
-            if (!Block.IsWorking || !Firing)
+            bool canFire = Block.IsWorking && Firing;
+            if (!canFire)
             {
                 if (!Definition.IsCountermeasureAttached || _didCloseAttached)
                     return;
@@ -89,10 +101,7 @@ namespace DetectionEquipment.Server.Countermeasures
             }
             _didCloseAttached = false;
 
-            if (!Block.IsWorking)
-                return;
-
-            if (Firing)
+            if (canFire)
             {
                 _shotAggregator += Definition.ShotsPerSecond / 60f;
                 int startMuzzleIdx = CurrentMuzzleIdx;
@@ -108,10 +117,19 @@ namespace DetectionEquipment.Server.Countermeasures
             {
                 foreach (var counter in _attachedCountermeasures)
                 {
+                    if (counter == null)
+                        continue;
                     var matrix = MatrixD.CreateWorld(counter.Position, counter.Direction,
                         Vector3D.CalculatePerpendicularVector(counter.Direction));
                     var color = new Color((uint) ((50 + counter.Id) * Block.EntityId)).Alpha(0.1f);
-                    MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(counter.EffectAperture) * counter.Definition.MaxRange, counter.Definition.MaxRange, ref color, 8, DebugDraw.MaterialSquare);
+
+                    if (counter.EffectAperture < Math.PI)
+                        MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(counter.EffectAperture) * counter.Definition.MaxRange, counter.Definition.MaxRange, ref color, 8, DebugDraw.MaterialSquare);
+                    else
+                    {
+                        DebugDraw.AddLine(counter.Position, counter.Position + counter.Direction * counter.Definition.MaxRange, color, 0);
+                        MySimpleObjectDraw.DrawTransparentSphere(ref matrix, counter.Definition.MaxRange, ref color, MySimpleObjectRasterizer.Wireframe, 20);
+                    }
                 }
             }
         }

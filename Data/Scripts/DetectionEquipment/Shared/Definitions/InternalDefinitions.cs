@@ -240,7 +240,8 @@ namespace DetectionEquipment.Shared.Definitions
                 IsCountermeasureAttached = false,
                 ShotsPerSecond = 15,
                 EjectionVelocity = 50,
-                FireParticle = "Muzzle_Flash_Autocannon"
+                FireParticle = "Muzzle_Flash_Autocannon",
+                ActivePowerDraw = 0,
             },
             ["DetEq_SimpleChaffEmitter"] = new CountermeasureEmitterDefinition
             {
@@ -283,7 +284,8 @@ namespace DetectionEquipment.Shared.Definitions
                 IsCountermeasureAttached = false,
                 ShotsPerSecond = 15,
                 EjectionVelocity = 100,
-                FireParticle = "Muzzle_Flash_Autocannon"
+                FireParticle = "Muzzle_Flash_Autocannon",
+                ActivePowerDraw = 0,
             },
             ["DetEq_SimpleJammer"] = new CountermeasureEmitterDefinition
             {
@@ -302,7 +304,8 @@ namespace DetectionEquipment.Shared.Definitions
                 IsCountermeasureAttached = true,
                 ShotsPerSecond = 60,
                 EjectionVelocity = 0,
-                FireParticle = ""
+                FireParticle = "",
+                ActivePowerDraw = 50,
             }
         };
 

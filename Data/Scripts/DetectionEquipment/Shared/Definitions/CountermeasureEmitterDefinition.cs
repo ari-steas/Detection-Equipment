@@ -67,6 +67,11 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(9)] public string FireParticle;
 
+        /// <summary>
+        /// Power draw while active, in megawatts.
+        /// </summary>
+        [ProtoMember(11)] public float ActivePowerDraw;
+
         
         public static bool Verify(CountermeasureEmitterDefinition def)
         {

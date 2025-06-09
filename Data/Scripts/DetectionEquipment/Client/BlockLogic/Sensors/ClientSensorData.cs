@@ -7,6 +7,7 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game;
 using VRageMath;
+using System.Reflection;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
@@ -80,6 +81,11 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 var matrix = SensorMatrix;
                 if (Aperture < Math.PI)
                     MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(Aperture) * MyAPIGateway.Session.SessionSettings.SyncDistance, MyAPIGateway.Session.SessionSettings.SyncDistance, ref Color, 8, DebugDraw.MaterialSquare);
+                else
+                {
+                    DebugDraw.AddLine(Position, Position + Direction * GlobalData.MaxSensorRange.Value, Color, 0);
+                    MySimpleObjectDraw.DrawTransparentSphere(ref matrix, (float) GlobalData.MaxSensorRange.Value, ref Color, MySimpleObjectRasterizer.Wireframe, 20);
+                }
             }
         }
 
