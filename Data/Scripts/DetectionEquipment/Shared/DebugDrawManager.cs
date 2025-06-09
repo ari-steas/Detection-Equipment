@@ -136,7 +136,7 @@ namespace DetectionEquipment.Shared
                     var point = _queuedPoints[i];
                     DrawPoint0(point.Position, point.Color);
 
-                    if (nowTicks > point.EndOfLife)
+                    if (nowTicks >= point.EndOfLife)
                         _queuedPoints.RemoveAt(i);
                 }
             }
@@ -148,7 +148,7 @@ namespace DetectionEquipment.Shared
                     var gridPoint = _queuedGridPoints[i];
                     DrawGridPoint0(gridPoint.Position, gridPoint.Grid, gridPoint.Color);
 
-                    if (nowTicks > gridPoint.EndOfLife)
+                    if (nowTicks >= gridPoint.EndOfLife)
                         _queuedGridPoints.RemoveAt(i);
                 }
             }
@@ -160,7 +160,7 @@ namespace DetectionEquipment.Shared
                     var linePoint = _queuedLinePoints[i];
                     DrawLine0(linePoint.Start, linePoint.End, linePoint.Color);
 
-                    if (nowTicks > linePoint.EndOfLife)
+                    if (nowTicks >= linePoint.EndOfLife)
                         _queuedLinePoints.RemoveAt(i);
                 }
             }
