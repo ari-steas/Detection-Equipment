@@ -29,7 +29,20 @@ namespace DetectionEquipment.Shared.Utils
             _modContext = context;
             try
             {
-                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(ModName.Replace(" ", "") + ".log");
+                string logName = ModName.Replace(" ", "");
+                bool didRotateLogs = MyAPIGateway.Utilities.FileExistsInGlobalStorage(logName + ".log");
+                if (didRotateLogs)
+                {
+                    var oldLogReader = MyAPIGateway.Utilities.ReadFileInGlobalStorage(logName + ".log");
+                    string oldLogContents = oldLogReader.ReadToEnd();
+                    oldLogReader.Close();
+                    var oldLogWriter = MyAPIGateway.Utilities.WriteFileInGlobalStorage(logName + "_PREV.log");
+                    oldLogWriter.Write(oldLogContents);
+                    oldLogWriter.Flush();
+                    oldLogWriter.Close();
+                }
+
+                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(logName + ".log");
 
                 int utcOffset = (DateTime.Now - DateTime.UtcNow).Hours;
 
@@ -42,6 +55,9 @@ namespace DetectionEquipment.Shared.Utils
                 _writer.WriteLine($"Session: {MyAPIGateway.Session?.Name ?? "MultiplayerSession"} | Client Info: {(string.IsNullOrEmpty(MyAPIGateway.Multiplayer?.MyName) ? null : MyAPIGateway.Multiplayer?.MyName) ?? "DedicatedHost"}::{MyAPIGateway.Multiplayer?.MyId}");
                 _writer.WriteLine("=================================================");
                 _writer.Flush();
+
+                if (didRotateLogs)
+                    Log.Info("Log.Init", $"Rotated previous log file to .\\{logName}_PREV.log");
             }
             catch (Exception ex)
             {
@@ -119,7 +135,7 @@ namespace DetectionEquipment.Shared.Utils
             foreach (var exceptionCount in _exceptions)
                 sumExceptions += exceptionCount;
             if (sumExceptions >= MaxExceptionsOverInterval)
-                Log.Exception("Log", new Exception($"Too many non-fatal exceptions ({sumExceptions}/{MaxExceptionsOverInterval}) in {MaxExceptionIntervalTicks/60f:N}s!"), true);
+                Log.Exception("Log.Update", new Exception($"Too many non-fatal exceptions ({sumExceptions}/{MaxExceptionsOverInterval}) in {MaxExceptionIntervalTicks/60f:N}s!"), true);
         }
 
         private class CustomCrashModContext : IMyModContext
