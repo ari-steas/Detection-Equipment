@@ -83,7 +83,6 @@ namespace DetectionEquipment.Server
 
         protected override void UnloadData()
         {
-            Log.GameUnloading = true;
             if (!MyAPIGateway.Session.IsServer)
                 return;
 

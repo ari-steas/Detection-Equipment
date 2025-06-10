@@ -58,7 +58,6 @@ namespace DetectionEquipment.Shared
 
         protected override void UnloadData()
         {
-            Log.GameUnloading = true;
             I = null;
         }
 

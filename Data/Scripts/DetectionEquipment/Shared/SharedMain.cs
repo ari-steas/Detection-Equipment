@@ -66,8 +66,6 @@ namespace DetectionEquipment.Shared
 
         protected override void UnloadData()
         {
-            Log.GameUnloading = true;
-
             try
             {
                 Log.Info("SharedMain", "Start unload...");

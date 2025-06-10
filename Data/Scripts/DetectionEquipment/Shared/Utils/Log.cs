@@ -21,8 +21,6 @@ namespace DetectionEquipment.Shared.Utils
         private static TextWriter _writer;
         private static string _indent = "";
 
-        public static bool GameUnloading = false;
-
         public static void Init(IMyModContext context)
         {
             _exceptions = new Queue<int>(MaxExceptionIntervalTicks + 1);

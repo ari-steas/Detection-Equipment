@@ -82,7 +82,6 @@ namespace DetectionEquipment.Client
 
         protected override void UnloadData()
         {
-            Log.GameUnloading = true;
             if (MyAPIGateway.Utilities.IsDedicated)
                 return;
 
