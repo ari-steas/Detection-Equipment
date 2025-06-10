@@ -143,6 +143,13 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                     b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.MinAperture),
                     b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.MaxAperture)
                 );
+            _apeSlider.Enabled = b =>
+            {
+                var def = b.GetLogic<ClientSensorLogic>().CurrentDefinition;
+                if (def == null)
+                    return false;
+                return def.MinAperture != def.MaxAperture;
+            };
 
             _aziSlider = CreateSlider(
                 "Azimuth",

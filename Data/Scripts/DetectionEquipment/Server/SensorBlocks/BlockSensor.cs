@@ -149,7 +149,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)
         {
-            Sensor.Enabled = Block.IsWorking;
+            Sensor.Enabled = Block.IsWorking || (Block.IsFunctional && Block.Enabled && Definition.MaxPowerDraw <= 0);
             Detections.Clear();
 
             UpdateSensorMatrix();
@@ -160,7 +160,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 _settingsUpdated = false;
             }
 
-            if (!Block.IsWorking)
+            if (!Sensor.Enabled)
                 return;
 
             Sensor.CountermeasureNoise = CountermeasureManager.GetNoise(Sensor);
@@ -179,7 +179,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         private void UpdateSensorMatrix()
         {
-            if (Block.IsWorking && Definition.Movement != null)
+            if (Sensor.Enabled && Definition.Movement != null)
             {
                 if (Azimuth != DesiredAzimuth)
                 {

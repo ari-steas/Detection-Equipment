@@ -1,10 +1,11 @@
-﻿using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared.Definitions;
+﻿using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using Sandbox.ModAPI;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
@@ -21,7 +22,7 @@ namespace DetectionEquipment.Server.Sensors
         public Vector3D Position { get; set; }
         public Vector3D Direction { get; set; }
 
-        private ConcurrentDictionary<long, DetectionInfo> _queuedRadarHits = new ConcurrentDictionary<long, DetectionInfo>();
+        private ConcurrentDictionary<long, RadarSensor> _queuedRadarHits = new ConcurrentDictionary<long, RadarSensor>();
         public double CountermeasureNoise { get; set; } = 0;
 
 
@@ -40,6 +41,7 @@ namespace DetectionEquipment.Server.Sensors
         {
             Sensors.Remove(this);
             ServerMain.I.SensorIdMap.Remove(Id);
+            _queuedRadarHits = null;
         }
 
         private PassiveRadarSensor() { }
@@ -52,14 +54,41 @@ namespace DetectionEquipment.Server.Sensors
             if (!Enabled || track == null)
                 return null;
 
-            if (!_queuedRadarHits.ContainsKey(track.EntityId))
+            RadarSensor sensor;
+            if (!_queuedRadarHits.TryGetValue(track.EntityId, out sensor))
                 return null;
-            var data = _queuedRadarHits[track.EntityId];
             _queuedRadarHits.Remove(track.EntityId);
-            data.Track = track;
+
+            Vector3D bearing = sensor.Position - Position;
+            double angleToTarget = Vector3D.Angle(Direction, bearing);
+            if (angleToTarget > Aperture)
+                return null;
+
+            double signalToNoiseRatio = sensor.SignalRatioAtTarget(Position, Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(angleToTarget) : Definition.RadarProperties.ReceiverArea);
+
+            double range = bearing.Normalize();
+
+            if (signalToNoiseRatio < 0)
+                return null;
+
+            double maxBearingError = Definition.BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
+            bearing = MathUtils.RandomCone(bearing, maxBearingError);
+
+            double maxRangeError = range * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
+            range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
+
+            var data = new DetectionInfo
+            (
+                track,
+                this,
+                signalToNoiseRatio,
+                range,
+                maxRangeError,
+                bearing,
+                maxBearingError
+            );
 
             OnDetection?.Invoke(ObjectPackager.Package(data));
-            //MyAPIGateway.Utilities.ShowMessage($"{data.CrossSection:N0}", data.ToString());
 
             return data;
         }
@@ -69,37 +98,10 @@ namespace DetectionEquipment.Server.Sensors
         {
             foreach (var passiveSensor in Sensors)
             {
-                if (passiveSensor.AttachedEntity?.GetTopMostParent() != entity.GetTopMostParent())
+                if (passiveSensor.AttachedEntity?.GetTopMostParent(typeof(IMyCubeGrid)) != entity.GetTopMostParent(typeof(IMyCubeGrid)))
                     continue;
 
-                Vector3D bearing = sensor.Position - passiveSensor.Position;
-                double angleToTarget = Vector3D.Angle(passiveSensor.Direction, bearing);
-                if (angleToTarget > passiveSensor.Aperture)
-                    continue;
-
-                double signalToNoiseRatio = sensor.SignalRatioAtTarget(passiveSensor.Position, passiveSensor.Aperture < Math.PI ? passiveSensor.Definition.RadarProperties.ReceiverArea * Math.Cos(angleToTarget) : passiveSensor.Definition.RadarProperties.ReceiverArea);
-
-                double range = bearing.Normalize();
-
-                if (signalToNoiseRatio < 0)
-                    continue;
-
-                double maxBearingError = passiveSensor.Definition.BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / passiveSensor.Definition.DetectionThreshold, 0, 1));
-                bearing = MathUtils.RandomCone(bearing, maxBearingError);
-
-                double maxRangeError = range * passiveSensor.Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / passiveSensor.Definition.DetectionThreshold, 0, 1));
-                range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
-
-                passiveSensor._queuedRadarHits[sensor.AttachedEntity.EntityId] = new DetectionInfo
-                (
-                    null, // this is set later
-                    passiveSensor,
-                    signalToNoiseRatio,
-                    range,
-                    maxRangeError,
-                    bearing,
-                    maxBearingError
-                );
+                passiveSensor._queuedRadarHits[sensor.AttachedEntity.EntityId] = sensor;
             }
         }
     }

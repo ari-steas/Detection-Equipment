@@ -106,7 +106,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         public void UpdateAfterSimulation()
         {
-            if (!Block.IsWorking)
+            if (!(Block.IsWorking || (Block.IsFunctional && ((IMyFunctionalBlock)Block).Enabled && CurrentDefinition.MaxPowerDraw <= 0)))
                 return;
             foreach (var sensor in Sensors.Values)
             {

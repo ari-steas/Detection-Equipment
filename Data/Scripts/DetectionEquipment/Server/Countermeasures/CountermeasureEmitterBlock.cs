@@ -90,7 +90,7 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public void Update()
         {
-            bool canFire = Block.IsWorking && Firing;
+            bool canFire = (Block.IsWorking || (Block.IsFunctional && Block.Enabled && Definition.ActivePowerDraw <= 0)) && Firing;
             if (!canFire)
             {
                 if (!Definition.IsCountermeasureAttached || _didCloseAttached)
