@@ -497,7 +497,8 @@ namespace IngameScript
         {
             public long UniqueId;
             public double CrossSection;
-            public double Error;
+            public double BearingError;
+            public double RangeError;
             public Vector3D Position;
             public Vector3D? Velocity;
             public double? VelocityVariance;
@@ -511,10 +512,8 @@ namespace IngameScript
                 CrossSection = info.CrossSection;
                 Position = sensor.Position + info.Bearing * info.Range;
 
-                Error = Math.Tan(info.BearingError) * info.Range; // planar error; base width of right triangle
-                Error *= Error;
-                Error += info.RangeError * info.RangeError; // normal error
-                Error = Math.Sqrt(Error);
+                BearingError = info.BearingError;
+                RangeError = info.RangeError;
 
                 DetectionType = sensor.Definition.Type;
 
@@ -529,7 +528,7 @@ namespace IngameScript
                 SetField(dataSet[0], out UniqueId);
                 SetField(dataSet[1], out DetectionType);
                 SetField(dataSet[2], out CrossSection);
-                SetField(dataSet[3], out Error);
+                SetField(dataSet[3], out BearingError);
                 SetField(dataSet[4], out Position);
                 SetField(dataSet[5], out Velocity);
                 SetField(dataSet[6], out VelocityVariance);
@@ -537,6 +536,7 @@ namespace IngameScript
                 int? tmpRelations;
                 SetField(dataSet[8], out tmpRelations);
                 Relations = (PbRelationBetweenPlayers?) tmpRelations;
+                SetField(dataSet[0], out RangeError);
                 I._returnFieldArray.Invoke(dataSet);
             }
 
@@ -545,7 +545,7 @@ namespace IngameScript
 
             public override string ToString()
             {
-                return $"UID: {UniqueId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}\nRelations: {Relations?.ToString() ?? "N/A"}";
+                return $"UID: {UniqueId}\nPosition: {Position.ToString("N0")} +-{BearingError:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}\nRelations: {Relations?.ToString() ?? "N/A"}";
             }
 
             public static PbWorldDetectionInfo Average(params PbWorldDetectionInfo[] args) => Average((ICollection<PbWorldDetectionInfo>) args);
@@ -564,8 +564,8 @@ namespace IngameScript
                 var allCodes = new MemorySafeList<string>();
                 foreach (var info in args)
                 {
-                    totalError += info.Error;
-                    if (info.Error < minError) minError = info.Error;
+                    totalError += info.BearingError;
+                    if (info.BearingError < minError) minError = info.BearingError;
                     foreach (var code in info.IffCodes)
                         if (!allCodes.Contains(code))
                             allCodes.Add(code);
@@ -580,9 +580,9 @@ namespace IngameScript
                 double pctSum = 0;
                 foreach (var info in args)
                 {
-                    pctSum += 1 - (info.Error / totalError);
+                    pctSum += 1 - (info.BearingError / totalError);
                     if (totalError > 0)
-                        averagePos += info.Position * (1 - (info.Error / totalError));
+                        averagePos += info.Position * (1 - (info.BearingError / totalError));
                     else
                         averagePos += info.Position;
                     totalCrossSection += info.CrossSection;
@@ -597,7 +597,7 @@ namespace IngameScript
                 {
                     CrossSection = totalCrossSection / args.Count,
                     Position = averagePos,
-                    Error = minError,
+                    BearingError = minError,
                     DetectionType = proposedType ?? PbSensorDefinition.SensorType.None,
                     IffCodes = allCodes.ToArray(),
                 };

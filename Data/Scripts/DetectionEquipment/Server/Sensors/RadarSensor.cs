@@ -15,25 +15,15 @@ namespace DetectionEquipment.Server.Sensors
     {
         public bool Enabled { get; set; } = true;
         public uint Id { get; private set; }
-        public readonly Func<long> AttachedEntityId;
+        public readonly IMyEntity AttachedEntity;
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
 
 
-        public RadarSensor(long attachedEntityId, SensorDefinition definition)
-        {
-            Id = ServerMain.I.HighestSensorId++;
-            AttachedEntityId = () => attachedEntityId;
-            Definition = definition;
-            Aperture = definition.MaxAperture;
-            
-            ServerMain.I.SensorIdMap[Id] = this;
-        }
-
         public RadarSensor(IMyEntity entity, SensorDefinition definition)
         {
             Id = ServerMain.I.HighestSensorId++;
-            AttachedEntityId = () => ((MyEntity)entity).GetTopMostParent().EntityId;
+            AttachedEntity = entity.GetTopMostParent();
             Definition = definition;
             Aperture = definition.MaxAperture;
             
@@ -120,16 +110,16 @@ namespace DetectionEquipment.Server.Sensors
             var iffCodes = track is GridTrack ? IffReflectorBlock.GetIffCodes(((GridTrack)track).Grid) : Array.Empty<string>();
 
             var detection = new DetectionInfo
-            {
-                Track = track,
-                Sensor = this,
-                CrossSection = visibilitySet.RadarVisibility,
-                Bearing = bearing,
-                BearingError = maxBearingError,
-                Range = range,
-                RangeError = maxRangeError,
-                IffCodes = iffCodes
-            };
+            (
+                track,
+                this,
+                visibilitySet.RadarVisibility,
+                range,
+                maxRangeError,
+                bearing,
+                maxBearingError,
+                iffCodes
+            );
 
             OnDetection?.Invoke(ObjectPackager.Package(detection));
 

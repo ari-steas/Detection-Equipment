@@ -174,7 +174,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
                 foreach (var detection in Detections)
-                    DebugDraw.AddLine(Sensor.Position, Sensor.Position + detection.Bearing * detection.Range, Color.Red, 0);
+                    DebugDraw.AddLine(Sensor.Position, detection.Position, Color.Red, 0);
         }
 
         private void UpdateSensorMatrix()

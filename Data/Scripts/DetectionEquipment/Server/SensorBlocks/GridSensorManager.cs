@@ -57,7 +57,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
                         foreach (var target in aggregator.DetectionSet)
                         {
-                            var err = target.Error / Vector3D.Distance(gridPos, target.Position);
+                            var err = target.SumError / Vector3D.Distance(gridPos, target.Position);
 
                             if (GlobalData.Debug)
                             {

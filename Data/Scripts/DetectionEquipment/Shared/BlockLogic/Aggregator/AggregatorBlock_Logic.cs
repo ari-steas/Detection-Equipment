@@ -11,7 +11,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
     {
         private void CalculateDetections(ICollection<WorldDetectionInfo[]> cache) // TODO: Improve performance of this method
         {
-            //Dictionary<WorldDetectionInfo, int> weightedInfos = new Dictionary<WorldDetectionInfo, int>();
             var aggregatedDetections = new HashSet<WorldDetectionInfo>();
 
             if (cache.Count == 0)
@@ -20,16 +19,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     _bufferDetections.Clear();
                 return;
             }
-
-            //int weight = 1;
-            //foreach (var set in cache)
-            //{
-            //    weight++;
-            //    foreach (var detection in set)
-            //    {
-            //        weightedInfos[detection] = weightedInfos.ContainsKey(detection) ? weightedInfos[detection] + weight : weight;
-            //    }
-            //}
 
             var latestSet = cache.First();
             List<WorldDetectionInfo> toCombine = new List<WorldDetectionInfo>();
@@ -91,15 +80,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 }
 
                 var averagedInfo = WorldDetectionInfo.Average(toCombine, this);
-                if (velVariation <= VelocityErrorThreshold * VelocityErrorThreshold)
-                    averagedInfo.Position += averageVelocity * AggregationTime / 2;
 
                 averagedInfo.Velocity = averageVelocity;
                 averagedInfo.VelocityVariance = velVariation;
 
                 //MyAPIGateway.Utilities.ShowNotification($"Vel: {averageVelocity.Length():N1} m/s (R={Math.Sqrt(velVariation)})", 1000/60);
                 if (GlobalData.Debug)
-                    DebugDraw.AddLine(averagedInfo.Position, averagedInfo.Position + averageVelocity, Color.Blue, 0);
+                    DebugDraw.AddLine(averagedInfo.Position, averagedInfo.Position, Color.Blue, 0);
 
                 aggregatedDetections.Add(averagedInfo);
                 toCombine.Clear();

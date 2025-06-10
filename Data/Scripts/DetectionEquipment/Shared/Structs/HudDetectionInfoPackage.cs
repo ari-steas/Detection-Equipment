@@ -8,7 +8,7 @@ using VRageMath;
 namespace DetectionEquipment.Shared.Structs
 {
     [ProtoContract(UseProtoMembersOnly = true)]
-    internal struct HudDetectionInfo
+    internal struct HudDetectionInfoPackage
     {
         [ProtoMember(1)] private long _entityId;
         [ProtoMember(2)] private float _crossSection;
@@ -35,21 +35,21 @@ namespace DetectionEquipment.Shared.Structs
             : (MyRelationsBetweenPlayers?) _relations;
         [ProtoMember(13)] private byte _relations;
 
-        public static explicit operator WorldDetectionInfo(HudDetectionInfo info) => new WorldDetectionInfo
+        public static explicit operator HudDetectionInfo(HudDetectionInfoPackage infoPackage) => new HudDetectionInfo
         {
-            EntityId = info._entityId,
-            Entity = (MyEntity) MyAPIGateway.Entities.GetEntityById(info._entityId),
-            CrossSection = info._crossSection,
-            Error = info._error,
-            Position = info.Position,
-            Velocity = info.Velocity,
-            VelocityVariance = info.VelocityVariance,
-            DetectionType = info.SensorType,
-            IffCodes = info._iffCodes ?? Array.Empty<string>(),
-            Relations = info.Relations,
+            EntityId = infoPackage._entityId,
+            Entity = (MyEntity) MyAPIGateway.Entities.GetEntityById(infoPackage._entityId),
+            CrossSection = infoPackage._crossSection,
+            Error = infoPackage._error,
+            Position = infoPackage.Position,
+            Velocity = infoPackage.Velocity,
+            VelocityVariance = infoPackage.VelocityVariance,
+            DetectionType = infoPackage.SensorType,
+            IffCodes = infoPackage._iffCodes ?? Array.Empty<string>(),
+            Relations = infoPackage.Relations,
         };
 
-        public static explicit operator HudDetectionInfo(WorldDetectionInfo info) => new HudDetectionInfo
+        public static explicit operator HudDetectionInfoPackage(HudDetectionInfo info) => new HudDetectionInfoPackage
         {
             _entityId = info.EntityId,
             _crossSection = (float) info.CrossSection,
@@ -68,5 +68,33 @@ namespace DetectionEquipment.Shared.Structs
             _iffCodes = info.IffCodes,
             _relations = info.Relations == null ? byte.MaxValue : (byte) info.Relations,
         };
+    }
+
+    internal struct HudDetectionInfo
+    {
+        public long EntityId;
+        public MyEntity Entity;
+        public double CrossSection;
+        public double Error;
+        public Vector3D Position;
+        public Vector3D? Velocity;
+        public double? VelocityVariance;
+        public SensorDefinition.SensorType DetectionType;
+        public string[] IffCodes;
+        public MyRelationsBetweenPlayers? Relations;
+
+        public HudDetectionInfo(WorldDetectionInfo info)
+        {
+            EntityId = info.EntityId;
+            Entity = info.Entity;
+            CrossSection = info.CrossSection;
+            Error = info.SumError;
+            Position = info.Position;
+            Velocity = info.Velocity;
+            VelocityVariance = info.VelocityVariance;
+            DetectionType = info.DetectionType;
+            IffCodes = info.IffCodes;
+            Relations = info.Relations;
+        }
     }
 }

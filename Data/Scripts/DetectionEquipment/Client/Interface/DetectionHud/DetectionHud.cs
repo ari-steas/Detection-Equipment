@@ -82,7 +82,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             }
         }
 
-        public static void UpdateDetections(ICollection<WorldDetectionInfo> detections)
+        public static void UpdateDetections(ICollection<HudDetectionInfo> detections)
         {
             foreach (var detection in detections)
             {

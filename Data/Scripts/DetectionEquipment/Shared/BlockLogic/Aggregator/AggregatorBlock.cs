@@ -17,6 +17,7 @@ using VRage.Game.Entity;
 using VRage.ModAPI;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
+using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -233,7 +234,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
                 // testing //
                 //MyAPIGateway.Utilities.ShowNotification($"Det: {AggregatedDetections.Count} Cache: {DetectionCache.Count}", 1000/60);
-                //if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
+                //if (GlobalData.Debug && Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
                 //{
                 //    foreach (var detection in _bufferDetections)
                 //    {

@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
 
@@ -13,14 +14,18 @@ namespace DetectionEquipment.Shared.Structs
     {
         public long EntityId;
         public double CrossSection;
-        public double Error;
-        public Vector3D Position;
+        public double MaxRangeError;
+        public double MaxBearingError;
+        public Vector3D PositionOffset;
         public Vector3D? Velocity;
         public double? VelocityVariance;
         public SensorDefinition.SensorType DetectionType;
         public string[] IffCodes;
         public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
+
+        public Vector3D Position => PositionOffset + Entity.PositionComp.WorldAABB.Center;
+        public double SumError => MaxRangeError + MaxBearingError;
 
         public static WorldDetectionInfo Create(DetectionInfo info, AggregatorBlock aggregator = null)
         {
@@ -29,17 +34,19 @@ namespace DetectionEquipment.Shared.Structs
                 EntityId = info.Track.EntityId,
                 Entity = (info.Track as EntityTrack)?.Entity,
                 CrossSection = info.CrossSection,
-                Position = info.Sensor.Position + info.Bearing * info.Range,
+                MaxRangeError = info.MaxRangeError,
+                MaxBearingError = info.MaxBearingError,
+                PositionOffset = info.PositionOffset,
                 DetectionType = info.Sensor.Definition.Type,
                 Velocity = null,
                 VelocityVariance = null,
                 IffCodes = info.IffCodes ?? Array.Empty<string>(),
             };
 
-            wInfo.Error = Math.Tan(info.BearingError) * info.Range; // planar error; base width of right triangle
-            wInfo.Error *= wInfo.Error;
-            wInfo.Error += info.RangeError * info.RangeError; // normal error
-            wInfo.Error = Math.Sqrt(wInfo.Error);
+            //wInfo.Error = Math.Tan(info.MaxBearingError) * info.Range; // planar error; base width of right triangle
+            //wInfo.Error *= wInfo.Error;
+            //wInfo.Error += info.MaxRangeError * info.MaxRangeError; // normal error
+            //wInfo.Error = Math.Sqrt(wInfo.Error);
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
 
             return wInfo;
@@ -51,8 +58,9 @@ namespace DetectionEquipment.Shared.Structs
             {
                 EntityId = info.EntityId,
                 CrossSection = info.CrossSection,
-                Error = info.Error,
-                Position = info.Position,
+                MaxRangeError = info.MaxRangeError,
+                MaxBearingError = info.MaxBearingError,
+                PositionOffset = info.PositionOffset,
                 Velocity = info.Velocity,
                 VelocityVariance = info.VelocityVariance,
                 DetectionType = info.DetectionType,
@@ -62,13 +70,15 @@ namespace DetectionEquipment.Shared.Structs
             };
         }
 
-        public override bool Equals(object obj) => obj is WorldDetectionInfo && Position.Equals(((WorldDetectionInfo)obj).Position);
-        public override int GetHashCode() => EntityId.GetHashCode();
-
-        public override string ToString()
+        public override bool Equals(object obj)
         {
-            return $"UID: {EntityId}\nPosition: {Position.ToString("N0")} +-{Error:N1}m\nIFF: {(IffCodes.Length == 0 ? "N/A" : string.Join(" | ", IffCodes))}";
+            if (!(obj is WorldDetectionInfo))
+                return false;
+            var info = (WorldDetectionInfo) obj;
+
+            return info.EntityId == EntityId && PositionOffset.Equals(info.PositionOffset);
         }
+        public override int GetHashCode() => EntityId.GetHashCode();
 
         public static WorldDetectionInfo Average(AggregatorBlock aggregator, params WorldDetectionInfo[] args) => Average(args, aggregator);
 
@@ -82,15 +92,11 @@ namespace DetectionEquipment.Shared.Structs
 
             SensorDefinition.SensorType? proposedType = null;
             MyEntity entity = null;
-            double totalError = 0;
-            double minError = double.MaxValue;
             var allCodes = new List<string>();
             foreach (var info in args)
             {
                 if (info.Entity != null)
                     entity = info.Entity;
-                totalError += info.Error;
-                if (info.Error < minError) minError = info.Error;
                 foreach (var code in info.IffCodes)
                     if (!allCodes.Contains(code))
                         allCodes.Add(code);
@@ -100,42 +106,76 @@ namespace DetectionEquipment.Shared.Structs
                     proposedType = SensorDefinition.SensorType.None;
             }
 
-            Vector3D averagePos = Vector3D.Zero;
-            double totalCrossSection = 0;
-            double pctSum = 0;
-            foreach (var info in args) // TODO weighted average error
-            {
-                pctSum += 1 - (info.Error / totalError);
-                if (totalError > 0)
-                    averagePos += info.Position * (1 - (info.Error / totalError));
-                else
-                    averagePos += info.Position;
-                totalCrossSection += info.CrossSection;
-            }
-
-            if (totalError > 0)
-                averagePos /= pctSum;
-            else
-                averagePos /= args.Count;
-
-            //double avgDiff = 0;
-            //foreach (var info in args)
-            //    avgDiff += Vector3D.DistanceSquared(info.Position, averagePos);
-            //avgDiff = Math.Sqrt(avgDiff) / args.Count;
+            double totalRangeError, totalBearingError, averageCrossSection;
+            var averageRelPos = AveragePositions(args, aggregator, entity, out totalRangeError, out totalBearingError, out averageCrossSection);
 
             var wInfo = new WorldDetectionInfo
             {
                 Entity = entity,
                 EntityId = entity?.EntityId ?? -1,
-                CrossSection = totalCrossSection / args.Count,
-                Position = averagePos,
-                Error = minError,
+                CrossSection = averageCrossSection,
+                PositionOffset = averageRelPos,
+                MaxRangeError = totalRangeError / args.Count,
+                MaxBearingError = totalBearingError / args.Count,
                 DetectionType = proposedType ?? SensorDefinition.SensorType.None,
                 IffCodes = allCodes.ToArray(),
             };
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
 
             return wInfo;
+        }
+
+        /// <summary>
+        /// RETURNS RELATIVE OFFSET!
+        /// </summary>
+        /// <param name="args"></param>
+        /// <param name="aggregator"></param>
+        /// <param name="totalError"></param>
+        /// <returns></returns>
+        private static Vector3D AveragePositions(ICollection<WorldDetectionInfo> args, AggregatorBlock aggregator, MyEntity entity,
+            out double totalRangeError, out double totalBearingError, out double averageCrossSection)
+        {
+            totalRangeError = 0;
+            totalBearingError = 0;
+            averageCrossSection = 0;
+
+            foreach (var info in args)
+            {
+                totalRangeError += info.MaxRangeError;
+                totalBearingError += info.MaxBearingError;
+            }
+
+            Vector3D averageBearing = Vector3D.Zero;
+            double averageRange = 0;
+            double bearingErrorPctSum = 0, rangeErrorPctSum = 0;
+            Vector3D aggregatorPos = aggregator.Block.GetPosition();
+            foreach (var info in args)
+            {
+                var relativeBearing = info.Position - aggregatorPos;
+                var relativeRange = relativeBearing.Normalize();
+
+                averageBearing += totalBearingError == 0
+                    ? relativeBearing
+                    : relativeBearing * (1 - (info.MaxBearingError / totalBearingError));
+                bearingErrorPctSum += (1 - (info.MaxBearingError / totalBearingError));
+
+                averageRange += totalRangeError == 0
+                    ? relativeRange
+                    : relativeRange * (1 - (info.MaxBearingError / totalRangeError));
+                rangeErrorPctSum += (1 - (info.MaxRangeError / totalRangeError));
+
+                averageCrossSection += info.CrossSection;
+            }
+
+            averageBearing /= totalBearingError == 0
+                ? bearingErrorPctSum
+                : args.Count;
+            averageRange /= totalRangeError == 0
+                ? rangeErrorPctSum
+                : args.Count;
+            averageCrossSection /= args.Count;
+
+            return averageBearing * averageRange + aggregatorPos - entity.PositionComp.WorldAABB.Center;
         }
 
         public int CompareTo(WorldDetectionInfo other)
@@ -149,12 +189,13 @@ namespace DetectionEquipment.Shared.Structs
             fieldArray[0] = EntityId;
             fieldArray[1] = DetectionType;
             fieldArray[2] = CrossSection;
-            fieldArray[3] = Error;
+            fieldArray[3] = MaxBearingError;
             fieldArray[4] = Position;
             fieldArray[5] = Velocity;
             fieldArray[6] = VelocityVariance;
             fieldArray[7] = IffCodes;
             fieldArray[8] = (int?) Relations;
+            fieldArray[9] = MaxRangeError;
         }
     }
 }

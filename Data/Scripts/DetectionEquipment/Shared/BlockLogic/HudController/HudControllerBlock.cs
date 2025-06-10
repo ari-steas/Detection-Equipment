@@ -26,7 +26,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         // DisplayCockpit?
         // Friendlies / Neutrals
         internal AggregatorBlock SourceAggregator => HudControllerControls.ActiveAggregators[this];
-        internal List<WorldDetectionInfo> Detections = new List<WorldDetectionInfo>();
+        internal List<HudDetectionInfo> Detections = new List<HudDetectionInfo>();
 
         public SimpleSync<bool> AlwaysDisplay = new SimpleSync<bool>(false);
         public SimpleSync<float> CombineAngle = new SimpleSync<float>((float)MathHelper.ToRadians(2.5));
@@ -78,7 +78,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 if (!ShowSelf.Value && item.Entity is IMyCubeGrid && item.Entity.GetTopMostParent(typeof(IMyCubeGrid)) == blockParent)
                     continue;
 
-                var newInfo = WorldDetectionInfo.Create(item);
+                var newInfo = new HudDetectionInfo(item);
                 if (item.VelocityVariance != null && item.VelocityVariance > SourceAggregator.VelocityErrorThreshold)
                 {
                     // Don't show velocity if we can't tell what it is.
@@ -127,16 +127,16 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         public class HudUpdatePacket : PacketBase
         {
             [ProtoMember(1)] private long _thisBlockId;
-            [ProtoMember(2)] private HudDetectionInfo[] _detections;
+            [ProtoMember(2)] private HudDetectionInfoPackage[] _detections;
 
             private HudUpdatePacket() { }
 
             public HudUpdatePacket(HudControllerBlock controller)
             {
                 _thisBlockId = controller.Block.EntityId;
-                _detections = new HudDetectionInfo[controller.Detections.Count];
+                _detections = new HudDetectionInfoPackage[controller.Detections.Count];
                 for (var i = 0; i < controller.Detections.Count; i++)
-                    _detections[i] = (HudDetectionInfo)controller.Detections[i];
+                    _detections[i] = (HudDetectionInfoPackage)controller.Detections[i];
             }
 
             public override void Received(ulong senderSteamId, bool fromServer)
@@ -152,7 +152,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 if (_detections != null)
                 {
                     foreach (var info in _detections)
-                        controller.Detections.Add((WorldDetectionInfo)info);
+                        controller.Detections.Add((HudDetectionInfo)info);
                 }
             }
         }

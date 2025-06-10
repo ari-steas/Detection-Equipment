@@ -90,15 +90,16 @@ namespace DetectionEquipment.Server.Sensors
                 double maxRangeError = range * passiveSensor.Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / passiveSensor.Definition.DetectionThreshold, 0, 1));
                 range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-                passiveSensor._queuedRadarHits[sensor.AttachedEntityId()] = new DetectionInfo
-                {
-                    Sensor = passiveSensor,
-                    CrossSection = signalToNoiseRatio,
-                    Bearing = bearing,
-                    BearingError = maxBearingError,
-                    Range = range,
-                    RangeError = maxRangeError,
-                };
+                passiveSensor._queuedRadarHits[sensor.AttachedEntity.EntityId] = new DetectionInfo
+                (
+                    null, // this is set later
+                    passiveSensor,
+                    signalToNoiseRatio,
+                    range,
+                    maxRangeError,
+                    bearing,
+                    maxBearingError
+                );
             }
         }
     }

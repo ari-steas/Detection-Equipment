@@ -67,16 +67,15 @@ namespace DetectionEquipment.Server.Sensors
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
             var detection = new DetectionInfo
-            {
-                Track = visibilitySet.Track,
-                Sensor = this,
-                CrossSection = visibility,
-                Bearing = bearing,
-                BearingError = maxBearingError,
-                Range = range,
-                RangeError = maxRangeError,
-                IffCodes = Array.Empty<string>(),
-            };
+            (
+                visibilitySet.Track,
+                this,
+                visibility,
+                range,
+                maxRangeError,
+                bearing,
+                maxBearingError
+            );
 
             OnDetection?.Invoke(ObjectPackager.Package(detection));
 

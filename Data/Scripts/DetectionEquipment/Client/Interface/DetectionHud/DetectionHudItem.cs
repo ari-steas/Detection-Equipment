@@ -12,7 +12,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 {
     internal class DetectionHudItem : HudElementBase
     {
-        public WorldDetectionInfo Detection;
+        public HudDetectionInfo Detection;
         private HudMarker OutlineBox;
         internal LabelBox InfoLabel;
         private LabelBox NewInfoLabel => new LabelBox(OutlineBox)
@@ -29,7 +29,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         public const int MaxBoxSize = 400, MinBoxSize = 25;
 
-        public DetectionHudItem(HudParentBase parent, WorldDetectionInfo info, int visible) : base(parent)
+        public DetectionHudItem(HudParentBase parent, HudDetectionInfo info, int visible) : base(parent)
         {
             Detection = info;
 
@@ -51,7 +51,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             Visible = value != 0;
         }
 
-        public void Update(WorldDetectionInfo detection)
+        public void Update(HudDetectionInfo detection)
         {
             Detection = detection;
             if (HudMarker.GetMarkerType(detection) != OutlineBox.Type || HudMarker.GetMarkerColor(detection) != OutlineBox.Color)
@@ -141,7 +141,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             public readonly MarkerType Type;
             public readonly Color Color;
 
-            public HudMarker(HudParentBase parent, WorldDetectionInfo detection) : base(parent)
+            public HudMarker(HudParentBase parent, HudDetectionInfo detection) : base(parent)
             {
                 Size = Vector2.One * MinBoxSize * 2;
                 string material;
@@ -207,7 +207,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 }
             }
 
-            public void ScaleOutline(WorldDetectionInfo detection, IReadOnlyHudSpaceNode hudSpace)
+            public void ScaleOutline(HudDetectionInfo detection, IReadOnlyHudSpaceNode hudSpace)
             {
                 if (Type == MarkerType.Rwr)
                     return;
@@ -242,7 +242,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 Size = new Vector2((float)MathUtils.ClampAbs(max.X - min.X, MinBoxSize, MaxBoxSize), (float)MathUtils.ClampAbs(max.Y - min.Y, 25, 400));
             }
 
-            public static MarkerType GetMarkerType(WorldDetectionInfo info)
+            public static MarkerType GetMarkerType(HudDetectionInfo info)
             {
                 if (info.IffCodes?.Length > 0)
                     return MarkerType.Full;
@@ -251,7 +251,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 return MarkerType.NoIff;
             }
 
-            public static Color GetMarkerColor(WorldDetectionInfo info)
+            public static Color GetMarkerColor(HudDetectionInfo info)
             {
                 switch (info.Relations)
                 {
