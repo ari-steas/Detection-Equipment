@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using Sandbox.ModAPI;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
@@ -122,6 +123,8 @@ namespace DetectionEquipment.Shared.Structs
             };
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
 
+            MyAPIGateway.Utilities.ShowNotification($"{wInfo.Position.ToString("N")}", 1000/60);
+
             return wInfo;
         }
 
@@ -168,11 +171,11 @@ namespace DetectionEquipment.Shared.Structs
             }
 
             averageBearing /= totalBearingError == 0
-                ? bearingErrorPctSum
-                : args.Count;
+                ? args.Count
+                : bearingErrorPctSum;
             averageRange /= totalRangeError == 0
-                ? rangeErrorPctSum
-                : args.Count;
+                ? args.Count
+                : rangeErrorPctSum;
             averageCrossSection /= args.Count;
 
             return averageBearing * averageRange + aggregatorPos - entity.PositionComp.WorldAABB.Center;
