@@ -1,5 +1,6 @@
 ﻿using Sandbox.ModAPI;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using VRage.Game.ModAPI;
 using VRage.Game;
@@ -9,14 +10,22 @@ namespace DetectionEquipment.Shared.Utils
 {
     public static class Log
     {
+        // non-fatal exception checker
+        private const int MaxExceptionsOverInterval = 10;
+        private const int MaxExceptionIntervalTicks = 60;
+        private static Queue<int> _exceptions;
+        private static int _lastTickExceptions = 0;
+
         private static IMyModContext _modContext;
         private const string ModName = "Detection Equipment";
         private static TextWriter _writer;
         private static string _indent = "";
+
         public static bool GameUnloading = false;
 
         public static void Init(IMyModContext context)
         {
+            _exceptions = new Queue<int>(MaxExceptionIntervalTicks + 1);
             _modContext = context;
             try
             {
@@ -45,6 +54,7 @@ namespace DetectionEquipment.Shared.Utils
         public static void Close()
         {
             Info("Log", "Unloaded.");
+            _exceptions = null;
             _writer?.Close();
             _writer = null;
         }
@@ -65,11 +75,23 @@ namespace DetectionEquipment.Shared.Utils
         /// <param name="fatal"></param>
         public static void Exception(string source, Exception exception, bool fatal = false)
         {
+            // WHY DON'T YOU CHECK CONTROL.VISIBLE???
+            if (fatal && source.StartsWith("TerminalControlAdder"))
+            {
+                Log.Info("Log.Exception", $"Intercepted possible Build Vision exception in {source}...");
+                throw CustomCrashModContext.GenerateException(source, exception);
+            }
+
             _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}");
             _writer?.Flush();
             MyLog.Default.WriteLineAndConsole($"DetectionEquipment - [{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}");
+
             if (fatal)
+            {
                 CustomCrashModContext.Throw(source, exception);
+                return;
+            }
+            _lastTickExceptions += 1;
         }
 
         public static void IncreaseIndent()
@@ -81,6 +103,23 @@ namespace DetectionEquipment.Shared.Utils
         {
             if (_indent.Length > 0)
                 _indent = _indent.Remove(_indent.Length - 1);
+        }
+
+        public static void Update()
+        {
+            if (_exceptions == null)
+                return;
+
+            _exceptions.Enqueue(_lastTickExceptions);
+            while (_exceptions.Count > MaxExceptionIntervalTicks)
+                _exceptions.Dequeue();
+            _lastTickExceptions = 0;
+
+            int sumExceptions = 0;
+            foreach (var exceptionCount in _exceptions)
+                sumExceptions += exceptionCount;
+            if (sumExceptions >= MaxExceptionsOverInterval)
+                Log.Exception("Log", new Exception($"Too many non-fatal exceptions ({sumExceptions}/{MaxExceptionsOverInterval}) in {MaxExceptionIntervalTicks/60f:N}s!"), true);
         }
 
         private class CustomCrashModContext : IMyModContext
@@ -121,27 +160,23 @@ namespace DetectionEquipment.Shared.Utils
             public static void Throw(string source, Exception ex)
             {
                 Log.Info("CustomCrashModContext", "Generating custom exception message...");
-                Log.Info("CustomCrashModContext", "If you can see this and the game is still running, it's Build Vision's fault. WHY DON'T YOU CHECK CONTROL.VISIBLE???");
+                // Invoking on main thread to guarantee the hard-crash message
+                MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                {
+                    Log.Close();
+                    throw GenerateException(source, ex);
+                });
+            }
+
+            public static ModCrashedException GenerateException(string source, Exception ex)
+            {
                 var context = new CustomCrashModContext(Log._modContext,
                     "Please reach out to @aristeas. on discord with logs for help.\n\n" +
                     "Mod: %AppData%\\SpaceEngineers\\Storage\\DetectionEquipment.log \n" +
                     "Game: %AppData%\\SpaceEngineers\\SpaceEngineers_*_*.log\n\n" +
                     $"{source}: {ex.Message}\n{ex.InnerException?.Message}\n"
-                    );
-
-                if ((GlobalData.MainThreadId == -1 || Environment.CurrentManagedThreadId == GlobalData.MainThreadId) &&
-                    (MyAPIGateway.Session?.GameplayFrameCounter > 0 && !GameUnloading))
-                {
-                    // should close the log here too but build vision needs an exception to hide controls. why?????
-                    throw new ModCrashedException(ex, context);
-                }
-
-                // Invoking on main thread to guarantee the hard-crash message
-                MyAPIGateway.Utilities.InvokeOnGameThread(() =>
-                {
-                    Log.Close();
-                    throw new ModCrashedException(ex, context);
-                });
+                );
+                return new ModCrashedException(ex, context); 
             }
         }
     }

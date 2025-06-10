@@ -55,6 +55,7 @@ namespace DetectionEquipment.Shared
                     GlobalData.UpdatePlayers();
                 }
 
+                Log.Update();
                 Ticks++;
             }
             catch (Exception ex)

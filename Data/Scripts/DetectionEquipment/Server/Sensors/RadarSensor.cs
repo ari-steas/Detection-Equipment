@@ -4,7 +4,7 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
-using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
@@ -23,7 +23,7 @@ namespace DetectionEquipment.Server.Sensors
         public RadarSensor(IMyEntity entity, SensorDefinition definition)
         {
             Id = ServerMain.I.HighestSensorId++;
-            AttachedEntity = entity.GetTopMostParent();
+            AttachedEntity = entity.GetTopMostParent(typeof(IMyCubeGrid));
             Definition = definition;
             Aperture = definition.MaxAperture;
             
