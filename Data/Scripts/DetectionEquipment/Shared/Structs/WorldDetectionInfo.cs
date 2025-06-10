@@ -183,7 +183,7 @@ namespace DetectionEquipment.Shared.Structs
             return other.CrossSection.CompareTo(this.CrossSection);
         }
 
-        public int FieldCount => 9;
+        public int FieldCount => 10;
         public void Package(object[] fieldArray)
         {
             fieldArray[0] = EntityId;
