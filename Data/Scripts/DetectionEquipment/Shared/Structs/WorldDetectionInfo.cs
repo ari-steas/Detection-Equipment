@@ -123,8 +123,6 @@ namespace DetectionEquipment.Shared.Structs
             };
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
 
-            MyAPIGateway.Utilities.ShowNotification($"{wInfo.Position.ToString("N")}", 1000/60);
-
             return wInfo;
         }
 
