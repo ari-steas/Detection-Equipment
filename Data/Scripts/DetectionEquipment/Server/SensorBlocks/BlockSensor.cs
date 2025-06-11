@@ -137,12 +137,15 @@ namespace DetectionEquipment.Server.SensorBlocks
                     throw new Exception($"Invalid SensorType {definition.Type}");
             }
 
-            var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
-            resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId,
-                () => Block.Enabled ? (float)Definition.MaxPowerDraw / 1000000 : 0);
-            resourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, (float)Definition.MaxPowerDraw / 1000000);
-            resourceSink.Update();
-            Block.EnabledChanged += b => resourceSink.Update();
+            if (Definition.MaxPowerDraw > 0)
+            {
+                var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
+                resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId,
+                    () => Block.Enabled ? (float)Definition.MaxPowerDraw / 1000000 : 0);
+                resourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, (float)Definition.MaxPowerDraw / 1000000);
+                resourceSink.Update();
+                Block.EnabledChanged += b => resourceSink.Update();
+            }
 
             ServerMain.I.BlockSensorIdMap[Sensor.Id] = this;
         }

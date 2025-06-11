@@ -37,10 +37,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Time",
                 "Interval",
                 "Interval over which detections should be aggregated.",
-                0,
+                1/60f,
                 15,
                 b => b.GameLogic.GetAs<AggregatorBlock>()?.AggregationTime,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().AggregationTime.Value = v,
+                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().AggregationTime.Value = (float) Math.Round(v*60)/60,
                 (b, sb) => sb.Append(b.GameLogic.GetAs<AggregatorBlock>().AggregationTime.Value.ToString("F1") + "s")
                 );
             CreateSlider(

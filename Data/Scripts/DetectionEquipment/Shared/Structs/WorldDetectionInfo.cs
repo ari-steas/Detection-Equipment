@@ -4,8 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
-using VRage.Game;
 using VRage.Game.Entity;
 using VRageMath;
 
@@ -162,7 +162,7 @@ namespace DetectionEquipment.Shared.Structs
 
                 averageRange += totalRangeError == 0
                     ? relativeRange
-                    : relativeRange * (1 - (info.MaxBearingError / totalRangeError));
+                    : relativeRange * (1 - (info.MaxRangeError / totalRangeError));
                 rangeErrorPctSum += (1 - (info.MaxRangeError / totalRangeError));
 
                 averageCrossSection += info.CrossSection;

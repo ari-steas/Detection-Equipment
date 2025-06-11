@@ -72,9 +72,12 @@ namespace DetectionEquipment.Server.Countermeasures
             SetupMuzzles();
 
             _resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
-            _resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () => Block.Enabled && Firing ? Definition.ActivePowerDraw : 0);
-            _resourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, Definition.ActivePowerDraw);
-            _resourceSink.Update();
+            if (Definition.ActivePowerDraw > 0)
+            {
+                _resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () => Block.Enabled && Firing ? Definition.ActivePowerDraw : 0);
+                _resourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, Definition.ActivePowerDraw);
+                _resourceSink.Update();
+            }
             Block.EnabledChanged += b => _resourceSink.Update();
         }
 

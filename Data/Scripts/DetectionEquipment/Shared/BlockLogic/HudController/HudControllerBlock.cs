@@ -100,13 +100,6 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
         protected void UpdateClient()
         {
-            for (var i = 0; i < Detections.Count; i++)
-            {
-                var detection = Detections[i];
-                detection.Position += (detection.Entity?.Physics?.LinearVelocity ?? detection.Velocity ?? Vector3.Zero) / 60f;
-                Detections[i] = detection;
-            }
-
             // Only show HUD blocks on controlled grid.
             if (MyAPIGateway.Session.Player?.Controller.ControlledEntity?.Entity.GetTopMostParent() ==
                 Block.GetTopMostParent())
@@ -114,6 +107,13 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 DetectionHud.AlwaysShow = AlwaysDisplay.Value;
                 DetectionHud.CombineAngle = CombineAngle.Value;
                 DetectionHud.UpdateDetections(Detections);
+            }
+
+            for (var i = 0; i < Detections.Count; i++)
+            {
+                var detection = Detections[i];
+                detection.Position += (detection.Entity?.Physics?.LinearVelocity ?? detection.Velocity ?? Vector3.Zero) / 60f;
+                Detections[i] = detection;
             }
         }
 
