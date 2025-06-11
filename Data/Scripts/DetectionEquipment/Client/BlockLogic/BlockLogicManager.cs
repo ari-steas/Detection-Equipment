@@ -88,7 +88,7 @@ namespace DetectionEquipment.Client.BlockLogic
         private static bool TryRegisterLogicInternal<TLogic>(long blockId, TLogic logic) where TLogic : class, IBlockLogic
         {
             var block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyCubeBlock;
-            if (block == null)
+            if (block?.CubeGrid?.Physics == null)
             {
                 if (GlobalData.Debug)
                     Log.Info("BlockLogicManager", $"Delayed registering {logic.GetType().Name} on {blockId}...");
