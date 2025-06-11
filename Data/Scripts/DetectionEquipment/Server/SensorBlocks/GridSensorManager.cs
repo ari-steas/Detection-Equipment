@@ -264,7 +264,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             public double RadarVisibility;
             public double OpticalVisibility;
             public double InfraredVisibility;
-            public Vector3D ClosestCorner, Position;
+            public Vector3D ClosestCorner;
             public BoundingBoxD BoundingBox;
 
             public VisibilitySet(IMyCubeGrid thisGrid, ITrack track)
@@ -281,7 +281,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                 }
                 InfraredVisibility = track.InfraredVisibility(thisGrid.WorldAABB.Center, OpticalVisibility);
                 ClosestCorner = Track.BoundingBox.ClosestCorner(thisGrid.WorldAABB.Center);
-                Position = Track.Position + ((track as EntityTrack)?.Entity?.Physics?.LinearVelocity / 30 ?? Vector3D.Zero);
                 BoundingBox = Track.BoundingBox;
             }
 
@@ -293,7 +292,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                 OpticalVisibility = 0;
                 InfraredVisibility = 0;
                 ClosestCorner = Vector3D.Zero;
-                Position = Vector3D.Zero;
                 BoundingBox = default(BoundingBoxD);
 
                 foreach (var visibilitySet in toAverage)
@@ -303,7 +301,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                         Track = visibilitySet.Track;
                         largestVisibility = visibilitySet.RadarVisibility + visibilitySet.OpticalVisibility;
                         ClosestCorner = visibilitySet.ClosestCorner;
-                        Position = visibilitySet.Position;
                         BoundingBox = visibilitySet.BoundingBox;
                     }
                     RadarVisibility += visibilitySet.RadarVisibility;

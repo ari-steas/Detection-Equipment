@@ -233,14 +233,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 }
 
                 // testing //
-                //MyAPIGateway.Utilities.ShowNotification($"Det: {_bufferDetections.Count} Cache: {DetectionCache.Count}", 1000/60);
+                //MiscUtils.SafeChat("", "\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+                ////MyAPIGateway.Utilities.ShowNotification($"Det: {_bufferDetections.Count} Cache: {DetectionCache.Count}", 1000/60);
                 //if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
                 //{
-                //    foreach (var detection in _bufferDetections)
+                //    foreach (var detection in DetectionSet)
                 //    {
                 //        DebugDraw.AddLine(Block.GetPosition(), detection.Position, Color.Green, 0);
                 //        if (detection.Velocity != null)
                 //            DebugDraw.AddLine(detection.Position, detection.Position + detection.Velocity.Value, Color.Blue, 0);
+                //        MiscUtils.SafeChat(detection.Entity.GetType().Name, $"{Vector3D.Distance(detection.Position, detection.Entity.PositionComp.WorldAABB.Center):N}m");
                 //    }
                 //}
             }

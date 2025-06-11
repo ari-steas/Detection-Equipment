@@ -49,7 +49,7 @@ namespace DetectionEquipment.Server.Sensors
             if (targetAngle > Aperture)
                 return null;
 
-            Vector3D bearing = visibilitySet.Position - Position;
+            Vector3D bearing = visibilitySet.Track.Position - Position;
             double range = bearing.Normalize();
             var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
             double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;

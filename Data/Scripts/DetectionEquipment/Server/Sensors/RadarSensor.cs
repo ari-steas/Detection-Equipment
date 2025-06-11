@@ -57,7 +57,7 @@ namespace DetectionEquipment.Server.Sensors
             if (targetAngle > Aperture)
                 return null;
 
-            double targetDistanceSq = Vector3D.DistanceSquared(Position, visibilitySet.Position);
+            double targetDistanceSq = Vector3D.DistanceSquared(Position, visibilitySet.Track.Position);
 
             double signalToNoiseRatio;
             {
@@ -101,7 +101,7 @@ namespace DetectionEquipment.Server.Sensors
             }
 
             double maxBearingError = Definition.BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
-            Vector3D bearing = MathUtils.RandomCone(Vector3D.Normalize(visibilitySet.Position - Position), maxBearingError);
+            Vector3D bearing = MathUtils.RandomCone(Vector3D.Normalize(visibilitySet.Track.Position - Position), maxBearingError);
 
             double range = Math.Sqrt(targetDistanceSq);
             double maxRangeError = range * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
