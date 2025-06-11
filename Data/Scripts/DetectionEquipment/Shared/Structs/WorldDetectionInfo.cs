@@ -20,7 +20,7 @@ namespace DetectionEquipment.Shared.Structs
         public Vector3D PositionOffset;
         public Vector3D? Velocity;
         public double? VelocityVariance;
-        public SensorDefinition.SensorType DetectionType;
+        public DetectionFlags DetectionType;
         public string[] IffCodes;
         public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
@@ -38,7 +38,7 @@ namespace DetectionEquipment.Shared.Structs
                 MaxRangeError = info.MaxRangeError,
                 MaxBearingError = info.MaxBearingError,
                 PositionOffset = info.PositionOffset,
-                DetectionType = info.Sensor.Definition.Type,
+                DetectionType = (DetectionFlags)(1 << (int) info.Sensor.Definition.Type-1),
                 Velocity = null,
                 VelocityVariance = null,
                 IffCodes = info.IffCodes ?? Array.Empty<string>(),
@@ -91,7 +91,7 @@ namespace DetectionEquipment.Shared.Structs
             if (args.Count == 1)
                 return args.First();
 
-            SensorDefinition.SensorType? proposedType = null;
+            DetectionFlags proposedType = DetectionFlags.None;
             MyEntity entity = null;
             var allCodes = new List<string>();
             foreach (var info in args)
@@ -101,10 +101,7 @@ namespace DetectionEquipment.Shared.Structs
                 foreach (var code in info.IffCodes)
                     if (!allCodes.Contains(code))
                         allCodes.Add(code);
-                if (proposedType == null)
-                    proposedType = info.DetectionType;
-                else if (proposedType != info.DetectionType)
-                    proposedType = SensorDefinition.SensorType.None;
+                proposedType |= info.DetectionType;
             }
 
             double totalRangeError, totalBearingError, averageCrossSection;
@@ -118,7 +115,7 @@ namespace DetectionEquipment.Shared.Structs
                 PositionOffset = averageRelPos,
                 MaxRangeError = totalRangeError / args.Count,
                 MaxBearingError = totalBearingError / args.Count,
-                DetectionType = proposedType ?? SensorDefinition.SensorType.None,
+                DetectionType = proposedType,
                 IffCodes = allCodes.ToArray(),
             };
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
@@ -177,6 +174,16 @@ namespace DetectionEquipment.Shared.Structs
             averageCrossSection /= args.Count;
 
             return averageBearing * averageRange + aggregatorPos - entity.PositionComp.WorldAABB.Center;
+        }
+
+        [Flags]
+        public enum DetectionFlags
+        {
+            None = 0,
+            Radar = 1,
+            PassiveRadar = 2,
+            Optical = 4,
+            Infrared = 8
         }
 
         public int CompareTo(WorldDetectionInfo other)

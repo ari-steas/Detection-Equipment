@@ -73,7 +73,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 false,
                 logic => MyAPIGateway.Session.IsServer ?
                          logic.GridSensors.BlockSensorIdMap.Keys :
-                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks.GetValueOrDefault(logic.CubeBlock.CubeGrid, new List<IMyCubeBlock>()),
+                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks.GetValueOrDefault(logic.CubeBlock.CubeGrid, new HashSet<IMyCubeBlock>()),
                 (logic, selected) =>
                 {
                     if (!MyAPIGateway.Session.IsServer)

@@ -26,7 +26,7 @@ namespace DetectionEquipment.Shared.Structs
 
         private double? VelocityVariance => float.IsPositiveInfinity(_velocityVariance) ? (double?)null : _velocityVariance;
         [ProtoMember(10)] private float _velocityVariance;
-        private SensorDefinition.SensorType SensorType => (SensorDefinition.SensorType) _sensorType;
+        private WorldDetectionInfo.DetectionFlags SensorType => (WorldDetectionInfo.DetectionFlags) _sensorType;
         [ProtoMember(11)] private byte _sensorType;
         [ProtoMember(12)] private string[] _iffCodes; // TODO: Cache this between server and client.
 
@@ -79,7 +79,7 @@ namespace DetectionEquipment.Shared.Structs
         public Vector3D Position;
         public Vector3D? Velocity;
         public double? VelocityVariance;
-        public SensorDefinition.SensorType DetectionType;
+        public WorldDetectionInfo.DetectionFlags DetectionType;
         public string[] IffCodes;
         public MyRelationsBetweenPlayers? Relations;
 

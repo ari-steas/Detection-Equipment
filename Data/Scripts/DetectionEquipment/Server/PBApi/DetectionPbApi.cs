@@ -502,7 +502,7 @@ namespace IngameScript
             public Vector3D Position;
             public Vector3D? Velocity;
             public double? VelocityVariance;
-            public PbSensorDefinition.SensorType DetectionType;
+            public DetectionFlags DetectionType;
             public string[] IffCodes;
             public PbRelationBetweenPlayers? Relations;
 
@@ -515,7 +515,7 @@ namespace IngameScript
                 BearingError = info.BearingError;
                 RangeError = info.RangeError;
 
-                DetectionType = sensor.Definition.Type;
+                DetectionType = (DetectionFlags) (1 << (int) sensor.Definition.Type - 1);
 
                 Velocity = null;
                 VelocityVariance = null;
@@ -558,7 +558,7 @@ namespace IngameScript
                 if (args.Count == 1)
                     return args.First();
 
-                PbSensorDefinition.SensorType? proposedType = null;
+                DetectionFlags proposedType = DetectionFlags.None;
                 double totalError = 0;
                 double minError = double.MaxValue;
                 var allCodes = new MemorySafeList<string>();
@@ -569,10 +569,7 @@ namespace IngameScript
                     foreach (var code in info.IffCodes)
                         if (!allCodes.Contains(code))
                             allCodes.Add(code);
-                    if (proposedType == null)
-                        proposedType = info.DetectionType;
-                    else if (proposedType != info.DetectionType)
-                        proposedType = PbSensorDefinition.SensorType.None;
+                    proposedType |= info.DetectionType;
                 }
 
                 Vector3D averagePos = Vector3D.Zero;
@@ -598,7 +595,7 @@ namespace IngameScript
                     CrossSection = totalCrossSection / args.Count,
                     Position = averagePos,
                     BearingError = minError,
-                    DetectionType = proposedType ?? PbSensorDefinition.SensorType.None,
+                    DetectionType = proposedType,
                     IffCodes = allCodes.ToArray(),
                 };
             }
@@ -606,6 +603,16 @@ namespace IngameScript
             public int CompareTo(PbWorldDetectionInfo other)
             {
                 return other.CrossSection.CompareTo(this.CrossSection);
+            }
+
+            [Flags]
+            public enum DetectionFlags
+            {
+                None = 0,
+                Radar = 1,
+                PassiveRadar = 2,
+                Optical = 4,
+                Infrared = 8
             }
 
             public enum PbRelationBetweenPlayers

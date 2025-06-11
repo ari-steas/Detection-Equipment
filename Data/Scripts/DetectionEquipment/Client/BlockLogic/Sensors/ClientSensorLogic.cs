@@ -75,10 +75,10 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         public void Register(IMyCubeBlock block)
         {
             Block = block;
-            if (SensorBlockManager.SensorBlocks.ContainsKey(Block.CubeGrid))
+            if (SensorBlockManager.SensorBlocks.ContainsKey(Block.CubeGrid)) 
                 SensorBlockManager.SensorBlocks[Block.CubeGrid].Add(Block);
             else
-                SensorBlockManager.SensorBlocks[Block.CubeGrid] = new List<IMyCubeBlock> { Block };
+                SensorBlockManager.SensorBlocks[Block.CubeGrid] = new HashSet<IMyCubeBlock> { Block };
 
             OnCustomDataChanged((IMyTerminalBlock) Block);
             ((IMyTerminalBlock)Block).CustomDataChanged += OnCustomDataChanged;

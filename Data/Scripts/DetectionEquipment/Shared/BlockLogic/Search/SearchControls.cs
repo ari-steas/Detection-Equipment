@@ -1,6 +1,8 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
+using System.Linq;
+using DetectionEquipment.Client.BlockLogic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -28,9 +30,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 "Sensors this block should direct. Ctrl+Click to select multiple.",
                 true,
                 false,
-                logic => MyAPIGateway.Session.IsServer ?
+                logic => (MyAPIGateway.Session.IsServer ?
                          logic.GridSensors.BlockSensorIdMap.Keys :
-                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid],
+                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid])
+                         // BRIMSTONE LINQ HELL
+                         .Where(sb => sb.GetLogic<ClientSensorLogic>().Sensors.Values.Any(s => s.Definition.Movement != null)),
                 (logic, selected) =>
                 {
                     if (!MyAPIGateway.Session.IsServer)

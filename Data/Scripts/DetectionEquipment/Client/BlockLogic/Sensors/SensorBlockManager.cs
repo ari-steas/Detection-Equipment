@@ -10,12 +10,12 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
     internal static class SensorBlockManager
     {
         public static Dictionary<uint, ClientSensorLogic> BlockSensorIdMap;
-        public static Dictionary<IMyCubeGrid, List<IMyCubeBlock>> SensorBlocks;
+        public static Dictionary<IMyCubeGrid, HashSet<IMyCubeBlock>> SensorBlocks;
 
         public static void Load()
         {
             BlockSensorIdMap = new Dictionary<uint, ClientSensorLogic>();
-            SensorBlocks = new Dictionary<IMyCubeGrid, List<IMyCubeBlock>>();
+            SensorBlocks = new Dictionary<IMyCubeGrid, HashSet<IMyCubeBlock>>();
 
             MyAPIGateway.Entities.OnEntityAdd += OnEntityAdd;
             MyAPIGateway.Entities.GetEntities(null, e =>

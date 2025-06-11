@@ -172,5 +172,20 @@ namespace DetectionEquipment.Shared.Utils
         
             return new Vector2D(desiredAzimuth, desiredElevation);
         }
+
+        public static Vector2 Abs(this Vector2 vec)
+        {
+            return new Vector2(vec.X < 0 ? -vec.X : vec.X, vec.Y < 0 ? -vec.Y : vec.Y);
+        }
+
+        public static float Angle(this Vector2 vec)
+        {
+            return (float) Math.Atan2(vec.Y, vec.X);
+        }
+
+        public static Vector2 FromPolar(float angle, float length)
+        {
+            return new Vector2(length * (float) Math.Cos(angle), length * (float) Math.Sin(angle));
+        }
     }
 }

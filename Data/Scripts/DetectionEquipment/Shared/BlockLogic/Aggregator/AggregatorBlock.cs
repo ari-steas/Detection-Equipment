@@ -78,7 +78,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public virtual MyRelationsBetweenPlayers GetInfoRelations(WorldDetectionInfo info)
         {
             // TODO: Script API for this
-            if (info.DetectionType == SensorDefinition.SensorType.PassiveRadar) // Radar locks are probably enemies
+            if (info.DetectionType == WorldDetectionInfo.DetectionFlags.PassiveRadar) // Radar locks are probably enemies
                 return MyRelationsBetweenPlayers.Enemies;
             return MyRelationsBetweenPlayers.Neutral; // we just don't know...
         }

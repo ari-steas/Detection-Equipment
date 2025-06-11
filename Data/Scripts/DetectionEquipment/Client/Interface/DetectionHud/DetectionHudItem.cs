@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Shared.Definitions;
+﻿using System.Collections.Generic;
+using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using RichHudFramework.UI;
@@ -7,6 +8,7 @@ using RichHudFramework.UI.Rendering;
 using VRage.Game.Entity;
 using VRage.ModAPI;
 using VRageMath;
+using static DetectionEquipment.Shared.Structs.WorldDetectionInfo;
 
 namespace DetectionEquipment.Client.Interface.DetectionHud
 {
@@ -107,29 +109,36 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         private string CrossSectionStr()
         {
-            string detectionTypePrefix = "DCS", detectionTypeSuffix = "";
+            List<string> detectionTypePrefix = new List<string>();
+            string detectionTypeSuffix;
+            if ((Detection.DetectionType & DetectionFlags.Radar) == DetectionFlags.Radar)
+                detectionTypePrefix.Add("RCS");
+            if ((Detection.DetectionType & DetectionFlags.PassiveRadar) == DetectionFlags.PassiveRadar)
+                detectionTypePrefix.Add("RWR");
+            if ((Detection.DetectionType & DetectionFlags.Optical) == DetectionFlags.Optical)
+                detectionTypePrefix.Add("VCS");
+            if ((Detection.DetectionType & DetectionFlags.Infrared) == DetectionFlags.Infrared)
+                detectionTypePrefix.Add("IRS");
+
             switch (Detection.DetectionType)
             {
-                case SensorDefinition.SensorType.Radar:
-                    detectionTypePrefix = "RCS";
+                case DetectionFlags.Radar:
                     detectionTypeSuffix = "m^2";
                     break;
-                case SensorDefinition.SensorType.PassiveRadar:
-                    detectionTypePrefix = "RWR";
+                case DetectionFlags.PassiveRadar:
                     detectionTypeSuffix = "dB";
                     break;
-                case SensorDefinition.SensorType.Optical:
-                    detectionTypePrefix = "VCS";
+                case DetectionFlags.Optical:
                     detectionTypeSuffix = "m^2";
                     break;
-                case SensorDefinition.SensorType.Infrared:
-                    detectionTypePrefix = "IRS";
+                case DetectionFlags.Infrared:
                     detectionTypeSuffix = "Wm^2";
                     break;
-                case SensorDefinition.SensorType.None:
-                    return "";
+                default:
+                    detectionTypeSuffix = "(?)";
+                    break;
             }
-            return $"{detectionTypePrefix}: {Detection.CrossSection:N0} {detectionTypeSuffix}\n";
+            return $"{string.Join("|", detectionTypePrefix)}: {Detection.CrossSection:N0} {detectionTypeSuffix}\n";
         }
 
         private class HudMarker : HudElementBase
@@ -246,7 +255,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             {
                 if (info.IffCodes?.Length > 0)
                     return MarkerType.Full;
-                if (info.DetectionType == SensorDefinition.SensorType.PassiveRadar)
+                if (info.DetectionType == DetectionFlags.PassiveRadar)
                     return MarkerType.Rwr;
                 return MarkerType.NoIff;
             }
