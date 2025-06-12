@@ -62,6 +62,10 @@ namespace DetectionEquipment.Shared.Definitions
         /// Dummy empty name for the sensor. If blank or invalid, defaults to the elevation subpart.
         /// </summary>
         [ProtoMember(11)] public string SensorEmpty;
+        /// <summary>
+        /// Name that shows in the sensor's terminal.
+        /// </summary>
+        [ProtoMember(12)] public string TerminalName;
 
         /// <summary>
         /// Defines properties for subpart-based movement.

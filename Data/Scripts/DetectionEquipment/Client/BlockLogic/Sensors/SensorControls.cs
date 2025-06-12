@@ -102,7 +102,12 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
                     foreach (var sensor in logic.Sensors.Values)
                     {
-                        var item = new VRage.ModAPI.MyTerminalControlListBoxItem(MyStringId.GetOrCompute(sensor.Definition.Type.ToString()), MyStringId.GetOrCompute(""), sensor.Id);
+                        var item = new VRage.ModAPI.MyTerminalControlListBoxItem(
+                            MyStringId.GetOrCompute(
+                                string.IsNullOrEmpty(sensor.Definition.TerminalName) ?
+                                sensor.Definition.Type.ToString() :
+                                sensor.Definition.TerminalName
+                            ), MyStringId.GetOrCompute(""), sensor.Id);
                         content.Add(item);
                         if (sensor.Id == logic.CurrentSensorId)
                             selected.Add(item);
