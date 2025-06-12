@@ -175,7 +175,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     Detections.Add(detection.Value);
             }
 
-            if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated)
+            if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated && Block.HasLocalPlayerAccess())
                 foreach (var detection in Detections)
                     DebugDraw.AddLine(Sensor.Position, detection.Position, Color.Red, 0);
         }

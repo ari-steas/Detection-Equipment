@@ -116,7 +116,7 @@ namespace DetectionEquipment.Server.Countermeasures
                 }
             }
 
-            if (Block.ShowOnHUD && Definition.IsCountermeasureAttached)
+            if (Block.ShowOnHUD && Definition.IsCountermeasureAttached && Block.HasLocalPlayerAccess())
             {
                 foreach (var counter in _attachedCountermeasures)
                 {

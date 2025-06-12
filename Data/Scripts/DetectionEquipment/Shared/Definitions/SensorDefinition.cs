@@ -117,18 +117,6 @@ namespace DetectionEquipment.Shared.Definitions
             [ProtoIgnore] public bool CanRotateFull => MaxAzimuth >= Math.PI && MinAzimuth <= -Math.PI;
             [ProtoIgnore] public bool CanElevateFull => MaxElevation >= Math.PI && MinElevation <= -Math.PI;
 
-            [ProtoIgnore] public object[] DataSet => new object[]
-            {
-                AzimuthPart,
-                ElevationPart,
-                MinAzimuth,
-                MaxAzimuth,
-                MinElevation,
-                MaxElevation,
-                AzimuthRate,
-                ElevationRate,
-            };
-
 
             public int FieldCount => 8;
             public void Package(object[] fieldArray)

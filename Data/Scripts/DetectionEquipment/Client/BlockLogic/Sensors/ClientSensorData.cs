@@ -76,7 +76,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 UpdateCameraView();
 
             // HUD
-            if (_block.ShowOnHUD)
+            if (_block.ShowOnHUD && _block.HasLocalPlayerAccess())
             {
                 var matrix = SensorMatrix;
                 if (Aperture < Math.PI)
