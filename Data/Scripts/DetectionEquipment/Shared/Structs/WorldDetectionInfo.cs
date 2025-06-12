@@ -104,8 +104,8 @@ namespace DetectionEquipment.Shared.Structs
                 proposedType |= info.DetectionType;
             }
 
-            double totalRangeError, totalBearingError, averageCrossSection;
-            var averageRelPos = AveragePositions(args, aggregator, entity, out totalRangeError, out totalBearingError, out averageCrossSection);
+            double minRangeError, minBearingError, averageCrossSection;
+            var averageRelPos = AveragePositions(args, aggregator, entity, out minRangeError, out minBearingError, out averageCrossSection);
 
             var wInfo = new WorldDetectionInfo
             {
@@ -113,8 +113,8 @@ namespace DetectionEquipment.Shared.Structs
                 EntityId = entity?.EntityId ?? -1,
                 CrossSection = averageCrossSection,
                 PositionOffset = averageRelPos,
-                MaxRangeError = totalRangeError / args.Count,
-                MaxBearingError = totalBearingError / args.Count,
+                MaxRangeError = minRangeError,
+                MaxBearingError = minBearingError,
                 DetectionType = proposedType,
                 IffCodes = allCodes.ToArray(),
             };
@@ -131,10 +131,12 @@ namespace DetectionEquipment.Shared.Structs
         /// <param name="totalError"></param>
         /// <returns></returns>
         private static Vector3D AveragePositions(ICollection<WorldDetectionInfo> args, AggregatorBlock aggregator, MyEntity entity,
-            out double totalRangeError, out double totalBearingError, out double averageCrossSection)
+            out double minRangeError, out double minBearingError, out double averageCrossSection)
         {
-            totalRangeError = 0;
-            totalBearingError = 0;
+            double totalRangeError = 0;
+            double totalBearingError = 0;
+            minRangeError = double.MaxValue;
+            minBearingError = double.MaxValue;
             averageCrossSection = 0;
 
             foreach (var info in args)
@@ -163,6 +165,20 @@ namespace DetectionEquipment.Shared.Structs
                 rangeErrorPctSum += (1 - (info.MaxRangeError / totalRangeError));
 
                 averageCrossSection += info.CrossSection;
+
+                if (info.MaxRangeError < minRangeError)
+                {
+                    minRangeError = totalRangeError == 0
+                        ? info.MaxRangeError
+                        : info.MaxRangeError * (1 - (info.MaxRangeError / totalRangeError));
+                }
+
+                if (info.MaxBearingError < minBearingError)
+                {
+                    minBearingError = totalBearingError == 0
+                        ? info.MaxBearingError
+                        : info.MaxBearingError * (1 - (info.MaxBearingError / totalBearingError));
+                }
             }
 
             averageBearing /= totalBearingError == 0
