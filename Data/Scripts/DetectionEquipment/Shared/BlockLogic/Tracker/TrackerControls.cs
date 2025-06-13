@@ -50,7 +50,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                          logic.GridSensors.BlockSensorMap.Keys :
                          (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid])
                     // BRIMSTONE LINQ HELL
-                    .Where(sb => sb.GetLogic<ClientSensorLogic>().Sensors.Values.Any(s => s.Definition.Movement != null)),
+                    .Where(sb => sb.GetLogic<ClientSensorLogic>()?.Sensors.Values.Any(s => s.Definition.Movement != null) ?? false),
                 (logic, selected) =>
                 {
                     if (!MyAPIGateway.Session.IsServer)

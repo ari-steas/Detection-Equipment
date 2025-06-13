@@ -92,7 +92,7 @@ namespace DetectionEquipment.Shared.Utils
             // WHY DON'T YOU CHECK CONTROL.VISIBLE???
             if (fatal && source.StartsWith("TerminalControlAdder"))
             {
-                Log.Info("Log.Exception", $"Intercepted possible Build Vision exception in {source}...");
+                //Log.Info("Log.Exception", $"Intercepted possible Build Vision exception in {source}...");
                 throw CustomCrashModContext.GenerateException(source, exception);
             }
 
