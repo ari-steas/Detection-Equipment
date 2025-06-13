@@ -37,7 +37,7 @@ namespace DetectionEquipment.Server
 
         public override void LoadData()
         {
-            if (!MyAPIGateway.Session.IsServer)
+            if (!MyAPIGateway.Session.IsServer || GlobalData.Killswitch)
                 return;
 
             try
@@ -83,7 +83,7 @@ namespace DetectionEquipment.Server
 
         protected override void UnloadData()
         {
-            if (!MyAPIGateway.Session.IsServer)
+            if (!MyAPIGateway.Session.IsServer || GlobalData.Killswitch)
                 return;
 
             try
@@ -116,7 +116,7 @@ namespace DetectionEquipment.Server
         private List<IMyEntity> _deadTracks = new List<IMyEntity>();
         public override void UpdateAfterSimulation()
         {
-            if (!MyAPIGateway.Session.IsServer)
+            if (!MyAPIGateway.Session.IsServer || GlobalData.Killswitch)
                 return;
 
             try

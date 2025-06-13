@@ -121,18 +121,11 @@ namespace DetectionEquipment.Shared.Serialization
             if (!ServerMain.I.GridSensorMangers.TryGetValue(block.CubeGrid, out manager))
                 return;
 
-            uint[] ids;
-            if (!manager.BlockSensorIdMap.TryGetValue(block, out ids))
+            List<BlockSensor> sensors;
+            if (!manager.BlockSensorMap.TryGetValue(block, out sensors) || sensors.Count == 0)
                 return;
 
-            var sensorSet = new List<BlockSensor>();
-            foreach (var sensor in manager.Sensors)
-                if (ids.Contains(sensor.Sensor.Id))
-                    sensorSet.Add(sensor);
-            if (sensorSet.Count == 0)
-                return;
-
-            SaveBlockSettings(block, sensorSet);
+            SaveBlockSettings(block, sensors);
         }
 
         internal static void SaveBlockSettings(IMyCubeBlock block, List<BlockSensor> sensors)

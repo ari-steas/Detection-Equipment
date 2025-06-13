@@ -23,7 +23,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
 
         public override void UpdateOnceBeforeFrame()
         {
-            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
 
             AutoSelfIff.Component = this;

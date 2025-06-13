@@ -36,7 +36,7 @@ namespace DetectionEquipment.Shared.BlockLogic
         {
             base.UpdateOnceBeforeFrame();
 
-            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
 
             try
@@ -61,6 +61,9 @@ namespace DetectionEquipment.Shared.BlockLogic
 
         public override bool IsSerialized()
         {
+            if (GlobalData.Killswitch)
+                return base.IsSerialized();
+
             GetSettings?.SaveBlockSettings();
             return base.IsSerialized();
         }
@@ -68,6 +71,9 @@ namespace DetectionEquipment.Shared.BlockLogic
         public override void MarkForClose()
         {
             base.MarkForClose();
+            if (GlobalData.Killswitch)
+                return;
+
             ControlBlockManager.I.Blocks.Remove(Block as MyCubeBlock);
             OnClose?.Invoke();
         }

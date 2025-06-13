@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Server.Sensors;
 using VRageMath;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
@@ -64,12 +65,20 @@ namespace DetectionEquipment.Server.PBApi
         #region Sensors
         private static uint[] GetSensorIds(IMyCubeBlock block)
         {
-            return ServerMain.I.GridSensorMangers[(MyCubeGrid) block.CubeGrid].BlockSensorIdMap[(MyCubeBlock) block];
+            List<BlockSensor> sensors;
+            if (!ServerMain.I.GridSensorMangers[(MyCubeGrid)block.CubeGrid].BlockSensorMap
+                    .TryGetValue((MyCubeBlock)block, out sensors))
+                return Array.Empty<uint>();
+
+            var ids = new uint[sensors.Count];
+            for (var i = 0; i < sensors.Count; i++)
+                ids[i] = sensors[i].Sensor.Id;
+            return ids;
         }
 
         private static bool HasSensor(IMyCubeBlock block)
         {
-            return ServerMain.I.GridSensorMangers[(MyCubeGrid) block.CubeGrid].BlockSensorIdMap.ContainsKey((MyCubeBlock) block);
+            return ServerMain.I.GridSensorMangers[(MyCubeGrid) block.CubeGrid].BlockSensorMap.ContainsKey((MyCubeBlock) block);
         }
 
         private static Vector3D GetSensorPosition(uint id)

@@ -31,7 +31,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 true,
                 false,
                 logic => (MyAPIGateway.Session.IsServer ?
-                         logic.GridSensors.BlockSensorIdMap.Keys :
+                         logic.GridSensors.BlockSensorMap.Keys :
                          (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid])
                          // BRIMSTONE LINQ HELL
                          .Where(sb => sb.GetLogic<ClientSensorLogic>().Sensors.Values.Any(s => s.Definition.Movement != null)),

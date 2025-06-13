@@ -153,7 +153,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         public override void UpdateOnceBeforeFrame()
         {
-            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
 
             AggregationTime.Component = this;
@@ -178,6 +178,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         public override void MarkForClose()
         {
+            if (GlobalData.Killswitch)
+                return;
             base.MarkForClose();
             DetectionCache.Clear();
             _parallelCache.Clear();
@@ -189,7 +191,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         private readonly List<WorldDetectionInfo[]> _parallelCache = new List<WorldDetectionInfo[]>();
         public override void UpdateAfterSimulation()
         {
-            if (!MyAPIGateway.Session.IsServer)
+            if (!MyAPIGateway.Session.IsServer || GlobalData.Killswitch)
                 return;
 
             if (!Block.IsWorking)
@@ -254,6 +256,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         public override void UpdateAfterSimulation10()
         {
+            if (GlobalData.Killswitch)
+                return;
             // This method is pretty slow, let's not call it often.
             _bufferVisibleAggregators = DatalinkManager.GetActiveDatalinkChannels(Block.CubeGrid, Block.OwnerId);
         }

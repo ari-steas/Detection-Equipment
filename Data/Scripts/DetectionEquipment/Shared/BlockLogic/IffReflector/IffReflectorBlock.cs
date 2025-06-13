@@ -22,7 +22,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
         public override void UpdateOnceBeforeFrame()
         {
-            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
 
             IffCode.Value = Block.CubeGrid.CustomName;
@@ -50,7 +50,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
         public override void MarkForClose()
         {
             base.MarkForClose();
-            if (!_iffMap.ContainsKey(Block.CubeGrid))
+            if (!_iffMap.ContainsKey(Block.CubeGrid) || GlobalData.Killswitch)
                 return;
 
             _iffMap[Block.CubeGrid].Remove(this);

@@ -37,7 +37,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
         public override void UpdateOnceBeforeFrame()
         {
-            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
 
             AlwaysDisplay.Component = this;
@@ -48,7 +48,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
         public override void UpdateAfterSimulation()
         {
-            if (!Block.IsWorking)
+            if (!Block.IsWorking || GlobalData.Killswitch)
                 return;
 
             try
@@ -119,6 +119,8 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
         public override void MarkForClose()
         {
+            if (GlobalData.Killswitch)
+                return;
             base.MarkForClose();
             HudControllerControls.ActiveAggregators.Remove(this);
         }

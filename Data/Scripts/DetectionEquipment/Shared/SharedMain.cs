@@ -22,6 +22,12 @@ namespace DetectionEquipment.Shared
             {
                 I = this;
 
+                if (!GlobalData.CheckShouldLoad())
+                {
+                    I = null;
+                    return;
+                }
+
                 Log.Init(ModContext);
                 Log.Info("SharedMain", "Start initialize...");
                 Log.IncreaseIndent();
@@ -47,6 +53,9 @@ namespace DetectionEquipment.Shared
 
         public override void UpdateAfterSimulation()
         {
+            if (GlobalData.Killswitch)
+                return;
+
             try
             {
                 if (Ticks % 10 == 0)
@@ -66,6 +75,9 @@ namespace DetectionEquipment.Shared
 
         protected override void UnloadData()
         {
+            if (GlobalData.Killswitch)
+                return;
+
             try
             {
                 Log.Info("SharedMain", "Start unload...");

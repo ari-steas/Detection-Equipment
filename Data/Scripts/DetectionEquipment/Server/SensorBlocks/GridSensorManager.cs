@@ -12,6 +12,7 @@ using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
+using Sandbox.Game.EntityComponents;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -23,12 +24,12 @@ namespace DetectionEquipment.Server.SensorBlocks
     {
         public readonly IMyCubeGrid Grid;
         public HashSet<BlockSensor> Sensors = new HashSet<BlockSensor>();
-        public Dictionary<IMyCubeBlock, uint[]> BlockSensorIdMap = new Dictionary<IMyCubeBlock, uint[]>();
-        public HashSet<AggregatorBlock> Aggregators = new HashSet<AggregatorBlock>();
-        public HashSet<VisibilitySet> TrackVisibility = new HashSet<VisibilitySet>();
-        public bool HasRadar = false;
+        public Dictionary<IMyCubeBlock, List<BlockSensor>> BlockSensorMap = new Dictionary<IMyCubeBlock, List<BlockSensor>>();
+        private readonly HashSet<AggregatorBlock> _aggregators = new HashSet<AggregatorBlock>();
+        private HashSet<VisibilitySet> _trackVisibility = new HashSet<VisibilitySet>();
+        private bool _hasRadar = false;
 
-        private Dictionary<IMyGridGroupData, List<VisibilitySet>> _combineBuffer = new Dictionary<IMyGridGroupData, List<VisibilitySet>>();
+        private readonly Dictionary<IMyGridGroupData, List<VisibilitySet>> _combineBuffer = new Dictionary<IMyGridGroupData, List<VisibilitySet>>();
         private bool _isUpdateComplete = true;
 
         public static void ScanTargetsAction(MyCubeGrid mainGrid, BoundingSphereD sphere, List<MyEntity> targets)
@@ -50,7 +51,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
                 {
                     var gridPos = grid.WorldMatrix.Translation;
-                    foreach (var aggregator in gridSensors.Aggregators)
+                    foreach (var aggregator in gridSensors._aggregators)
                     {
                         if (!aggregator.DoWcTargeting.Value)
                             continue;
@@ -120,11 +121,11 @@ namespace DetectionEquipment.Server.SensorBlocks
                 var tracksBuffer = new Dictionary<IMyEntity, ITrack>(ServerMain.I.Tracks);
                 MyAPIGateway.Parallel.Start(() =>
                 {
-                    var internalVisibility = new HashSet<VisibilitySet>(TrackVisibility.Count);
+                    var internalVisibility = new HashSet<VisibilitySet>(_trackVisibility.Count);
                     foreach (var trackKvp in tracksBuffer)
                     {
                         // 500km max track range if radar is present, 50km otherwise
-                        if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (HasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
+                        if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
                             continue;
 
                         var gT = trackKvp.Value as GridTrack;
@@ -167,9 +168,9 @@ namespace DetectionEquipment.Server.SensorBlocks
                     }
                     _combineBuffer.Clear();
 
-                    lock (TrackVisibility)
+                    lock (_trackVisibility)
                     {
-                        TrackVisibility = internalVisibility;
+                        _trackVisibility = internalVisibility;
                     }
                     _isUpdateComplete = true;
                 });
@@ -180,7 +181,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             MyAPIGateway.Parallel.ForEach(Sensors, sensor =>
             {
-                sensor.Update(TrackVisibility);
+                sensor.Update(_trackVisibility);
             });
         }
 
@@ -203,25 +204,38 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 List<uint> ids = new List<uint>();
                 var sensors = DefinitionManager.TryCreateSensors(cubeBlock);
+
+                bool didPopulate = !BlockSensorMap.ContainsKey(cubeBlock);
+                if (didPopulate)
+                    BlockSensorMap.Add(cubeBlock, sensors);
+
                 foreach (var newSensor in sensors)
                 {
                     Sensors.Add(newSensor);
                     ids.Add(newSensor.Sensor.Id);
+                    if (!didPopulate)
+                        BlockSensorMap[cubeBlock].Add(newSensor);
 
-                    HasRadar |= newSensor.Sensor is RadarSensor || newSensor.Sensor is PassiveRadarSensor;
+                    _hasRadar |= newSensor.Sensor is RadarSensor || newSensor.Sensor is PassiveRadarSensor;
                 }
 
                 if (ids.Count > 0)
                 {
-                    BlockSensorIdMap[cubeBlock] = ids.ToArray();
                     BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
                     BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
+
+                    {
+                        var resourceSink = (MyResourceSinkComponent)cubeBlock.ResourceSink;
+                        resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () => BlockSensor.GetPowerDraw(cubeBlock));
+                        resourceSink.Update();
+                        cubeBlock.EnabledChanged += b => resourceSink.Update();
+                    }
                 }
 
                 var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
                 if (aggregator != null)
                 {
-                    Aggregators.Add(aggregator);
+                    _aggregators.Add(aggregator);
                 }
             }
             catch (Exception ex)
@@ -238,14 +252,14 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (cubeBlock != null)
                 {
                     Sensors.RemoveWhere(sensor => sensor.Block == cubeBlock);
-                    BlockSensorIdMap.Remove(cubeBlock);
+                    BlockSensorMap.Remove(cubeBlock);
 
-                    HasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
+                    _hasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
 
                     var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
                     if (aggregator != null)
                     {
-                        Aggregators.Remove(aggregator);
+                        _aggregators.Remove(aggregator);
                     }
                 }
             }

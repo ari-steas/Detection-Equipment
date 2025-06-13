@@ -9,6 +9,7 @@ using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRage.ModAPI;
+using VRage.Utils;
 
 namespace DetectionEquipment.Shared
 {
@@ -17,6 +18,10 @@ namespace DetectionEquipment.Shared
         // this has to be above all IniSettings.
         private static List<IIniSetting> _allSettings = new List<IIniSetting>();
 
+        /// <summary>
+        /// Kill switch for the entire mod
+        /// </summary>
+        public static bool Killswitch = true;
         public const ushort ServerNetworkId = 15289;
         public const ushort DataNetworkId = 15288;
         public const ushort ClientNetworkId = 15287;
@@ -123,7 +128,24 @@ namespace DetectionEquipment.Shared
                 Log.Info("GlobalData", "Not contributing to WC targeting, if present.");
         }
 
+        internal static bool CheckShouldLoad()
+        {
+            foreach (var mod in MyAPIGateway.Session.Mods)
+            {
+                if (mod.GetModContext().ModPath == SharedMain.I.ModContext.ModPath)
+                    continue;
 
+                if (mod.GetModContext().ModId.RemoveChars(' ').ToLower().Contains("detectionequipment"))
+                {
+                    Killswitch = true;
+                    MyLog.Default.WriteLineAndConsole($"[Detection Equipment] Found local DetEq version \"{mod.GetPath()}\" - cancelling init and disabling mod. My ModId: {SharedMain.I.ModContext.ModId}");
+                    return false;
+                }
+            }
+
+            Killswitch = false;
+            return true;
+        }
 
         public static bool IsReady = false;
         internal static void Init()

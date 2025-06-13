@@ -49,7 +49,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
         public override void UpdateOnceBeforeFrame()
         {
-            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
             ResetAngleTime.Component = this;
             base.UpdateOnceBeforeFrame();
@@ -57,7 +57,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
         public override void UpdateAfterSimulation()
         {
-            if (!MyAPIGateway.Session.IsServer)
+            if (!MyAPIGateway.Session.IsServer || GlobalData.Killswitch)
                 return;
 
             if (SourceAggregator == null || !Block.IsWorking)

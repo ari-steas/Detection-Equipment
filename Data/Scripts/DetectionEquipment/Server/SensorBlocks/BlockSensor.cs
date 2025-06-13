@@ -137,16 +137,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                     throw new Exception($"Invalid SensorType {definition.Type}");
             }
 
-            if (Definition.MaxPowerDraw > 0)
-            {
-                var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
-                resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId,
-                    () => Block.Enabled ? (float)Definition.MaxPowerDraw / 1000000 : 0);
-                resourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, (float)Definition.MaxPowerDraw / 1000000);
-                resourceSink.Update();
-                Block.EnabledChanged += b => resourceSink.Update();
-            }
-
             ServerMain.I.BlockSensorIdMap[Sensor.Id] = this;
         }
 
@@ -208,6 +198,20 @@ namespace DetectionEquipment.Server.SensorBlocks
         {
             ServerMain.I.BlockSensorIdMap.Remove(Sensor.Id);
             Sensor.Close();
+        }
+
+        public static float GetPowerDraw(IMyFunctionalBlock block)
+        {
+            GridSensorManager manager;
+            List<BlockSensor> sensors;
+            if (!block.Enabled || !ServerMain.I.GridSensorMangers.TryGetValue(block.CubeGrid, out manager) || !manager.BlockSensorMap.TryGetValue(block, out sensors))
+                return 0;
+
+            float totalDraw = 0;
+            foreach (var sensor in sensors)
+                totalDraw += (float) sensor.Definition.MaxPowerDraw;
+            block.ResourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, totalDraw / 1000000);
+            return totalDraw / 1000000;
         }
 
         public bool CanAimAt(Vector3D position)

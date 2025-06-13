@@ -9,6 +9,7 @@ using Sandbox.ModAPI;
 using DetectionEquipment.Client.External;
 using DetectionEquipment.Client.Interface.Commands;
 using DetectionEquipment.Client.Interface.DetectionHud;
+using DetectionEquipment.Shared;
 
 namespace DetectionEquipment.Client
 {
@@ -18,7 +19,7 @@ namespace DetectionEquipment.Client
     {
         public override void LoadData()
         {
-            if (MyAPIGateway.Utilities.IsDedicated)
+            if (MyAPIGateway.Utilities.IsDedicated || GlobalData.Killswitch)
                 return;
 
             try
@@ -47,7 +48,7 @@ namespace DetectionEquipment.Client
 
         public override void UpdateAfterSimulation()
         {
-            if (MyAPIGateway.Utilities.IsDedicated)
+            if (MyAPIGateway.Utilities.IsDedicated || GlobalData.Killswitch)
                 return;
 
             try
@@ -82,7 +83,7 @@ namespace DetectionEquipment.Client
 
         protected override void UnloadData()
         {
-            if (MyAPIGateway.Utilities.IsDedicated)
+            if (MyAPIGateway.Utilities.IsDedicated || GlobalData.Killswitch)
                 return;
 
             try

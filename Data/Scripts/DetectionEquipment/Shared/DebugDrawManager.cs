@@ -52,12 +52,18 @@ namespace DetectionEquipment.Shared
 
         public override void LoadData()
         {
+            if (GlobalData.Killswitch)
+                return;
+
             if (!MyAPIGateway.Utilities.IsDedicated)
                 I = this;
         }
 
         protected override void UnloadData()
         {
+            if (GlobalData.Killswitch)
+                return;
+
             I = null;
         }
 
@@ -126,6 +132,9 @@ namespace DetectionEquipment.Shared
 
         public override void Draw()
         {
+            if (GlobalData.Killswitch)
+                return;
+
             long nowTicks = DateTime.UtcNow.Ticks;
 
             lock (_queuedPoints)

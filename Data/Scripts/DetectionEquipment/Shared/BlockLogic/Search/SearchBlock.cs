@@ -22,14 +22,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
         public override void UpdateOnceBeforeFrame()
         {
-            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
             base.UpdateOnceBeforeFrame();
         }
 
         public override void UpdateAfterSimulation()
         {
-            if (!MyAPIGateway.Session.IsServer || !Block.IsWorking)
+            if (!MyAPIGateway.Session.IsServer || !Block.IsWorking || GlobalData.Killswitch)
                 return;
 
             foreach (var sensor in ControlledSensors)
