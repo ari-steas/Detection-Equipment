@@ -1,12 +1,14 @@
-﻿using VRage.Game.ModAPI;
+﻿using DetectionEquipment.Shared.BlockLogic;
+using Sandbox.ModAPI;
+using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Client.BlockLogic
 {
     internal interface IBlockLogic
     {
-        IMyCubeBlock Block { get; set; }
+        IMyTerminalBlock Block { get; set; }
         bool IsClosed { get; set; }
-        void Register(IMyCubeBlock block);
+        void Register(IMyTerminalBlock block);
         void Close();
 
 

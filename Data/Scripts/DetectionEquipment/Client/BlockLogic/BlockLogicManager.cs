@@ -2,6 +2,7 @@
 using DetectionEquipment.Client.BlockLogic.Countermeasures;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
@@ -87,7 +88,7 @@ namespace DetectionEquipment.Client.BlockLogic
 
         private static bool TryRegisterLogicInternal<TLogic>(long blockId, TLogic logic) where TLogic : class, IBlockLogic
         {
-            var block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyCubeBlock;
+            var block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyTerminalBlock;
             if (block?.CubeGrid?.Physics == null)
             {
                 if (GlobalData.Debug)
@@ -144,13 +145,13 @@ namespace DetectionEquipment.Client.BlockLogic
 
         public static void OnEntityRemoved(IMyEntity ent)
         {
-            var block = ent as IMyCubeBlock;
+            var block = ent as IMyTerminalBlock;
             if (block == null)
                 return;
             CloseLogic(block);
         }
 
-        public static void CloseLogic(IMyCubeBlock block)
+        public static void CloseLogic(IMyTerminalBlock block)
         {
             List<IBlockLogic> set;
             lock (Logics)

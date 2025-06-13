@@ -6,13 +6,15 @@ using System.Collections.Generic;
 using VRage.Game.ModAPI;
 using VRageMath;
 using DetectionEquipment.Client.Networking;
+using DetectionEquipment.Shared;
+using Sandbox.Game.EntityComponents;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
     internal class ClientSensorLogic : IBlockLogic
     {
         public readonly Dictionary<uint, ClientSensorData> Sensors = new Dictionary<uint, ClientSensorData>();
-        public IMyCubeBlock Block { get; set; }
+        public IMyTerminalBlock Block { get; set; }
         public bool IsClosed { get; set; }
 
         public uint CurrentSensorId = uint.MaxValue;
@@ -72,7 +74,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             _definitionIds = definitionIds;
         }
 
-        public void Register(IMyCubeBlock block)
+        public void Register(IMyTerminalBlock block)
         {
             Block = block;
             if (SensorBlockManager.SensorBlocks.ContainsKey(Block.CubeGrid)) 
@@ -80,8 +82,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             else
                 SensorBlockManager.SensorBlocks[Block.CubeGrid] = new HashSet<IMyCubeBlock> { Block };
 
-            OnCustomDataChanged((IMyTerminalBlock) Block);
-            ((IMyTerminalBlock)Block).CustomDataChanged += OnCustomDataChanged;
+            OnCustomDataChanged(Block);
+            Block.CustomDataChanged += OnCustomDataChanged;
 
             new SensorControls().DoOnce();
 
@@ -89,6 +91,25 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 RegisterSensor(_sensorIds[i], _definitionIds[i]);
             _sensorIds = null;
             _definitionIds = null;
+
+            if (!MyAPIGateway.Session.IsServer)
+            {
+                var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
+                resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () =>
+                {
+                    if (!((IMyFunctionalBlock)Block).Enabled)
+                        return 0;
+
+                    float totalDraw = 0;
+                    foreach (var sensor in Sensors.Values)
+                        totalDraw += (float) sensor.Definition.MaxPowerDraw;
+                    Block.ResourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, totalDraw / 1000000);
+                    return totalDraw / 1000000;
+                });
+                
+                resourceSink.Update();
+                ((IMyFunctionalBlock)Block).EnabledChanged += b => resourceSink.Update();
+            }
         }
 
         public void Close()

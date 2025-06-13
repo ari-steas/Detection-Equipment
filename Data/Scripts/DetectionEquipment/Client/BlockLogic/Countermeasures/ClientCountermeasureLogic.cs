@@ -1,13 +1,9 @@
-﻿using DetectionEquipment.Client.BlockLogic.Sensors;
-using DetectionEquipment.Client.Networking;
-using DetectionEquipment.Server.Networking;
-using System;
+﻿using DetectionEquipment.Client.Networking;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
-using VRage.Game.ModAPI;
+using Sandbox.Game.EntityComponents;
+using Sandbox.ModAPI;
 
 namespace DetectionEquipment.Client.BlockLogic.Countermeasures
 {
@@ -15,7 +11,7 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
     {
         public uint Id;
         public CountermeasureEmitterDefinition Definition;
-        public IMyCubeBlock Block { get; set; }
+        public IMyTerminalBlock Block { get; set; }
         public bool IsClosed { get; set; }
 
         private bool _firing = false;
@@ -39,11 +35,21 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
             Definition = DefinitionManager.GetCountermeasureEmitterDefinition(defIds[0]);
         }
 
-        public void Register(IMyCubeBlock block)
+        public void Register(IMyTerminalBlock block)
         {
             Block = block;
 
             new CountermeasureControls().DoOnce();
+
+            if (!MyAPIGateway.Session.IsServer && Definition.ActivePowerDraw > 0)
+            {
+                var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
+                resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId,
+                    () => ((IMyFunctionalBlock)Block).Enabled ? (float)Definition.ActivePowerDraw / 1000000 : 0);
+                resourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, (float)Definition.ActivePowerDraw / 1000000);
+                resourceSink.Update();
+                ((IMyFunctionalBlock)Block).EnabledChanged += b => resourceSink.Update();
+            }
         }
 
         public void Close()
