@@ -68,7 +68,7 @@ namespace DetectionEquipment.Client
 
         public override void Draw()
         {
-            if (MyAPIGateway.Utilities.IsDedicated)
+            if (MyAPIGateway.Utilities.IsDedicated || GlobalData.Killswitch)
                 return;
 
             try

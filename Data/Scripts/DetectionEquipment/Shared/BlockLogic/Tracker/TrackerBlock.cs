@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
+﻿using System;
+using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
@@ -10,6 +11,7 @@ using VRage.Game.Components;
 using VRageMath;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Tracker;
+using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
@@ -60,33 +62,42 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             if (!MyAPIGateway.Session.IsServer || GlobalData.Killswitch)
                 return;
 
-            if (SourceAggregator == null || !Block.IsWorking)
-                return;
-
-            _detectionTrackDict.Clear();
-            foreach (var detection in SourceAggregator.DetectionSet)
-                _detectionTrackDict[detection] = 0;
-
-            foreach (var sensor in ControlledSensors)
+            try
             {
-                var target = GetFirstTarget(sensor);
-                if (target == null)
+                if (SourceAggregator == null || !Block.IsWorking)
+                    return;
+
+                _detectionTrackDict.Clear();
+                foreach (var detection in SourceAggregator.DetectionSet)
+                    _detectionTrackDict[detection] = 0;
+
+                foreach (var sensor in ControlledSensors)
                 {
-                    if (!LockDecay.ContainsKey(sensor) || LockDecay[sensor].RemainingDecayTime <= 0)
+                    var target = GetFirstTarget(sensor);
+                    if (target == null)
                     {
-                        sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
-                        sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
-                        LockDecay.Remove(sensor);
+                        if (!LockDecay.ContainsKey(sensor) || LockDecay[sensor].RemainingDecayTime <= 0)
+                        {
+                            sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
+                            sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
+                            LockDecay.Remove(sensor);
+                        }
+                        else
+                        {
+                            LockDecay[sensor].RemainingDecayTime -= 1 / 60f;
+                        }
+
+                        continue;
                     }
-                    else
-                    {
-                        LockDecay[sensor].RemainingDecayTime -= 1 / 60f;
-                    }
-                    continue;
+
+                    _detectionTrackDict[target.Value]++;
+                    sensor.AimAt(target.Value.Position);
+                    LockDecay[sensor] = new LockSet(target.Value.EntityId, ResetAngleTime);
                 }
-                _detectionTrackDict[target.Value]++;
-                sensor.AimAt(target.Value.Position);
-                LockDecay[sensor] = new LockSet(target.Value.EntityId, ResetAngleTime);
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("TrackerBlock", ex, true);
             }
         }
 

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<Definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <BlueprintClassEntries>
+
+		<!-- Assembler -->
+        <Entry Class="EliteConsumables" BlueprintSubtypeId="DetEq_FlareBlueprint" />
+        <Entry Class="EliteConsumables" BlueprintSubtypeId="DetEq_ChaffBlueprint" />
+
+
+		<!-- Unused by Vanilla Assemblers, Ammo is listed under Consumables -->
+        <Entry Class="Ammo" BlueprintSubtypeId="DetEq_FlareBlueprint" />
+        <Entry Class="Ammo" BlueprintSubtypeId="DetEq_ChaffBlueprint" />
+		
+    </BlueprintClassEntries>
+	
+</Definitions>

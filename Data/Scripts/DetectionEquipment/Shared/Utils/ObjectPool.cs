@@ -29,7 +29,7 @@ namespace DetectionEquipment.Shared.Utils
         /// Requests an existing object from the pool, or generates a new one if none are available.
         /// </summary>
         /// <returns></returns>
-        public TObject Pull()
+        public TObject Pop()
         {
             lock (_lockObj)
             {

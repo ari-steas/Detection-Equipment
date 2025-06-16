@@ -98,13 +98,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         private WorldDetectionInfo[] AggregateInfos(ICollection<WorldDetectionInfo> infos)
         {
-            var groupCache = ControlBlockManager.I.GroupsCacheBuffer.Pull();
+            var groupCache = ControlBlockManager.I.GroupsCacheBuffer.Pop();
 
             // Group infos together
             foreach (var info in infos)
             {
                 if (!groupCache.ContainsKey(info.EntityId))
-                    groupCache[info.EntityId] = ControlBlockManager.I.GroupInfoBuffer.Pull();
+                    groupCache[info.EntityId] = ControlBlockManager.I.GroupInfoBuffer.Pop();
                 groupCache[info.EntityId].Add(info);
             }
 

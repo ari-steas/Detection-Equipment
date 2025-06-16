@@ -4,15 +4,19 @@ using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
-using DetectionEquipment.Shared.Serialization;
 using DetectionEquipment.Shared.Utils;
+using Sandbox.Game;
 using Sandbox.Game.EntityComponents;
+using Sandbox.Game.Weapons;
 using Sandbox.ModAPI;
+using VRage.Collections;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.ModAPI;
+using VRage.Game.ModAPI.Ingame;
 using VRageMath;
+using IMyCubeBlock = VRage.Game.ModAPI.IMyCubeBlock;
+using IMyEntity = VRage.ModAPI.IMyEntity;
 
 namespace DetectionEquipment.Server.Countermeasures
 {
@@ -26,6 +30,10 @@ namespace DetectionEquipment.Server.Countermeasures
         public int CurrentMuzzleIdx = 0;
         private int _currentSequenceIdx = 0;
         private float _shotAggregator = 0;
+
+        private int _magazineShots = 0;
+        private int _reloadTicks = 0;
+        private bool _hadReload = false;
 
         private bool _firing = false;
         public bool Firing
@@ -69,6 +77,8 @@ namespace DetectionEquipment.Server.Countermeasures
             Definition = definition;
             Block = block;
 
+            _magazineShots = definition.MagazineSize;
+
             SetupMuzzles();
 
             _resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
@@ -79,6 +89,16 @@ namespace DetectionEquipment.Server.Countermeasures
                 _resourceSink.Update();
             }
             Block.EnabledChanged += b => _resourceSink.Update();
+
+            if (Block.HasInventory)
+            {
+                var constraint = new MyInventoryConstraint("Countermeasure Ammo", icon: @"Textures\GUI\Icons\FilterAmmo25mm.dds");
+                if (!string.IsNullOrEmpty(Definition.MagazineItem))
+                    constraint.Add(Definition.MagazineItemDefinition);
+
+                var inventory = (MyInventory) Block.GetInventory();
+                inventory.Constraint = constraint;
+            }
         }
 
         public void UpdateFromPacket(Client.BlockLogic.Countermeasures.CountermeasureUpdatePacket packet)
@@ -93,7 +113,18 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public void Update()
         {
-            bool canFire = (Block.IsWorking || (Block.IsFunctional && Block.Enabled && Definition.ActivePowerDraw <= 0)) && Firing;
+            if (_hadReload)
+            {
+                _reloadTicks -= 1;
+                if (_reloadTicks <= 0)
+                    Reloading = false;
+            }
+            else if (_reloadTicks > 0)
+            {
+                _hadReload = TryConsumeReload();
+            }
+
+            bool canFire = (Block.IsWorking || (Block.IsFunctional && Block.Enabled && Definition.ActivePowerDraw <= 0)) && Firing && !Reloading && _hadReload;
             if (!canFire)
             {
                 if (!Definition.IsCountermeasureAttached || _didCloseAttached)
@@ -104,15 +135,24 @@ namespace DetectionEquipment.Server.Countermeasures
             }
             _didCloseAttached = false;
 
+            
+
             if (canFire)
             {
                 _shotAggregator += Definition.ShotsPerSecond / 60f;
                 int startMuzzleIdx = CurrentMuzzleIdx;
-                while (_shotAggregator >= 1)
+                while (_shotAggregator >= 1 && _magazineShots > 0)
                 {
                     FireOnce();
                     if (CurrentMuzzleIdx == startMuzzleIdx) // Prevent infinite loop if all muzzles are in use.
                         break;
+                }
+
+                if (_magazineShots <= 0 && Definition.ReloadTime > 1/60f)
+                {
+                    Reloading = true;
+                    _hadReload = TryConsumeReload();
+                    _reloadTicks = (int)(Definition.ReloadTime * 60);
                 }
             }
 
@@ -157,11 +197,38 @@ namespace DetectionEquipment.Server.Countermeasures
                     ServerNetwork.SendToEveryoneInSync(new CountermeasureEmitterPacket(this), Block.WorldMatrix.Translation);
 
                 _shotAggregator -= 1;
+                _magazineShots -= 1;
             }
 
             CurrentMuzzleIdx++;
             if (CurrentMuzzleIdx >= Muzzles.Length)
                 CurrentMuzzleIdx = 0;
+        }
+
+        private bool TryConsumeReload()
+        {
+            if (string.IsNullOrEmpty(Definition.MagazineItem))
+                return true;
+
+            var inventory = Block.GetInventory();
+            if (inventory == null)
+                throw new Exception($"Missing inventory on block with subtype {Block.BlockDefinition.SubtypeName}.");
+
+            var items = CountermeasureManager.InventoryItemPool.Pop();
+            inventory.GetItems(items);
+
+            bool hadItem = false;
+            foreach (var item in items)
+            {
+                if (item.Type.SubtypeId != Definition.MagazineItem || item.Amount < 1)
+                    continue;
+                inventory.RemoveItems(item.ItemId, 1);
+                hadItem = true;
+                break;
+            }
+
+            CountermeasureManager.InventoryItemPool.Push(items);
+            return hadItem;
         }
 
 

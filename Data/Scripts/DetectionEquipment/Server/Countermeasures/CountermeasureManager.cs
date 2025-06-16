@@ -6,6 +6,7 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
+using MyInventoryItem = VRage.Game.ModAPI.Ingame.MyInventoryItem;
 
 namespace DetectionEquipment.Server.Countermeasures
 {
@@ -19,6 +20,7 @@ namespace DetectionEquipment.Server.Countermeasures
         private static List<CountermeasureEmitterBlock> _deadEmitters;
         public static uint HighestCountermeasureEmitterId = 0;
 
+        public static ObjectPool<List<MyInventoryItem>> InventoryItemPool;
 
         public static void Init()
         {
@@ -29,6 +31,8 @@ namespace DetectionEquipment.Server.Countermeasures
             CountermeasureEmitterIdMap = new Dictionary<uint, CountermeasureEmitterBlock>();
             _deadEmitters = new List<CountermeasureEmitterBlock>();
             HighestCountermeasureEmitterId = 0;
+
+            InventoryItemPool = new ObjectPool<List<MyInventoryItem>>(() => new List<MyInventoryItem>(), list => list.Clear(), 100);
 
             ServerMain.I.OnBlockPlaced += OnBlockPlaced;
 
@@ -76,6 +80,8 @@ namespace DetectionEquipment.Server.Countermeasures
 
             CountermeasureEmitterIdMap = null;
             _deadEmitters = null;
+
+            InventoryItemPool = null;
 
             Log.Info("CountermeasureManager", "Closed.");
         }

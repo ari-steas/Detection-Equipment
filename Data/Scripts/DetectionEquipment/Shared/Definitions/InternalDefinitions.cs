@@ -242,6 +242,9 @@ namespace DetectionEquipment.Shared.Definitions
                 EjectionVelocity = 50,
                 FireParticle = "Muzzle_Flash_Autocannon",
                 ActivePowerDraw = 0,
+                MagazineSize = 25,
+                MagazineItem = "DetEq_FlareMagazine",
+                ReloadTime = 120,
             },
             ["DetEq_SimpleChaffEmitter"] = new CountermeasureEmitterDefinition
             {
@@ -286,6 +289,9 @@ namespace DetectionEquipment.Shared.Definitions
                 EjectionVelocity = 100,
                 FireParticle = "Muzzle_Flash_Autocannon",
                 ActivePowerDraw = 0,
+                MagazineSize = 25,
+                MagazineItem = "DetEq_ChaffMagazine",
+                ReloadTime = 120,
             },
             ["DetEq_SimpleJammer"] = new CountermeasureEmitterDefinition
             {

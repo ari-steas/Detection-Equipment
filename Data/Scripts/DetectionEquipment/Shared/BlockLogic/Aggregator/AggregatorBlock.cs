@@ -91,7 +91,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         /// <returns></returns>
         private HashSet<WorldDetectionInfo> UpdateAggregatedDetections()
         {
-            var infosCache = ControlBlockManager.I.GroupInfoBuffer.Pull();
+            var infosCache = ControlBlockManager.I.GroupInfoBuffer.Pop();
 
             lock (_bufferDetections)
             {
@@ -202,7 +202,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
             try
             {
-                var infosCache = ControlBlockManager.I.GroupInfoBuffer.Pull();
+                var infosCache = ControlBlockManager.I.GroupInfoBuffer.Pop();
 
                 foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensors)
                 {

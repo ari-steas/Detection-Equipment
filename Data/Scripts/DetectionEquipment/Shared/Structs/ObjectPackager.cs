@@ -32,7 +32,7 @@ namespace DetectionEquipment.Shared.Structs
                 _objectBuffers[toPackage.FieldCount] = buffer;
             }
 
-            var fieldArray = buffer.Pull();
+            var fieldArray = buffer.Pop();
             toPackage.Package(fieldArray);
             return fieldArray;
         }

@@ -16,6 +16,9 @@ namespace DetectionEquipment.Shared.Utils
         private static Queue<int> _exceptions;
         private static int _lastTickExceptions = 0;
 
+        private const int MaxFileSize = 1048576;
+        private static int _currentFileSize = 0;
+
         private static IMyModContext _modContext;
         private const string ModName = "Detection Equipment";
         private static TextWriter _writer;
@@ -75,8 +78,26 @@ namespace DetectionEquipment.Shared.Utils
 
         public static void Info(string source, string text)
         {
-            _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[INFO]\t{source}\t{text.Replace("\n", $"\n{DateTime.UtcNow:HH:mm:ss}\t{_indent}\t\t")}");
+            if (_currentFileSize > MaxFileSize)
+                return;
+
+            var toWrite = $"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[INFO]\t{source}\t{text.Replace("\n", $"\n{DateTime.UtcNow:HH:mm:ss}\t{_indent}\t\t")}";
+            _writer?.WriteLine(toWrite);
+            _currentFileSize += toWrite.Length;
+
+            if (_currentFileSize > MaxFileSize)
+            {
+                _writer?.WriteLine($"Log exceeded file size limit {MaxFileSize/1024:N0}kB - truncating all further info messages.");
+                MyAPIGateway.Utilities.InvokeOnGameThread(() =>
+                {
+                    MyAPIGateway.Utilities.ShowNotification(
+                        "[Detection Equipment] Log exceeded file size limit - something has gone horribly wrong.",
+                        20000, "Red");
+                    MyLog.Default.WriteLineAndConsole($"[Detection Equipment] Log exceeded file size limit {MaxFileSize/1024:N0}kB - truncating all further info messages.");
+                });
+            }
             _writer?.Flush();
+
             //if (MyAPIGateway.Utilities.IsDedicated)
             //    MyLog.Default.WriteLineToConsole($"{_indent}[INFO]\t{source}\t{text}");
         }
@@ -96,9 +117,11 @@ namespace DetectionEquipment.Shared.Utils
                 throw CustomCrashModContext.GenerateException(source, exception);
             }
 
-            _writer?.WriteLine($"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}");
+            var toWrite = $"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}";
+            _writer?.WriteLine(toWrite);
             _writer?.Flush();
-            MyLog.Default.WriteLineAndConsole($"DetectionEquipment - [{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}");
+            MyLog.Default.WriteLineAndConsole($"[DetectionEquipment] [{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}");
+            _currentFileSize += toWrite.Length;
 
             if (fatal)
             {

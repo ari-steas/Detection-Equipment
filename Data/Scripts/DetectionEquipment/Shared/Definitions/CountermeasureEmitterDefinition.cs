@@ -1,6 +1,10 @@
 ﻿using System;
+using System.Data;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
+using Sandbox.Definitions;
+using VRage.Game;
+using VRageMath;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -72,7 +76,14 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         [ProtoMember(11)] public float ActivePowerDraw;
 
+        /// <summary>
+        /// Inventory size, kiloliters
+        /// </summary>
+        [ProtoMember(12)] public float InventorySize = 1;
+
         
+        [ProtoIgnore] public MyDefinitionId MagazineItemDefinition;
+
         public static bool Verify(CountermeasureEmitterDefinition def)
         {
             bool isValid = true;
@@ -96,6 +107,37 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 Log.Info("CountermeasureEmitterDefinition", "CountermeasureIds unset!");
                 isValid = false;
+            }
+            if (string.IsNullOrEmpty(def.MagazineItem))
+            {
+                Log.Info("CountermeasureEmitterDefinition", "MagazineItem unset! Defaulting to no item.");
+            }
+
+            if (def.InventorySize > 0 && def.BlockSubtypes != null)
+            {
+                bool didSetItemDef = string.IsNullOrEmpty(def.MagazineItem);
+
+                // this is pretty silly but it works
+                var inventorySize = new Vector3((float)Math.Pow(def.InventorySize, 1 / 3d));
+
+                int remainingSubtypes = def.BlockSubtypes.Length;
+                foreach (var gameDef in MyDefinitionManager.Static.GetAllDefinitions())
+                {
+                    if (!didSetItemDef && gameDef.Id.SubtypeName == def.MagazineItem)
+                    {
+                        def.MagazineItemDefinition = gameDef.Id;
+                        didSetItemDef = true;
+                        continue;
+                    }
+
+                    var sorterDef = gameDef as MyConveyorSorterDefinition;
+                    if (sorterDef == null || !def.BlockSubtypes.Contains(sorterDef.Id.SubtypeName))
+                        continue;
+
+                    sorterDef.InventorySize = inventorySize;
+                    if (--remainingSubtypes <= 0 && didSetItemDef)
+                        break;
+                }
             }
 
             return isValid;
