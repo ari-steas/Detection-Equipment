@@ -27,7 +27,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         }
 
         static bool HasNoLogic(IMyTerminalBlock block) => block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic();
-        static bool HasNoLogicOrInventory(IMyTerminalBlock block) => (block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic()) || block.GetInventory().MaxVolume > 0;
+        static bool HasNoLogicOrInventory(IMyTerminalBlock block) => (block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic()) || block.GetInventory()?.MaxVolume > 0;
 
         static void EditControls()
         {
