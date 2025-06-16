@@ -7,6 +7,7 @@ using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using VRageMath;
@@ -37,6 +38,13 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
                 // prep and send update packets, receive order doesn't matter
                 ServerNetwork.SendToPlayer(new CountermeasureUpdatePacket(logic.Value), requesterId);
             }
+
+            if (ids.Count == 0)
+            {
+                Log.Exception("CountermeasurePacket", new Exception($"Failed to create emitter for {blockEntityId}!"));
+                return null;
+            }
+
             return new CountermeasureInitPacket
             {
                 AttachedBlockId = blockEntityId,

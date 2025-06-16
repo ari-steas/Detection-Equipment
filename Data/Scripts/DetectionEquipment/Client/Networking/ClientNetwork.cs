@@ -32,7 +32,24 @@ namespace DetectionEquipment.Client.Networking
 
         public void Update()
         {
-            if (_packetQueue.Count > 0)
+            if (_packetQueue.Count <= 0)
+                return;
+
+            if (MyAPIGateway.Session.IsServer)
+            {
+                foreach (var packet in _packetQueue)
+                {
+                    try
+                    {
+                        packet.Received(0, false);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Exception("ClientNetwork", ex);
+                    }
+                }
+            }
+            else
             {
                 try
                 {
@@ -43,8 +60,9 @@ namespace DetectionEquipment.Client.Networking
                 {
                     Log.Exception("ClientNetwork", new Exception($"Failed to serialize packet containing {string.Join(", ", _packetQueue.Select(p => p.GetType().Name).Distinct())}.", ex));
                 }
-                _packetQueue.Clear();
             }
+
+            _packetQueue.Clear();
         }
 
         void ReceivedPacket(ushort channelId, byte[] serialized, ulong senderSteamId, bool isSenderServer)
@@ -74,19 +92,6 @@ namespace DetectionEquipment.Client.Networking
             {
                 // avoid thread contention
                 MyAPIGateway.Utilities.InvokeOnGameThread(() => SendToServerInternal(packet));
-                return;
-            }
-
-            if (MyAPIGateway.Session.IsServer)
-            {
-                try
-                {
-                    packet.Received(0, false);
-                }
-                catch (Exception ex)
-                {
-                    Log.Exception("ClientNetwork", ex);
-                }
                 return;
             }
 

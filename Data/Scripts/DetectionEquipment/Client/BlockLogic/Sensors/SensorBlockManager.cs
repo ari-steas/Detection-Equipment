@@ -47,7 +47,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         private static void OnBlockAdded(IMySlimBlock slim)
         {
             var block = slim.FatBlock;
-            if (block == null)
+            if (block?.CubeGrid?.Physics == null)
                 return;
 
             if (DefinitionManager.GetSensorDefinitions(block).Count == 0)

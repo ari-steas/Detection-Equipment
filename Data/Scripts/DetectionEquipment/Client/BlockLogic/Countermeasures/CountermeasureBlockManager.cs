@@ -44,7 +44,7 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
         private static void OnBlockAdded(IMySlimBlock slim)
         {
             var block = slim.FatBlock;
-            if (block == null)
+            if (block?.CubeGrid?.Physics == null)
                 return;
 
             if (DefinitionManager.GetCountermeasureEmitterDefinitions(block).Count == 0)

@@ -30,7 +30,9 @@ namespace DetectionEquipment.Client.BlockLogic
             }
             else
             {
-                ServerNetwork.SendToPlayer(CreateServerInitPacket(AttachedBlockId, senderSteamId), senderSteamId);
+                var packet = CreateServerInitPacket(AttachedBlockId, senderSteamId);
+                if (packet != null)
+                    ServerNetwork.SendToPlayer(packet, senderSteamId);
             }
         }
     }

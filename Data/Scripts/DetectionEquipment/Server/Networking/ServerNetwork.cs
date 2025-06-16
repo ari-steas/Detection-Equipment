@@ -42,16 +42,38 @@ namespace DetectionEquipment.Server.Networking
                 if (queuePair.Value.Count == 0)
                     continue;
 
-                try
+                // skip sending to self (server player)
+                if (queuePair.Key == MyAPIGateway.Multiplayer.ServerId || queuePair.Key == 0)
                 {
-                    MyAPIGateway.Multiplayer.SendMessageTo(GlobalData.ClientNetworkId,
-                        MyAPIGateway.Utilities.SerializeToBinary(queuePair.Value.ToArray()), queuePair.Key);
-                    queuePair.Value.Clear();
+                    if (!MyAPIGateway.Utilities.IsDedicated)
+                    {
+                        foreach (var packet in queuePair.Value)
+                        {
+                            try
+                            {
+                                packet.Received(0, true);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Exception("ServerNetwork", ex);
+                            }
+                        }
+                    }
                 }
-                catch (Exception ex)
+                else
                 {
-                    Log.Exception("ServerNetwork", new Exception($"Failed to serialize packet containing {string.Join(", ", queuePair.Value.Select(p => p.GetType().Name).Distinct())}.", ex));
+                    try
+                    {
+                        MyAPIGateway.Multiplayer.SendMessageTo(GlobalData.ClientNetworkId,
+                            MyAPIGateway.Utilities.SerializeToBinary(queuePair.Value.ToArray()), queuePair.Key);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Exception("ServerNetwork", new Exception($"Failed to serialize packet containing {string.Join(", ", queuePair.Value.Select(p => p.GetType().Name).Distinct())}.", ex));
+                    }
                 }
+
+                queuePair.Value.Clear();
             }
         }
 
@@ -93,22 +115,6 @@ namespace DetectionEquipment.Server.Networking
                 return;
             }
 
-            if (playerSteamId == MyAPIGateway.Multiplayer.ServerId || playerSteamId == 0)
-            {
-                if (!MyAPIGateway.Utilities.IsDedicated)
-                {
-                    try
-                    {
-                        packet.Received(0, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Exception("ServerNetwork", ex);
-                    }
-                }
-                return;
-            }
-
             if (!_packetQueue.ContainsKey(playerSteamId))
                 _packetQueue[playerSteamId] = new HashSet<PacketBase>();
             _packetQueue[playerSteamId].Add(packet);
@@ -128,23 +134,6 @@ namespace DetectionEquipment.Server.Networking
 
             foreach (IMyPlayer p in GlobalData.Players)
             {
-                // skip sending to self (server player) or back to sender
-                if (p.SteamUserId == MyAPIGateway.Multiplayer.ServerId || p.SteamUserId == 0)
-                {
-                    if (!MyAPIGateway.Utilities.IsDedicated)
-                    {
-                        try
-                        {
-                            packet.Received(0, true);
-                        }
-                        catch (Exception ex)
-                        {
-                            Log.Exception("ServerNetwork", ex);
-                        }
-                    }
-                    continue;
-                }
-
                 if (!_packetQueue.ContainsKey(p.SteamUserId))
                     _packetQueue[p.SteamUserId] = new HashSet<PacketBase>();
                 _packetQueue[p.SteamUserId].Add(packet);
