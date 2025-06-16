@@ -10,8 +10,12 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
     {
         static bool _done = false;
 
-        public static void DoOnce()
+        public static void DoOnce(IMyTerminalBlock block)
         {
+            // Auto-hide logic blocks without an inventory.
+            if (block != null)
+                block.ShowInInventory = HasNoLogicOrInventory(block);
+
             if (_done)
                 return;
             _done = true;
@@ -22,7 +26,8 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             Log.Info("HideSorterControls", "Removed sorter controls.");
         }
 
-        static bool AppendedCondition(IMyTerminalBlock block) => block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic();
+        static bool HasNoLogic(IMyTerminalBlock block) => block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic();
+        static bool HasNoLogicOrInventory(IMyTerminalBlock block) => (block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic()) || block.GetInventory().MaxVolume > 0;
 
         static void EditControls()
         {
@@ -39,15 +44,17 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                     case "removeFromSelectionButton":
                     case "candidatesList":
                     case "addToSelectionButton":
-                    case "ShowInInventory":
                     case "SearchField":
                         //case "": // keen doesn't name their terminal control separators. :(
                         //c.Enabled = TerminalChainedDelegate.Create(c.Enabled, AppendedCondition); // grays out
-                        c.Visible = TerminalChainedDelegate.Create(c.Visible, AppendedCondition); // hides
+                        c.Visible = TerminalChainedDelegate.Create(c.Visible, HasNoLogic); // hides
                         break;
-                        //default:
-                        //    Log.Info("HideSorterControls", $"Ignored control {c.GetType().Name}/{c.Id}.");
-                        //    break;
+                    case "ShowInInventory":
+                        c.Visible = TerminalChainedDelegate.Create(c.Visible, HasNoLogicOrInventory);
+                        break;
+                    //default:
+                    //    Log.Info("HideSorterControls", $"Ignored control {c.GetType().Name}/{c.Id}.");
+                    //    break;
                 }
             }
         }
@@ -67,7 +74,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                         {
                             // appends a custom condition after the original condition with an AND.
 
-                            a.Enabled = TerminalChainedDelegate.Create(a.Enabled, AppendedCondition);
+                            a.Enabled = TerminalChainedDelegate.Create(a.Enabled, HasNoLogic);
                             // action.Enabled hides it, there is no grayed-out for actions.
 
                             break;

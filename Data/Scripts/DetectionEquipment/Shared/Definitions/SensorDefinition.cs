@@ -190,28 +190,28 @@ namespace DetectionEquipment.Shared.Definitions
             fieldArray[9] = ObjectPackager.Package(RadarProperties);
         }
 
-        public static bool Verify(SensorDefinition def)
+        public static bool Verify(string defName, SensorDefinition def)
         {
             bool isValid = true;
 
             if (def == null)
             {
-                Log.Info("SensorDefinition", "Definition null!");
+                Log.Info(defName, "Definition null!");
                 return false;
             }
             if (def.BlockSubtypes == null || def.BlockSubtypes.Length == 0)
             {
-                Log.Info("SensorDefinition", "BlockSubtypes unset!");
+                Log.Info(defName, "BlockSubtypes unset!");
                 isValid = false;
             }
             if (def.MinAperture > def.MaxAperture || def.MinAperture < 0 || def.MaxAperture < 0)
             {
-                Log.Info("SensorDefinition", "Aperture invalid! Make sure both Min and Max are greater than zero, and min is less than max.");
+                Log.Info(defName, "Aperture invalid! Make sure both Min and Max are greater than zero, and min is less than max.");
                 isValid = false;
             }
             if (def.RadarProperties == null && def.Type == SensorType.Radar)
             {
-                Log.Info("SensorDefinition", "Radar properties are null on a radar sensor!");
+                Log.Info(defName, "Radar properties are null on a radar sensor!");
                 isValid = false;
             }
 
@@ -219,12 +219,12 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 if (def.Movement.AzimuthPart.StartsWith("subpart"))
                 {
-                    Log.Info("SensorDefinition", "Azimuth subpart starts with \"subpart_\" - this will likely result in part location failure.");
+                    Log.Info(defName, "Azimuth subpart starts with \"subpart_\" - this will likely result in part location failure.");
                     isValid = false;
                 }
                 if (def.Movement.ElevationPart.StartsWith("subpart"))
                 {
-                    Log.Info("SensorDefinition", "Elevation subpart starts with \"subpart_\" - this will likely result in part location failure.");
+                    Log.Info(defName, "Elevation subpart starts with \"subpart_\" - this will likely result in part location failure.");
                     isValid = false;
                 }
             }

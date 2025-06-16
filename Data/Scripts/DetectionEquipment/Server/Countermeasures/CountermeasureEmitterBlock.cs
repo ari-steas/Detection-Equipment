@@ -33,7 +33,7 @@ namespace DetectionEquipment.Server.Countermeasures
 
         private int _magazineShots = 0;
         private int _reloadTicks = 0;
-        private bool _hadReload = false;
+        private bool _hadReload = true;
 
         private bool _firing = false;
         public bool Firing
@@ -220,6 +220,7 @@ namespace DetectionEquipment.Server.Countermeasures
             bool hadItem = false;
             foreach (var item in items)
             {
+                Log.Info("", item.Type.SubtypeId);
                 if (item.Type.SubtypeId != Definition.MagazineItem || item.Amount < 1)
                     continue;
                 inventory.RemoveItems(item.ItemId, 1);

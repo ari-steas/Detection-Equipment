@@ -100,7 +100,7 @@ namespace DetectionEquipment.Shared.Definitions
 
                     Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
                     Log.IncreaseIndent();
-                    bool valid = SensorDefinition.Verify(definition);
+                    bool valid = SensorDefinition.Verify(definitionId, definition);
                     Log.DecreaseIndent();
                     if (!valid)
                     {
@@ -136,7 +136,7 @@ namespace DetectionEquipment.Shared.Definitions
 
                     Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
                     Log.IncreaseIndent();
-                    bool valid = CountermeasureDefinition.Verify(definition);
+                    bool valid = CountermeasureDefinition.Verify(definitionId, definition);
                     Log.DecreaseIndent();
                     if (!valid)
                     {
@@ -170,7 +170,7 @@ namespace DetectionEquipment.Shared.Definitions
 
                     Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
                     Log.IncreaseIndent();
-                    bool valid = CountermeasureEmitterDefinition.Verify(definition);
+                    bool valid = CountermeasureEmitterDefinition.Verify(definitionId, definition);
                     Log.DecreaseIndent();
                     if (!valid)
                     {

@@ -81,19 +81,19 @@ namespace DetectionEquipment.Shared.Definitions
             Quadratic = 2,
         }
 
-        public static bool Verify(CountermeasureDefinition def)
+        public static bool Verify(string defName, CountermeasureDefinition def)
         {
             bool isValid = true;
 
             if (def == null)
             {
-                Log.Info("CountermeasureDefinition", "Definition null!");
+                Log.Info(defName, "Definition null!");
                 return false;
             }
 
             if (def.CountermeasureType == CountermeasureTypeEnum.None)
             {
-                Log.Info("CountermeasureDefinition", "CountermeasureType is undefined!");
+                Log.Info(defName, "CountermeasureType is undefined!");
                 isValid = false;
             }
 

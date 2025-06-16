@@ -79,38 +79,38 @@ namespace DetectionEquipment.Shared.Definitions
         /// <summary>
         /// Inventory size, kiloliters
         /// </summary>
-        [ProtoMember(12)] public float InventorySize = 1;
+        [ProtoMember(12)] public float InventorySize;
 
         
         [ProtoIgnore] public MyDefinitionId MagazineItemDefinition;
 
-        public static bool Verify(CountermeasureEmitterDefinition def)
+        public static bool Verify(string defName, CountermeasureEmitterDefinition def)
         {
             bool isValid = true;
 
             if (def == null)
             {
-                Log.Info("CountermeasureEmitterDefinition", "Definition null!");
+                Log.Info(defName, "Definition null!");
                 return false;
             }
             if (def.BlockSubtypes == null || def.BlockSubtypes.Length == 0)
             {
-                Log.Info("CountermeasureEmitterDefinition", "BlockSubtypes unset!");
+                Log.Info(defName, "BlockSubtypes unset!");
                 isValid = false;
             }
             if (def.Muzzles == null || def.Muzzles.Length == 0)
             {
-                Log.Info("CountermeasureEmitterDefinition", "Muzzles unset! Defaulting to center of block.");
+                Log.Info(defName, "Muzzles unset! Defaulting to center of block.");
                 def.Muzzles = Array.Empty<string>();
             }
             if (def.CountermeasureIds == null || def.CountermeasureIds.Length == 0)
             {
-                Log.Info("CountermeasureEmitterDefinition", "CountermeasureIds unset!");
+                Log.Info(defName, "CountermeasureIds unset!");
                 isValid = false;
             }
             if (string.IsNullOrEmpty(def.MagazineItem))
             {
-                Log.Info("CountermeasureEmitterDefinition", "MagazineItem unset! Defaulting to no item.");
+                Log.Info(defName, "MagazineItem unset! Defaulting to no item.");
             }
 
             if (def.InventorySize > 0 && def.BlockSubtypes != null)
@@ -137,6 +137,12 @@ namespace DetectionEquipment.Shared.Definitions
                     sorterDef.InventorySize = inventorySize;
                     if (--remainingSubtypes <= 0 && didSetItemDef)
                         break;
+                }
+
+                if (!didSetItemDef)
+                {
+                    Log.Info(defName, $"Failed to find magazine item definition \"{def.MagazineItem}\"!");
+                    isValid = false;
                 }
             }
 

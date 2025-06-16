@@ -41,7 +41,7 @@ namespace DetectionEquipment.Shared.BlockLogic
 
             try
             {
-                HideSorterControls.DoOnce();
+                HideSorterControls.DoOnce(Block);
                 ControlBlockManager.I.Blocks.Add(Block as MyCubeBlock, this);
 
                 if (MyAPIGateway.Session.IsServer)
