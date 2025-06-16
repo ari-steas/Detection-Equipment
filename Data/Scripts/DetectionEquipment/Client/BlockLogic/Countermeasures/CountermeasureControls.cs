@@ -1,9 +1,5 @@
 ﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Sandbox.ModAPI;
 
 namespace DetectionEquipment.Client.BlockLogic.Countermeasures
@@ -31,7 +27,11 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
                     var logic = b.GetLogic<ClientCountermeasureLogic>();
                     logic.Firing = !logic.Firing;
                 },
-                (b, sb) => sb.Append(b.GetLogic<ClientCountermeasureLogic>().Firing ? "On" : "Off"),
+                (b, sb) =>
+                {
+                    var logic = b.GetLogic<ClientCountermeasureLogic>();
+                    sb.Append($"{(logic.Reloading ? "REL" : "RDY")}  {(logic.Firing ? " On" : "Off")}");
+                },
                 @"Textures\GUI\Icons\Actions\Toggle.dds"
                 );
         }

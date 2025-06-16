@@ -244,8 +244,7 @@ namespace DetectionEquipment.Shared.Definitions
                 ActivePowerDraw = 0,
                 MagazineSize = 25,
                 MagazineItem = "DetEq_FlareMagazine",
-                ReloadTime = 1,
-                //ReloadTime = 120,
+                ReloadTime = 12,
                 InventorySize = 0.240f,
             },
             ["DetEq_SimpleChaffEmitter"] = new CountermeasureEmitterDefinition
@@ -293,8 +292,7 @@ namespace DetectionEquipment.Shared.Definitions
                 ActivePowerDraw = 0,
                 MagazineSize = 25,
                 MagazineItem = "DetEq_ChaffMagazine",
-                //ReloadTime = 120,
-                ReloadTime = 2,
+                ReloadTime = 12,
                 InventorySize = 0.240f,
             },
             ["DetEq_SimpleJammer"] = new CountermeasureEmitterDefinition

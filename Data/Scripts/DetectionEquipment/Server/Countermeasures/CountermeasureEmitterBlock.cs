@@ -115,11 +115,18 @@ namespace DetectionEquipment.Server.Countermeasures
         {
             if (_hadReload)
             {
-                _reloadTicks -= 1;
-                if (_reloadTicks <= 0)
-                    Reloading = false;
+                if (Reloading)
+                {
+                    if (_reloadTicks <= 0)
+                    {
+                        Reloading = false;
+                        _magazineShots = Definition.MagazineSize;
+                    }
+                    else
+                        _reloadTicks -= 1;
+                }
             }
-            else if (_reloadTicks > 0)
+            else if (_reloadTicks > 0 && MyAPIGateway.Session.GameplayFrameCounter % 9 == 0)
             {
                 _hadReload = TryConsumeReload();
             }
@@ -220,7 +227,6 @@ namespace DetectionEquipment.Server.Countermeasures
             bool hadItem = false;
             foreach (var item in items)
             {
-                Log.Info("", item.Type.SubtypeId);
                 if (item.Type.SubtypeId != Definition.MagazineItem || item.Amount < 1)
                     continue;
                 inventory.RemoveItems(item.ItemId, 1);
