@@ -52,18 +52,12 @@ namespace DetectionEquipment.Shared
 
         public override void LoadData()
         {
-            if (GlobalData.Killswitch)
-                return;
-
             if (!MyAPIGateway.Utilities.IsDedicated)
                 I = this;
         }
 
         protected override void UnloadData()
         {
-            if (GlobalData.Killswitch)
-                return;
-
             I = null;
         }
 
