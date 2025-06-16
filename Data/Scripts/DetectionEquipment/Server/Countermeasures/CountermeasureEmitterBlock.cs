@@ -214,7 +214,7 @@ namespace DetectionEquipment.Server.Countermeasures
 
         private bool TryConsumeReload()
         {
-            if (string.IsNullOrEmpty(Definition.MagazineItem))
+            if (MyAPIGateway.Session.CreativeMode || string.IsNullOrEmpty(Definition.MagazineItem))
                 return true;
 
             var inventory = Block.GetInventory();
