@@ -41,10 +41,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 TrackerControls.ActiveSensorSelect.UpdateSelected(this, value.Select(sensor => sensor.Block.EntityId).ToArray());
             }
         }
-        public SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
+        public readonly SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
 
-        private SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
-        public Dictionary<BlockSensor, LockSet> LockDecay = new Dictionary<BlockSensor, LockSet>();
+        private readonly SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
+        public readonly Dictionary<BlockSensor, LockSet> LockDecay = new Dictionary<BlockSensor, LockSet>();
 
         protected override ControlBlockSettingsBase GetSettings => new TrackerSettings(this);
         protected override ITerminalControlAdder GetControls => new TrackerControls();

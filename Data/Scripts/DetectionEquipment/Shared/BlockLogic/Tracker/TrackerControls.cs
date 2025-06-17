@@ -62,7 +62,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                     {
                         foreach (var sensor in logic.GridSensors.Sensors)
                         {
-                            if (sensor.Block != item)
+                            if (sensor.Block != item || sensor.Definition.Movement == null)
                                 continue;
                             ActiveSensors[logic].Add(sensor);
                             break;
