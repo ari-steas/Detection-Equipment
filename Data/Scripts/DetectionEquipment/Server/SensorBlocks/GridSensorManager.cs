@@ -205,7 +205,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 List<uint> ids = new List<uint>();
                 var sensors = DefinitionManager.TryCreateSensors(cubeBlock);
 
-                bool didPopulate = !BlockSensorMap.ContainsKey(cubeBlock);
+                bool didPopulate = sensors.Count > 0;
                 if (didPopulate)
                     BlockSensorMap.Add(cubeBlock, sensors);
 

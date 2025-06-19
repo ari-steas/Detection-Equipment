@@ -71,9 +71,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Sensors this aggregator should use data from. Ctrl+Click to select multiple.",
                 true,
                 false,
-                logic => MyAPIGateway.Session.IsServer ?
-                         logic.GridSensors.BlockSensorMap.Keys :
-                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks.GetValueOrDefault(logic.CubeBlock.CubeGrid, new HashSet<IMyCubeBlock>()),
+                logic => (MyAPIGateway.Session.IsServer ?
+                        logic.GridSensors.BlockSensorMap.Keys :
+                        (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid]),
                 (logic, selected) =>
                 {
                     if (!MyAPIGateway.Session.IsServer)
