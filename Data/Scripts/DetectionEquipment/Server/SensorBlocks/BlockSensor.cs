@@ -138,6 +138,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
 
             ServerMain.I.BlockSensorIdMap[Sensor.Id] = this;
+            MyAPIGateway.Utilities.InvokeOnGameThread(((MyResourceSinkComponent)block.ResourceSink).Update);
         }
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)
