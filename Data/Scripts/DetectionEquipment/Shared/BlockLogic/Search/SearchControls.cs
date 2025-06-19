@@ -31,10 +31,10 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 true,
                 false,
                 logic => (MyAPIGateway.Session.IsServer ?
-                         logic.GridSensors.BlockSensorMap.Keys :
-                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid])
-                         // BRIMSTONE LINQ HELL
-                         .Where(sb => sb.GetLogic<ClientSensorLogic>()?.Sensors.Values.Any(s => s.Definition.Movement != null) ?? false),
+                        logic.GridSensors.BlockSensorMap.Keys :
+                        (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid])
+                        // BRIMSTONE LINQ HELL
+                        .Where(sb => sb.GetLogic<ClientSensorLogic>()?.Sensors.Values.Any(s => s.Definition.Movement != null) ?? false),
                 (logic, selected) =>
                 {
                     if (!MyAPIGateway.Session.IsServer)
@@ -46,7 +46,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                     {
                         foreach (var sensor in logic.GridSensors.Sensors)
                         {
-                            if (sensor.Block != item)
+                            if (sensor.Block != item || sensor.Definition.Movement == null)
                                 continue;
                             ActiveSensors[logic].Add(sensor);
                             sensor.DesiredAzimuth = 0;
