@@ -68,8 +68,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                     return;
 
                 _detectionTrackDict.Clear();
-                foreach (var detection in SourceAggregator.DetectionSet)
-                    _detectionTrackDict[detection] = 0;
+                lock (SourceAggregator.DetectionSet)
+                {
+                    foreach (var detection in SourceAggregator.DetectionSet)
+                        _detectionTrackDict[detection] = 0;
+                }
 
                 foreach (var sensor in ControlledSensors)
                 {
