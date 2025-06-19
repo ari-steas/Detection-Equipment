@@ -146,6 +146,9 @@ namespace DetectionEquipment.Shared.Definitions
                 }
             }
 
+            if (def.ActivePowerDraw <= 0)
+                def.ActivePowerDraw = 0.000001f;
+
             return isValid;
         }
     }

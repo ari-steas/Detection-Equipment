@@ -228,6 +228,9 @@ namespace DetectionEquipment.Shared.Definitions
                     isValid = false;
                 }
             }
+
+            if (def.MaxPowerDraw <= 0)
+                def.MaxPowerDraw = 1;
             // TODO: more & better validation
 
             return isValid;
