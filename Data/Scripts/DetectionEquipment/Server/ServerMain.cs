@@ -149,7 +149,12 @@ namespace DetectionEquipment.Server
 
         private void OnWcApiReady()
         {
-            GlobalData.ContributeWcTargeting.AddOnChanged(contributeTargeting =>
+            GlobalData.ContributeWcTargeting.AddOnChanged(AddTargetActions);
+        }
+
+        private static void AddTargetActions(bool contributeTargeting)
+        {
+            ApiManager.WcOnLoadRegisterOrInvoke(() =>
             {
                 if (contributeTargeting)
                 {

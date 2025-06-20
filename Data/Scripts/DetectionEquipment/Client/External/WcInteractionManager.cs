@@ -2,6 +2,7 @@
 using DetectionEquipment.Shared.Utils;
 using System.Collections.Generic;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.ExternalApis.WcApi;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
@@ -34,7 +35,12 @@ namespace DetectionEquipment.Client.External
                 return;
             }
 
-            GlobalData.ContributeWcTargeting.AddOnChanged(contributeTargeting =>
+            GlobalData.ContributeWcTargeting.AddOnChanged(AddScanAction);
+        }
+
+        private static void AddScanAction(bool contributeTargeting)
+        {
+            ApiManager.WcOnLoadRegisterOrInvoke(() =>
             {
                 if (contributeTargeting)
                 {
