@@ -14,7 +14,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
     internal class IffReflectorBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public readonly SimpleSync<string> IffCode = new SimpleSync<string>("");
-        public readonly SimpleSync<bool> ReturnHash = new SimpleSync<bool>(false);
+        public readonly SimpleSync<bool> ReturnHash = new SimpleSync<bool>(true);
 
         public string IffCodeCache { get; private set; } = "";
         protected override ControlBlockSettingsBase GetSettings => new IffReflectorSettings(this);
