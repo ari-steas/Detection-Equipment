@@ -268,71 +268,19 @@ namespace DetectionEquipment.Server.Tracking
             globalDirection.Normalize();
             Vector3D direction = Vector3D.Rotate(globalDirection, MatrixD.Invert(Grid.WorldMatrix));
 
+
             // Estimate the max cast size
-            Vector3D minCheck = Vector3D.MaxValue, maxCheck = Vector3D.MinValue;
-            MatrixD rotationMatrix = MatrixD.CreateFromDir(direction, direction == Vector3D.Up ? Vector3D.Backward : (direction == Vector3D.Down ? Vector3D.Forward : Vector3D.Up));
-            foreach (var corner in Entity.PositionComp.LocalAABB.Corners)
-            {
-                var vec = Vector3D.Rotate(corner, rotationMatrix);
-                if (minCheck.X > vec.X)
-                    minCheck.X = vec.X;
-                if (minCheck.Y > vec.Y)
-                    minCheck.Y = vec.Y;
-                if (minCheck.Z > vec.Z)
-                    minCheck.Z = vec.Z;
-
-                if (maxCheck.X < vec.X)
-                    maxCheck.X = vec.X;
-                if (maxCheck.Y < vec.Y)
-                    maxCheck.Y = vec.Y;
-                if (maxCheck.Z < vec.Z)
-                    maxCheck.Z = vec.Z;
-            }
-
-            var invRMatrix = MatrixD.Invert(rotationMatrix);
-            minCheck = Vector3D.Rotate(minCheck, rotationMatrix);
-            maxCheck = Vector3D.Rotate(maxCheck, rotationMatrix);
-
-            minCheck = Vector3D.Rotate(Vector3D.ProjectOnPlane(ref minCheck, ref direction), invRMatrix);
-            maxCheck = Vector3D.Rotate(Vector3D.ProjectOnPlane(ref maxCheck, ref direction), invRMatrix);
-            
-            {
-                // Min and max can get mixed up a bit
-                var bufferMin = minCheck;
-                minCheck.MinComponents(maxCheck);
-                maxCheck.MaxComponents(bufferMin);
-                bufferMin = maxCheck - minCheck;
-                minCheck = -bufferMin/2;
-                maxCheck = bufferMin/2;
-            }
+            Vector3D minCheck, maxCheck;
+            MatrixD rotationMatrix;
+            CalcCheckArea(direction, out minCheck, out maxCheck, out rotationMatrix);
 
             var gridPos = Grid.WorldAABB.Center;
             //DebugDraw.AddLine(gridPos, Vector3D.Rotate(direction * 10, Grid.WorldMatrix) + gridPos, Color.Blue, 0);
 
             // Cast for occupied cells, if there's a hit then do a physics cast.
-            HashSet<Vector3I> visited = new HashSet<Vector3I>();
-            double maxCastLength = Grid.LocalAABB.HalfExtents.Length();
-
-            double checkArea = (maxCheck.X - minCheck.X) * (maxCheck.Y - minCheck.Y);
-            int scaleMultiplier = (int) MathUtils.Clamp(Math.Round(Math.Pow(checkArea / 500, 1/3d)), 1, double.MaxValue);
-
-            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize * scaleMultiplier) // Check every two blocks for performance's sake
-            {
-                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize * scaleMultiplier) // Check every two blocks for performance's sake
-                {
-                    var vecOffset = Vector3D.Rotate(new Vector3D(x, y, 0), rotationMatrix);
-
-                    var from = Vector3D.Rotate(direction * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
-                    var to = Vector3D.Rotate(direction * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
-
-                    //if (GlobalData.Debug)
-                    //    DebugDraw.AddLine(from, to, Color.Gray.SetAlphaPct(0.05f), 0);
-
-                    var result = Grid.RayCastBlocks(from, to);
-                    if (result != null)
-                        visited.Add(result.Value);
-                }
-            }
+            double maxCastLength;
+            int scaleMultiplier;
+            HashSet<Vector3I> visited = GenerateOccupiedCells(direction, minCheck, maxCheck, rotationMatrix, out maxCastLength, out scaleMultiplier);
 
             double totalRcs = 0;
             double totalVcs = 0;
@@ -379,6 +327,86 @@ namespace DetectionEquipment.Server.Tracking
                 radarCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Radar);
                 visualCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Optical);
             }
+        }
+
+        /// <summary>
+        /// Estimates raycast bounds to save on performance.
+        /// </summary>
+        /// <param name="direction"></param>
+        /// <param name="minCheck"></param>
+        /// <param name="maxCheck"></param>
+        private void CalcCheckArea(Vector3D direction, out Vector3D minCheck, out Vector3D maxCheck, out MatrixD castRotationMatrix)
+        {
+            minCheck = Vector3D.MaxValue;
+            maxCheck = Vector3D.MinValue;
+            castRotationMatrix = MatrixD.CreateFromDir(direction, direction == Vector3D.Up ? Vector3D.Backward : (direction == Vector3D.Down ? Vector3D.Forward : Vector3D.Up));
+            foreach (var corner in Entity.PositionComp.LocalAABB.Corners)
+            {
+                var vec = Vector3D.Rotate(corner, castRotationMatrix);
+                if (minCheck.X > vec.X)
+                    minCheck.X = vec.X;
+                if (minCheck.Y > vec.Y)
+                    minCheck.Y = vec.Y;
+                if (minCheck.Z > vec.Z)
+                    minCheck.Z = vec.Z;
+
+                if (maxCheck.X < vec.X)
+                    maxCheck.X = vec.X;
+                if (maxCheck.Y < vec.Y)
+                    maxCheck.Y = vec.Y;
+                if (maxCheck.Z < vec.Z)
+                    maxCheck.Z = vec.Z;
+            }
+
+            var invRMatrix = MatrixD.Invert(castRotationMatrix);
+            minCheck = Vector3D.Rotate(minCheck, castRotationMatrix);
+            maxCheck = Vector3D.Rotate(maxCheck, castRotationMatrix);
+
+            minCheck = Vector3D.Rotate(Vector3D.ProjectOnPlane(ref minCheck, ref direction), invRMatrix);
+            maxCheck = Vector3D.Rotate(Vector3D.ProjectOnPlane(ref maxCheck, ref direction), invRMatrix);
+            
+            {
+                // Min and max can get mixed up a bit
+                var bufferMin = minCheck;
+                minCheck.MinComponents(maxCheck);
+                maxCheck.MaxComponents(bufferMin);
+                bufferMin = maxCheck - minCheck;
+                minCheck = -bufferMin/2;
+                maxCheck = bufferMin/2;
+            }
+        }
+
+        private HashSet<Vector3I> GenerateOccupiedCells(Vector3D direction, Vector3D minCheck, Vector3D maxCheck, MatrixD rotationMatrix, out double maxCastLength, out int scaleMultiplier)
+        {
+            var gridPos = Grid.WorldAABB.Center;
+            //DebugDraw.AddLine(gridPos, Vector3D.Rotate(direction * 10, Grid.WorldMatrix) + gridPos, Color.Blue, 0);
+
+            // Cast for occupied cells, if there's a hit then do a physics cast.
+            var visited = new HashSet<Vector3I>();
+            maxCastLength = Grid.LocalAABB.HalfExtents.Length();
+
+            double checkArea = (maxCheck.X - minCheck.X) * (maxCheck.Y - minCheck.Y);
+            scaleMultiplier = (int) MathUtils.Clamp(Math.Round(Math.Pow(checkArea / 500, 1/3d)), 1, double.MaxValue);
+
+            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize * scaleMultiplier) // Check every two blocks for performance's sake
+            {
+                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize * scaleMultiplier) // Check every two blocks for performance's sake
+                {
+                    var vecOffset = Vector3D.Rotate(new Vector3D(x, y, 0), rotationMatrix);
+
+                    var from = Vector3D.Rotate(direction * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
+                    var to = Vector3D.Rotate(direction * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
+
+                    //if (GlobalData.Debug)
+                    //    DebugDraw.AddLine(from, to, Color.Gray.SetAlphaPct(0.05f), 0);
+
+                    var result = Grid.RayCastBlocks(from, to);
+                    if (result != null)
+                        visited.Add(result.Value);
+                }
+            }
+
+            return visited;
         }
     }
 }
