@@ -31,7 +31,7 @@ namespace DetectionEquipment.Shared.Networking
             var grid = MyAPIGateway.Entities.GetEntityById(_gridId) as MyCubeGrid;
             if (grid == null)
             {
-                if (GlobalData.Debug)
+                if (GlobalData.DebugLevel > 0)
                     Log.Info("WcTargetingPacket", $"Failed to update grid targeting for {_gridId}!");
                 return;
             }

@@ -5,8 +5,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using RichHudFramework;
-using Sandbox.Game.Entities;
-using VRage;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -186,8 +184,8 @@ namespace DetectionEquipment.Server.Tracking
             {
                 // Min and max can get mixed up a bit
                 var bufferMin = minCheck;
-                minCheck.MinComponents(maxCheck);
-                maxCheck.MaxComponents(bufferMin);
+                TrackingUtils.MinComponents(ref minCheck, maxCheck);
+                TrackingUtils.MaxComponents(ref maxCheck, bufferMin);
                 bufferMin = maxCheck - minCheck;
                 minCheck = -bufferMin/2;
                 maxCheck = bufferMin/2;
@@ -266,57 +264,35 @@ namespace DetectionEquipment.Server.Tracking
         public virtual void CalculateRcs(Vector3D globalDirection, out double radarCrossSection, out double visualCrossSection)
         {
             globalDirection.Normalize();
-            Vector3D direction = Vector3D.Rotate(globalDirection, MatrixD.Invert(Grid.WorldMatrix));
-
+            Vector3D localDirection = Vector3D.Rotate(globalDirection, MatrixD.Invert(Grid.WorldMatrix));
 
             // Estimate the max cast size
             Vector3D minCheck, maxCheck;
-            MatrixD rotationMatrix;
-            CalcCheckArea(direction, out minCheck, out maxCheck, out rotationMatrix);
 
-            var gridPos = Grid.WorldAABB.Center;
-            //DebugDraw.AddLine(gridPos, Vector3D.Rotate(direction * 10, Grid.WorldMatrix) + gridPos, Color.Blue, 0);
-
-            // Cast for occupied cells, if there's a hit then do a physics cast.
-            double maxCastLength;
-            int scaleMultiplier;
-            HashSet<Vector3I> visited = GenerateOccupiedCells(direction, minCheck, maxCheck, rotationMatrix, out maxCastLength, out scaleMultiplier);
+            double maxCastLength = Grid.LocalAABB.HalfExtents.Length();
+            double checkArea = CalcCheckArea(localDirection, out minCheck, out maxCheck);
+            int scaleMultiplier = (int) MathUtils.Clamp(Math.Round(Math.Pow(checkArea / 500, 1/3d)), 1, double.MaxValue);
 
             double totalRcs = 0;
             double totalVcs = 0;
 
-            MyAPIGateway.Parallel.ForEach(visited, hitPos =>
+            // Cast for occupied cells using a weird and messed up custom method (based around block bounding boxes)
+            var gridCells = GlobalObjectPools.Vector3IPool.Pop();
+            foreach (var hitInfo in GenerateHitNormals(gridCells, localDirection, minCheck, maxCheck, maxCastLength, scaleMultiplier))
             {
-                var globalHitPos = Vector3D.Transform(hitPos * Grid.GridSize, Grid.WorldMatrix);
-                if (GlobalData.Debug)
-                    DebugDraw.AddPoint(globalHitPos, Color.Gray.SetAlphaPct(0.1f), 0);
-                Vector3D from = globalHitPos - globalDirection * Grid.GridSize * 3;
-                Vector3D to = globalHitPos + globalDirection * maxCastLength; // cast several blocks deep to limit certain cheese tactics
-            
-                IHitInfo hitInfo;
-                if (!MyAPIGateway.Physics.CastRay(from, to, out hitInfo, 15) || hitInfo == null ||
-                    hitInfo.HitEntity != Grid)
-                {
-                    if (GlobalData.Debug)
-                        DebugDraw.AddLine(from, to, Color.Red, 0);
-                    return;
-                }
-
-                var block = Grid.GetCubeBlock(hitPos);
-
-                if (GlobalData.Debug)
-                    DebugDraw.AddLine(from, to, Color.Green, 0);
-                // Armor blocks have half the RCS of components, and light armor has half the RCS of heavy armor.
                 totalVcs += 1;
-                double scaledRcs = Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
+                double scaledRcs = Math.Abs(hitInfo.DotProduct);
 
-                if (GlobalData.LowRcsSubtypes.Contains(block?.BlockDefinition.Id.SubtypeName))
+                if (GlobalData.LowRcsSubtypes.Contains(hitInfo.Block.BlockDefinition.Id.SubtypeName))
                     totalRcs += scaledRcs / 2;
-                else if (block?.FatBlock == null)
+                else if (hitInfo.Block.FatBlock == null)
                     totalRcs += scaledRcs;
                 else
                     totalRcs += scaledRcs * 2;
-            });
+            }
+            gridCells.Clear();
+            GlobalObjectPools.Vector3IPool.Push(gridCells);
+
 
             radarCrossSection = totalRcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier;
             visualCrossSection = totalVcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier;
@@ -332,81 +308,120 @@ namespace DetectionEquipment.Server.Tracking
         /// <summary>
         /// Estimates raycast bounds to save on performance.
         /// </summary>
-        /// <param name="direction"></param>
+        /// <param name="localDir"></param>
         /// <param name="minCheck"></param>
         /// <param name="maxCheck"></param>
-        private void CalcCheckArea(Vector3D direction, out Vector3D minCheck, out Vector3D maxCheck, out MatrixD castRotationMatrix)
+        private double CalcCheckArea(Vector3D localDir, out Vector3D minCheck, out Vector3D maxCheck)
         {
             minCheck = Vector3D.MaxValue;
             maxCheck = Vector3D.MinValue;
-            castRotationMatrix = MatrixD.CreateFromDir(direction, direction == Vector3D.Up ? Vector3D.Backward : (direction == Vector3D.Down ? Vector3D.Forward : Vector3D.Up));
+
+            var suggestedPlaneUp = Vector3D.Cross(localDir, Vector3D.Dot(localDir, Vector3.Right) < 0.5 ? Vector3D.Right : Vector3D.Up);
+            suggestedPlaneUp.Normalize();
+
+            var lookMatrix = MatrixD.CreateFromDir(localDir, suggestedPlaneUp);
+            var invLookMatrix = MatrixD.Invert(lookMatrix);
+
             foreach (var corner in Entity.PositionComp.LocalAABB.Corners)
             {
-                var vec = Vector3D.Rotate(corner, castRotationMatrix);
-                if (minCheck.X > vec.X)
-                    minCheck.X = vec.X;
-                if (minCheck.Y > vec.Y)
-                    minCheck.Y = vec.Y;
-                if (minCheck.Z > vec.Z)
-                    minCheck.Z = vec.Z;
+                Vector3D vec = corner - Entity.PositionComp.LocalAABB.Center;
+                // project on plane
+                vec = vec - Vector3D.Dot(vec, localDir) * localDir;
 
-                if (maxCheck.X < vec.X)
-                    maxCheck.X = vec.X;
-                if (maxCheck.Y < vec.Y)
-                    maxCheck.Y = vec.Y;
-                if (maxCheck.Z < vec.Z)
-                    maxCheck.Z = vec.Z;
+                if (GlobalData.DebugLevel > 2)
+                    DebugDraw.AddLine(Grid.WorldAABB.Center, Vector3D.Rotate(vec, Grid.WorldMatrix) + Grid.WorldAABB.Center, Color.DeepPink, 0);
+
+                vec = Vector3D.Rotate(vec, invLookMatrix);
+                
+                TrackingUtils.MinComponents(ref minCheck, vec);
+                TrackingUtils.MaxComponents(ref maxCheck, vec);
             }
 
-            var invRMatrix = MatrixD.Invert(castRotationMatrix);
-            minCheck = Vector3D.Rotate(minCheck, castRotationMatrix);
-            maxCheck = Vector3D.Rotate(maxCheck, castRotationMatrix);
-
-            minCheck = Vector3D.Rotate(Vector3D.ProjectOnPlane(ref minCheck, ref direction), invRMatrix);
-            maxCheck = Vector3D.Rotate(Vector3D.ProjectOnPlane(ref maxCheck, ref direction), invRMatrix);
-            
+            if (GlobalData.DebugLevel > 2)
             {
-                // Min and max can get mixed up a bit
-                var bufferMin = minCheck;
-                minCheck.MinComponents(maxCheck);
-                maxCheck.MaxComponents(bufferMin);
-                bufferMin = maxCheck - minCheck;
-                minCheck = -bufferMin/2;
-                maxCheck = bufferMin/2;
+                DebugDraw.AddPoint(Vector3D.Rotate(minCheck, lookMatrix * Grid.WorldMatrix) + Grid.WorldAABB.Center, Color.Green, 0);
+                DebugDraw.AddPoint(Vector3D.Rotate(maxCheck, lookMatrix * Grid.WorldMatrix) + Grid.WorldAABB.Center, Color.Red, 0);
+            }
+
+            return (maxCheck.X - minCheck.X) * (maxCheck.Y - minCheck.Y);
+        }
+
+        private IEnumerable<CustomHitInfo> GenerateHitNormals(List<Vector3I> gridCells, Vector3D localDir, Vector3D minCheck, Vector3D maxCheck, double maxCastLength, int scaleMultiplier)
+        {
+            var gridPos = Grid.WorldAABB.Center;
+            var lookMatrix = MatrixD.CreateFromDir(localDir, Vector3D.Cross(localDir, Vector3D.Dot(localDir, Vector3.Right) < 0.5 ? Vector3D.Right : Vector3D.Up));
+
+            minCheck.X += Grid.GridSize / 2;
+            minCheck.Y += Grid.GridSize / 2;
+            maxCheck.X -= Grid.GridSize / 2;
+            maxCheck.Y -= Grid.GridSize / 2;
+
+            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize * scaleMultiplier)
+            {
+                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize * scaleMultiplier)
+                {
+                    var vecOffset = Vector3D.Rotate(new Vector3D(x, y, 0), lookMatrix);
+                    
+                    var from = Vector3D.Rotate(localDir * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
+                    var to = Vector3D.Rotate(localDir * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
+
+
+                    if (GlobalData.DebugLevel > 3)
+                        DebugDraw.AddLine(from, to, Color.Gray.SetAlphaPct(0.05f), 0);
+
+                    // out positions are cleared by keen
+                    Grid.RayCastCells(from, to, gridCells);
+                    if (gridCells.Count == 0)
+                        continue;
+
+                    var gridAlignedFrom = localDir * -maxCastLength + vecOffset + Grid.LocalAABB.Center;
+
+                    foreach (var cell in gridCells)
+                    {
+                        var block = Grid.GetCubeBlock(cell);
+                        if (block == null)
+                            continue;
+
+                        double tMin, tMax;
+                        if (!MathUtils.IntersectBoxD(gridAlignedFrom, localDir, (block.Min - Vector3.Half) * Grid.GridSize,
+                                (block.Max + Vector3.Half) * Grid.GridSize, out tMin, out tMax))
+                        {
+                            if (GlobalData.DebugLevel > 3)
+                                DebugDraw.AddLine(Vector3D.Transform(gridAlignedFrom, Grid.WorldMatrix), Vector3D.Transform(gridAlignedFrom + localDir*maxCastLength, Grid.WorldMatrix), Color.Red, 0);
+                            continue;
+                        }
+
+                        if (GlobalData.DebugLevel > 3)
+                            DebugDraw.AddLine(Vector3D.Transform(gridAlignedFrom + localDir*tMin, Grid.WorldMatrix), Vector3D.Transform(gridAlignedFrom + localDir*tMax, Grid.WorldMatrix), Color.LimeGreen, 0);
+
+                        var blockCenter = ((block.Max - block.Min) / 2f + block.Min) * Grid.GridSize;
+                        var intersectNormal = Vector3D.Normalize(gridAlignedFrom + localDir * tMin - blockCenter);
+                        MathUtils.LargestComponent(ref intersectNormal);
+
+                        if (GlobalData.DebugLevel > 2)
+                        {
+                            var globalBlockPos = Vector3D.Transform(blockCenter, Grid.WorldMatrix);
+                            var globalNormal = Vector3D.Rotate(intersectNormal, Grid.WorldMatrix);
+                            DebugDraw.AddLine(globalBlockPos, globalBlockPos + globalNormal, Color.LimeGreen, 0);
+                        }
+                        
+                        yield return new CustomHitInfo(block, Vector3D.Dot(localDir, intersectNormal));
+                        break;
+                    }
+                }
             }
         }
 
-        private HashSet<Vector3I> GenerateOccupiedCells(Vector3D direction, Vector3D minCheck, Vector3D maxCheck, MatrixD rotationMatrix, out double maxCastLength, out int scaleMultiplier)
+        private struct CustomHitInfo
         {
-            var gridPos = Grid.WorldAABB.Center;
-            //DebugDraw.AddLine(gridPos, Vector3D.Rotate(direction * 10, Grid.WorldMatrix) + gridPos, Color.Blue, 0);
+            public IMySlimBlock Block;
+            public double DotProduct;
 
-            // Cast for occupied cells, if there's a hit then do a physics cast.
-            var visited = new HashSet<Vector3I>();
-            maxCastLength = Grid.LocalAABB.HalfExtents.Length();
-
-            double checkArea = (maxCheck.X - minCheck.X) * (maxCheck.Y - minCheck.Y);
-            scaleMultiplier = (int) MathUtils.Clamp(Math.Round(Math.Pow(checkArea / 500, 1/3d)), 1, double.MaxValue);
-
-            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize * scaleMultiplier) // Check every two blocks for performance's sake
+            public CustomHitInfo(IMySlimBlock block, double dotProduct)
             {
-                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize * scaleMultiplier) // Check every two blocks for performance's sake
-                {
-                    var vecOffset = Vector3D.Rotate(new Vector3D(x, y, 0), rotationMatrix);
-
-                    var from = Vector3D.Rotate(direction * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
-                    var to = Vector3D.Rotate(direction * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
-
-                    //if (GlobalData.Debug)
-                    //    DebugDraw.AddLine(from, to, Color.Gray.SetAlphaPct(0.05f), 0);
-
-                    var result = Grid.RayCastBlocks(from, to);
-                    if (result != null)
-                        visited.Add(result.Value);
-                }
+                Block = block;
+                DotProduct = dotProduct;
             }
-
-            return visited;
         }
     }
 }

@@ -33,6 +33,7 @@ namespace DetectionEquipment.Shared
                 Log.IncreaseIndent();
 
                 GlobalData.Init();
+                GlobalObjectPools.Init();
                 PersistentBlockIdHelper.Load();
                 ObjectPackager.Load();
                 ApiManager.Init();
@@ -89,6 +90,7 @@ namespace DetectionEquipment.Shared
                 DefinitionManager.Unload();
                 PersistentBlockIdHelper.Unload();
                 ObjectPackager.Unload();
+                GlobalObjectPools.Unload();
                 GlobalData.Unload();
 
                 I = null;

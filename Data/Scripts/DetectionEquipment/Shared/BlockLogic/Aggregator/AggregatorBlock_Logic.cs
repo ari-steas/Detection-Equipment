@@ -62,7 +62,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     var velocities = new Vector3D[toCombine.Count - 1];
                     for (int i = 0; i < velocities.Length; i++)
                     {
-                        if (GlobalData.Debug)
+                        if (GlobalData.DebugLevel > 1)
                             DebugDraw.AddLine(toCombine[i].Position, toCombine[i+1].Position, Color.White * ((float)i/velocities.Length), 0); // Position delta indicator
                         velocities[i] = (toCombine[i + 1].Position - toCombine[i].Position) * 60;
                         averageVelocity += velocities[i];
@@ -85,7 +85,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 averagedInfo.VelocityVariance = velVariation;
 
                 //MyAPIGateway.Utilities.ShowNotification($"Vel: {averageVelocity.Length():N1} m/s (R={Math.Sqrt(velVariation)})", 1000/60);
-                if (GlobalData.Debug)
+                if (GlobalData.DebugLevel > 1)
                     DebugDraw.AddLine(averagedInfo.Position, averagedInfo.Position, Color.Blue, 0);
 
                 aggregatedDetections.Add(averagedInfo);

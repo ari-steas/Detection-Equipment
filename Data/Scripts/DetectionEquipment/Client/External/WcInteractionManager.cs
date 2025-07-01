@@ -63,7 +63,7 @@ namespace DetectionEquipment.Client.External
             foreach (var target in valid)
             {
                 targets.Add(target);
-                if (GlobalData.Debug)
+                if (GlobalData.DebugLevel > 1)
                     DebugDraw.AddLine(grid.WorldMatrix.Translation, target.WorldMatrix.Translation, Color.Maroon, 10/6f);
             }
             

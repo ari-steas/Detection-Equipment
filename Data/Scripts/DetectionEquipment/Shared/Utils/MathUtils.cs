@@ -187,5 +187,44 @@ namespace DetectionEquipment.Shared.Utils
         {
             return new Vector2(length * (float) Math.Cos(angle), length * (float) Math.Sin(angle));
         }
+
+        public static bool IntersectBoxD(Vector3D position, Vector3D direction, Vector3D boxMin, Vector3D boxMax, out double tMin, out double tMax)
+        {
+            double num1 = 1.0 / direction.X;
+            double num2 = 1.0 / direction.Y;
+            double num3 = 1.0 / direction.Z;
+            double val1_1 = (boxMin.X - position.X) * num1;
+            double val2_1 = (boxMax.X - position.X) * num1;
+            double val1_2 = (boxMin.Y - position.Y) * num2;
+            double val2_2 = (boxMax.Y - position.Y) * num2;
+            double val1_3 = (boxMin.Z - position.Z) * num3;
+            double val2_3 = (boxMax.Z - position.Z) * num3;
+            tMin = Math.Max(Math.Max(Math.Min(val1_1, val2_1), Math.Min(val1_2, val2_2)), Math.Min(val1_3, val2_3));
+            tMax = Math.Min(Math.Min(Math.Max(val1_1, val2_1), Math.Max(val1_2, val2_2)), Math.Max(val1_3, val2_3));
+            return tMax >= 0.0 && tMin <= tMax;
+        }
+
+        public static void LargestComponent(ref Vector3D vec)
+        {
+            var absX = Math.Abs(vec.X);
+            var absY = Math.Abs(vec.Y);
+            var absZ = Math.Abs(vec.Z);
+
+            if (absX >= absY && absX >= absZ)
+            {
+                vec.Y = 0;
+                vec.Z = 0;
+            }
+            else if (absY >= absX && absY >= absZ)
+            {
+                vec.X = 0;
+                vec.Z = 0;
+            }
+            else if (absZ >= absX && absZ >= absY)
+            {
+                vec.X = 0;
+                vec.Y = 0;
+            }
+        }
     }
 }

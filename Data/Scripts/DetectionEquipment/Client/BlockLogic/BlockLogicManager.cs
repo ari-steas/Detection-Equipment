@@ -91,7 +91,7 @@ namespace DetectionEquipment.Client.BlockLogic
             var block = MyAPIGateway.Entities.GetEntityById(blockId) as IMyTerminalBlock;
             if (block?.CubeGrid?.Physics == null)
             {
-                if (GlobalData.Debug)
+                if (GlobalData.DebugLevel > 0)
                     Log.Info("BlockLogicManager", $"Delayed registering {logic.GetType().Name} on {blockId}...");
                 return false;
             }
@@ -115,13 +115,13 @@ namespace DetectionEquipment.Client.BlockLogic
                         continue;
 
                     logic.UpdateFromNetwork(updatePacket);
-                    if (GlobalData.Debug)
+                    if (GlobalData.DebugLevel > 0)
                         Log.Info("BlockLogicManager", $"Updated {logic.GetType().Name} from network on {blockId}.");
                     updateSet.RemoveAt(i);
                     // todo optimize this, there should only be one logic of each type per block!
                 }
             }
-            if (GlobalData.Debug)
+            if (GlobalData.DebugLevel > 0)
                 Log.Info("BlockLogicManager", $"Registered {logic.GetType().Name} on {blockId}.");
             return true;
         }
@@ -135,7 +135,7 @@ namespace DetectionEquipment.Client.BlockLogic
                     DelayedUpdateLogics[blockId].Add(packet);
                 else
                     DelayedUpdateLogics[blockId] = new List<BlockLogicUpdatePacket> { packet };
-                if (GlobalData.Debug)
+                if (GlobalData.DebugLevel > 0)
                     Log.Info("BlockLogicManager", $"Delayed updating {typeof(TLogic).Name} on {blockId}...");
                 return false;
             }

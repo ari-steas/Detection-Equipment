@@ -60,7 +60,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                         {
                             var err = target.SumError / Vector3D.Distance(gridPos, target.Position);
 
-                            if (GlobalData.Debug)
+                            if (GlobalData.DebugLevel > 1)
                             {
                                 DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
                                 //MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}/{GlobalData.MinLockForWcTarget*100:F}% err", 100000/60);

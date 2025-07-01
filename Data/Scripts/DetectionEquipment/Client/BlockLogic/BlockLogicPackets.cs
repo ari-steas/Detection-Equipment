@@ -19,7 +19,7 @@ namespace DetectionEquipment.Client.BlockLogic
 
         public override void Received(ulong senderSteamId, bool fromServer)
         {
-            if (GlobalData.Debug)
+            if (GlobalData.DebugLevel > 0)
                 Log.Info("BlockLogicInitPacket", "Received BlockLogicInitPacket from " + (fromServer ? "server" : "client"));
 
             if (fromServer)

@@ -37,7 +37,7 @@ namespace DetectionEquipment.Shared.Utils
             [Vector3D.Normalize(Vector3D.Down + Vector3D.Right)] = 0,
         };
 
-        public static void MinComponents(this Vector3D a, Vector3D b)
+        public static void MinComponents(ref Vector3D a, Vector3D b)
         {
             if (a.X > b.X)
                 a.X = b.X;
@@ -47,7 +47,7 @@ namespace DetectionEquipment.Shared.Utils
                 a.Z = b.Z;
         }
 
-        public static void MaxComponents(this Vector3D a, Vector3D b)
+        public static void MaxComponents(ref Vector3D a, Vector3D b)
         {
             if (a.X < b.X)
                 a.X = b.X;

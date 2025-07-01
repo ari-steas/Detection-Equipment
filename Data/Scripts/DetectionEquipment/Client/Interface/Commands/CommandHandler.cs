@@ -26,7 +26,7 @@ namespace DetectionEquipment.Client.Interface.Commands
 
             ["debug"] = new Command(
                 "DetEq",
-                "Toggles debug mode. Most useful on localhost.",
+                "Sets debug mode level. Most useful on localhost. Takes integer level as an optional argument, where a higher level provides more debug info.",
                 CommandMethods.ToggleDebug),
 
             #endregion

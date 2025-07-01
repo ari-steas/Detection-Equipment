@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game;
 using Sandbox.ModAPI;
@@ -25,7 +26,7 @@ namespace DetectionEquipment.Client.Interface
         private static bool _shouldShow = false;
         public static void Update()
         {
-            if (_ticks++ % 10 == 0)
+            if (_ticks++ % 10 == 0 || GlobalData.DebugLevel > 0)
                 _shouldShow = GetData(out _name, out _rcs, out _vcs, out _irs, out _rawIrs);
 
             // Updating every tick to prevent flashing
@@ -68,12 +69,13 @@ namespace DetectionEquipment.Client.Interface
                 return false;
 
             // raycast for grid
-            var castEnt = MiscUtils.RaycastEntityFromCamera();
+            var castMatrix = GlobalData.DebugLevel > 0 && MyAPIGateway.Session.Player?.Character != null ? MyAPIGateway.Session.Player.Character.WorldMatrix : MyAPIGateway.Session.Camera.WorldMatrix;
+            var castEnt = MiscUtils.RaycastEntityFromMatrix(castMatrix);
             if (castEnt == null)
                 return true;
 
             //Vector3D position = MyAPIGateway.Session.Camera.WorldMatrix.Translation - MyAPIGateway.Session.Camera.WorldMatrix.Forward * 500;
-            Vector3D position = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
+            Vector3D position = castMatrix.Translation;
 
             var castGrid = castEnt as IMyCubeGrid;
             if (castGrid != null)

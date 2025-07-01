@@ -131,40 +131,47 @@ namespace DetectionEquipment.Shared
 
             long nowTicks = DateTime.UtcNow.Ticks;
 
-            lock (_queuedPoints)
+            try
             {
-                for (var i = _queuedPoints.Count - 1; i >= 0; i--)
+                lock (_queuedPoints)
                 {
-                    var point = _queuedPoints[i];
-                    DrawPoint0(point.Position, point.Color);
+                    for (var i = _queuedPoints.Count - 1; i >= 0; i--)
+                    {
+                        var point = _queuedPoints[i];
+                        DrawPoint0(point.Position, point.Color);
 
-                    if (nowTicks >= point.EndOfLife)
-                        _queuedPoints.RemoveAt(i);
+                        if (nowTicks >= point.EndOfLife)
+                            _queuedPoints.RemoveAt(i);
+                    }
+                }
+
+                lock (_queuedGridPoints)
+                {
+                    for (var i = _queuedGridPoints.Count - 1; i >= 0; i--)
+                    {
+                        var gridPoint = _queuedGridPoints[i];
+                        DrawGridPoint0(gridPoint.Position, gridPoint.Grid, gridPoint.Color);
+
+                        if (nowTicks >= gridPoint.EndOfLife)
+                            _queuedGridPoints.RemoveAt(i);
+                    }
+                }
+
+                lock (_queuedLinePoints)
+                {
+                    for (var i = _queuedLinePoints.Count - 1; i >= 0; i--)
+                    {
+                        var linePoint = _queuedLinePoints[i];
+                        DrawLine0(linePoint.Start, linePoint.End, linePoint.Color);
+
+                        if (nowTicks >= linePoint.EndOfLife)
+                            _queuedLinePoints.RemoveAt(i);
+                    }
                 }
             }
-
-            lock (_queuedGridPoints)
+            catch (Exception ex)
             {
-                for (var i = _queuedGridPoints.Count - 1; i >= 0; i--)
-                {
-                    var gridPoint = _queuedGridPoints[i];
-                    DrawGridPoint0(gridPoint.Position, gridPoint.Grid, gridPoint.Color);
-
-                    if (nowTicks >= gridPoint.EndOfLife)
-                        _queuedGridPoints.RemoveAt(i);
-                }
-            }
-
-            lock (_queuedLinePoints)
-            {
-                for (var i = _queuedLinePoints.Count - 1; i >= 0; i--)
-                {
-                    var linePoint = _queuedLinePoints[i];
-                    DrawLine0(linePoint.Start, linePoint.End, linePoint.Color);
-
-                    if (nowTicks >= linePoint.EndOfLife)
-                        _queuedLinePoints.RemoveAt(i);
-                }
+                Log.Exception("DebugDrawManager", ex);
             }
         }
 

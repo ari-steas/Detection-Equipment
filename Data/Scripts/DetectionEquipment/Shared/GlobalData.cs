@@ -33,7 +33,7 @@ namespace DetectionEquipment.Shared
         public static List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;
         public static HashSet<string> LowRcsSubtypes;
-        public static bool Debug = false;
+        public static int DebugLevel = 0;
         public static List<MyPlanet> Planets = new List<MyPlanet>();
 
         public static string[] IgnoredEntityTypes = {
