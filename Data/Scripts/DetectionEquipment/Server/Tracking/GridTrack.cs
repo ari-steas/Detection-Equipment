@@ -5,8 +5,10 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using RichHudFramework;
+using Sandbox.Game.Entities;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
+using VRage.Game.Models;
 using VRageMath;
 
 namespace DetectionEquipment.Server.Tracking
@@ -277,8 +279,7 @@ namespace DetectionEquipment.Server.Tracking
             double totalVcs = 0;
 
             // Cast for occupied cells using a weird and messed up custom method (based around block bounding boxes)
-            var gridCells = GlobalObjectPools.Vector3IPool.Pop();
-            foreach (var hitInfo in GenerateHitNormals(gridCells, localDirection, minCheck, maxCheck, maxCastLength, scaleMultiplier))
+            foreach (var hitInfo in GenerateHitNormals(localDirection, minCheck, maxCheck, maxCastLength, scaleMultiplier))
             {
                 totalVcs += 1;
                 double scaledRcs = Math.Abs(hitInfo.DotProduct);
@@ -290,8 +291,6 @@ namespace DetectionEquipment.Server.Tracking
                 else
                     totalRcs += scaledRcs * 2;
             }
-            gridCells.Clear();
-            GlobalObjectPools.Vector3IPool.Push(gridCells);
 
 
             radarCrossSection = totalRcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier;
@@ -346,8 +345,9 @@ namespace DetectionEquipment.Server.Tracking
             return (maxCheck.X - minCheck.X) * (maxCheck.Y - minCheck.Y);
         }
 
-        private IEnumerable<CustomHitInfo> GenerateHitNormals(List<Vector3I> gridCells, Vector3D localDir, Vector3D minCheck, Vector3D maxCheck, double maxCastLength, int scaleMultiplier)
+        private IEnumerable<CustomHitInfo> GenerateHitNormals(Vector3D localDir, Vector3D minCheck, Vector3D maxCheck, double maxCastLength, int scaleMultiplier)
         {
+            var grid = (MyCubeGrid)Grid;
             var gridPos = Grid.WorldAABB.Center;
             var lookMatrix = MatrixD.CreateFromDir(localDir, Vector3D.Cross(localDir, Vector3D.Dot(localDir, Vector3.Right) < 0.5 ? Vector3D.Right : Vector3D.Up));
 
@@ -361,53 +361,23 @@ namespace DetectionEquipment.Server.Tracking
                 for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize * scaleMultiplier)
                 {
                     var vecOffset = Vector3D.Rotate(new Vector3D(x, y, 0), lookMatrix);
-                    
-                    var from = Vector3D.Rotate(localDir * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
-                    var to = Vector3D.Rotate(localDir * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
+
+                    LineD castLine = new LineD(
+                        Vector3D.Rotate(localDir * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos,
+                        Vector3D.Rotate(localDir * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos);
 
 
                     if (GlobalData.DebugLevel > 3)
-                        DebugDraw.AddLine(from, to, Color.Gray.SetAlphaPct(0.05f), 0);
+                        DebugDraw.AddLine(castLine.From, castLine.To, Color.Gray.SetAlphaPct(0.05f), 0);
 
-                    // out positions are cleared by keen
-                    Grid.RayCastCells(from, to, gridCells);
-                    if (gridCells.Count == 0)
+                    MyCubeGrid.MyCubeGridHitInfo intersect = new MyCubeGrid.MyCubeGridHitInfo();
+                    if (!grid.GetIntersectionWithLine(ref castLine, ref intersect))
                         continue;
 
-                    var gridAlignedFrom = localDir * -maxCastLength + vecOffset + Grid.LocalAABB.Center;
-
-                    foreach (var cell in gridCells)
-                    {
-                        var block = Grid.GetCubeBlock(cell);
-                        if (block == null)
-                            continue;
-
-                        double tMin, tMax;
-                        if (!MathUtils.IntersectBoxD(gridAlignedFrom, localDir, (block.Min - Vector3.Half) * Grid.GridSize,
-                                (block.Max + Vector3.Half) * Grid.GridSize, out tMin, out tMax))
-                        {
-                            if (GlobalData.DebugLevel > 3)
-                                DebugDraw.AddLine(Vector3D.Transform(gridAlignedFrom, Grid.WorldMatrix), Vector3D.Transform(gridAlignedFrom + localDir*maxCastLength, Grid.WorldMatrix), Color.Red, 0);
-                            continue;
-                        }
-
-                        if (GlobalData.DebugLevel > 3)
-                            DebugDraw.AddLine(Vector3D.Transform(gridAlignedFrom + localDir*tMin, Grid.WorldMatrix), Vector3D.Transform(gridAlignedFrom + localDir*tMax, Grid.WorldMatrix), Color.LimeGreen, 0);
-
-                        var blockCenter = ((block.Max - block.Min) / 2f + block.Min) * Grid.GridSize;
-                        var intersectNormal = Vector3D.Normalize(gridAlignedFrom + localDir * tMin - blockCenter);
-                        MathUtils.LargestComponent(ref intersectNormal);
-
-                        if (GlobalData.DebugLevel > 2)
-                        {
-                            var globalBlockPos = Vector3D.Transform(blockCenter, Grid.WorldMatrix);
-                            var globalNormal = Vector3D.Rotate(intersectNormal, Grid.WorldMatrix);
-                            DebugDraw.AddLine(globalBlockPos, globalBlockPos + globalNormal, Color.LimeGreen, 0);
-                        }
+                    if (GlobalData.DebugLevel > 2)
+                        DebugDraw.AddLine(intersect.Triangle.IntersectionPointInWorldSpace, intersect.Triangle.IntersectionPointInWorldSpace + intersect.Triangle.NormalInWorldSpace, Color.LimeGreen, 0);
                         
-                        yield return new CustomHitInfo(block, Vector3D.Dot(localDir, intersectNormal));
-                        break;
-                    }
+                    yield return new CustomHitInfo(Grid.GetCubeBlock(intersect.Position), Math.Abs(Vector3D.Dot(localDir, intersect.Triangle.NormalInObjectSpace)));
                 }
             }
         }
