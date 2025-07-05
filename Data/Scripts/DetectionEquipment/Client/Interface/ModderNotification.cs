@@ -6,17 +6,21 @@ namespace DetectionEquipment.Client.Interface
 {
     internal static class ModderNotification
     {
-        private static int _displayTime = 1200;
+        private static int _displayTime = 1500;
         private static bool _isDisplaying = false;
 
         public static void Init()
         {
+            if (MyAPIGateway.Utilities.FileExistsInWorldStorage("showedmodnotif", typeof(ModderNotification)))
+                return;
+
             foreach (var mod in MyAPIGateway.Session.Mods)
             {
                 if (mod.PublishedServiceName == "Steam" && !mod.Name.EndsWith(".sbm"))
                 {
                     Log.Info("ModderNotification", $"Detected local mod \"{mod.Name}\" - displaying modder info.");
                     _isDisplaying = true;
+                    MyAPIGateway.Utilities.WriteFileInWorldStorage("showedmodnotif", typeof(ModderNotification)).Close();
                     break;
                 }
             }
