@@ -33,6 +33,10 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
 
         public override MyRelationsBetweenPlayers GetInfoRelations(WorldDetectionInfo info)
         {
+            MyRelationsBetweenPlayers pbResult;
+            if (TryInvokePbIffAction(info, out pbResult))
+                return pbResult;
+
             if (info.IffCodes.Length == 0)
             {
                 if (info.DetectionType == WorldDetectionInfo.DetectionFlags.PassiveRadar) // Radar locks are probably enemies

@@ -14,6 +14,7 @@ using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Structs;
+using Sandbox.ModAPI.Ingame;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -53,6 +54,7 @@ namespace DetectionEquipment.Server.PBApi
             ["SetAggregatorUseAllSensors"] = new Action<IMyCubeBlock, bool>(SetAggregatorUseAllSensors),
             ["GetAggregatorActiveSensors"] = new Func<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>>(GetAggregatorActiveSensors),
             ["SetAggregatorActiveSensors"] = new Action<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>>(SetAggregatorActiveSensors),
+            ["SetAggregatorIffAction"] = new Action<MyGridProgram, IMyCubeBlock, Func<long, int>>(SetAggregatorIffAction),
 
             // IFF Reflector
             ["HasReflector"] = new Func<IMyCubeBlock, bool>(HasReflector),
@@ -259,6 +261,19 @@ namespace DetectionEquipment.Server.PBApi
             }
 
             AggregatorControls.ActiveSensorSelect.UpdateSelected(control, valid.ToArray());
+        }
+
+        private static void SetAggregatorIffAction(MyGridProgram pb, IMyCubeBlock block, Func<long, int> func)
+        {
+            IControlBlockBase control;
+            if (!ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock) block, out control))
+                return;
+            var aggregator = control as AggregatorBlock;
+            if (aggregator == null || pb == null)
+                return;
+
+            aggregator.PbIffAction = func;
+            aggregator.PbIffActionOwner = pb;
         }
 
         #endregion

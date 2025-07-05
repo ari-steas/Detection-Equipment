@@ -1,11 +1,8 @@
-﻿using DetectionEquipment.Shared.Definitions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using DetectionEquipment.Shared.Utils;
-using Sandbox.ModAPI;
 using VRage.Game.Entity;
 using VRageMath;
 

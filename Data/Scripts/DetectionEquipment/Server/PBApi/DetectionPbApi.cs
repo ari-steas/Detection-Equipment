@@ -37,13 +37,10 @@ namespace IngameScript
         /// <param name="program">Use 'this' (this program instance)</param>
         public DetectionPbApi(MyGridProgram program)
         {
-            if (I != null)
-                throw new Exception("Only one DetectionPbApi should be active at at time!");
-
-            // Shamelessly adapted from the WcPbAPI
             if (program == null)
                 throw new Exception("Invalid Program instance!");
 
+            _program = program;
             _methodMap = program.Me.GetProperty("DetectionPbApi")?.As<IReadOnlyDictionary<string, Delegate>>()?.GetValue(program.Me);
             if (_methodMap == null)
                 throw new Exception("Failed to get DetectionPbApi!"); // This is expected to occur once on world load; Detection Equipment automatically recompiles affected programmable blocks.
@@ -67,10 +64,10 @@ namespace IngameScript
             if (!_hasSensor.Invoke(block))
                 return new MemorySafeList<PbSensorBlock>(0);
 
-            MemorySafeList<PbSensorBlock> MemorySafeList = new MemorySafeList<PbSensorBlock>();
+            MemorySafeList<PbSensorBlock> memorySafeList = new MemorySafeList<PbSensorBlock>();
             foreach (uint id in _getSensorIds.Invoke(block))
-                MemorySafeList.Add(new PbSensorBlock(block, id));
-            return MemorySafeList;
+                memorySafeList.Add(new PbSensorBlock(this, block, id));
+            return memorySafeList;
         }
 
         /// <summary>
@@ -90,7 +87,7 @@ namespace IngameScript
             if (!_hasAggregator.Invoke(block))
                 return null;
 
-            return new PbAggregatorBlock(block);
+            return new PbAggregatorBlock(this, block);
         }
 
         /// <summary>
@@ -110,7 +107,7 @@ namespace IngameScript
             if (!_hasReflector.Invoke(block))
                 return null;
 
-            return new PbIffReflectorBlock(block);
+            return new PbIffReflectorBlock(this, block);
         }
 
         /// <summary>
@@ -154,6 +151,7 @@ namespace IngameScript
         private Action<IMyCubeBlock, bool> _setAggregatorUseAllSensors;
         private Func<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>> _getAggregatorActiveSensors;
         private Action<IMyCubeBlock, MemorySafeList<IMyTerminalBlock>> _setAggregatorActiveSensors;
+        private Action<MyGridProgram, IMyCubeBlock, Func<long, int>> _setAggregatorIffAction;
 
         // Iff Reflector
         private Func<IMyCubeBlock, bool> _hasReflector;
@@ -166,13 +164,11 @@ namespace IngameScript
 
         #region API Internals
 
+        private MyGridProgram _program;
         private readonly IReadOnlyDictionary<string, Delegate> _methodMap;
-        public static DetectionPbApi I { get; private set; }
 
         private void InitializeApi()
         {
-            I = this;
-
             SetApiMethod("ReturnFieldArray", ref _returnFieldArray);
 
             SetApiMethod("GetSensorIds", ref _getSensorIds);
@@ -200,6 +196,7 @@ namespace IngameScript
             SetApiMethod("SetAggregatorUseAllSensors", ref _setAggregatorUseAllSensors);
             SetApiMethod("GetAggregatorActiveSensors", ref _getAggregatorActiveSensors);
             SetApiMethod("SetAggregatorActiveSensors", ref _setAggregatorActiveSensors);
+            SetApiMethod("SetAggregatorIffAction", ref _setAggregatorIffAction);
 
             SetApiMethod("HasReflector", ref _hasReflector);
             SetApiMethod("GetIffCode", ref _getIffCode);
@@ -234,7 +231,10 @@ namespace IngameScript
 
         private static void SetField<T>(object dataSet, out T field)
         {
-            field = (T) dataSet;
+            if (dataSet == null)
+                field = default(T);
+            else
+                field = (T)dataSet;
         }
 
         #endregion
@@ -247,13 +247,14 @@ namespace IngameScript
         public class PbSensorBlock
         {
             private PbSensorDefinition _definition = null;
+            private readonly DetectionPbApi _;
 
             public PbSensorDefinition Definition
             {
                 get
                 {
                     if (_definition == null)
-                        _definition = new PbSensorDefinition(I._getSensorDefinition.Invoke(Id));
+                        _definition = new PbSensorDefinition(_, _._getSensorDefinition.Invoke(Id));
                     return _definition;
                 }
             }
@@ -266,8 +267,9 @@ namespace IngameScript
             /// </summary>
             /// <param name="block"></param>
             /// <param name="id"></param>
-            public PbSensorBlock(IMyCubeBlock block, uint id)
+            public PbSensorBlock(DetectionPbApi pbApi, IMyCubeBlock block, uint id)
             {
+                _ = pbApi;
                 Id = id;
                 Block = block;
 
@@ -280,10 +282,10 @@ namespace IngameScript
             /// </summary>
             public PbDetectionInfo[] GetDetections()
             {
-                var dataSets = I._getSensorDetections.Invoke(Id);
+                var dataSets = _._getSensorDetections.Invoke(Id);
                 var detections = new PbDetectionInfo[dataSets.Length];
                 for (int i = 0; i < dataSets.Length; i++)
-                    detections[i] = new PbDetectionInfo(dataSets[i]);
+                    detections[i] = new PbDetectionInfo(_, dataSets[i]);
                 return detections;
             }
 
@@ -293,8 +295,8 @@ namespace IngameScript
             /// <param name="collection"></param>
             public void GetDetections(ICollection<PbDetectionInfo> collection)
             {
-                foreach (var infoArray in I._getSensorDetections.Invoke(Id))
-                    collection.Add(new PbDetectionInfo(infoArray));
+                foreach (var infoArray in _._getSensorDetections.Invoke(Id))
+                    collection.Add(new PbDetectionInfo(_, infoArray));
             }
 
             /// <summary>
@@ -310,9 +312,9 @@ namespace IngameScript
                 {
                     // Only have an action registered if we need it - this avoids the mod profiler hit.
                     if (_onDetection == null && value != null)
-                        I._registerInvokeOnDetection.Invoke(Id, InvokeOnDetection);
+                        _._registerInvokeOnDetection.Invoke(Id, InvokeOnDetection);
                     else if (value == null)
-                        I._unregisterInvokeOnDetection.Invoke(Id, InvokeOnDetection);
+                        _._unregisterInvokeOnDetection.Invoke(Id, InvokeOnDetection);
                     _onDetection = value;
                 }
             }
@@ -320,11 +322,11 @@ namespace IngameScript
             /// <summary>
             /// Global position of the sensor.
             /// </summary>
-            public Vector3D Position => I._getSensorPosition.Invoke(Id);
+            public Vector3D Position => _._getSensorPosition.Invoke(Id);
             /// <summary>
             /// Global forward direction of the sensor.
             /// </summary>
-            public Vector3D Direction => I._getSensorDirection.Invoke(Id);
+            public Vector3D Direction => _._getSensorDirection.Invoke(Id);
 
             /// <summary>
             /// The sensor's half field of view in radians.
@@ -333,11 +335,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getSensorAperture.Invoke(Id);
+                    return _._getSensorAperture.Invoke(Id);
                 }
                 set
                 {
-                    I._setSensorAperture.Invoke(Id, value);
+                    _._setSensorAperture.Invoke(Id, value);
                 }
             }
 
@@ -348,11 +350,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getSensorAzimuth.Invoke(Id);
+                    return _._getSensorAzimuth.Invoke(Id);
                 }
                 set
                 {
-                    I._setSensorAzimuth.Invoke(Id, value);
+                    _._setSensorAzimuth.Invoke(Id, value);
                 }
             }
 
@@ -363,11 +365,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getSensorElevation.Invoke(Id);
+                    return _._getSensorElevation.Invoke(Id);
                 }
                 set
                 {
-                    I._setSensorElevation.Invoke(Id, value);
+                    _._setSensorElevation.Invoke(Id, value);
                 }
             }
 
@@ -375,7 +377,7 @@ namespace IngameScript
             /// Converts tuple data into a pb-usable format.
             /// </summary>
             /// <param name="tuple"></param>
-            private void InvokeOnDetection(object[] dataSet) => _onDetection?.Invoke(new PbDetectionInfo(dataSet));
+            private void InvokeOnDetection(object[] dataSet) => _onDetection?.Invoke(new PbDetectionInfo(_, dataSet));
         }
 
         /// <summary>
@@ -390,7 +392,7 @@ namespace IngameScript
             public readonly double DetectionThreshold, MaxPowerDraw, BearingErrorModifier, RangeErrorModifier;
             public readonly RadarPropertiesDefinition RadarProperties = null;
 
-            public PbSensorDefinition(object[] dataSet)
+            public PbSensorDefinition(DetectionPbApi pbApi, object[] dataSet)
             {
                 SetField(dataSet[0], out BlockSubtypes);
                 SetField(dataSet[1], out Type);
@@ -398,8 +400,8 @@ namespace IngameScript
                 SetField(dataSet[3], out MinAperture);
                 if (dataSet[4] != null)
                 {
-                    Movement = new SensorMovementDefinition((object[]) dataSet[4]);
-                    I._returnFieldArray.Invoke((object[]) dataSet[4]);
+                    Movement = new SensorMovementDefinition(pbApi, (object[]) dataSet[4]);
+                    pbApi._returnFieldArray.Invoke((object[]) dataSet[4]);
                 }
                 SetField(dataSet[5], out DetectionThreshold);
                 SetField(dataSet[6], out MaxPowerDraw);
@@ -407,10 +409,10 @@ namespace IngameScript
                 SetField(dataSet[8], out RangeErrorModifier);
                 if (dataSet[9] != null)
                 {
-                    RadarProperties = new RadarPropertiesDefinition((object[]) dataSet[9]);
-                    I._returnFieldArray.Invoke((object[]) dataSet[9]);
+                    RadarProperties = new RadarPropertiesDefinition(pbApi, (object[]) dataSet[9]);
+                    pbApi._returnFieldArray.Invoke((object[]) dataSet[9]);
                 }
-                I._returnFieldArray.Invoke(dataSet);
+                pbApi._returnFieldArray.Invoke(dataSet);
             }
 
             public class SensorMovementDefinition
@@ -418,7 +420,7 @@ namespace IngameScript
                 public readonly string AzimuthPart, ElevationPart;
                 public readonly double MinAzimuth, MaxAzimuth, MinElevation, MaxElevation, AzimuthRate, ElevationRate;
 
-                public SensorMovementDefinition(object[] dataSet)
+                public SensorMovementDefinition(DetectionPbApi pbApi, object[] dataSet)
                 {
                     SetField(dataSet[0], out AzimuthPart);
                     SetField(dataSet[1], out ElevationPart);
@@ -428,7 +430,7 @@ namespace IngameScript
                     SetField(dataSet[5], out MaxElevation);
                     SetField(dataSet[6], out AzimuthRate);
                     SetField(dataSet[7], out ElevationRate);
-                    I._returnFieldArray.Invoke(dataSet);
+                    pbApi._returnFieldArray.Invoke(dataSet);
                 }
 
                 public bool CanRotateFull => MaxAzimuth >= Math.PI && MinAzimuth <= -Math.PI;
@@ -440,13 +442,13 @@ namespace IngameScript
             {
                 public readonly double ReceiverArea, PowerEfficiencyModifier, Bandwidth, Frequency;
 
-                public RadarPropertiesDefinition(object[] dataSet)
+                public RadarPropertiesDefinition(DetectionPbApi pbApi, object[] dataSet)
                 {
                     SetField(dataSet[0], out ReceiverArea);
                     SetField(dataSet[1], out PowerEfficiencyModifier);
                     SetField(dataSet[2], out Bandwidth);
                     SetField(dataSet[3], out Frequency);
-                    I._returnFieldArray.Invoke(dataSet);
+                    pbApi._returnFieldArray.Invoke(dataSet);
                 }
             }
 
@@ -471,7 +473,7 @@ namespace IngameScript
             public readonly string[] IffCodes;
             public readonly uint SensorId;
 
-            public PbDetectionInfo(object[] dataSet)
+            public PbDetectionInfo(DetectionPbApi pbApi, object[] dataSet)
             {
                 SetField(dataSet[0], out CrossSection);
                 SetField(dataSet[1], out Range);
@@ -481,7 +483,7 @@ namespace IngameScript
                 SetField(dataSet[5], out IffCodes);
                 SetField(dataSet[6], out UniqueId);
                 SetField(dataSet[7], out SensorId);
-                I._returnFieldArray.Invoke(dataSet);
+                pbApi._returnFieldArray.Invoke(dataSet);
             }
 
             public override string ToString()
@@ -523,7 +525,7 @@ namespace IngameScript
                 Relations = null;
             }
 
-            public PbWorldDetectionInfo(object[] dataSet)
+            public PbWorldDetectionInfo(DetectionPbApi pbApi, object[] dataSet)
             {
                 SetField(dataSet[0], out UniqueId);
                 SetField(dataSet[1], out DetectionType);
@@ -536,8 +538,8 @@ namespace IngameScript
                 int? tmpRelations;
                 SetField(dataSet[8], out tmpRelations);
                 Relations = (PbRelationBetweenPlayers?) tmpRelations;
-                SetField(dataSet[0], out RangeError);
-                I._returnFieldArray.Invoke(dataSet);
+                SetField(dataSet[9], out RangeError);
+                pbApi._returnFieldArray.Invoke(dataSet);
             }
 
             public override bool Equals(object obj) => obj is PbWorldDetectionInfo && Position.Equals(((PbWorldDetectionInfo)obj).Position);
@@ -627,9 +629,11 @@ namespace IngameScript
         public class PbAggregatorBlock
         {
             public readonly IMyCubeBlock Block;
+            private readonly DetectionPbApi _;
 
-            public PbAggregatorBlock(IMyCubeBlock block)
+            public PbAggregatorBlock(DetectionPbApi pbApi, IMyCubeBlock block)
             {
+                _ = pbApi;
                 Block = block;
             }
 
@@ -640,11 +644,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getAggregatorTime.Invoke(Block);
+                    return _._getAggregatorTime.Invoke(Block);
                 }
                 set
                 {
-                    I._setAggregatorTime.Invoke(Block, value);
+                    _._setAggregatorTime.Invoke(Block, value);
                 }
             }
 
@@ -659,11 +663,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getAggregatorVelocity.Invoke(Block);
+                    return _._getAggregatorVelocity.Invoke(Block);
                 }
                 set
                 {
-                    I._setAggregatorVelocity.Invoke(Block, value);
+                    _._setAggregatorVelocity.Invoke(Block, value);
                 }
             }
 
@@ -674,11 +678,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getAggregatorUseAllSensors.Invoke(Block);
+                    return _._getAggregatorUseAllSensors.Invoke(Block);
                 }
                 set
                 {
-                    I._setAggregatorUseAllSensors.Invoke(Block, value);
+                    _._setAggregatorUseAllSensors.Invoke(Block, value);
                 }
             }
 
@@ -689,11 +693,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getAggregatorActiveSensors.Invoke(Block);
+                    return _._getAggregatorActiveSensors.Invoke(Block);
                 }
                 set
                 {
-                    I._setAggregatorActiveSensors.Invoke(Block, value);
+                    _._setAggregatorActiveSensors.Invoke(Block, value);
                 }
             }
 
@@ -703,10 +707,10 @@ namespace IngameScript
             /// <returns></returns>
             public PbWorldDetectionInfo[] GetAggregatedInfo()
             {
-                var dataSet = I._getAggregatorInfo.Invoke(Block);
+                var dataSet = _._getAggregatorInfo.Invoke(Block);
                 var toReturn = new PbWorldDetectionInfo[dataSet.Length];
                 for (int i = 0; i < toReturn.Length; i++)
-                    toReturn[i] = new PbWorldDetectionInfo(dataSet[i]);
+                    toReturn[i] = new PbWorldDetectionInfo(_, dataSet[i]);
                 return toReturn;
             }
 
@@ -716,17 +720,28 @@ namespace IngameScript
             /// <param name="collection"></param>
             public void GetAggregatedInfo(ICollection<PbWorldDetectionInfo> collection)
             {
-                foreach (var infoArray in I._getAggregatorInfo.Invoke(Block))
-                    collection.Add(new PbWorldDetectionInfo(infoArray));
+                foreach (var infoArray in _._getAggregatorInfo.Invoke(Block))
+                    collection.Add(new PbWorldDetectionInfo(_, infoArray));
+            }
+
+            /// <summary>
+            /// Assigns an IFF action to this aggregator; applies to detection info and HUD.
+            /// </summary>
+            /// <param name="action">UniqueId, PbRelationBetweenPlayers</param>
+            public void SetIffAction(Func<long, int> action)
+            {
+                _._setAggregatorIffAction.Invoke(_._program, Block, action);
             }
         }
 
         public class PbIffReflectorBlock
         {
             public readonly IMyCubeBlock Block;
+            private readonly DetectionPbApi _;
 
-            public PbIffReflectorBlock(IMyCubeBlock block)
+            public PbIffReflectorBlock(DetectionPbApi pbApi, IMyCubeBlock block)
             {
+                _ = pbApi;
                 Block = block;
             }
 
@@ -734,11 +749,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getIffCode(Block);
+                    return _._getIffCode(Block);
                 }
                 set
                 {
-                    I._setIffCode.Invoke(Block, value);
+                    _._setIffCode.Invoke(Block, value);
                 }
             }
 
@@ -746,11 +761,11 @@ namespace IngameScript
             {
                 get
                 {
-                    return I._getIffReturnHashed(Block);
+                    return _._getIffReturnHashed(Block);
                 }
                 set
                 {
-                    I._setIffReturnHashed(Block, value);
+                    _._setIffReturnHashed(Block, value);
                 }
             }
 

@@ -17,7 +17,11 @@ using VRage.Game.Entity;
 using VRage.ModAPI;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
+using Sandbox.ModAPI.Ingame;
+using VRage.Scripting;
 using VRageMath;
+using IMyConveyorSorter = Sandbox.ModAPI.IMyConveyorSorter;
+using IMyTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -75,12 +79,42 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             }
         }
 
+        internal Func<long, int> PbIffAction = null;
+        internal Sandbox.ModAPI.Ingame.MyGridProgram PbIffActionOwner = null;
+
         public virtual MyRelationsBetweenPlayers GetInfoRelations(WorldDetectionInfo info)
         {
-            // TODO: Script API for this
+            MyRelationsBetweenPlayers pbResult;
+            if (TryInvokePbIffAction(info, out pbResult))
+                return pbResult;
+
             if (info.DetectionType == WorldDetectionInfo.DetectionFlags.PassiveRadar) // Radar locks are probably enemies
                 return MyRelationsBetweenPlayers.Enemies;
             return MyRelationsBetweenPlayers.Neutral; // we just don't know...
+        }
+
+        protected bool TryInvokePbIffAction(WorldDetectionInfo info, out MyRelationsBetweenPlayers relations)
+        {
+            relations = MyRelationsBetweenPlayers.Neutral;
+            if (PbIffAction == null)
+                return false;
+
+            try
+            {
+                relations = (MyRelationsBetweenPlayers)PbIffAction.Invoke(info.EntityId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                PbIffAction = null;
+                PbIffActionOwner.Echo(ex.ToString());
+                PbIffActionOwner.Runtime.UpdateFrequency = UpdateFrequency.None;
+                PbIffActionOwner = null;
+
+                Log.Info("AggregatorBlock", $"Caught exception in pbscript IffAction - {ex}");
+            }
+
+            return false;
         }
 
         private int _lastDetectionSetUpdate = -1;
