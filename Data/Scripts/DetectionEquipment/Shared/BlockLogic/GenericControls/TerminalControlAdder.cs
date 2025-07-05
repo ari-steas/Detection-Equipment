@@ -8,7 +8,6 @@ using VRage.Game.Components;
 using System.Collections.Generic;
 using VRage.ModAPI;
 using DetectionEquipment.Shared.Utils;
-using System.Runtime.CompilerServices;
 
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
@@ -329,6 +328,42 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
             MyAPIGateway.TerminalControls.AddControl<TBlockType>(box);
             return box;
+        }
+
+        public IMyTerminalControlColor CreateColor(string id, string displayName, string toolTip, Func<IMyTerminalBlock, VRageMath.Color> getter, Action<IMyTerminalBlock, VRageMath.Color> setter)
+        {
+            var slider = MyAPIGateway.TerminalControls.CreateControl<IMyTerminalControlColor, TBlockType>(IdPrefix + id);
+            slider.Title = MyStringId.GetOrCompute(displayName);
+            slider.Tooltip = MyStringId.GetOrCompute(toolTip);
+            slider.Getter = tb =>
+            {
+                try
+                {
+                    return getter.Invoke(tb);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_GETTER", ex, true);
+                    return VRageMath.Color.Black;
+                }
+            };
+            slider.Setter = (tb, v) =>
+            {
+                try
+                {
+                    setter.Invoke(tb, v);
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("TerminalControlAdder::" + IdPrefix + id + "_SETTER", ex, true);
+                }
+            };
+
+            slider.Visible = VisibleFunc;
+            slider.SupportsMultipleBlocks = true;
+
+            MyAPIGateway.TerminalControls.AddControl<TBlockType>(slider);
+            return slider;
         }
 
         public IMyTerminalControlLabel CreateLabel(string id, string text)

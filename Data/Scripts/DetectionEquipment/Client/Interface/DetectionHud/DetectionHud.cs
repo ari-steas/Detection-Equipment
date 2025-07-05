@@ -98,6 +98,12 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             }
         }
 
+        public static void UpdateColors(Color color)
+        {
+            foreach (var hudItem in _hudItems)
+                hudItem.Value.Update(hudItem.Value.Detection);
+        }
+
         private static void OnRichHudReady()
         {
             Log.Info("DetectionHud", "RichHud notified ready!");

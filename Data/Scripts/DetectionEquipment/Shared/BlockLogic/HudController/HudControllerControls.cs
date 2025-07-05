@@ -27,16 +27,16 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 b => b.GameLogic.GetAs<HudControllerBlock>().AlwaysDisplay.Value,
                 (b, v) => b.GameLogic.GetAs<HudControllerBlock>().AlwaysDisplay.Value = v
             );
-            CreateSlider(
-                "CombineAngle",
-                "Combine Angle",
-                "Angle at which to combine close targets.",
-                0,
-                10,
-                b => MathHelper.ToDegrees(b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value),
-                (b, v) => b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value = MathHelper.ToRadians(v),
-                (b, sb) => sb.Append($"{MathHelper.ToDegrees(b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value):F}°")
-            );
+            //CreateSlider(
+            //    "CombineAngle",
+            //    "Combine Angle",
+            //    "Angle at which to combine close targets.",
+            //    0,
+            //    10,
+            //    b => MathHelper.ToDegrees(b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value),
+            //    (b, v) => b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value = MathHelper.ToRadians(v),
+            //    (b, sb) => sb.Append($"{MathHelper.ToDegrees(b.GameLogic.GetAs<HudControllerBlock>().CombineAngle.Value):F}°")
+            //);
             CreateToggle(
                 "DisplaySelf",
                 "Display Self",
@@ -67,6 +67,35 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 }
             );
             ActiveAggregatorSelect.ListBox.VisibleRowsCount = 5;
+
+            CreateColor(
+                "FriendlyColor",
+                "Friendly Color",
+                "Outline color for friendly tracks. Global per-player.",
+                b => UserData.HudFriendlyColor.Value,
+                (b, v) => UserData.HudFriendlyColor.Value = v
+            );
+            CreateColor(
+                "NeutralColor",
+                "Neutral Color",
+                "Outline color for neutral tracks. Global per-player.",
+                b => UserData.HudNeutralColor.Value,
+                (b, v) => UserData.HudNeutralColor.Value = v
+            );
+            CreateColor(
+                "EnemyColor",
+                "Enemy Color",
+                "Outline color for enemy tracks. Global per-player.",
+                b => UserData.HudEnemyColor.Value,
+                (b, v) => UserData.HudEnemyColor.Value = v
+            );
+            CreateColor(
+                "TextColor",
+                "Text Color",
+                "Color for track text info. Global per-player.",
+                b => UserData.HudTextColor.Value,
+                (b, v) => UserData.HudTextColor.Value = v
+            );
         }
 
         protected override void CreateTerminalProperties()

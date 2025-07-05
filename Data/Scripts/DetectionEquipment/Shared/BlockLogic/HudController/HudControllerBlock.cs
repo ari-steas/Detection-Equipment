@@ -13,7 +13,6 @@ using DetectionEquipment.Client.Interface.DetectionHud;
 using VRageMath;
 using MyAPIGateway = Sandbox.ModAPI.MyAPIGateway;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.HudController;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController

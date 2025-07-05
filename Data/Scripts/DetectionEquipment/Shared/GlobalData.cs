@@ -10,13 +10,17 @@ using VRage.Game.ModAPI.Ingame.Utilities;
 using VRage.Game.ObjectBuilders.Definitions;
 using VRage.ModAPI;
 using VRage.Utils;
+using static DetectionEquipment.Shared.Utils.IniConfig;
 
 namespace DetectionEquipment.Shared
 {
     public static class GlobalData
     {
-        // this has to be above all IniSettings.
-        private static List<IIniSetting> _allSettings = new List<IIniSetting>();
+        private static IniConfig _iniConfig = new IniConfig(
+            FileLocation.WorldStorage,
+            "config.ini",
+            "General Config",
+            " Detection Equipment World Settings\n\n Set config values below,\n   then restart the world.\n Delete a line to reset it to default.\n ");
 
         /// <summary>
         /// Kill switch for the entire mod
@@ -47,6 +51,7 @@ namespace DetectionEquipment.Shared
         /// Furthest distance (in meters) a radar can lock onto a target. Don't increase this too high or syncing will break.
         /// </summary>
         public static IniSetting<double> MaxSensorRange = new IniSetting<double>(
+            _iniConfig,
             "MaxSensorRange",
             "Furthest distance (in meters) a radar can lock onto a target. Don't increase this too high or syncing will break.",
             150000);
@@ -55,6 +60,7 @@ namespace DetectionEquipment.Shared
         /// Furthest distance (in meters) a camera can lock onto a target. Cannot be further than MaxSensorRange.
         /// </summary>
         public static IniSetting<double> MaxVisualSensorRange = new IniSetting<double>(
+            _iniConfig,
             "MaxVisualSensorRange",
             "Furthest distance (in meters) a camera can lock onto a target. Cannot be further than MaxSensorRange.",
             Math.Max(MaxSensorRange, 50000));
@@ -63,6 +69,7 @@ namespace DetectionEquipment.Shared
         /// Required for extended-range WeaponCore integration. Increases sync distance; set to 0 or a negative number to disable.
         /// </summary>
         public static IniSetting<int> OverrideSyncDistance = new IniSetting<int>(
+            _iniConfig,
             "OverrideSyncDistance",
             "Required for extended-range WeaponCore integration. Increases sync distance; set to 0 or a negative number to disable.",
             (int) MaxSensorRange,
@@ -72,6 +79,7 @@ namespace DetectionEquipment.Shared
         /// Should aggregators be able to provide targeting to WeaponCore guns?
         /// </summary>
         public static IniSetting<bool> ContributeWcTargeting = new IniSetting<bool>(
+            _iniConfig,
             "ContributeWcTargeting",
             "Should aggregators be able to provide targeting to WeaponCore guns?",
             true);
@@ -80,6 +88,7 @@ namespace DetectionEquipment.Shared
         /// Should vanilla WeaponCore magic targeting be disabled? If true, forces <see cref="ContributeWcTargeting"/> enabled.
         /// </summary>
         public static IniSetting<bool> OverrideWcTargeting = new IniSetting<bool>(
+            _iniConfig,
             "OverrideWcTargeting",
             "Should vanilla WeaponCore magic targeting be disabled? If true, forces ContributeWcTargeting enabled.",
             true,
@@ -89,6 +98,7 @@ namespace DetectionEquipment.Shared
         /// Maximum range for WeaponCore magic targeting, in meters. Only applies if OverrideWcTargeting is false. Set to zero or less to disable.
         /// </summary>
         public static IniSetting<float> MaxWcMagicTargetingRange = new IniSetting<float>(
+            _iniConfig,
             "MaxWcMagicTargetingRange",
             "Maximum range for WeaponCore magic targeting, in meters. Only applies if OverrideWcTargeting is false. Set to zero or less to disable.",
             -1f);
@@ -97,6 +107,7 @@ namespace DetectionEquipment.Shared
         /// Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance
         /// </summary>
         public static IniSetting<float> MinLockForWcTarget = new IniSetting<float>(
+            _iniConfig,
             "MinLockForWcTarget",
             "Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance",
             0.25f);
@@ -105,6 +116,7 @@ namespace DetectionEquipment.Shared
         /// Multiplier on all radar cross-sections for all entities.
         /// </summary>
         public static IniSetting<float> RcsModifier = new IniSetting<float>(
+            _iniConfig,
             "RcsModifier",
             "Multiplier on all radar cross-sections for all entities.",
             1f);
@@ -113,6 +125,7 @@ namespace DetectionEquipment.Shared
         /// Multiplier on all visual cross-sections for all entities.
         /// </summary>
         public static IniSetting<float> VcsModifier = new IniSetting<float>(
+            _iniConfig,
             "RcsModifier",
             "Multiplier on all visual cross-sections for all entities.",
             1f);
@@ -121,6 +134,7 @@ namespace DetectionEquipment.Shared
         /// Multiplier on light armor RCS for all grids.
         /// </summary>
         public static IniSetting<float> LightRcsModifier = new IniSetting<float>(
+            _iniConfig,
             "LightRcsModifier",
             "Multiplier on light armor RCS for all grids.",
             0.5f);
@@ -129,6 +143,7 @@ namespace DetectionEquipment.Shared
         /// Multiplier on heavy armor RCS for all grids.
         /// </summary>
         public static IniSetting<float> HeavyRcsModifier = new IniSetting<float>(
+            _iniConfig,
             "HeavyRcsModifier",
             "Multiplier on heavy armor RCS for all grids.",
             1f);
@@ -137,6 +152,7 @@ namespace DetectionEquipment.Shared
         /// Multiplier on fatblock ("functional" block) RCS for all grids.
         /// </summary>
         public static IniSetting<float> FatblockRcsModifier = new IniSetting<float>(
+            _iniConfig,
             "HeavyRcsModifier",
             "Multiplier on fatblock (\"functional\" block) RCS for all grids.",
             2f);
@@ -194,8 +210,8 @@ namespace DetectionEquipment.Shared
 
             if (MyAPIGateway.Session.IsServer)
             {
-                ReadSettings();
-                WriteSettings();
+                _iniConfig.ReadSettings();
+                _iniConfig.WriteSettings();
                 MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(DataNetworkId, ServerMessageHandler);
                 IsReady = true;
             }
@@ -254,11 +270,9 @@ namespace DetectionEquipment.Shared
                 if (isSenderServer)
                     return;
 
-                var file = MyAPIGateway.Utilities.ReadFileInWorldStorage("config.ini", typeof(GlobalData));
-                var data = file.ReadToEnd();
-                file.Close();
+                var file = _iniConfig.ReadFile();
 
-                MyAPIGateway.Multiplayer.SendMessageTo(DataNetworkId, MyAPIGateway.Utilities.SerializeToBinary(data), senderSteamId);
+                MyAPIGateway.Multiplayer.SendMessageTo(DataNetworkId, MyAPIGateway.Utilities.SerializeToBinary(file), senderSteamId);
             }
             catch (Exception ex)
             {
@@ -286,7 +300,7 @@ namespace DetectionEquipment.Shared
                 Log.Info("GlobalData",
                     $"Read settings data from network:\n===========================================\n\n{data}\n===========================================\n");
 
-                foreach (var setting in _allSettings)
+                foreach (var setting in _iniConfig.AllSettings)
                     setting.Read(ini, "General Config");
 
                 // Can't unregister network handlers inside a network handler call
@@ -315,6 +329,7 @@ namespace DetectionEquipment.Shared
             LowRcsSubtypes = null;
             if (MyAPIGateway.Session.IsServer)
                 MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(DataNetworkId, ServerMessageHandler);
+            _iniConfig = null;
             Log.Info("GlobalData", "Data cleared.");
         }
 
@@ -324,137 +339,5 @@ namespace DetectionEquipment.Shared
             if (planet != null)
                 Planets.Add(planet);
         }
-
-        #region Settings Load/Save
-
-        private static void ReadSettings()
-        {
-            if (!MyAPIGateway.Utilities.FileExistsInWorldStorage("config.ini", typeof(GlobalData)))
-            {
-                Log.Info("GlobalData", "Skipped read settings data.");
-                return;
-            }
-
-            Log.Info("GlobalData", "Reading settings data...");
-            Log.IncreaseIndent();
-            var file = MyAPIGateway.Utilities.ReadFileInWorldStorage("config.ini", typeof(GlobalData));
-            var ini = new MyIni();
-            ini.TryParse(file.ReadToEnd());
-            file.Close();
-
-            foreach (var setting in _allSettings)
-                setting.Read(ini, "General Config");
-            Log.DecreaseIndent();
-            Log.Info("GlobalData", "Successfully read settings data.");
-        }
-
-        private static void WriteSettings()
-        {
-            var ini = new MyIni();
-            ini.AddSection("General Config");
-            ini.SetSectionComment("General Config", " Detection Equipment World Settings\n\n Set config values below,\n   then restart the world.\n Delete a line to reset it to default.\n ");
-        
-            foreach (var setting in _allSettings)
-                setting.Write(ini, "General Config");
-
-            var file = MyAPIGateway.Utilities.WriteFileInWorldStorage("config.ini", typeof(GlobalData));
-            file.Write(ini.ToString());
-            file.Flush();
-            file.Close();
-            Log.Info("GlobalData", "Successfully wrote settings data.");
-        }
-
-        public class IniSetting<TValue> : IIniSetting
-        {
-            public string Name;
-            public string Description;
-            private TValue _value;
-            public TValue Value
-            {
-                get
-                {
-                    return _value;
-                }
-                set
-                {
-                    if (_value.Equals(value))
-                        return;
-                    _value = value;
-                    _onChanged?.Invoke(_value);
-                }
-            }
-
-            private Action<TValue> _onChanged = null;
-
-            public IniSetting(string name, string description, TValue value, Action<TValue> onChanged = null)
-            {
-                Name = name;
-                Description = description;
-                _value = value;
-                GlobalData._allSettings.Add(this);
-                _onChanged = onChanged;
-            }
-
-            /// <summary>
-            /// Adds and invokes an action invoked on value change.
-            /// </summary>
-            /// <param name="onChanged"></param>
-            public void AddOnChanged(Action<TValue> onChanged)
-            {
-                onChanged?.Invoke(_value);
-                _onChanged += onChanged;
-            }
-
-            public void Write(MyIni ini, string section)
-            {
-                ini.Set(section, Name, _value.ToString());
-                ini.SetComment(section, Name, Description);
-            }
-
-            public void Read(MyIni ini, string section)
-            {
-                if (_value is string)
-                    _value = (TValue) (object) ini.Get(section, Name).ToString((string) (object) _value);
-                else if (_value is bool)
-                    _value = (TValue) (object) ini.Get(section, Name).ToBoolean((bool) (object) _value); // the devil has a name and it is keen software house
-                else if (_value is byte)
-                    _value = (TValue) (object) ini.Get(section, Name).ToByte((byte) (object) _value);
-                else if (_value is char)
-                    _value = (TValue) (object) ini.Get(section, Name).ToChar((char) (object) _value);
-                else if (_value is decimal)
-                    _value = (TValue) (object) ini.Get(section, Name).ToDecimal((decimal) (object) _value);
-                else if (_value is double)
-                    _value = (TValue) (object) ini.Get(section, Name).ToDouble((double) (object) _value);
-                else if (_value is short)
-                    _value = (TValue) (object) ini.Get(section, Name).ToInt16((short) (object) _value);
-                else if (_value is int)
-                    _value = (TValue) (object) ini.Get(section, Name).ToInt32((int) (object) _value);
-                else if (_value is long)
-                    _value = (TValue) (object) ini.Get(section, Name).ToInt64((long) (object) _value);
-                else if (_value is sbyte)
-                    _value = (TValue) (object) ini.Get(section, Name).ToSByte((sbyte) (object) _value);
-                else if (_value is float)
-                    _value = (TValue) (object) ini.Get(section, Name).ToSingle((float) (object) _value);
-                else if (_value is ushort)
-                    _value = (TValue) (object) ini.Get(section, Name).ToUInt16((ushort) (object) _value);
-                else if (_value is uint)
-                    _value = (TValue) (object) ini.Get(section, Name).ToUInt32((uint) (object) _value);
-                else if (_value is ulong)
-                    _value = (TValue) (object) ini.Get(section, Name).ToUInt64((ulong) (object) _value);
-                else
-                    throw new Exception("Invalid setting TValue " + typeof(TValue).FullName);
-                _onChanged?.Invoke(_value);
-            }
-
-            public static implicit operator TValue(IniSetting<TValue> setting) => setting.Value;
-        }
-
-        private interface IIniSetting
-        {
-            void Write(MyIni ini, string section);
-            void Read(MyIni ini, string section);
-        }
-
-        #endregion
     }
 }

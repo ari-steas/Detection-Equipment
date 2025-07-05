@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
@@ -21,7 +22,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         {
             ParentAlignment = ParentAlignments.Right | ParentAlignments.Top | ParentAlignments.InnerV,
             Color = Color.Transparent,
-            Format = GlyphFormat.White.WithColor(Color.Lime),
+            Format = GlyphFormat.White.WithColor(UserData.HudTextColor),
             Padding = new Vector2(2, 1),
             TextBoard =
             {
@@ -60,8 +61,11 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             {
                 RemoveChild(OutlineBox);
                 OutlineBox = new HudMarker(this, detection);
-                InfoLabel = NewInfoLabel;
+                InfoLabel.Parent.RemoveChild(InfoLabel);
+                OutlineBox.RegisterChild(InfoLabel);
             }
+            if (InfoLabel.Format.Color != UserData.HudTextColor)
+                InfoLabel.Format = GlyphFormat.White.WithColor(UserData.HudTextColor);
             Update();
         }
 
@@ -266,11 +270,11 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 {
                     case MyRelationsBetweenPlayers.Allies:
                     case MyRelationsBetweenPlayers.Self:
-                        return Color.Green;
+                        return UserData.HudFriendlyColor;
                     case MyRelationsBetweenPlayers.Enemies:
-                        return Color.Red;
+                        return UserData.HudEnemyColor;
                     default:
-                        return Color.White;
+                        return UserData.HudNeutralColor;
                 }
             }
 
