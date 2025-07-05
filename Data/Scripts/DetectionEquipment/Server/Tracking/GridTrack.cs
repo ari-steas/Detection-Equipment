@@ -52,7 +52,7 @@ namespace DetectionEquipment.Server.Tracking
             };
         }
 
-        public override double ProjectedArea(Vector3D source, VisibilityType type)
+        protected override double ProjectedArea(Vector3D source, VisibilityType type)
         {
             var cache = type == VisibilityType.Radar ? RadarVisibilityCache : OpticalVisibilityCache;
 
@@ -119,11 +119,12 @@ namespace DetectionEquipment.Server.Tracking
                     thrustWattage += dotProduct * thisWattage;
                 }
             }
-            // base visibility is already divided by distancesq
-            return base.InfraredVisibility(source, opticalVisibility) + (heatWattage + thrustWattage) / Vector3D.DistanceSquared(source, Position);
-        }
 
-        // TODO: Scale visible and infrared visibility by thrust output.
+            double visFromHeat = (heatWattage + thrustWattage) / Vector3D.DistanceSquared(source, Position);
+
+            // base visibility is already divided by distancesq
+            return base.InfraredVisibility(source, opticalVisibility) + visFromHeat;
+        }
 
         /// <summary>
         /// Update a portion of the visibility caches.
@@ -285,11 +286,11 @@ namespace DetectionEquipment.Server.Tracking
                 double scaledRcs = Math.Abs(hitInfo.DotProduct);
 
                 if (GlobalData.LowRcsSubtypes.Contains(hitInfo.Block.BlockDefinition.Id.SubtypeName))
-                    totalRcs += scaledRcs / 2;
+                    totalRcs += scaledRcs * GlobalData.LightRcsModifier;
                 else if (hitInfo.Block.FatBlock == null)
-                    totalRcs += scaledRcs;
+                    totalRcs += scaledRcs * GlobalData.HeavyRcsModifier;
                 else
-                    totalRcs += scaledRcs * 2;
+                    totalRcs += scaledRcs * GlobalData.FatblockRcsModifier;
             }
 
 
@@ -299,8 +300,8 @@ namespace DetectionEquipment.Server.Tracking
             // Failsafe for all raycasts missing
             if (radarCrossSection == 0 || visualCrossSection == 0)
             {
-                radarCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Radar);
-                visualCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Optical);
+                radarCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Radar) * GlobalData.RcsModifier;
+                visualCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Optical) * GlobalData.VcsModifier;
             }
         }
 

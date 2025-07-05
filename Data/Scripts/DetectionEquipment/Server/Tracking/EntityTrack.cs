@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Shared.Utils;
+﻿using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Utils;
 using VRage.Game.Entity;
 using VRageMath;
 
@@ -18,7 +19,7 @@ namespace DetectionEquipment.Server.Tracking
         }
 
         // Multiplying the projected area by 2 because grids inherently have an absurdly high RCS
-        public virtual double ProjectedArea(Vector3D source, VisibilityType type) => 2 * Entity.PositionComp.LocalAABB.ProjectedArea(Vector3D.Transform(source, MatrixD.Invert(Entity.PositionComp.WorldMatrixRef)).Normalized());
+        protected virtual double ProjectedArea(Vector3D source, VisibilityType type) => 2 * Entity.PositionComp.LocalAABB.ProjectedArea(Vector3D.Transform(source, MatrixD.Invert(Entity.PositionComp.WorldMatrixRef)).Normalized());
 
         public virtual double InfraredVisibility(Vector3D source)
         {
@@ -34,12 +35,12 @@ namespace DetectionEquipment.Server.Tracking
 
         public virtual double OpticalVisibility(Vector3D source)
         {
-            return ProjectedArea(source, VisibilityType.Optical);
+            return ProjectedArea(source, VisibilityType.Optical) * GlobalData.VcsModifier;
         }
 
         public virtual double RadarVisibility(Vector3D source)
         {
-            return ProjectedArea(source, VisibilityType.Radar);
+            return ProjectedArea(source, VisibilityType.Radar) * GlobalData.RcsModifier;
         }
     }
 }

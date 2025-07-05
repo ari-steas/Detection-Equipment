@@ -101,6 +101,45 @@ namespace DetectionEquipment.Shared
             "Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance",
             0.25f);
 
+        /// <summary>
+        /// Multiplier on all radar cross-sections for all entities.
+        /// </summary>
+        public static IniSetting<float> RcsModifier = new IniSetting<float>(
+            "RcsModifier",
+            "Multiplier on all radar cross-sections for all entities.",
+            1f);
+
+        /// <summary>
+        /// Multiplier on all visual cross-sections for all entities.
+        /// </summary>
+        public static IniSetting<float> VcsModifier = new IniSetting<float>(
+            "RcsModifier",
+            "Multiplier on all visual cross-sections for all entities.",
+            1f);
+
+        /// <summary>
+        /// Multiplier on light armor RCS for all grids.
+        /// </summary>
+        public static IniSetting<float> LightRcsModifier = new IniSetting<float>(
+            "LightRcsModifier",
+            "Multiplier on light armor RCS for all grids.",
+            0.5f);
+
+        /// <summary>
+        /// Multiplier on heavy armor RCS for all grids.
+        /// </summary>
+        public static IniSetting<float> HeavyRcsModifier = new IniSetting<float>(
+            "HeavyRcsModifier",
+            "Multiplier on heavy armor RCS for all grids.",
+            1f);
+
+        /// <summary>
+        /// Multiplier on fatblock ("functional" block) RCS for all grids.
+        /// </summary>
+        public static IniSetting<float> FatblockRcsModifier = new IniSetting<float>(
+            "HeavyRcsModifier",
+            "Multiplier on fatblock (\"functional\" block) RCS for all grids.",
+            2f);
 
 
         private static void SyncDistanceUpdated(int distance)
