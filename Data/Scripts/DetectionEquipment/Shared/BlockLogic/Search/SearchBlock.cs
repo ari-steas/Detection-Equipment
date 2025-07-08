@@ -10,7 +10,7 @@ using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Search
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionSearchBlock")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionSearchBlock", "DetectionSearchBlock_Small")]
     internal class SearchBlock : ControlBlockBase<IMyConveyorSorter>
     {
         internal HashSet<BlockSensor> ControlledSensors => SearchControls.ActiveSensors[this];

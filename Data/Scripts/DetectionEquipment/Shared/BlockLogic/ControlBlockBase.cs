@@ -1,15 +1,19 @@
 ﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.Utils;
+using Sandbox.Definitions;
+using Sandbox.Game.Components;
 using Sandbox.Game.Entities;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
-using DetectionEquipment.Shared.Utils;
+using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Network;
 using VRage.ObjectBuilders;
-using DetectionEquipment.Shared.BlockLogic.GenericControls;
 
 namespace DetectionEquipment.Shared.BlockLogic
 {
@@ -30,6 +34,31 @@ namespace DetectionEquipment.Shared.BlockLogic
             Block = (TBlock)Entity;
 
             NeedsUpdate |= MyEntityUpdateEnum.BEFORE_NEXT_FRAME;
+
+            // LCD screen fix from Digi's "Fix LCD support" mod (https://steamcommunity.com/sharedfiles/filedetails/?id=2989537125)
+            {
+                var def = (Block as MyCubeBlock)?.BlockDefinition as MyFunctionalBlockDefinition;
+                if (def == null || Block.Render is MyRenderComponentScreenAreas)
+                    return;
+
+                if(def.ScreenAreas == null || def.ScreenAreas.Count <= 0)
+                    return; // doesn't need LCDs
+
+                var oldRender = Block.Render;
+
+                var newRender = new MyRenderComponentScreenAreas(Block as MyCubeBlock);
+                Block.Render = newRender;
+
+                // preserve color, skin, etc
+                Block.Render.ColorMaskHsv = oldRender.ColorMaskHsv;
+                Block.Render.EnableColorMaskHsv = oldRender.EnableColorMaskHsv;
+                Block.Render.TextureChanges = oldRender.TextureChanges;
+                Block.Render.MetalnessColorable = oldRender.MetalnessColorable;
+                Block.Render.PersistentFlags = oldRender.PersistentFlags;
+
+                // fix for LCDs not working when block spawns instead of placed
+                Block.Components.Get<MyMultiTextPanelComponent>()?.SetRender(newRender);
+            }
         }
 
         public override void UpdateOnceBeforeFrame()

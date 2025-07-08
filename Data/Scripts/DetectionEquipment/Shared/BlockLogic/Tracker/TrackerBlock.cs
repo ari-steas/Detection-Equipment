@@ -10,12 +10,11 @@ using DetectionEquipment.Shared.Networking;
 using VRage.Game.Components;
 using VRageMath;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.Tracker;
 using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionTrackerBlock")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionTrackerBlock", "DetectionTrackerBlock_Small")]
     internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>
     {
         internal AggregatorBlock SourceAggregator

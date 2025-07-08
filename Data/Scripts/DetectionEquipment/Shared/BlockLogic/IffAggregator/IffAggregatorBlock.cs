@@ -11,7 +11,7 @@ using VRage.Game.Entity;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionIffAggregatorBlock")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionIffAggregatorBlock", "DetectionIffAggregatorBlock_Small")]
     // ReSharper disable once ClassNeverInstantiated.Global
     internal class IffAggregatorBlock : AggregatorBlock
     {

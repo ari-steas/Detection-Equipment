@@ -25,7 +25,7 @@ using IMyTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock", "DetectionAggregatorBlock_Small")]
     internal partial class AggregatorBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public readonly SimpleSync<float> AggregationTime = new SimpleSync<float>(1);

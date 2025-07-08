@@ -7,7 +7,7 @@
                 <SubtypeId>DetectionHudControllerBlock</SubtypeId>
             </Id>
             <DisplayName>Detection HUD Controller</DisplayName>
-            <Icon>Textures\GUI\Icons\Cubes\ProgrammingBlock.dds</Icon>
+            <Icon>Textures\GUI\Icons\Cubes\DetectionHudController.dds</Icon>
             <Description>
 				Displays aggregator tracks on the HUD of players controlling this ship.
 			</Description>
@@ -15,7 +15,7 @@
             <BlockTopology>TriangleMesh</BlockTopology>
             <Size x="1" y="1" z="1" />
             <ModelOffset x="0" y="0" z="0" />
-            <Model>Models\Cubes\Large\ProgrammingBlock.mwm</Model>
+            <Model>Models\DetEqLogicBlock.mwm</Model>
             <Components>
                 <Component Subtype="SteelPlate" Count="11" />
                 <Component Subtype="Construction" Count="4" />
@@ -26,14 +26,10 @@
                 <Component Subtype="SteelPlate" Count="10" />
             </Components>
             <CriticalComponent Subtype="Computer" Index="0" />
-            <BuildProgressModels>
-                <Model BuildPercentUpperBound="0.33" File="Models\Cubes\Large\ProgrammingBlockConstruction_1.mwm" />
-                <Model BuildPercentUpperBound="0.66" File="Models\Cubes\Large\ProgrammingBlockConstruction_2.mwm" />
-                <Model BuildPercentUpperBound="1.00" File="Models\Cubes\Large\ProgrammingBlockConstruction_3.mwm" />
-            </BuildProgressModels>
             <ScreenAreas>
-                <ScreenArea Name="CockpitScreen_02" DisplayName="DisplayName_Screen_Large" TextureResolution="512" ScreenWidth="16" ScreenHeight="10" />
-                <ScreenArea Name="CockpitScreen_01" DisplayName="DisplayName_Screen_Keyboard" TextureResolution="256" ScreenWidth="5" ScreenHeight="2" />
+                <ScreenArea Name="CockpitScreen_03" DisplayName="Right Screen" TextureResolution="512" ScreenWidth="16" ScreenHeight="9" />
+                <ScreenArea Name="CockpitScreen_02" DisplayName="Middle Screen" TextureResolution="512" ScreenWidth="16" ScreenHeight="9" />
+                <ScreenArea Name="CockpitScreen_01" DisplayName="Left Screen" TextureResolution="512" ScreenWidth="16" ScreenHeight="9" />
             </ScreenAreas>
             <BlockPairName>DetectionHudControllerBlock</BlockPairName>
             <MirroringY>Z</MirroringY>
@@ -41,8 +37,64 @@
             <EdgeType>Light</EdgeType>
             <BuildTimeSeconds>20</BuildTimeSeconds>
             <MountPoints>
-                <MountPoint Side="Bottom" StartX="0.0" StartY="0" EndX="1.0" EndY="1.0" />
-            </MountPoints>
+				<MountPoint Side="Back" StartX="0.00" StartY="0.00" EndX="1.00" EndY="0.40"/>
+				<MountPoint Side="Left" StartX="0.60" StartY="0.00" EndX="1.00" EndY="0.40"/>
+				<MountPoint Side="Right" StartX="0.00" StartY="0.00" EndX="0.40" EndY="0.40"/>
+				<MountPoint Side="Bottom" StartX="0.00" StartY="0.60" EndX="1.00" EndY="1.00"/>
+			</MountPoints>
+            <ResourceSinkGroup>Utility</ResourceSinkGroup>
+            <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
+            <DamagedSound>ParticleElectrical</DamagedSound>
+            <EmissiveColorPreset>Default</EmissiveColorPreset>
+            <DestroyEffect>BlockDestroyedExplosion_Large</DestroyEffect>
+            <DestroySound>WepSmallWarheadExpl</DestroySound>
+            <PCU>100</PCU>
+            <IsAirTight>false</IsAirTight>
+        </Definition>
+		
+		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
+            <Id>
+                <TypeId>ConveyorSorter</TypeId>
+                <SubtypeId>DetectionHudControllerBlock_Small</SubtypeId>
+            </Id>
+            <DisplayName>Detection HUD Controller</DisplayName>
+            <Icon>Textures\GUI\Icons\Cubes\DetectionHudController.dds</Icon>
+            <Description>
+				Displays aggregator tracks on the HUD of players controlling this ship.
+			</Description>
+            <CubeSize>Small</CubeSize>
+            <BlockTopology>TriangleMesh</BlockTopology>
+            <Size x="5" y="2" z="2"/>
+            <ModelOffset x="0" y="0" z="0" />
+            <Model>Models\DetEqLogicBlock_Small.mwm</Model>
+            <Components>
+                <Component Subtype="SteelPlate" Count="11" />
+                <Component Subtype="Construction" Count="4" />
+                <Component Subtype="LargeTube" Count="2" />
+                <Component Subtype="Motor" Count="1" />
+                <Component Subtype="Display" Count="1" />
+                <Component Subtype="Computer" Count="2" />
+                <Component Subtype="SteelPlate" Count="10" />
+            </Components>
+            <CriticalComponent Subtype="Computer" Index="0" />
+            <ScreenAreas>
+                <ScreenArea Name="CockpitScreen_03" DisplayName="Right Screen" TextureResolution="512" ScreenWidth="16" ScreenHeight="9" />
+                <ScreenArea Name="CockpitScreen_02" DisplayName="Middle Screen" TextureResolution="512" ScreenWidth="16" ScreenHeight="9" />
+                <ScreenArea Name="CockpitScreen_01" DisplayName="Left Screen" TextureResolution="512" ScreenWidth="16" ScreenHeight="9" />
+            </ScreenAreas>
+            <BlockPairName>DetectionHudControllerBlock</BlockPairName>
+            <MirroringY>Z</MirroringY>
+            <MirroringZ>Y</MirroringZ>
+            <EdgeType>Light</EdgeType>
+            <BuildTimeSeconds>20</BuildTimeSeconds>
+            <MountPoints>
+				<MountPoint Side="Front" StartX="0.00" StartY="0.00" EndX="5.00" EndY="2.00"/>
+				<MountPoint Side="Back" StartX="0.00" StartY="0.00" EndX="5.00" EndY="2.00"/>
+				<MountPoint Side="Left" StartX="0.00" StartY="0.00" EndX="2.00" EndY="2.00"/>
+				<MountPoint Side="Right" StartX="0.00" StartY="0.00" EndX="2.00" EndY="2.00"/>
+				<MountPoint Side="Top" StartX="0.00" StartY="0.00" EndX="5.00" EndY="2.00"/>
+				<MountPoint Side="Bottom" StartX="0.00" StartY="0.00" EndX="5.00" EndY="2.00"/>
+			</MountPoints>
             <ResourceSinkGroup>Utility</ResourceSinkGroup>
             <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
             <DamagedSound>ParticleElectrical</DamagedSound>

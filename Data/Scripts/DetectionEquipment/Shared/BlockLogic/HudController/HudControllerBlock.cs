@@ -17,7 +17,7 @@ using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionHudControllerBlock")]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionHudControllerBlock", "DetectionHudControllerBlock_Small")]
     // ReSharper disable once ClassNeverInstantiated.Global
     internal class HudControllerBlock : ControlBlockBase<IMyConveyorSorter>
     {
