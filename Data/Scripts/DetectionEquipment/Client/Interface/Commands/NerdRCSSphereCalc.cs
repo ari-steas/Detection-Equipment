@@ -43,7 +43,7 @@ namespace DetectionEquipment.Client.Interface.Commands
         private static MatrixD InvRenderMatrix;
 
         private static int numDone;
-        private static IMyCubeGrid RCSCalcGrid;
+        private static IMyCubeGrid ValueVisualizationGrid;
         private static List<IMySlimBlock> BlocksToRemove = new List<IMySlimBlock>();
         private static List<MyObjectBuilder_CubeBlock> BlockedBlocks = new List<MyObjectBuilder_CubeBlock>();
         private static IEnumerator<bool> GridEnumerator;
@@ -93,10 +93,10 @@ namespace DetectionEquipment.Client.Interface.Commands
         }
         public static void CalculateSphere(string[] args)
         {
-            if (RCSCalcGrid != null)
+            if (ValueVisualizationGrid != null)
             {
-                RCSCalcGrid.Close();
-                RCSCalcGrid = null;
+                ValueVisualizationGrid.Close();
+                ValueVisualizationGrid = null;
             }
 
             int count = 1000;
@@ -165,13 +165,18 @@ namespace DetectionEquipment.Client.Interface.Commands
                     GridEnumerator = null;
                 }
             }
+            if (CurrentGrid == null && ValueVisualizationGrid != null)
+            {
+                ValueVisualizationGrid.Close();
+                ValueVisualizationGrid = null;
+            }
         }
         public static void Close()
         {
-            if (RCSCalcGrid != null)
+            if (ValueVisualizationGrid != null)
             {
-                RCSCalcGrid.Close();
-                RCSCalcGrid = null;
+                ValueVisualizationGrid.Close();
+                ValueVisualizationGrid = null;
             }
             SpherePoints = null;
             values = null;
@@ -272,10 +277,10 @@ namespace DetectionEquipment.Client.Interface.Commands
         {
             IsJobActive = true;
             MyAPIGateway.Utilities.ShowMessage("DetEq", "Started visualizing grid.");
-            if (RCSCalcGrid != null)
+            if (ValueVisualizationGrid != null)
             {
-                RCSCalcGrid.Close();
-                RCSCalcGrid = null;
+                ValueVisualizationGrid.Close();
+                ValueVisualizationGrid = null;
             }
             yield return true;
 
@@ -285,9 +290,9 @@ namespace DetectionEquipment.Client.Interface.Commands
             gridRCS.DisplayName = $"{gridRCS.Name} RCS Calc Visualized";
 
             MyAPIGateway.Entities.RemapObjectBuilder(gridRCS);
-            RCSCalcGrid = (IMyCubeGrid)MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(gridRCS);
+            ValueVisualizationGrid = (IMyCubeGrid)MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(gridRCS);
 
-            RCSCalcGrid.GetBlocks(BlocksToRemove);
+            ValueVisualizationGrid.GetBlocks(BlocksToRemove);
 
             double maxValComparison = 0;
 
@@ -325,14 +330,14 @@ namespace DetectionEquipment.Client.Interface.Commands
 
                 Vector3D worldPos = SpherePoints[i] * value + CurrentGrid.WorldAABB.Center;
 
-                Vector3I gridPos = RCSCalcGrid.WorldToGridInteger(worldPos);
+                Vector3I gridPos = ValueVisualizationGrid.WorldToGridInteger(worldPos);
                 block.Min = gridPos;
 
                 block.ColorMaskHSV = MyColorPickerConstants.HSVToHSVOffset(new Vector3(1 - (float)(value / maxValComparison), 1f, 1f));
 
-                if (RCSCalcGrid.CanAddCube(gridPos))
+                if (ValueVisualizationGrid.CanAddCube(gridPos))
                 {
-                    RCSCalcGrid.AddBlock(block, false);
+                    ValueVisualizationGrid.AddBlock(block, false);
                     numDone++;
                 }
                 else
@@ -347,13 +352,13 @@ namespace DetectionEquipment.Client.Interface.Commands
             }
             foreach (var block in BlocksToRemove)
             {
-                RCSCalcGrid.RemoveBlock(block, false);
+                ValueVisualizationGrid.RemoveBlock(block, false);
             }
             foreach (var b in BlockedBlocks)
             {
-                if (RCSCalcGrid.CanAddCube(b.Min))
+                if (ValueVisualizationGrid.CanAddCube(b.Min))
                 {
-                    RCSCalcGrid.AddBlock(b, false);
+                    ValueVisualizationGrid.AddBlock(b, false);
                 }
                 numDone++;
             }
