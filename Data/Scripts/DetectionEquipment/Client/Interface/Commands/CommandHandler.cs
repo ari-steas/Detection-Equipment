@@ -29,6 +29,16 @@ namespace DetectionEquipment.Client.Interface.Commands
                 "Sets debug mode level. Most useful on localhost. Takes integer level as an optional argument, where a higher level provides more debug info.",
                 CommandMethods.ToggleDebug),
 
+            ["getallangles"] = new Command(
+                "DetEq",
+                "Calculates the RCS of the looked at grid for all angles and prints it out to a storage file \"DetEq_RCS_Sphere.txt\" in this world's storage. Optionally takes the number of points as an argument, defaulting to 1000.",
+                NerdRCSSphereCalc.CalculateSphere),
+
+            ["render"] = new Command(
+                "DetEq",
+                "Renders a given detection value from 'calcallangles'. Value must be specified as an argument, as either 'RCS', 'VCS', or 'IRS'. 1m away from grid center corresponds to 10m^2 RCS/VCS, or 0.1MWm^2 for IRS",
+                NerdRCSSphereCalc.RenderSphere),
+
             #endregion
         };
 
