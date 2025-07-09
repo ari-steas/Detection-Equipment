@@ -55,7 +55,7 @@
 		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
             <Id>
                 <TypeId>ConveyorSorter</TypeId>
-                <SubtypeId>DetectionSearchBlock</SubtypeId>
+                <SubtypeId>DetectionSearchBlock_Small</SubtypeId>
             </Id>
             <DisplayName>Detection Searcher</DisplayName>
             <Icon>Textures\GUI\Icons\Cubes\DetectionSearch.dds</Icon>
