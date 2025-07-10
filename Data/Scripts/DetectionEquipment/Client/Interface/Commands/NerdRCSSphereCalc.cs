@@ -389,7 +389,7 @@ namespace DetectionEquipment.Client.Interface.Commands
 
                 }
 
-                Vector3D worldPos = SpherePoints[i] * value + CurrentGrid.WorldAABB.Center;
+                Vector3D worldPos = -SpherePoints[i] * value + CurrentGrid.WorldAABB.Center;
 
                 Vector3I gridPos = ValueVisualizationGrid.WorldToGridInteger(worldPos);
                 block.Min = gridPos;
