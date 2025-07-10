@@ -49,6 +49,8 @@ namespace DetectionEquipment.Client.Interface.Commands
         private static IEnumerator<bool> GridEnumerator;
         private static int num = 0;
         private static int numBlocksToAdd = 2000;
+        private static float VisScale;
+        private static string VisUnit;
         public static void RenderSphere(string[] args)
         {
 
@@ -70,24 +72,42 @@ namespace DetectionEquipment.Client.Interface.Commands
                 return;
             }
 
+            float Scale = -1;
+            if (args.Length >= 3)
+            {
+                if (!float.TryParse(args[2], out Scale))
+                {
+                    Scale = -1;
+                }
+                else
+                {
+                    VisScale = Scale;
+                }
+            }
 
             string arg = args[1].ToLowerInvariant();
             switch (arg)
             {
                 case "rcs":
+                    if (Scale == -1)
+                        VisScale = 10;
+
                     GridEnumerator = ValuesToGrid(VisType.RCS).GetEnumerator();
-                    GridEnumerator.MoveNext();
                     break;
                 case "vcs":
+                    if (Scale == -1)
+                        VisScale = 10;
+
                     GridEnumerator = ValuesToGrid(VisType.VCS).GetEnumerator();
-                    GridEnumerator.MoveNext();
                     break;
                 case "irs":
+                    if (Scale == -1)
+                        VisScale = 100000;// divide by 100000 because these values are in the MW
+
                     GridEnumerator = ValuesToGrid(VisType.IRS).GetEnumerator();
-                    GridEnumerator.MoveNext();
                     break;
                 default:
-                    MyAPIGateway.Utilities.ShowMessage("DetEq", $"Error: second parameter '{arg}' not recognize. Please list 'RCS', 'VCS', or 'IRS' to render their appropriate spheres.");
+                    MyAPIGateway.Utilities.ShowMessage("DetEq", $"Error: second parameter '{arg}' not recognized. Please list 'RCS', 'VCS', or 'IRS' to render their appropriate spheres.");
                     return;
             }
         }
@@ -136,6 +156,11 @@ namespace DetectionEquipment.Client.Interface.Commands
         }
         public static void Update()
         {
+            if (CurrentGrid != null && !CurrentGrid.IsStatic)
+            {
+                CurrentGrid.IsStatic = true;
+            }
+
             if (IsJobActive)
             {
                 float percentDone = (float)numDone / PointCount * 100f;
@@ -165,10 +190,19 @@ namespace DetectionEquipment.Client.Interface.Commands
                     GridEnumerator = null;
                 }
             }
-            if (CurrentGrid == null && ValueVisualizationGrid != null)
+
+
+            if ((CurrentGrid == null || CurrentGrid.Closed) && ValueVisualizationGrid != null)
             {
+                CurrentGrid = null;
                 ValueVisualizationGrid.Close();
                 ValueVisualizationGrid = null;
+            }
+            else if (ValueVisualizationGrid != null)
+            {
+                double value = Vector3D.Distance(CurrentGrid.WorldAABB.Center, MyAPIGateway.Session.Camera.WorldMatrix.Translation) * VisScale;
+                value = Math.Round(value, 4);
+                MyAPIGateway.Utilities.ShowNotification($"Camera position is at {value}{VisUnit} in the visualization.", 1);
             }
         }
         public static void Close()
@@ -209,12 +243,16 @@ namespace DetectionEquipment.Client.Interface.Commands
             numDone = 0;
             MyAPIGateway.Utilities.InvokeOnGameThread(() => MyAPIGateway.Utilities.ShowMessage("DetEq", "Calculated point unit vectors."));
 
+            CurrentGrid.IsStatic = true;
+
             List<GridTrack> tracks = new List<GridTrack>();
             foreach (var grid in attached)
             {
                 tracks.Add(new GridTrack(grid));
             }
             maxVals = new Vector3D();
+
+            bool IsValid = true;
             // RCS calc for all the unit vectors from above
             MyAPIGateway.Parallel.For(0, PointCount, (i) =>
             {
@@ -222,6 +260,12 @@ namespace DetectionEquipment.Client.Interface.Commands
                 {
                     foreach (var track in tracks)
                     {
+                        if (track.Grid == null)
+                        {
+                            IsValid = false;
+                            return;
+                        }
+
                         double trackVcs, trackRcs;
                         track.CalculateRcs(SpherePoints[i], out trackRcs, out trackVcs);
                         values[i].X += trackRcs;
@@ -250,7 +294,19 @@ namespace DetectionEquipment.Client.Interface.Commands
                 numDone++;
             });
             numDone = 0;
-            MyAPIGateway.Utilities.InvokeOnGameThread(() => MyAPIGateway.Utilities.ShowMessage("DetEq", "Calculated all DetEq values."));
+
+            if (IsValid)
+            {
+                MyAPIGateway.Utilities.InvokeOnGameThread(() => MyAPIGateway.Utilities.ShowMessage("DetEq", "Calculated all DetEq values."));
+            }
+            else
+            {
+                MyAPIGateway.Utilities.InvokeOnGameThread(() => MyAPIGateway.Utilities.ShowMessage("DetEq", "Error: Grid was removed during operation. Stopping sphere angle calc."));
+                CurrentGrid = null;
+                SpherePoints = null;
+                values = null;
+                return;
+            }
 
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < PointCount; i++)
@@ -276,13 +332,15 @@ namespace DetectionEquipment.Client.Interface.Commands
         static IEnumerable<bool> ValuesToGrid(VisType t)
         {
             IsJobActive = true;
-            MyAPIGateway.Utilities.ShowMessage("DetEq", "Started visualizing grid.");
+
+            MyAPIGateway.Utilities.ShowMessage("DetEq", $"Started visualizing grid with a 1m:{VisScale}m^2 scale.");
+
             if (ValueVisualizationGrid != null)
             {
                 ValueVisualizationGrid.Close();
                 ValueVisualizationGrid = null;
             }
-            yield return true;
+
 
             var gridRCS = (MyObjectBuilder_CubeGrid)CurrentGrid.GetObjectBuilder(true);
 
@@ -300,15 +358,18 @@ namespace DetectionEquipment.Client.Interface.Commands
             {
                 case VisType.RCS:
                     maxValComparison = maxVals.X;
+                    VisUnit = "m^2";
                     break;
                 case VisType.VCS:
                     maxValComparison = maxVals.Y;
+                    VisUnit = "m^2";
                     break;
                 case VisType.IRS:
                     maxValComparison = maxVals.Z;
+                    VisUnit = "Wm^2";
                     break;
             }
-
+            yield return true;
             for (int i = 0; i < PointCount; i++)
             {
                 MyObjectBuilder_CubeBlock block = MyObjectBuilderSerializer.CreateNewObject<MyObjectBuilder_CubeBlock>("SmallBlockArmorBlock");
@@ -317,13 +378,13 @@ namespace DetectionEquipment.Client.Interface.Commands
                 switch (t)
                 {
                     case VisType.RCS:
-                        value = values[i].X / 10f;
+                        value = values[i].X / VisScale;
                         break;
                     case VisType.VCS:
-                        value = values[i].Y / 10f;
+                        value = values[i].Y / VisScale;
                         break;
                     case VisType.IRS:
-                        value = values[i].Z / 100000f; // divide by 100000 because these values are in the MW
+                        value = values[i].Z / VisScale;
                         break;
 
                 }
