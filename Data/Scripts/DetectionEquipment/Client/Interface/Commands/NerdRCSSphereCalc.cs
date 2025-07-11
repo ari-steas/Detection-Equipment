@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
+using RichHudFramework;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -43,6 +44,7 @@ namespace DetectionEquipment.Client.Interface.Commands
         private static MatrixD InvRenderMatrix;
 
         private static int numDone;
+        private static Vector3D? VisualizationPosition;
         private static IMyCubeGrid ValueVisualizationGrid;
         private static List<IMySlimBlock> BlocksToRemove = new List<IMySlimBlock>();
         private static List<MyObjectBuilder_CubeBlock> BlockedBlocks = new List<MyObjectBuilder_CubeBlock>();
@@ -51,6 +53,9 @@ namespace DetectionEquipment.Client.Interface.Commands
         private static int numBlocksToAdd = 2000;
         private static float VisScale;
         private static string VisUnit;
+
+        private static Vector3D[] positions;
+        private static Color[] colors;
         public static void RenderSphere(string[] args)
         {
 
@@ -85,6 +90,16 @@ namespace DetectionEquipment.Client.Interface.Commands
                 }
             }
 
+            Func<VisType, IEnumerable<bool>> type;
+            if (values.Length < 16384)
+            {
+                type = ValuesToBillboards;
+            }
+            else
+            {
+                type = ValuesToGrid;
+            }
+
             string arg = args[1].ToLowerInvariant();
             switch (arg)
             {
@@ -92,19 +107,36 @@ namespace DetectionEquipment.Client.Interface.Commands
                     if (Scale == -1)
                         VisScale = 10;
 
-                    GridEnumerator = ValuesToGrid(VisType.RCS).GetEnumerator();
+                    GridEnumerator = type(VisType.RCS).GetEnumerator();
                     break;
                 case "vcs":
                     if (Scale == -1)
                         VisScale = 10;
 
-                    GridEnumerator = ValuesToGrid(VisType.VCS).GetEnumerator();
+                    GridEnumerator = type(VisType.VCS).GetEnumerator();
                     break;
                 case "irs":
                     if (Scale == -1)
                         VisScale = 100000;// divide by 100000 because these values are in the MW
 
-                    GridEnumerator = ValuesToGrid(VisType.IRS).GetEnumerator();
+                    GridEnumerator = type(VisType.IRS).GetEnumerator();
+                    break;
+                case "reset":
+                    if (ValueVisualizationGrid != null)
+                    {
+                        ValueVisualizationGrid.Close();
+                        ValueVisualizationGrid = null;
+                    }
+                    colors = null;
+                    positions = null;
+                    VisualizationPosition = null;
+                    if (GridEnumerator != null)
+                    {
+                        GridEnumerator.Dispose();
+                        GridEnumerator = null;
+                    }
+                    BlocksToRemove.Clear();
+                    BlockedBlocks.Clear();
                     break;
                 default:
                     MyAPIGateway.Utilities.ShowMessage("DetEq", $"Error: second parameter '{arg}' not recognized. Please list 'RCS', 'VCS', or 'IRS' to render their appropriate spheres.");
@@ -191,18 +223,34 @@ namespace DetectionEquipment.Client.Interface.Commands
                 }
             }
 
-
             if ((CurrentGrid == null || CurrentGrid.Closed) && ValueVisualizationGrid != null)
             {
                 CurrentGrid = null;
                 ValueVisualizationGrid.Close();
                 ValueVisualizationGrid = null;
             }
-            else if (ValueVisualizationGrid != null)
+            if (VisualizationPosition != null)
             {
-                double value = Vector3D.Distance(CurrentGrid.WorldAABB.Center, MyAPIGateway.Session.Camera.WorldMatrix.Translation) * VisScale;
+                double value = Vector3D.Distance(VisualizationPosition.Value, MyAPIGateway.Session.Camera.WorldMatrix.Translation) * VisScale;
                 value = Math.Round(value, 4);
                 MyAPIGateway.Utilities.ShowNotification($"Camera position is at {value}{VisUnit} in the visualization.", 1);
+
+                
+            }
+        }
+
+        public static void Draw()
+        {
+            if (colors != null)
+            {
+                Vector3D camPos = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
+                for (int i = 0; i < colors.Length; i++)
+                {
+                    float distMult = Math.Max((float)Vector3D.Distance(camPos, positions[i]) / 100f, 0.5f);
+                    MyTransparentGeometry.AddPointBillboard(DebugDraw.MaterialDot, colors[i], positions[i], 0.35f * distMult,
+                        0,
+                        blendType: VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                }
             }
         }
         public static void Close()
@@ -243,8 +291,6 @@ namespace DetectionEquipment.Client.Interface.Commands
             numDone = 0;
             MyAPIGateway.Utilities.InvokeOnGameThread(() => MyAPIGateway.Utilities.ShowMessage("DetEq", "Calculated point unit vectors."));
 
-            CurrentGrid.IsStatic = true;
-
             List<GridTrack> tracks = new List<GridTrack>();
             foreach (var grid in attached)
             {
@@ -265,6 +311,9 @@ namespace DetectionEquipment.Client.Interface.Commands
                             IsValid = false;
                             return;
                         }
+
+                        if (!TrackingUtils.HasLoSDir(SpherePoints[i], MyAPIGateway.Session.Player?.Character, track.Grid))
+                            continue;
 
                         double trackVcs, trackRcs;
                         track.CalculateRcs(SpherePoints[i], out trackRcs, out trackVcs);
@@ -328,10 +377,64 @@ namespace DetectionEquipment.Client.Interface.Commands
             MyAPIGateway.Utilities.ShowMessage("DetEq", "Sent to file.");
             IsJobActive = false;
         }
+        static IEnumerable<bool> ValuesToBillboards(VisType t)
+        {
+            MyAPIGateway.Utilities.ShowMessage("DetEq", $"Started visualizing grid with a 1m:{VisScale}m^2 scale.");
+            if (ValueVisualizationGrid != null)
+            {
+                ValueVisualizationGrid.Close();
+                ValueVisualizationGrid = null;
+            }
+            VisualizationPosition = CurrentGrid.WorldAABB.Center;
 
+            positions = new Vector3D[PointCount];
+            colors = new Color[PointCount];
+            double maxValComparison = 0;
+
+            switch (t)
+            {
+                case VisType.RCS:
+                    maxValComparison = maxVals.X / VisScale;
+                    VisUnit = "m^2";
+                    break;
+                case VisType.VCS:
+                    maxValComparison = maxVals.Y / VisScale;
+                    VisUnit = "m^2";
+                    break;
+                case VisType.IRS:
+                    maxValComparison = maxVals.Z / VisScale;
+                    VisUnit = "Wm^2";
+                    break;
+            }
+
+            MyAPIGateway.Parallel.For(0, PointCount, (i) =>
+            {
+                double value = 0;
+                switch (t)
+                {
+                    case VisType.RCS:
+                        value = values[i].X / VisScale;
+                        break;
+                    case VisType.VCS:
+                        value = values[i].Y / VisScale;
+                        break;
+                    case VisType.IRS:
+                        value = values[i].Z / VisScale;
+                        break;
+
+                }
+
+                positions[i] = -SpherePoints[i] * value + VisualizationPosition.Value;
+                colors[i] = new Vector3(1 - (float)(value / maxValComparison), 1f, 1f).HSVtoColor().SetAlphaPct(1f) * DebugDraw.OnTopColorMul;
+            });
+
+            MyAPIGateway.Utilities.ShowMessage("DetEq", $"Visualizer made.");
+            yield return false;
+        }
         static IEnumerable<bool> ValuesToGrid(VisType t)
         {
             IsJobActive = true;
+            VisualizationPosition = CurrentGrid.WorldAABB.Center;
 
             MyAPIGateway.Utilities.ShowMessage("DetEq", $"Started visualizing grid with a 1m:{VisScale}m^2 scale.");
 
@@ -357,15 +460,15 @@ namespace DetectionEquipment.Client.Interface.Commands
             switch (t)
             {
                 case VisType.RCS:
-                    maxValComparison = maxVals.X;
+                    maxValComparison = maxVals.X / VisScale;
                     VisUnit = "m^2";
                     break;
                 case VisType.VCS:
-                    maxValComparison = maxVals.Y;
+                    maxValComparison = maxVals.Y / VisScale;
                     VisUnit = "m^2";
                     break;
                 case VisType.IRS:
-                    maxValComparison = maxVals.Z;
+                    maxValComparison = maxVals.Z / VisScale;
                     VisUnit = "Wm^2";
                     break;
             }
@@ -389,12 +492,12 @@ namespace DetectionEquipment.Client.Interface.Commands
 
                 }
 
-                Vector3D worldPos = -SpherePoints[i] * value + CurrentGrid.WorldAABB.Center;
+                Vector3D worldPos = -SpherePoints[i] * value + VisualizationPosition.Value;
 
                 Vector3I gridPos = ValueVisualizationGrid.WorldToGridInteger(worldPos);
                 block.Min = gridPos;
 
-                block.ColorMaskHSV = MyColorPickerConstants.HSVToHSVOffset(new Vector3(1 - (float)(value / maxValComparison), 1f, 1f));
+                block.ColorMaskHSV = PaintUtils.HSVToColorMask(new Vector3(1 - (float)(value / maxValComparison), 1f, 1f));
 
                 if (ValueVisualizationGrid.CanAddCube(gridPos))
                 {

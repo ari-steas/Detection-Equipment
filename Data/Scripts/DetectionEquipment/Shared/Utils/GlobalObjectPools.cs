@@ -19,7 +19,10 @@ namespace DetectionEquipment.Shared.Utils
         /// Please return these cleared!
         /// </summary>
         public static ObjectPool<List<IHitInfo>> HitInfoPool;
-
+        /// <summary>
+        /// Please return these cleared!
+        /// </summary>
+        public static ObjectPool<List<MyLineSegmentOverlapResult<MyEntity>>> LineSegmentOverlapPool;
         public static void Init()
         {
             Vector3IPool = new ObjectPool<List<Vector3I>>(
@@ -32,6 +35,10 @@ namespace DetectionEquipment.Shared.Utils
             );
             HitInfoPool = new ObjectPool<List<IHitInfo>>(
                 () => new List<IHitInfo>(),
+                startSize: 100
+            );
+            LineSegmentOverlapPool = new ObjectPool<List<MyLineSegmentOverlapResult<MyEntity>>>(
+                () => new List<MyLineSegmentOverlapResult<MyEntity>>(),
                 startSize: 100
             );
         }

@@ -75,6 +75,7 @@ namespace DetectionEquipment.Client
             try
             {
                 DetectionHud.Draw();
+                NerdRCSSphereCalc.Draw();
             }
             catch (Exception ex)
             {

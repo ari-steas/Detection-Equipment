@@ -7,6 +7,8 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
+using RichHudFramework;
+using VRage.Game.Models;
 
 namespace DetectionEquipment.Shared.Utils
 {
@@ -156,37 +158,96 @@ namespace DetectionEquipment.Shared.Utils
 
         public static bool HasLoS(Vector3D thisPos, IMyEntity thisEnt, IMyEntity toCheck)
         {
-            var castList = GlobalObjectPools.HitInfoPool.Pop();
-
             // Look for at least two visible corners
             bool oneHit = false;
 
-            for (int i = 0; i < BoundingBoxD.NUMBER_OF_CORNERS; i++)
+            foreach (var cornerLocal in toCheck.LocalAABB.Corners)
             {
-                MyAPIGateway.Physics.CastRay(thisPos, toCheck.PositionComp.WorldAABB.GetCorner(i), castList);
+                Vector3D corner = Vector3D.Transform(cornerLocal, toCheck.WorldMatrix);
 
-                bool isValid = true;
-                foreach (var hitInfo in castList)
-                {
-                    if (hitInfo.HitEntity == thisEnt || hitInfo.HitEntity == toCheck)
-                        continue;
-
-                    isValid = false;
-                    break;
-                }
+                // MyAPIGateway.Physics.CastRay(thisPos, toCheck.PositionComp.WorldAABB.GetCorner(i), castList);
+                // threadsafe but only goes by AABBs
+                bool isValid = IsBlocked(thisEnt, toCheck, corner, thisPos);
 
                 if (!isValid)
                     continue;
 
                 if (oneHit)
+                {
                     return true;
+                }
                 oneHit = true;
             }
 
-            castList.Clear();
-            GlobalObjectPools.HitInfoPool.Push(castList);
+            if (oneHit && !IsBlocked(thisEnt, toCheck, toCheck.WorldAABB.Center, thisPos))
+            {
+                return true;
+            }
 
             return false;
+        }
+
+        
+
+        public static bool HasLoSDir(Vector3D direction, IMyEntity thisEnt, IMyEntity toCheck)
+        {
+            // Look for at least two visible corners
+            bool oneHit = false;
+            
+            double distToRaycast = toCheck.WorldAABB.HalfExtents.Length();
+            foreach (var cornerLocal in toCheck.LocalAABB.Corners)
+            {
+                Vector3D corner = Vector3D.Transform(cornerLocal, toCheck.WorldMatrix);
+                // MyAPIGateway.Physics.CastRay(thisPos, toCheck.PositionComp.WorldAABB.GetCorner(i), castList);
+                // threadsafe but only goes by AABBs
+                bool isValid = IsBlocked(thisEnt, toCheck, corner, corner - distToRaycast * direction);
+
+                if (!isValid)
+                    continue;
+
+                if (oneHit)
+                {
+                    return true;
+                }
+                oneHit = true;
+            }
+
+            if (oneHit && !IsBlocked(thisEnt, toCheck, toCheck.WorldAABB.Center, toCheck.WorldAABB.Center - distToRaycast * direction))
+            {
+                return true;
+            }
+
+            return false;
+        }
+        private static bool IsBlocked(IMyEntity thisEnt, IMyEntity toCheck, Vector3D from, Vector3D to)
+        {
+            var castList = GlobalObjectPools.LineSegmentOverlapPool.Pop();
+            LineD raycast = new LineD(from, to);
+
+            MyGamePruningStructure.GetAllEntitiesInRay(ref raycast, castList);
+
+            if (GlobalData.DebugLevel > 4) // trolling
+                DebugDraw.AddLine(raycast, Color.Cyan.SetAlphaPct(0.05f), 0);
+
+            bool isValid = true;
+            foreach (var segementOerlapResult in castList)
+            {
+                if (segementOerlapResult.Element == thisEnt || segementOerlapResult.Element == toCheck)
+                    continue;
+
+                // raycast extents can be optimized further
+                Vector3D? result;
+                if (segementOerlapResult.Element.GetIntersectionWithLine(ref raycast, out result))
+                {
+                    if (GlobalData.DebugLevel > 4) // trolling
+                        DebugDraw.AddPoint(result.Value, Color.Red.SetAlphaPct(1f), 0);
+                    isValid = false;
+                    break;
+                }
+            }
+            castList.Clear();
+            GlobalObjectPools.LineSegmentOverlapPool.Push(castList);
+            return isValid;
         }
 
         //public static DetectionInfo AverageDetection(params DetectionInfo[] args)
