@@ -107,6 +107,23 @@ namespace DetectionEquipment.Shared
             }
         }
 
+        public static void AddLine(LineD line, Color color, float duration)
+        {
+            if (I == null)
+                return;
+
+            lock (I._queuedLinePoints)
+            {
+                I._queuedLinePoints.Add(new LineDrawPoint
+                {
+                    Start = line.From,
+                    End = line.To,
+                    EndOfLife = DateTime.UtcNow.Ticks + (long)(duration * TimeSpan.TicksPerSecond),
+                    Color = color,
+                });
+            }
+        }
+
         public static void AddLine(Vector3D origin, Vector3D destination, Color color, float duration)
         {
             if (I == null)

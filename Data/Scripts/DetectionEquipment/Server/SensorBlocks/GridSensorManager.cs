@@ -128,23 +128,12 @@ namespace DetectionEquipment.Server.SensorBlocks
                         if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
                             continue;
 
+                        if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
+                            continue;
+
                         var gT = trackKvp.Value as GridTrack;
                         if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
                             continue;
-
-                        // Only track objects the grid can see
-                        IHitInfo hitInfo;
-                        MyAPIGateway.Physics.CastLongRay(Grid.WorldAABB.ClosestCorner(trackKvp.Value.Position), trackKvp.Value.Position, out hitInfo, false);
-                        if (hitInfo != null && hitInfo.HitEntity?.GetTopMostParent() != trackKvp.Key.GetTopMostParent())
-                        {
-                            // All this is special handling for subgrids
-                            var gridHit = hitInfo.HitEntity as IMyCubeGrid;
-                            var gridEnt = trackKvp.Key as IMyCubeGrid;
-                            bool differentType = gridHit == null ^ gridEnt == null;
-                            bool bothGrids = gridHit != null && gridEnt != null;
-                            if (differentType || (bothGrids && !gridHit.IsInSameLogicalGroupAs(gridEnt)))
-                                continue;
-                        }
 
                         if (gT != null)
                         {

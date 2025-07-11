@@ -2,6 +2,10 @@
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
 using System.Linq;
+using Sandbox.ModAPI;
+using VRage.Game.Entity;
+using VRage.Game.ModAPI;
+using VRage.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.Utils
@@ -78,6 +82,16 @@ namespace DetectionEquipment.Shared.Utils
                 delta.Z > 0 ? boundingBoxD.Max.Z : boundingBoxD.Min.Z);
         }
 
+        public static Vector3D FurthestCorner(this BoundingBoxD boundingBoxD, Vector3D position)
+        {
+            var delta = position - boundingBoxD.Center;
+
+            return new Vector3D(
+                delta.X < 0 ? boundingBoxD.Max.X : boundingBoxD.Min.X,
+                delta.Y < 0 ? boundingBoxD.Max.Y : boundingBoxD.Min.Y,
+                delta.Z < 0 ? boundingBoxD.Max.Z : boundingBoxD.Min.Z);
+        }
+
         private static readonly HashSet<MyDataBroadcaster> Broadcasters = new HashSet<MyDataBroadcaster>();
         private static readonly Queue<MyDataReceiver> BroadcastToCheck = new Queue<MyDataReceiver>();
         public static List<MyDataBroadcaster> GetAllRelayedBroadcasters(MyDataReceiver receiver, long identityId, bool mutual)
@@ -138,6 +152,41 @@ namespace DetectionEquipment.Shared.Utils
             var list = Broadcasters.ToList();
             Broadcasters.Clear();
             return list;
+        }
+
+        public static bool HasLoS(Vector3D thisPos, IMyEntity thisEnt, IMyEntity toCheck)
+        {
+            var castList = GlobalObjectPools.HitInfoPool.Pop();
+
+            // Look for at least two visible corners
+            bool oneHit = false;
+
+            for (int i = 0; i < BoundingBoxD.NUMBER_OF_CORNERS; i++)
+            {
+                MyAPIGateway.Physics.CastRay(thisPos, toCheck.PositionComp.WorldAABB.GetCorner(i), castList);
+
+                bool isValid = true;
+                foreach (var hitInfo in castList)
+                {
+                    if (hitInfo.HitEntity == thisEnt || hitInfo.HitEntity == toCheck)
+                        continue;
+
+                    isValid = false;
+                    break;
+                }
+
+                if (!isValid)
+                    continue;
+
+                if (oneHit)
+                    return true;
+                oneHit = true;
+            }
+
+            castList.Clear();
+            GlobalObjectPools.HitInfoPool.Push(castList);
+
+            return false;
         }
 
         //public static DetectionInfo AverageDetection(params DetectionInfo[] args)
