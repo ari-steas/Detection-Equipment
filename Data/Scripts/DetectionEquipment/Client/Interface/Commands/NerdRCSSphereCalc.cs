@@ -283,11 +283,14 @@ namespace DetectionEquipment.Client.Interface.Commands
                     int count = 0;
                     MyAPIGateway.Parallel.For(0, PointCount, (i) =>
                     {
-                        billboardPositions.positionSizes[i] = Math.Max((float)Vector3D.Distance(camPos, billboardPositions.positions[i]) / 100f, 0.5f);
+                        
 
                         billboardPositions.renderPos[i] = count < 16384 && IsVisible(billboardPositions.positions[i], viewProjectionMat, camPos, MyAPIGateway.Session.Camera.WorldMatrix.Forward);
                         if (billboardPositions.renderPos[i])
+                        {
+                            billboardPositions.positionSizes[i] = Math.Max((float)Vector3D.Distance(camPos, billboardPositions.positions[i]) / 100f, 0.5f);
                             count++;
+                        }    
                     });
                 }
                 for (int i = 0; i < billboardPositions.colors.Length; i++)
