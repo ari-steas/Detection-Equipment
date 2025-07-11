@@ -36,7 +36,7 @@ namespace DetectionEquipment.Client.Interface.Commands
 
             ["render"] = new Command(
                 "DetEq",
-                "render <rcs | vcs | irs | reset> <scalemult>. Renders a given detection value from 'calcallangles'. Value (<type>) must be specified as an argument, as either 'RCS', 'VCS', 'IRS', or 'reset' if you wish to stop rendering. 1m away from grid center corresponds to 10m^2 RCS/VCS, or 100000Wm^2 for IRS by default, or corresponds to the given scale value if <scalemult> is specified.",
+                "render <rcs | vcs | irs | reset> <scalemult>. Renders a given detection value sphere from 'calcallangles'. Value (<type>) must be specified as an argument, as either 'RCS', 'VCS', 'IRS', or 'reset' if you wish to stop rendering. 1m away from grid center corresponds to 10m^2 RCS/VCS, or 100000Wm^2 for IRS by default, or corresponds to the given scale value if <scalemult> is specified.",
                 NerdRCSSphereCalc.RenderSphere),
 
             #endregion
