@@ -75,7 +75,7 @@ namespace DetectionEquipment.Client.Interface
                 return true;
 
             //Vector3D position = MyAPIGateway.Session.Camera.WorldMatrix.Translation - MyAPIGateway.Session.Camera.WorldMatrix.Forward * 500;
-            Vector3D position = castMatrix.Translation;
+            Vector3D camPos = castMatrix.Translation;
 
             var castGrid = castEnt as IMyCubeGrid;
             if (castGrid != null)
@@ -84,23 +84,27 @@ namespace DetectionEquipment.Client.Interface
                 castGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(attached);
                 foreach (var grid in attached)
                 {
+                    // Only track objects the grid can see
+                    if (!TrackingUtils.HasLoS(camPos, MyAPIGateway.Session.Player?.Character, grid))
+                        continue;
+
                     var track = new Server.Tracking.GridTrack(grid);
                     double trackVcs, trackRcs;
-                    track.CalculateRcs(castGrid.WorldAABB.Center - position, out trackRcs, out trackVcs);
+                    track.CalculateRcs(castGrid.WorldAABB.Center - camPos, out trackRcs, out trackVcs);
                     rcs += trackRcs;
                     vcs += trackVcs;
-                    irs += track.InfraredVisibility(position, trackVcs);
-                    rawIrs += irs * Vector3D.DistanceSquared(position, track.Position);
+                    irs += track.InfraredVisibility(camPos, trackVcs);
+                    rawIrs += irs * Vector3D.DistanceSquared(camPos, track.Position);
                 }
                 name = $"\"{castGrid.CustomName}\" & {attached.Count-1} subgrids";
             }
             else
             {
                 var track = new Server.Tracking.EntityTrack((MyEntity) castEnt);
-                rcs = track.RadarVisibility(position);
-                vcs = track.OpticalVisibility(position);
-                irs = track.InfraredVisibility(position, vcs);
-                rawIrs = irs * Vector3D.DistanceSquared(position, track.Position);
+                rcs = track.RadarVisibility(camPos);
+                vcs = track.OpticalVisibility(camPos);
+                irs = track.InfraredVisibility(camPos, vcs);
+                rawIrs = irs * Vector3D.DistanceSquared(camPos, track.Position);
                 name = $"\"{castEnt.DisplayName}\"";
             }
 

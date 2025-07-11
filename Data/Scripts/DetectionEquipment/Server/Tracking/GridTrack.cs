@@ -369,7 +369,7 @@ namespace DetectionEquipment.Server.Tracking
 
 
                     if (GlobalData.DebugLevel > 3)
-                        DebugDraw.AddLine(castLine.From, castLine.To, Color.Gray.SetAlphaPct(0.05f), 0);
+                        DebugDraw.AddLine(castLine, Color.Gray.SetAlphaPct(0.05f), 0);
 
                     MyCubeGrid.MyCubeGridHitInfo intersect = new MyCubeGrid.MyCubeGridHitInfo();
                     if (!grid.GetIntersectionWithLine(ref castLine, ref intersect))
