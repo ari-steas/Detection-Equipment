@@ -1,13 +1,13 @@
-﻿using DetectionEquipment.Shared.Definitions;
+﻿using DetectionEquipment.Client.Networking;
+using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
+using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using VRage.Game.ModAPI;
 using VRageMath;
-using DetectionEquipment.Client.Networking;
-using DetectionEquipment.Shared;
-using Sandbox.Game.EntityComponents;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
@@ -26,6 +26,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             }
             set
             {
+                if (Sensors[CurrentSensorId].Aperture == value)
+                    return;
                 Sensors[CurrentSensorId].Aperture = value;
                 ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
             }
@@ -38,6 +40,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             }
             set
             {
+                if (Sensors[CurrentSensorId].DesiredAzimuth == value)
+                    return;
                 Sensors[CurrentSensorId].DesiredAzimuth = value;
                 ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
             }
@@ -50,7 +54,65 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             }
             set
             {
+                if (Sensors[CurrentSensorId].DesiredElevation == value)
+                    return;
                 Sensors[CurrentSensorId].DesiredElevation = value;
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+            }
+        }
+        public float CurrentMinAzimuth
+        {
+            get
+            {
+                return Sensors[CurrentSensorId].MinAzimuth;
+            }
+            set
+            {
+                if (Sensors[CurrentSensorId].MinAzimuth == value)
+                    return;
+                Sensors[CurrentSensorId].MinAzimuth = value;
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+            }
+        }
+        public float CurrentMaxAzimuth
+        {
+            get
+            {
+                return Sensors[CurrentSensorId].MaxAzimuth;
+            }
+            set
+            {
+                if (Sensors[CurrentSensorId].MaxAzimuth == value)
+                    return;
+                Sensors[CurrentSensorId].MaxAzimuth = value;
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+            }
+        }
+        public float CurrentMinElevation
+        {
+            get
+            {
+                return Sensors[CurrentSensorId].MinElevation;
+            }
+            set
+            {
+                if (Sensors[CurrentSensorId].MinElevation == value)
+                    return;
+                Sensors[CurrentSensorId].MinElevation = value;
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+            }
+        }
+        public float CurrentMaxElevation
+        {
+            get
+            {
+                return Sensors[CurrentSensorId].MaxElevation;
+            }
+            set
+            {
+                if (Sensors[CurrentSensorId].MaxElevation == value)
+                    return;
+                Sensors[CurrentSensorId].MaxElevation = value;
                 ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
             }
         }
@@ -156,6 +218,10 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             data.Aperture = packet.Aperture;
             data.DesiredAzimuth = packet.Azimuth;
             data.DesiredElevation = packet.Elevation;
+            data.MinAzimuth = packet.MinAzimuth;
+            data.MaxAzimuth = packet.MaxAzimuth;
+            data.MinElevation = packet.MinElevation;
+            data.MaxElevation = packet.MaxElevation;
         }
 
         private void OnCustomDataChanged(IMyTerminalBlock obj)

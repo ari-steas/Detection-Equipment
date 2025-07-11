@@ -38,6 +38,8 @@ namespace DetectionEquipment.Server.PBApi
             ["SetSensorAzimuth"] = new Action<uint, double>(SetSensorAzimuth),
             ["GetSensorElevation"] = new Func<uint, double>(GetSensorElevation),
             ["SetSensorElevation"] = new Action<uint, double>(SetSensorElevation),
+            ["GetSensorLimits"] = new Func<uint, Vector4D>(GetSensorLimits),
+            ["SetSensorLimits"] = new Action<uint, Vector4D>(SetSensorLimits),
             ["GetSensorDefinition"] = new Func<uint, object[]>(GetSensorDefinition),
             ["GetSensorDetections"] = new Func<uint, object[][]>(GetSensorDetections),
             ["RegisterInvokeOnDetection"] = new Action<uint, Action<object[]>>(RegisterInvokeOnDetection),
@@ -121,6 +123,25 @@ namespace DetectionEquipment.Server.PBApi
         private static void SetSensorElevation(uint id, double value)
         {
             ServerMain.I.BlockSensorIdMap[id].DesiredElevation = value;
+        }
+
+        private static Vector4D GetSensorLimits(uint id)
+        {
+            var sensor = ServerMain.I.BlockSensorIdMap[id];
+            return new Vector4D(sensor.MinAzimuth, sensor.MaxAzimuth, sensor.MinElevation, sensor.MaxElevation);
+        }
+
+        private static void SetSensorLimits(uint id, Vector4D limits)
+        {
+            var sensor = ServerMain.I.BlockSensorIdMap[id];
+            if (!double.IsNaN(limits.X))
+                sensor.MinAzimuth = limits.X;
+            if (!double.IsNaN(limits.Y))
+                sensor.MaxAzimuth = limits.Y;
+            if (!double.IsNaN(limits.Z))
+                sensor.MinElevation = limits.Z;
+            if (!double.IsNaN(limits.W))
+                sensor.MaxElevation = limits.W;
         }
 
         private static object[] GetSensorDefinition(uint id)

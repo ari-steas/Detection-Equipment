@@ -7,7 +7,6 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game;
 using VRageMath;
-using System.Reflection;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
@@ -16,8 +15,72 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         public readonly uint Id;
         public readonly SensorDefinition Definition;
         public float Aperture = 0;
-        public float DesiredAzimuth = 0;
-        public float DesiredElevation = 0;
+        public float _desiredAzimuth = 0, _minAzimuth, _maxAzimuth;
+        public float _desiredElevation = 0, _minElevation, _maxElevation;
+
+        public float DesiredAzimuth
+        {
+            get { return _desiredAzimuth; }
+            set { _desiredAzimuth = MathHelper.Clamp(value, MinAzimuth, MaxAzimuth); }
+        }
+
+        public float MinAzimuth
+        {
+            get { return _minAzimuth; }
+            set
+            {
+                _minAzimuth = value; 
+                if (MaxAzimuth < MinAzimuth)
+                    MaxAzimuth = MinAzimuth;
+                if (DesiredAzimuth < MinAzimuth)
+                    DesiredAzimuth = MinAzimuth;
+            }
+        }
+
+        public float MaxAzimuth
+        {
+            get { return _maxAzimuth; }
+            set
+            {
+                _maxAzimuth = value;
+                if (MinAzimuth > MaxAzimuth)
+                    MinAzimuth = MaxAzimuth;
+                if (DesiredAzimuth > MaxAzimuth)
+                    DesiredAzimuth = MaxAzimuth;
+            }
+        }
+
+        public float DesiredElevation
+        {
+            get { return _desiredElevation; }
+            set { _desiredElevation = MathHelper.Clamp(value, MinElevation, MaxElevation); }
+        }
+
+        public float MinElevation
+        {
+            get { return _minElevation; }
+            set
+            {
+                _minElevation = value; 
+                if (MaxElevation < MinElevation)
+                    MaxElevation = MinElevation;
+                if (DesiredElevation < MinElevation)
+                    DesiredElevation = MinElevation;
+            }
+        }
+
+        public float MaxElevation
+        {
+            get { return _maxElevation; }
+            set
+            {
+                _maxElevation = value;
+                if (MinElevation > MaxElevation)
+                    MinElevation = MaxElevation;
+                if (DesiredElevation > MaxElevation)
+                    DesiredElevation = MaxElevation;
+            }
+        }
 
         public float Azimuth  { get; private set; } = 0;
         public float Elevation  { get; private set; } = 0;
@@ -60,6 +123,11 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                     Log.Info("ClientSensorData", $"Failed to get sensor w/ DefId {Definition.Id} elevation part {Definition.Movement.AzimuthPart}!\n" +
                                                  $"Valid subparts:\n\t{string.Join("\n\t", SubpartManager.GetAllSubpartsDict(block).Keys)}");
                 //Log.Info("ClientBlockSensor", "Inited subparts for " + block.BlockDefinition.SubtypeName);
+
+                MinAzimuth = (float) Definition.Movement.MinAzimuth;
+                MaxAzimuth = (float) Definition.Movement.MaxAzimuth;
+                MinElevation = (float) Definition.Movement.MinElevation;
+                MaxElevation = (float) Definition.Movement.MaxElevation;
             }
 
             _dummyParent = (MyEntity) block;
@@ -137,7 +205,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             var limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.AzimuthRate * delta);
 
             if (!Definition.Movement.CanElevateFull)
-                Azimuth = (float) MathUtils.Clamp(limitedAzimuth, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
+                Azimuth = (float) MathUtils.Clamp(limitedAzimuth, Math.Max(Definition.Movement.MinAzimuth, MinAzimuth), Math.Min(Definition.Movement.MaxAzimuth, MaxAzimuth));
             else
                 Azimuth = (float) MathUtils.NormalizeAngle(limitedAzimuth);
 
@@ -149,7 +217,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             var limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.ElevationRate * delta);
 
             if (!Definition.Movement.CanElevateFull)
-                Elevation = (float) MathUtils.Clamp(limitedElevation, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
+                Elevation = (float) MathUtils.Clamp(limitedElevation, Math.Max(Definition.Movement.MinElevation, MinElevation), Math.Min(Definition.Movement.MaxElevation, MaxElevation));
             else
                 Elevation = (float) MathUtils.NormalizeAngle(limitedElevation);
 

@@ -42,11 +42,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                     SearchRotate(
                         sensor,
                         ref desiredAzimuth,
-                        sensor.Definition.Movement.MinAzimuth,
-                        sensor.Definition.Movement.MaxAzimuth,
+                        sensor.MinAzimuth,
+                        sensor.MaxAzimuth,
                         ref desiredElevation,
-                        sensor.Definition.Movement.MinElevation,
-                        sensor.Definition.Movement.MaxElevation
+                        sensor.MinElevation,
+                        sensor.MaxElevation
                     );
                 }
                 else
@@ -54,11 +54,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                     SearchRotate(
                         sensor,
                         ref desiredElevation,
-                        sensor.Definition.Movement.MinElevation,
-                        sensor.Definition.Movement.MaxElevation,
+                        sensor.MinElevation,
+                        sensor.MaxElevation,
                         ref desiredAzimuth,
-                        sensor.Definition.Movement.MinAzimuth,
-                        sensor.Definition.Movement.MaxAzimuth
+                        sensor.MinAzimuth,
+                        sensor.MaxAzimuth
                     );
                 }
 

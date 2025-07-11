@@ -135,6 +135,8 @@ namespace IngameScript
         private Action<uint, double> _setSensorAzimuth;
         private Func<uint, double> _getSensorElevation;
         private Action<uint, double> _setSensorElevation;
+        private Func<uint, Vector4D> _getSensorLimits;
+        private Action<uint, Vector4D> _setSensorLimits;
         private Func<uint, object[]> _getSensorDefinition;
         private Func<uint, object[][]> _getSensorDetections;
         private Action<uint, Action<object[]>> _registerInvokeOnDetection;
@@ -181,6 +183,8 @@ namespace IngameScript
             SetApiMethod("SetSensorAzimuth", ref _setSensorAzimuth);
             SetApiMethod("GetSensorElevation", ref _getSensorElevation);
             SetApiMethod("SetSensorElevation", ref _setSensorElevation);
+            SetApiMethod("GetSensorLimits", ref _getSensorLimits);
+            SetApiMethod("SetSensorLimits", ref _setSensorLimits);
             SetApiMethod("GetSensorDefinition", ref _getSensorDefinition);
             SetApiMethod("GetSensorDetections", ref _getSensorDetections);
             SetApiMethod("RegisterInvokeOnDetection", ref _registerInvokeOnDetection);
@@ -357,6 +361,55 @@ namespace IngameScript
                     _._setSensorAzimuth.Invoke(Id, value);
                 }
             }
+
+            public double MinAzimuth
+            {
+                get
+                {
+                    return _._getSensorLimits.Invoke(Id).X;
+                }
+                set
+                {
+                    _._setSensorLimits.Invoke(Id, new Vector4D(value, double.NaN, double.NaN, double.NaN));
+                }
+            }
+
+            public double MaxAzimuth
+            {
+                get
+                {
+                    return _._getSensorLimits.Invoke(Id).Y;
+                }
+                set
+                {
+                    _._setSensorLimits.Invoke(Id, new Vector4D(double.NaN, value, double.NaN, double.NaN));
+                }
+            }
+
+            public double MinElevation
+            {
+                get
+                {
+                    return _._getSensorLimits.Invoke(Id).Z;
+                }
+                set
+                {
+                    _._setSensorLimits.Invoke(Id, new Vector4D(double.NaN, double.NaN, value, double.NaN));
+                }
+            }
+
+            public double MaxElevation
+            {
+                get
+                {
+                    return _._getSensorLimits.Invoke(Id).W;
+                }
+                set
+                {
+                    _._setSensorLimits.Invoke(Id, new Vector4D(double.NaN, double.NaN, double.NaN, value));
+                }
+            }
+
 
             /// <summary>
             /// Elevation of the sensor gimbal, in radians.

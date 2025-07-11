@@ -10,7 +10,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
     internal class SensorControls : TerminalControlAdder<IMyCameraBlock>
     {
-        private IMyTerminalControlSlider _apeSlider, _aziSlider, _eleSlider;
+        private IMyTerminalControlSlider _apeSlider, _aziSlider, _eleSlider, _minAziSlider, _maxAziSlider, _minEleSlider, _maxEleSlider;
 
         protected override Func<IMyTerminalBlock, bool> VisibleFunc => block => block.GetLogic<ClientSensorLogic>() != null;
         public override string IdPrefix => "SensorControls_";
@@ -156,6 +156,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 return def.MinAperture != def.MaxAperture;
             };
 
+            #region Azimuth
+
             _aziSlider = CreateSlider(
                 "Azimuth",
                 "Desired Azimuth",
@@ -178,6 +180,58 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 );
             _aziSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
 
+            _minAziSlider = CreateSlider(
+                "MinAzimuth",
+                "Minimum Azimuth",
+                "Minimum sensor azimuth in degrees",
+                0,
+                360,
+                b => MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentMinAzimuth),
+                (b, v) =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    if (logic.CurrentDefinition.Movement == null)
+                        return;
+                    logic.CurrentMinAzimuth = (float)MathHelper.Clamp(MathHelper.ToRadians(v), logic.CurrentDefinition.Movement.MinAzimuth, logic.CurrentDefinition.Movement.MaxAzimuth);
+                    _aziSlider.UpdateVisual();
+                    _maxAziSlider.UpdateVisual();
+                },
+                (b, sb) => sb.Append(MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentMinAzimuth).ToString("F1") + "°")
+            );
+            _minAziSlider.SetLimits(
+                b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinAzimuth ?? 0),
+                b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxAzimuth ?? 0)
+            );
+            _minAziSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+
+            _maxAziSlider = CreateSlider(
+                "MaxAzimuth",
+                "Maximum Azimuth",
+                "Maximum sensor azimuth in degrees",
+                0,
+                360,
+                b => MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentMaxAzimuth),
+                (b, v) =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    if (logic.CurrentDefinition.Movement == null)
+                        return;
+                    logic.CurrentMaxAzimuth = (float)MathHelper.Clamp(MathHelper.ToRadians(v), logic.CurrentDefinition.Movement.MinAzimuth, logic.CurrentDefinition.Movement.MaxAzimuth);
+                    _aziSlider.UpdateVisual();
+                    _minAziSlider.UpdateVisual();
+                },
+                (b, sb) => sb.Append(MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentMaxAzimuth).ToString("F1") + "°")
+            );
+            _maxAziSlider.SetLimits(
+                b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinAzimuth ?? 0),
+                b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxAzimuth ?? 0)
+            );
+            _maxAziSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+
+            #endregion
+
+            #region Elevation
+
             _eleSlider = CreateSlider(
                 "Elevation",
                 "Desired Elevation",
@@ -199,6 +253,56 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                     b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxElevation ?? 0)
                 );
             _eleSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+
+            _minEleSlider = CreateSlider(
+                "MinElevation",
+                "Minimum Elevation",
+                "Minimum sensor elevation in degrees",
+                0,
+                360,
+                b => MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentMinElevation),
+                (b, v) =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    if (logic.CurrentDefinition.Movement == null)
+                        return;
+                    logic.CurrentMinElevation = (float)MathHelper.Clamp(MathHelper.ToRadians(v), logic.CurrentDefinition.Movement.MinElevation, logic.CurrentDefinition.Movement.MaxElevation);
+                    _eleSlider.UpdateVisual();
+                    _maxEleSlider.UpdateVisual();
+                },
+                (b, sb) => sb.Append(MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentMinElevation).ToString("F1") + "°")
+            );
+            _minEleSlider.SetLimits(
+                b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinElevation ?? 0),
+                b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxElevation ?? 0)
+            );
+            _minEleSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+
+            _maxEleSlider = CreateSlider(
+                "MaxElevation",
+                "Maximum Elevation",
+                "Maximum sensor elevation in degrees",
+                0,
+                360,
+                b => MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentMaxElevation),
+                (b, v) =>
+                {
+                    var logic = b.GetLogic<ClientSensorLogic>();
+                    if (logic.CurrentDefinition.Movement == null)
+                        return;
+                    logic.CurrentMaxElevation = (float)MathHelper.Clamp(MathHelper.ToRadians(v), logic.CurrentDefinition.Movement.MinElevation, logic.CurrentDefinition.Movement.MaxElevation);
+                    _eleSlider.UpdateVisual();
+                    _minEleSlider.UpdateVisual();
+                },
+                (b, sb) => sb.Append(MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentMaxElevation).ToString("F1") + "°")
+            );
+            _maxEleSlider.SetLimits(
+                b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinElevation ?? 0),
+                b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxElevation ?? 0)
+            );
+            _maxEleSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+
+            #endregion
         }
     }
 }

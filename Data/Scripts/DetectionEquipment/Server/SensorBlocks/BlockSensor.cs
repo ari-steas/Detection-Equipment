@@ -44,7 +44,7 @@ namespace DetectionEquipment.Server.SensorBlocks
         public double Azimuth { get; private set;} = 0;
         public double Elevation { get; private set; } = 0;
 
-        private double _desiredAzimuth = 0, _desiredElevation = 0;
+        private double _desiredAzimuth = 0, _minAzimuth, _maxAzimuth, _desiredElevation = 0, _minElevation, _maxElevation;
         public double DesiredAzimuth
         {
             get
@@ -57,7 +57,44 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (_desiredAzimuth == normalized)
                     return;
                 _desiredAzimuth = normalized;
-                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
+                _settingsUpdated = true;
+            }
+        }
+        public double MinAzimuth
+        {
+            get
+            {
+                return _minAzimuth;
+            }
+            set
+            {
+                var normalized = MathUtils.NormalizeAngle(value);
+                if (_minAzimuth == normalized)
+                    return;
+                _minAzimuth = normalized;
+                if (MaxAzimuth < MinAzimuth)
+                    MaxAzimuth = MinAzimuth;
+                if (DesiredAzimuth < MinAzimuth)
+                    DesiredAzimuth = MinAzimuth;
+                _settingsUpdated = true;
+            }
+        }
+        public double MaxAzimuth
+        {
+            get
+            {
+                return _maxAzimuth;
+            }
+            set
+            {
+                var normalized = MathUtils.NormalizeAngle(value);
+                if (_maxAzimuth == normalized)
+                    return;
+                _maxAzimuth = normalized;
+                if (MinAzimuth > MaxAzimuth)
+                    MinAzimuth = MaxAzimuth;
+                if (DesiredAzimuth > MaxAzimuth)
+                    DesiredAzimuth = MaxAzimuth;
                 _settingsUpdated = true;
             }
         }
@@ -73,7 +110,44 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (_desiredElevation == normalized)
                     return;
                 _desiredElevation = normalized;
-                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
+                _settingsUpdated = true;
+            }
+        }
+        public double MinElevation
+        {
+            get
+            {
+                return _minElevation;
+            }
+            set
+            {
+                var normalized = MathUtils.NormalizeAngle(value);
+                if (_minElevation == normalized)
+                    return;
+                _minElevation = normalized;
+                if (MaxElevation < MinElevation)
+                    MaxElevation = MinElevation;
+                if (DesiredElevation < MinElevation)
+                    DesiredElevation = MinElevation;
+                _settingsUpdated = true;
+            }
+        }
+        public double MaxElevation
+        {
+            get
+            {
+                return _maxElevation;
+            }
+            set
+            {
+                var normalized = MathUtils.NormalizeAngle(value);
+                if (_maxElevation == normalized)
+                    return;
+                _maxElevation = normalized;
+                if (MinElevation > MaxElevation)
+                    MinElevation = MaxElevation;
+                if (DesiredElevation > MaxElevation)
+                    DesiredElevation = MaxElevation;
                 _settingsUpdated = true;
             }
         }
@@ -89,7 +163,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (Sensor.Aperture == normalized)
                     return;
                 Sensor.Aperture = normalized;
-                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
                 _settingsUpdated = true;
             }
         }
@@ -99,6 +172,19 @@ namespace DetectionEquipment.Server.SensorBlocks
             _desiredAzimuth = packet.Azimuth;
             _desiredElevation = packet.Elevation;
             Sensor.Aperture = packet.Aperture;
+            _minAzimuth = packet.MinAzimuth;
+            _maxAzimuth = packet.MaxAzimuth;
+            _maxElevation = packet.MaxElevation;
+            _minElevation = packet.MinElevation;
+            _settingsUpdated = true;
+        }
+
+        internal void LoadDefaultSettings()
+        {
+            _minAzimuth = (float) Definition.Movement.MinAzimuth;
+            _maxAzimuth = (float) Definition.Movement.MaxAzimuth;
+            _minElevation = (float) Definition.Movement.MinElevation;
+            _maxElevation = (float) Definition.Movement.MaxElevation;
             _settingsUpdated = true;
         }
 
@@ -148,8 +234,9 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             UpdateSensorMatrix();
 
-            if (_settingsUpdated && MyAPIGateway.Session.GameplayFrameCounter % 9 == 0)
+            if (_settingsUpdated && MyAPIGateway.Session.GameplayFrameCounter % 3 == 0)
             {
+                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
                 BlockSensorSettings.SaveBlockSettings(Block);
                 _settingsUpdated = false;
             }
@@ -231,8 +318,8 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             var angle = MathUtils.GetAngleTo(Block.WorldMatrix, position);
 
-            DesiredAzimuth = MathHelper.Clamp(angle.X, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
-            DesiredElevation = MathHelper.Clamp(angle.Y, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
+            DesiredAzimuth = MathHelper.Clamp(angle.X, MinAzimuth, MaxAzimuth);
+            DesiredElevation = MathHelper.Clamp(angle.Y, MinElevation, MaxElevation);
         }
 
         private Matrix GetAzimuthMatrix(float delta)
@@ -240,7 +327,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             var limitedAzimuth = MathUtils.LimitRotationSpeed(Azimuth, DesiredAzimuth, Definition.Movement.AzimuthRate * delta);
 
             if (!Definition.Movement.CanElevateFull)
-                Azimuth = MathUtils.Clamp(limitedAzimuth, Definition.Movement.MinAzimuth, Definition.Movement.MaxAzimuth);
+                Azimuth = MathUtils.Clamp(limitedAzimuth, Math.Max(Definition.Movement.MinAzimuth, MinAzimuth), Math.Min(Definition.Movement.MaxAzimuth, MaxAzimuth));
             else
                 Azimuth = MathUtils.NormalizeAngle(limitedAzimuth);
 
@@ -252,7 +339,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             var limitedElevation = MathUtils.LimitRotationSpeed(Elevation, DesiredElevation, Definition.Movement.ElevationRate * delta);
 
             if (!Definition.Movement.CanElevateFull)
-                Elevation = MathUtils.Clamp(limitedElevation, Definition.Movement.MinElevation, Definition.Movement.MaxElevation);
+                Elevation = MathUtils.Clamp(limitedElevation, Math.Max(Definition.Movement.MinElevation, MinElevation), Math.Min(Definition.Movement.MaxElevation, MaxElevation));
             else
                 Elevation = MathUtils.NormalizeAngle(limitedElevation);
 

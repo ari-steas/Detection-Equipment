@@ -59,14 +59,22 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         [ProtoMember(3)] public float Azimuth;
         [ProtoMember(4)] public float Elevation;
         [ProtoMember(5)] public float Aperture;
+        [ProtoMember(6)] public float MinAzimuth;
+        [ProtoMember(7)] public float MaxAzimuth;
+        [ProtoMember(8)] public float MinElevation;
+        [ProtoMember(9)] public float MaxElevation;
 
-        public SensorUpdatePacket(long blockId, ClientSensorData sensor)
+        public SensorUpdatePacket(long blockId, ClientSensorData sensor) // TODO make this only update one value at a time
         {
             AttachedBlockId = blockId;
             Id = sensor.Id;
             Azimuth = sensor.DesiredAzimuth;
             Elevation = sensor.DesiredElevation;
             Aperture = sensor.Aperture;
+            MinAzimuth = sensor.MinAzimuth;
+            MaxAzimuth = sensor.MaxAzimuth;
+            MinElevation = sensor.MinElevation;
+            MaxElevation = sensor.MaxElevation;
         }
 
         public SensorUpdatePacket(Server.SensorBlocks.BlockSensor sensor)
@@ -76,6 +84,10 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             Azimuth = (float) sensor.DesiredAzimuth;
             Elevation = (float) sensor.DesiredElevation;
             Aperture = (float) sensor.Aperture;
+            MinAzimuth = (float) sensor.MinAzimuth;
+            MaxAzimuth = (float) sensor.MaxAzimuth;
+            MinElevation = (float) sensor.MinElevation;
+            MaxElevation = (float) sensor.MaxElevation;
         }
 
         private SensorUpdatePacket()
