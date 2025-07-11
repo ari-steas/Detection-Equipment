@@ -38,24 +38,50 @@ namespace DetectionEquipment.Client.Interface.Commands
         /// <summary>
         /// X is RCS, Y is VCS, Z is IRS from 1m away
         /// </summary>
-        private static Vector3D[] values;
-        private static Vector3D maxVals;
+        private static Vector3D[] DetectionValues;
+        private static Vector3D MaximumValues;
         private static IMyCubeGrid CurrentGrid = null;
-        private static MatrixD InvRenderMatrix;
 
-        private static int numDone;
+        private static int OperationsDone;
         private static Vector3D? VisualizationPosition;
-        private static IMyCubeGrid ValueVisualizationGrid;
-        private static List<IMySlimBlock> BlocksToRemove = new List<IMySlimBlock>();
-        private static List<MyObjectBuilder_CubeBlock> BlockedBlocks = new List<MyObjectBuilder_CubeBlock>();
         private static IEnumerator<bool> GridEnumerator;
-        private static int num = 0;
-        private static int numBlocksToAdd = 2000;
         private static float VisScale;
         private static string VisUnit;
 
-        private static Vector3D[] positions;
-        private static Color[] colors;
+        static class GridDrawData
+        {
+            public static IMyCubeGrid ValueVisualizationGrid;
+            public static List<IMySlimBlock> BlocksToRemove = new List<IMySlimBlock>();
+            public static List<MyObjectBuilder_CubeBlock> BlockedBlocks = new List<MyObjectBuilder_CubeBlock>();
+            public static int blocksAddedThisTick = 0;
+            public static int numBlocksToAdd = 2000;
+
+            public static void CloseGridIfPossible()
+            {
+                if (ValueVisualizationGrid != null)
+                {
+                    ValueVisualizationGrid.Close();
+                    ValueVisualizationGrid = null;
+                }
+            }
+        }
+
+        private static BillboardDrawData billboardPositions;
+        class BillboardDrawData
+        {
+            public bool[] renderPos;
+            public Vector3D[] positions;
+            public Color[] colors;
+            public float[] positionSizes;
+
+            public BillboardDrawData(int count)
+            {
+                renderPos = new bool[count];
+                positions = new Vector3D[count];
+                colors = new Color[count];
+                positionSizes = new float[count];
+            }
+        }
         public static void RenderSphere(string[] args)
         {
 
@@ -64,7 +90,7 @@ namespace DetectionEquipment.Client.Interface.Commands
                 MyAPIGateway.Utilities.ShowMessage("DetEq", "Error: Job is already in progress. Please wait for it to complete.");
                 return;
             }
-            if (CurrentGrid == null | values == null)
+            if (CurrentGrid == null | DetectionValues == null)
             {
                 MyAPIGateway.Utilities.ShowMessage("DetEq", "Error: no data to visualize!");
                 return;
@@ -91,7 +117,7 @@ namespace DetectionEquipment.Client.Interface.Commands
             }
 
             Func<VisType, IEnumerable<bool>> type;
-            if (values.Length < 16384)
+            if (DetectionValues.Length < 50000)
             {
                 type = ValuesToBillboards;
             }
@@ -122,34 +148,33 @@ namespace DetectionEquipment.Client.Interface.Commands
                     GridEnumerator = type(VisType.IRS).GetEnumerator();
                     break;
                 case "reset":
-                    if (ValueVisualizationGrid != null)
-                    {
-                        ValueVisualizationGrid.Close();
-                        ValueVisualizationGrid = null;
-                    }
-                    colors = null;
-                    positions = null;
-                    VisualizationPosition = null;
+                    ResetRender();
+
                     if (GridEnumerator != null)
                     {
                         GridEnumerator.Dispose();
                         GridEnumerator = null;
                     }
-                    BlocksToRemove.Clear();
-                    BlockedBlocks.Clear();
                     break;
                 default:
                     MyAPIGateway.Utilities.ShowMessage("DetEq", $"Error: second parameter '{arg}' not recognized. Please list 'RCS', 'VCS', or 'IRS' to render their appropriate spheres.");
                     return;
             }
         }
+
+        private static void ResetRender()
+        {
+            GridDrawData.CloseGridIfPossible();
+
+            billboardPositions = null;
+            VisualizationPosition = null;
+            GridDrawData.BlocksToRemove.Clear();
+            GridDrawData.BlockedBlocks.Clear();
+        }
+
         public static void CalculateSphere(string[] args)
         {
-            if (ValueVisualizationGrid != null)
-            {
-                ValueVisualizationGrid.Close();
-                ValueVisualizationGrid = null;
-            }
+            GridDrawData.CloseGridIfPossible();
 
             int count = 1000;
             if (args.Length >= 2 && int.TryParse(args[1], out count))
@@ -179,7 +204,7 @@ namespace DetectionEquipment.Client.Interface.Commands
             {
                 PointCount = count;
                 CurrentGrid = castGrid;
-                InvRenderMatrix = MatrixD.Invert(CurrentGrid.WorldMatrixNormalizedInv);
+
                 MyAPIGateway.Parallel.Start(SphereWorkFunc);
                 MyAPIGateway.Utilities.ShowMessage("DetEq", $"Started calculations for {PointCount} points.");
                 return;
@@ -195,25 +220,25 @@ namespace DetectionEquipment.Client.Interface.Commands
 
             if (IsJobActive)
             {
-                float percentDone = (float)numDone / PointCount * 100f;
+                float percentDone = (float)OperationsDone / PointCount * 100f;
 
                 percentDone = (float)Math.Round(percentDone, 4);
 
-                MyAPIGateway.Utilities.ShowNotification($"{percentDone}% done ({numDone}/{PointCount}", 1);
+                MyAPIGateway.Utilities.ShowNotification($"{percentDone}% done ({OperationsDone}/{PointCount}", 1);
             }
             if (GridEnumerator != null && MyAPIGateway.Session.GameplayFrameCounter % 5 == 0)
             {
-                num = 0;
+                GridDrawData.blocksAddedThisTick = 0;
 
                 // make sure game stays above like 0.15 sim
                 // once the grid gets large enough even adding 1 block still brings sim down to 0.2 so ensure its atleast 300 blocks/call
-                if (MyAPIGateway.Physics.ServerSimulationRatio < 0.8f && numBlocksToAdd >= 400 /* 300 (min) + 100 (add/sub val) */)
+                if (MyAPIGateway.Physics.ServerSimulationRatio < 0.8f && GridDrawData.numBlocksToAdd >= 400 /* 300 (min) + 100 (add/sub val) */)
                 {
-                    numBlocksToAdd -= 100;
+                    GridDrawData.numBlocksToAdd -= 100;
                 }
                 else
                 {
-                    numBlocksToAdd += 100;
+                    GridDrawData.numBlocksToAdd += 100;
                 }
 
                 if (!GridEnumerator.MoveNext() || !GridEnumerator.Current)
@@ -223,11 +248,10 @@ namespace DetectionEquipment.Client.Interface.Commands
                 }
             }
 
-            if ((CurrentGrid == null || CurrentGrid.Closed) && ValueVisualizationGrid != null)
+            if (CurrentGrid == null || CurrentGrid.Closed)
             {
                 CurrentGrid = null;
-                ValueVisualizationGrid.Close();
-                ValueVisualizationGrid = null;
+                GridDrawData.CloseGridIfPossible();
             }
             if (VisualizationPosition != null)
             {
@@ -241,27 +265,57 @@ namespace DetectionEquipment.Client.Interface.Commands
 
         public static void Draw()
         {
-            if (colors != null)
+            if (billboardPositions != null)
             {
                 Vector3D camPos = MyAPIGateway.Session.Camera.WorldMatrix.Translation;
-                for (int i = 0; i < colors.Length; i++)
+                if (billboardPositions.positions.Length < 16384)
                 {
-                    float distMult = Math.Max((float)Vector3D.Distance(camPos, positions[i]) / 100f, 0.5f);
-                    MyTransparentGeometry.AddPointBillboard(DebugDraw.MaterialDot, colors[i], positions[i], 0.35f * distMult,
-                        0,
-                        blendType: VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                    MyAPIGateway.Parallel.For(0, PointCount, (i) =>
+                    {
+                        billboardPositions.positionSizes[i] = Math.Max((float)Vector3D.Distance(camPos, billboardPositions.positions[i]) / 100f, 0.5f);
+
+                        billboardPositions.renderPos[i] = true;
+                    });
                 }
+                else
+                {
+                    MatrixD viewProjectionMat = MyAPIGateway.Session.Camera.ViewMatrix * MyAPIGateway.Session.Camera.ProjectionMatrix;
+                    int count = 0;
+                    MyAPIGateway.Parallel.For(0, PointCount, (i) =>
+                    {
+                        billboardPositions.positionSizes[i] = Math.Max((float)Vector3D.Distance(camPos, billboardPositions.positions[i]) / 100f, 0.5f);
+
+                        billboardPositions.renderPos[i] = count < 16384 && IsVisible(billboardPositions.positions[i], viewProjectionMat, camPos, MyAPIGateway.Session.Camera.WorldMatrix.Forward);
+                        if (billboardPositions.renderPos[i])
+                            count++;
+                    });
+                }
+                for (int i = 0; i < billboardPositions.colors.Length; i++)
+                {
+                    if (billboardPositions.renderPos[i])
+                    {
+                        MyTransparentGeometry.AddPointBillboard(DebugDraw.MaterialDot, billboardPositions.colors[i], billboardPositions.positions[i], 0.35f * billboardPositions.positionSizes[i],
+                            0,
+                            blendType: VRageRender.MyBillboard.BlendTypeEnum.AdditiveTop);
+                    }
+
+                }
+
             }
+        }
+        private static bool IsVisible(Vector3D pos, MatrixD viewProjectionMat, Vector3D camPosition, Vector3D camForwards)
+        {
+            Vector3D ScreenCoords = Vector3D.Transform(pos, viewProjectionMat);
+            bool OffScreen = ScreenCoords.X > 1 || ScreenCoords.X < -1 || ScreenCoords.Y > 1 || ScreenCoords.Y < -1;
+            bool Behind = Vector3D.Dot((pos - camPosition).Normalized(), camForwards) < 0;
+
+            return !OffScreen && !Behind;
         }
         public static void Close()
         {
-            if (ValueVisualizationGrid != null)
-            {
-                ValueVisualizationGrid.Close();
-                ValueVisualizationGrid = null;
-            }
+            ResetRender();
             SpherePoints = null;
-            values = null;
+            DetectionValues = null;
             CurrentGrid = null;
         }
         private static void SphereWorkFunc()
@@ -269,7 +323,8 @@ namespace DetectionEquipment.Client.Interface.Commands
 
             IsJobActive = true;
             SpherePoints = new Vector3D[PointCount];
-            values = new Vector3D[PointCount];
+            DetectionValues = new Vector3D[PointCount];
+
 
             var attached = new List<IMyCubeGrid>();
             CurrentGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(attached);
@@ -285,10 +340,10 @@ namespace DetectionEquipment.Client.Interface.Commands
                 double x = Math.Cos(theta) * r;
                 double z = Math.Sin(theta) * r;
 
-                SpherePoints[i] = Vector3D.Rotate(new Vector3D(x, y, z), InvRenderMatrix);
-                numDone++;
+                SpherePoints[i] = new Vector3D(x, y, z);
+                OperationsDone++;
             });
-            numDone = 0;
+            OperationsDone = 0;
             MyAPIGateway.Utilities.InvokeOnGameThread(() => MyAPIGateway.Utilities.ShowMessage("DetEq", "Calculated point unit vectors."));
 
             List<GridTrack> tracks = new List<GridTrack>();
@@ -296,7 +351,7 @@ namespace DetectionEquipment.Client.Interface.Commands
             {
                 tracks.Add(new GridTrack(grid));
             }
-            maxVals = new Vector3D();
+            MaximumValues = new Vector3D();
 
             bool IsValid = true;
             // RCS calc for all the unit vectors from above
@@ -317,32 +372,32 @@ namespace DetectionEquipment.Client.Interface.Commands
 
                         double trackVcs, trackRcs;
                         track.CalculateRcs(SpherePoints[i], out trackRcs, out trackVcs);
-                        values[i].X += trackRcs;
-                        values[i].Y += trackVcs;
-                        values[i].Z += track.InfraredVisibility(SpherePoints[i] + track.Position, trackVcs);
+                        DetectionValues[i].X += trackRcs;
+                        DetectionValues[i].Y += trackVcs;
+                        DetectionValues[i].Z += track.InfraredVisibility(SpherePoints[i] + track.Position, trackVcs);
                     }
 
-                    if (values[i].X > maxVals.X)
+                    if (DetectionValues[i].X > MaximumValues.X)
                     {
-                        maxVals.X = values[i].X;
+                        MaximumValues.X = DetectionValues[i].X;
                     }
-                    if (values[i].Y > maxVals.Y)
+                    if (DetectionValues[i].Y > MaximumValues.Y)
                     {
-                        maxVals.Y = values[i].Y;
+                        MaximumValues.Y = DetectionValues[i].Y;
                     }
-                    if (values[i].Z > maxVals.Z)
+                    if (DetectionValues[i].Z > MaximumValues.Z)
                     {
-                        maxVals.Z = values[i].Z;
+                        MaximumValues.Z = DetectionValues[i].Z;
                     }
                 }
                 catch (Exception ex)
                 {
-                    MyLog.Default.WriteLine($"{SpherePoints[i]} / {values[i]}");
+                    MyLog.Default.WriteLine($"{SpherePoints[i]} / {DetectionValues[i]}");
                     MyLog.Default.Error(ex.ToString());
                 }
-                numDone++;
+                OperationsDone++;
             });
-            numDone = 0;
+            OperationsDone = 0;
 
             if (IsValid)
             {
@@ -353,7 +408,7 @@ namespace DetectionEquipment.Client.Interface.Commands
                 MyAPIGateway.Utilities.InvokeOnGameThread(() => MyAPIGateway.Utilities.ShowMessage("DetEq", "Error: Grid was removed during operation. Stopping sphere angle calc."));
                 CurrentGrid = null;
                 SpherePoints = null;
-                values = null;
+                DetectionValues = null;
                 return;
             }
 
@@ -361,10 +416,10 @@ namespace DetectionEquipment.Client.Interface.Commands
             for (int i = 0; i < PointCount; i++)
             {
                 builder.AppendLine($"{SpherePoints[i].X},{SpherePoints[i].Y},{SpherePoints[i].Z}:" +
-                    $"{values[i].X},{values[i].Y},{values[i].Z}");
-                numDone++;
+                    $"{DetectionValues[i].X},{DetectionValues[i].Y},{DetectionValues[i].Z}");
+                OperationsDone++;
             }
-            numDone = 0;
+            OperationsDone = 0;
 
             TextWriter w = MyAPIGateway.Utilities.WriteFileInWorldStorage("DetEq_RCS_Sphere.txt", typeof(NerdRCSSphereCalc));
             lock (w)
@@ -380,29 +435,24 @@ namespace DetectionEquipment.Client.Interface.Commands
         static IEnumerable<bool> ValuesToBillboards(VisType t)
         {
             MyAPIGateway.Utilities.ShowMessage("DetEq", $"Started visualizing grid with a 1m:{VisScale}m^2 scale.");
-            if (ValueVisualizationGrid != null)
-            {
-                ValueVisualizationGrid.Close();
-                ValueVisualizationGrid = null;
-            }
+            ResetRender();
             VisualizationPosition = CurrentGrid.WorldAABB.Center;
-
-            positions = new Vector3D[PointCount];
-            colors = new Color[PointCount];
+            
+            billboardPositions = new BillboardDrawData(PointCount);
             double maxValComparison = 0;
 
             switch (t)
             {
                 case VisType.RCS:
-                    maxValComparison = maxVals.X / VisScale;
+                    maxValComparison = MaximumValues.X / VisScale;
                     VisUnit = "m^2";
                     break;
                 case VisType.VCS:
-                    maxValComparison = maxVals.Y / VisScale;
+                    maxValComparison = MaximumValues.Y / VisScale;
                     VisUnit = "m^2";
                     break;
                 case VisType.IRS:
-                    maxValComparison = maxVals.Z / VisScale;
+                    maxValComparison = MaximumValues.Z / VisScale;
                     VisUnit = "Wm^2";
                     break;
             }
@@ -413,19 +463,19 @@ namespace DetectionEquipment.Client.Interface.Commands
                 switch (t)
                 {
                     case VisType.RCS:
-                        value = values[i].X / VisScale;
+                        value = DetectionValues[i].X / VisScale;
                         break;
                     case VisType.VCS:
-                        value = values[i].Y / VisScale;
+                        value = DetectionValues[i].Y / VisScale;
                         break;
                     case VisType.IRS:
-                        value = values[i].Z / VisScale;
+                        value = DetectionValues[i].Z / VisScale;
                         break;
 
                 }
 
-                positions[i] = -SpherePoints[i] * value + VisualizationPosition.Value;
-                colors[i] = new Vector3(1 - (float)(value / maxValComparison), 1f, 1f).HSVtoColor().SetAlphaPct(1f) * DebugDraw.OnTopColorMul;
+                billboardPositions.positions[i] = -SpherePoints[i] * value + VisualizationPosition.Value;
+                billboardPositions.colors[i] = new Vector3(1 - (float)(value / maxValComparison), 1f, 1f).HSVtoColor().SetAlphaPct(1f) * DebugDraw.OnTopColorMul;
             });
 
             MyAPIGateway.Utilities.ShowMessage("DetEq", $"Visualizer made.");
@@ -438,12 +488,7 @@ namespace DetectionEquipment.Client.Interface.Commands
 
             MyAPIGateway.Utilities.ShowMessage("DetEq", $"Started visualizing grid with a 1m:{VisScale}m^2 scale.");
 
-            if (ValueVisualizationGrid != null)
-            {
-                ValueVisualizationGrid.Close();
-                ValueVisualizationGrid = null;
-            }
-
+            ResetRender();
 
             var gridRCS = (MyObjectBuilder_CubeGrid)CurrentGrid.GetObjectBuilder(true);
 
@@ -451,24 +496,24 @@ namespace DetectionEquipment.Client.Interface.Commands
             gridRCS.DisplayName = $"{gridRCS.Name} RCS Calc Visualized";
 
             MyAPIGateway.Entities.RemapObjectBuilder(gridRCS);
-            ValueVisualizationGrid = (IMyCubeGrid)MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(gridRCS);
+            GridDrawData.ValueVisualizationGrid = (IMyCubeGrid)MyAPIGateway.Entities.CreateFromObjectBuilderAndAdd(gridRCS);
 
-            ValueVisualizationGrid.GetBlocks(BlocksToRemove);
+            GridDrawData.ValueVisualizationGrid.GetBlocks(GridDrawData.BlocksToRemove);
 
             double maxValComparison = 0;
 
             switch (t)
             {
                 case VisType.RCS:
-                    maxValComparison = maxVals.X / VisScale;
+                    maxValComparison = MaximumValues.X / VisScale;
                     VisUnit = "m^2";
                     break;
                 case VisType.VCS:
-                    maxValComparison = maxVals.Y / VisScale;
+                    maxValComparison = MaximumValues.Y / VisScale;
                     VisUnit = "m^2";
                     break;
                 case VisType.IRS:
-                    maxValComparison = maxVals.Z / VisScale;
+                    maxValComparison = MaximumValues.Z / VisScale;
                     VisUnit = "Wm^2";
                     break;
             }
@@ -481,58 +526,58 @@ namespace DetectionEquipment.Client.Interface.Commands
                 switch (t)
                 {
                     case VisType.RCS:
-                        value = values[i].X / VisScale;
+                        value = DetectionValues[i].X / VisScale;
                         break;
                     case VisType.VCS:
-                        value = values[i].Y / VisScale;
+                        value = DetectionValues[i].Y / VisScale;
                         break;
                     case VisType.IRS:
-                        value = values[i].Z / VisScale;
+                        value = DetectionValues[i].Z / VisScale;
                         break;
 
                 }
 
                 Vector3D worldPos = -SpherePoints[i] * value + VisualizationPosition.Value;
 
-                Vector3I gridPos = ValueVisualizationGrid.WorldToGridInteger(worldPos);
+                Vector3I gridPos = GridDrawData.ValueVisualizationGrid.WorldToGridInteger(worldPos);
                 block.Min = gridPos;
 
                 block.ColorMaskHSV = PaintUtils.HSVToColorMask(new Vector3(1 - (float)(value / maxValComparison), 1f, 1f));
 
-                if (ValueVisualizationGrid.CanAddCube(gridPos))
+                if (GridDrawData.ValueVisualizationGrid.CanAddCube(gridPos))
                 {
-                    ValueVisualizationGrid.AddBlock(block, false);
-                    numDone++;
+                    GridDrawData.ValueVisualizationGrid.AddBlock(block, false);
+                    OperationsDone++;
                 }
                 else
                 {
-                    BlockedBlocks.Add(block);
+                    GridDrawData.BlockedBlocks.Add(block);
                 }
-                num++;
-                if (num % numBlocksToAdd == 0)
+                GridDrawData.blocksAddedThisTick++;
+                if (GridDrawData.blocksAddedThisTick % GridDrawData.numBlocksToAdd == 0)
                 {
                     yield return true;
                 }
             }
-            foreach (var block in BlocksToRemove)
+            foreach (var block in GridDrawData.BlocksToRemove)
             {
-                ValueVisualizationGrid.RemoveBlock(block, false);
+                GridDrawData.ValueVisualizationGrid.RemoveBlock(block, false);
             }
-            foreach (var b in BlockedBlocks)
+            foreach (var b in GridDrawData.BlockedBlocks)
             {
-                if (ValueVisualizationGrid.CanAddCube(b.Min))
+                if (GridDrawData.ValueVisualizationGrid.CanAddCube(b.Min))
                 {
-                    ValueVisualizationGrid.AddBlock(b, false);
+                    GridDrawData.ValueVisualizationGrid.AddBlock(b, false);
                 }
-                numDone++;
+                OperationsDone++;
             }
             yield return true;
 
             MyAPIGateway.Utilities.ShowMessage("DetEq", $"Visualizer made.");
 
             IsJobActive = false;
-            BlocksToRemove.Clear();
-            BlockedBlocks.Clear();
+            GridDrawData.BlocksToRemove.Clear();
+            GridDrawData.BlockedBlocks.Clear();
 
             yield return false;
         }
