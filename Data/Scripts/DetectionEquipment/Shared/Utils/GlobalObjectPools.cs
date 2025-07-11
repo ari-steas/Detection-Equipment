@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using Sandbox.Game.Entities;
+using System.Collections.Generic;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -22,7 +23,11 @@ namespace DetectionEquipment.Shared.Utils
         /// <summary>
         /// Please return these cleared!
         /// </summary>
-        public static ObjectPool<List<MyLineSegmentOverlapResult<MyEntity>>> LineSegmentOverlapPool;
+        public static ObjectPool<List<MyLineSegmentOverlapResult<MyEntity>>> EntityLineOverlapPool;
+        /// <summary>
+        /// Please return these cleared!
+        /// </summary>
+        //public static ObjectPool<List<MyLineSegmentOverlapResult<MyVoxelBase>>> VoxelLineOverlapPool;
         public static void Init()
         {
             Vector3IPool = new ObjectPool<List<Vector3I>>(
@@ -37,10 +42,14 @@ namespace DetectionEquipment.Shared.Utils
                 () => new List<IHitInfo>(),
                 startSize: 100
             );
-            LineSegmentOverlapPool = new ObjectPool<List<MyLineSegmentOverlapResult<MyEntity>>>(
+            EntityLineOverlapPool = new ObjectPool<List<MyLineSegmentOverlapResult<MyEntity>>>(
                 () => new List<MyLineSegmentOverlapResult<MyEntity>>(),
                 startSize: 100
             );
+            //VoxelLineOverlapPool = new ObjectPool<List<MyLineSegmentOverlapResult<MyVoxelBase>>>(
+            //    () => new List<MyLineSegmentOverlapResult<MyVoxelBase>>(),
+            //    startSize: 100
+            //);
         }
 
         public static void Unload()
@@ -48,6 +57,8 @@ namespace DetectionEquipment.Shared.Utils
             Vector3IPool = null;
             MyEntityPool = null;
             HitInfoPool = null;
+            EntityLineOverlapPool = null;
+            //VoxelLineOverlapPool = null;
         }
     }
 }
