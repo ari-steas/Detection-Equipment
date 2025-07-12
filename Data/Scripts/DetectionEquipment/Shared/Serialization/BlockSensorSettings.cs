@@ -44,8 +44,8 @@ namespace DetectionEquipment.Shared.Serialization
             for (int i = 0; i < sensors.Count; i++)
             {
                 DefinitionIdMap[i] = sensors[i].Definition.Id;
-                Azimuth[i] = sensors[i].Azimuth;
-                Elevation[i] = sensors[i].Elevation;
+                Azimuth[i] = sensors[i].DesiredAzimuth;
+                Elevation[i] = sensors[i].DesiredElevation;
                 Aperture[i] = sensors[i].Aperture;
                 AllowMechanicalControl[i] = sensors[i].AllowMechanicalControl;
                 MinAzimuth[i] = sensors[i].MinAzimuth;
@@ -70,8 +70,8 @@ namespace DetectionEquipment.Shared.Serialization
             for (int i = 0; i < sensors.Count; i++)
             {
                 DefinitionIdMap[i] = sensors[i].Definition.Id;
-                Azimuth[i] = (float) sensors[i].Azimuth;
-                Elevation[i] = (float) sensors[i].Elevation;
+                Azimuth[i] = (float) sensors[i].DesiredAzimuth;
+                Elevation[i] = (float) sensors[i].DesiredElevation;
                 Aperture[i] = (float) sensors[i].Aperture;
                 AllowMechanicalControl[i] = sensors[i].AllowMechanicalControl;
                 MinAzimuth[i] = (float) sensors[i].MinAzimuth;

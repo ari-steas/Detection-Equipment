@@ -167,6 +167,9 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public void UpdateFromPacket(Client.BlockLogic.Sensors.SensorUpdatePacket packet)
         {
+            if (_settingsUpdated)
+                return;
+
             _desiredAzimuth = packet.Azimuth;
             _desiredElevation = packet.Elevation;
             Sensor.Aperture = packet.Aperture;
