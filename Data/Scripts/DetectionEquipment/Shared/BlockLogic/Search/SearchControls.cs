@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
+﻿using System;
+using DetectionEquipment.Server.SensorBlocks;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,8 @@ using DetectionEquipment.Client.BlockLogic.Sensors;
 using VRage.Game.ModAPI;
 using VRageMath;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using VRage.ModAPI;
+using VRage.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.Search
 {
@@ -23,6 +26,43 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
         protected override void CreateTerminalActions()
         {
+            CreateAction(
+                "IncrementMode",
+                "Search Mode",
+                b =>
+                {
+                    var mode = b.GameLogic.GetAs<SearchBlock>().SearchMode;
+                    mode.Value = (int)mode.Value == Enum.GetNames(typeof(SearchBlock.SearchModes)).Length - 1
+                        ? 0
+                        : mode.Value + 1;
+                },
+                (b, sb) => sb.Append(b.GameLogic.GetAs<SearchBlock>().SearchMode.Value.ToString()),
+                @"Textures\GUI\Icons\Actions\SubsystemTargeting_Cycle.dds"
+            );
+        }
+
+        protected override void CreateTerminalProperties()
+        {
+            CreateCombobox(
+                "ModeSelect",
+                "Search Mode",
+                "Search mode for all sensors controlled by this block.",
+                (content) =>
+                {
+                    var enumNames = Enum.GetNames(typeof(SearchBlock.SearchModes));
+                    for (var i = 0; i < enumNames.Length; i++)
+                    {
+                        content.Add(new MyTerminalControlComboBoxItem
+                        {
+                            Key = i,
+                            Value = MyStringId.GetOrCompute(enumNames[i])
+                        });
+                    }
+                },
+                b => (long) b.GameLogic.GetAs<SearchBlock>().SearchMode.Value,
+                (b, selected) => b.GameLogic.GetAs<SearchBlock>().SearchMode.Value = (SearchBlock.SearchModes) selected
+            );
+
             ActiveSensorSelect = new BlockSelectControl<SearchBlock, IMyConveyorSorter>(
                 this,
                 "ActiveSensors",
@@ -33,8 +73,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 logic => (MyAPIGateway.Session.IsServer ?
                         logic.GridSensors.BlockSensorMap.Keys :
                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid])
-                        // BRIMSTONE LINQ HELL
-                        .Where(sb => sb.GetLogic<ClientSensorLogic>()?.Sensors.Values.Any(s => s.Definition.Movement != null) ?? false),
+                    // BRIMSTONE LINQ HELL
+                    .Where(sb => sb.GetLogic<ClientSensorLogic>()?.Sensors.Values.Any(s => s.Definition.Movement != null) ?? false),
                 (logic, selected) =>
                 {
                     if (!MyAPIGateway.Session.IsServer)
@@ -56,12 +96,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                         }
                     }
                 }
-                );
-        }
-
-        protected override void CreateTerminalProperties()
-        {
-
+            );
         }
     }
 }

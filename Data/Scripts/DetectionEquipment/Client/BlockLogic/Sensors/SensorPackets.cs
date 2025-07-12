@@ -63,6 +63,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         [ProtoMember(7)] public float MaxAzimuth;
         [ProtoMember(8)] public float MinElevation;
         [ProtoMember(9)] public float MaxElevation;
+        [ProtoMember(10)] public bool AllowMechanicalControl;
 
         public SensorUpdatePacket(long blockId, ClientSensorData sensor) // TODO make this only update one value at a time
         {
@@ -75,6 +76,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             MaxAzimuth = sensor.MaxAzimuth;
             MinElevation = sensor.MinElevation;
             MaxElevation = sensor.MaxElevation;
+            AllowMechanicalControl = sensor.AllowMechanicalControl;
         }
 
         public SensorUpdatePacket(Server.SensorBlocks.BlockSensor sensor)
@@ -88,6 +90,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             MaxAzimuth = (float) sensor.MaxAzimuth;
             MinElevation = (float) sensor.MinElevation;
             MaxElevation = (float) sensor.MaxElevation;
+            AllowMechanicalControl = sensor.AllowMechanicalControl;
         }
 
         private SensorUpdatePacket()

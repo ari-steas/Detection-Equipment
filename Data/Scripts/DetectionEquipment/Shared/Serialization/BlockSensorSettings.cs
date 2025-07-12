@@ -19,10 +19,11 @@ namespace DetectionEquipment.Shared.Serialization
         [ProtoMember(2)] public float[] Azimuth;
         [ProtoMember(3)] public float[] Elevation;
         [ProtoMember(4)] public float[] Aperture;
-        [ProtoMember(5)] public float[] MinAzimuth;
-        [ProtoMember(6)] public float[] MaxAzimuth;
-        [ProtoMember(7)] public float[] MinElevation;
-        [ProtoMember(8)] public float[] MaxElevation;
+        [ProtoMember(5)] public bool[] AllowMechanicalControl;
+        [ProtoMember(6)] public float[] MinAzimuth;
+        [ProtoMember(7)] public float[] MaxAzimuth;
+        [ProtoMember(8)] public float[] MinElevation;
+        [ProtoMember(9)] public float[] MaxElevation;
 
         private BlockSensorSettings() { }
 
@@ -34,6 +35,7 @@ namespace DetectionEquipment.Shared.Serialization
             Azimuth = new float[sensors.Count];
             Elevation = new float[sensors.Count];
             Aperture = new float[sensors.Count];
+            AllowMechanicalControl = new bool[sensors.Count];
             MinAzimuth = new float[sensors.Count];
             MaxAzimuth = new float[sensors.Count];
             MinElevation = new float[sensors.Count];
@@ -45,6 +47,7 @@ namespace DetectionEquipment.Shared.Serialization
                 Azimuth[i] = sensors[i].Azimuth;
                 Elevation[i] = sensors[i].Elevation;
                 Aperture[i] = sensors[i].Aperture;
+                AllowMechanicalControl[i] = sensors[i].AllowMechanicalControl;
                 MinAzimuth[i] = sensors[i].MinAzimuth;
                 MaxAzimuth[i] = sensors[i].MaxAzimuth;
                 MinElevation[i] = sensors[i].MinElevation;
@@ -58,6 +61,7 @@ namespace DetectionEquipment.Shared.Serialization
             Azimuth = new float[sensors.Count];
             Elevation = new float[sensors.Count];
             Aperture = new float[sensors.Count];
+            AllowMechanicalControl = new bool[sensors.Count];
             MinAzimuth = new float[sensors.Count];
             MaxAzimuth = new float[sensors.Count];
             MinElevation = new float[sensors.Count];
@@ -69,6 +73,7 @@ namespace DetectionEquipment.Shared.Serialization
                 Azimuth[i] = (float) sensors[i].Azimuth;
                 Elevation[i] = (float) sensors[i].Elevation;
                 Aperture[i] = (float) sensors[i].Aperture;
+                AllowMechanicalControl[i] = sensors[i].AllowMechanicalControl;
                 MinAzimuth[i] = (float) sensors[i].MinAzimuth;
                 MaxAzimuth[i] = (float) sensors[i].MaxAzimuth;
                 MinElevation[i] = (float) sensors[i].MinElevation;
@@ -123,6 +128,7 @@ namespace DetectionEquipment.Shared.Serialization
                     // backwards-compatibility for settings
                     if (loadedSettings.MinAzimuth != null)
                     {
+                        sensor.AllowMechanicalControl = loadedSettings.AllowMechanicalControl[idx];
                         sensor.MinAzimuth = loadedSettings.MinAzimuth[idx];
                         sensor.MaxAzimuth = loadedSettings.MaxAzimuth[idx];
                         sensor.MinElevation = loadedSettings.MinElevation[idx];
@@ -130,6 +136,7 @@ namespace DetectionEquipment.Shared.Serialization
                     }
                     else
                     {
+                        sensor.AllowMechanicalControl = true;
                         sensor.MinAzimuth = sensor.Definition.Movement?.MinAzimuth ?? 0;
                         sensor.MaxAzimuth = sensor.Definition.Movement?.MaxAzimuth ?? 0;
                         sensor.MinElevation = sensor.Definition.Movement?.MinElevation ?? 0;

@@ -68,10 +68,9 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
             set
             {
-                var normalized = MathUtils.NormalizeAngle(value);
-                if (_minAzimuth == normalized)
+                if (_minAzimuth == value)
                     return;
-                _minAzimuth = normalized;
+                _minAzimuth = value;
                 if (MaxAzimuth < MinAzimuth)
                     MaxAzimuth = MinAzimuth;
                 if (DesiredAzimuth < MinAzimuth)
@@ -87,10 +86,9 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
             set
             {
-                var normalized = MathUtils.NormalizeAngle(value);
-                if (_maxAzimuth == normalized)
+                if (_maxAzimuth == value)
                     return;
-                _maxAzimuth = normalized;
+                _maxAzimuth = value;
                 if (MinAzimuth > MaxAzimuth)
                     MinAzimuth = MaxAzimuth;
                 if (DesiredAzimuth > MaxAzimuth)
@@ -121,10 +119,9 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
             set
             {
-                var normalized = MathUtils.NormalizeAngle(value);
-                if (_minElevation == normalized)
+                if (_minElevation == value)
                     return;
-                _minElevation = normalized;
+                _minElevation = value;
                 if (MaxElevation < MinElevation)
                     MaxElevation = MinElevation;
                 if (DesiredElevation < MinElevation)
@@ -140,10 +137,9 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
             set
             {
-                var normalized = MathUtils.NormalizeAngle(value);
-                if (_maxElevation == normalized)
+                if (_maxElevation == value)
                     return;
-                _maxElevation = normalized;
+                _maxElevation = value;
                 if (MinElevation > MaxElevation)
                     MinElevation = MaxElevation;
                 if (DesiredElevation > MaxElevation)
@@ -167,6 +163,8 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
         }
 
+        public bool AllowMechanicalControl;
+
         public void UpdateFromPacket(Client.BlockLogic.Sensors.SensorUpdatePacket packet)
         {
             _desiredAzimuth = packet.Azimuth;
@@ -176,11 +174,13 @@ namespace DetectionEquipment.Server.SensorBlocks
             _maxAzimuth = packet.MaxAzimuth;
             _maxElevation = packet.MaxElevation;
             _minElevation = packet.MinElevation;
+            AllowMechanicalControl = packet.AllowMechanicalControl;
             _settingsUpdated = true;
         }
 
         internal void LoadDefaultSettings()
         {
+            AllowMechanicalControl = true;
             _minAzimuth = (float) Definition.Movement.MinAzimuth;
             _maxAzimuth = (float) Definition.Movement.MaxAzimuth;
             _minElevation = (float) Definition.Movement.MinElevation;

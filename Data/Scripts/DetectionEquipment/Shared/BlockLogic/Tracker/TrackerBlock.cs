@@ -75,6 +75,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
                 foreach (var sensor in ControlledSensors)
                 {
+                    if (!sensor.AllowMechanicalControl)
+                        continue;
+
                     var target = GetFirstTarget(sensor);
                     if (target == null)
                     {

@@ -82,6 +82,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             }
         }
 
+        public bool AllowMechanicalControl = true;
+
         public float Azimuth  { get; private set; } = 0;
         public float Elevation  { get; private set; } = 0;
         public Vector3D Position { get; private set; } = Vector3D.Zero;

@@ -15,6 +15,9 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         protected override Func<IMyTerminalBlock, bool> VisibleFunc => block => block.GetLogic<ClientSensorLogic>() != null;
         public override string IdPrefix => "SensorControls_";
 
+        private static bool HasMovement(IMyTerminalBlock block) =>
+            block.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+
         protected override void CreateTerminalActions()
         {
             CreateAction(
@@ -27,7 +30,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 },
                 (b, sb) => sb.Append($"AZ  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDesiredAzimuth):N0}°"),
                 @"Textures\GUI\Icons\Actions\Increase.dds"
-                ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
+                ).Enabled = HasMovement;
             CreateAction(
                 "DecAzimuth",
                 "Decrease Azimuth",
@@ -38,7 +41,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 },
                 (b, sb) => sb.Append($"AZ  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDesiredAzimuth):N0}°"),
                 @"Textures\GUI\Icons\Actions\Decrease.dds"
-            ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
+            ).Enabled = HasMovement;
 
             CreateAction(
                 "IncElevation",
@@ -50,7 +53,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 },
                 (b, sb) => sb.Append($"EV  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDesiredElevation):N0}°"),
                 @"Textures\GUI\Icons\Actions\Increase.dds"
-            ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
+            ).Enabled = HasMovement;
             CreateAction(
                 "DecElevation",
                 "Decrease Elevation",
@@ -61,7 +64,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 },
                 (b, sb) => sb.Append($"EV  {MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDesiredElevation):N0}°"),
                 @"Textures\GUI\Icons\Actions\Decrease.dds"
-            ).Enabled = b => b.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
+            ).Enabled = HasMovement;
 
             CreateAction(
                 "IncAperture",
@@ -156,6 +159,14 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 return def.MinAperture != def.MaxAperture;
             };
 
+            CreateToggle(
+                "AllowMechanicalControl",
+                "Allow Automatic Control",
+                "If disabled, prevents tracker and searcher blocks from controlling this sensor.",
+                b => b.GetLogic<ClientSensorLogic>().CurrentAllowMechanicalControl,
+                (b, v) => b.GetLogic<ClientSensorLogic>().CurrentAllowMechanicalControl = v
+            ).Enabled = HasMovement;
+
             #region Azimuth
 
             _aziSlider = CreateSlider(
@@ -178,7 +189,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                     b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinAzimuth ?? 0),
                     b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxAzimuth ?? 0)
                 );
-            _aziSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+            _aziSlider.Enabled = HasMovement;
 
             _minAziSlider = CreateSlider(
                 "MinAzimuth",
@@ -202,7 +213,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinAzimuth ?? 0),
                 b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxAzimuth ?? 0)
             );
-            _minAziSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+            _minAziSlider.Enabled = HasMovement;
 
             _maxAziSlider = CreateSlider(
                 "MaxAzimuth",
@@ -226,7 +237,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinAzimuth ?? 0),
                 b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxAzimuth ?? 0)
             );
-            _maxAziSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+            _maxAziSlider.Enabled = HasMovement;
 
             #endregion
 
@@ -252,7 +263,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                     b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinElevation ?? 0),
                     b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxElevation ?? 0)
                 );
-            _eleSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+            _eleSlider.Enabled = HasMovement;
 
             _minEleSlider = CreateSlider(
                 "MinElevation",
@@ -276,7 +287,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinElevation ?? 0),
                 b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxElevation ?? 0)
             );
-            _minEleSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+            _minEleSlider.Enabled = HasMovement;
 
             _maxEleSlider = CreateSlider(
                 "MaxElevation",
@@ -300,7 +311,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MinElevation ?? 0),
                 b => (float)MathHelper.ToDegrees(b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement?.MaxElevation ?? 0)
             );
-            _maxEleSlider.Enabled = b => b.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+            _maxEleSlider.Enabled = HasMovement;
 
             #endregion
         }

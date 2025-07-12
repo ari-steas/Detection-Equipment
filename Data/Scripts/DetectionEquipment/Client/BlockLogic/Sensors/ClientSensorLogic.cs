@@ -116,6 +116,22 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
             }
         }
+
+        public bool CurrentAllowMechanicalControl
+        {
+            get
+            {
+                return Sensors[CurrentSensorId].AllowMechanicalControl;
+            }
+            set
+            {
+                if (Sensors[CurrentSensorId].AllowMechanicalControl == value)
+                    return;
+                Sensors[CurrentSensorId].AllowMechanicalControl = value;
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+            }
+        }
+
         public SensorDefinition CurrentDefinition
         {
             get
@@ -222,6 +238,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             data.MaxAzimuth = packet.MaxAzimuth;
             data.MinElevation = packet.MinElevation;
             data.MaxElevation = packet.MaxElevation;
+            data.AllowMechanicalControl = packet.AllowMechanicalControl;
         }
 
         private void OnCustomDataChanged(IMyTerminalBlock obj)
