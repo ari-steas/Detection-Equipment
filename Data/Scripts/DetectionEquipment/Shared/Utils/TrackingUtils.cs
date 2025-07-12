@@ -257,10 +257,10 @@ namespace DetectionEquipment.Shared.Utils
                 }
                 else if (segementOverlapResult.Element is MyVoxelBase)
                 {
-                    if (segementOverlapResult.Element is MyPlanet)
-                    {
-                        ((MyPlanet)segementOverlapResult.Element).PrefetchShapeOnRay(ref raycast);
-                    }
+                    //if (segementOverlapResult.Element is MyPlanet)
+                    //{
+                    //    ((MyPlanet)segementOverlapResult.Element).PrefetchShapeOnRay(ref raycast);
+                    //}
 
                     MyIntersectionResultLineTriangleEx? tri;
                     if (((MyVoxelBase)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast, out tri))
