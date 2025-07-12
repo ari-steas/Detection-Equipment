@@ -7,6 +7,7 @@ using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.Utils;
 using VRageMath;
+using VRageRender;
 using static VRageRender.MyBillboard;
 
 namespace DetectionEquipment.Shared
@@ -14,7 +15,7 @@ namespace DetectionEquipment.Shared
     [MySessionComponentDescriptor(MyUpdateOrder.NoUpdate)]
     public class DebugDraw : MySessionComponentBase
     {
-        protected const float OnTopColorMul = 0.5f;
+        public const float OnTopColorMul = 0.5f;
 
         private const float DepthRatioF = 0.01f;
         // i'm gonna kiss digi on the 
@@ -225,7 +226,7 @@ namespace DetectionEquipment.Shared
             return Vector3D.Rotate((Vector3D)position * 2.5f, grid.WorldMatrix) + grid.GetPosition();
         }
 
-        private static float ToAlwaysOnTop(ref Vector3D position)
+        public static float ToAlwaysOnTop(ref Vector3D position)
         {
             var camMatrix = MyAPIGateway.Session.Camera.WorldMatrix;
             position = camMatrix.Translation + (position - camMatrix.Translation) * DepthRatioF;

@@ -11,9 +11,9 @@ namespace DetectionEquipment.Client.Interface.Commands
 
         public static void ToggleDebug(string[] args)
         {
-            /* ** SUBJECT TO CHANGE - LAST UPDATED 7/10/2025 **
+            /* ** SUBJECT TO CHANGE - LAST UPDATED 7/11/2025 **
              * - 1+ is extra logging
-             * - 2+ is some visual info from aggregators and sensors
+             * - 2+ is some visual info from aggregators and sensors, LOS check info lines & hit pos
              * - 3+ is light info from V/RCS calcs (hit normals, projected grid bounds)
              * - 4+ is full V/RCS calc info (cellcast lines)
              */

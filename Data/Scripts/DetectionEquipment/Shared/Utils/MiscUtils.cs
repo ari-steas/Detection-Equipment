@@ -13,7 +13,7 @@ namespace DetectionEquipment.Shared.Utils
         public static IMyEntity RaycastEntityFromMatrix(MatrixD matrix)
         {
             var hits = new List<IHitInfo>();
-            MyAPIGateway.Physics.CastRay(matrix.Translation + matrix.Forward, matrix.Translation + matrix.Forward * 500, hits);
+            MyAPIGateway.Physics.CastRay(matrix.Translation + matrix.Forward, matrix.Translation + matrix.Forward * 5000, hits);
             foreach (var hit in hits)
             {
                 var ent = hit.HitEntity;

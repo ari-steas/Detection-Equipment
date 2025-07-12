@@ -128,12 +128,15 @@ namespace DetectionEquipment.Server.SensorBlocks
                         if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
                             continue;
 
-                        if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
-                            continue;
-
+                        // move this before LOS check to save a few more raycasts
                         var gT = trackKvp.Value as GridTrack;
                         if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
                             continue;
+
+                        if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
+                            continue;
+
+                        
 
                         if (gT != null)
                         {
