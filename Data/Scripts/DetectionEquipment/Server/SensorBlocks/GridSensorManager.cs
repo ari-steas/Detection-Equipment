@@ -1,22 +1,23 @@
-﻿using System;
-using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared.Definitions;
-using DetectionEquipment.Shared.Serialization;
-using Sandbox.ModAPI;
-using System.Collections.Generic;
-using System.Linq;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
+using DetectionEquipment.Shared.Serialization;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
+using Sandbox.ModAPI;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
+using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
 namespace DetectionEquipment.Server.SensorBlocks
 {
@@ -133,14 +134,15 @@ namespace DetectionEquipment.Server.SensorBlocks
                         if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
                             continue;
 
+                        // check sensor visibility before registering tracks
                         bool cont = false;
                         foreach (var sensor in Sensors)
                         {
-                            if (sensor.Block == null || sensor.Sensor == null || !sensor.Block.IsFunctional)
+                            if (sensor.Block == null || sensor.Sensor == null || !sensor.Sensor.Enabled)
                                 continue;
 
-                            double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, gT.BoundingBox.ClosestCorner(sensor.Sensor.Position) - sensor.Sensor.Position);
-                            if (targetAngle <= sensor.Sensor.Aperture)
+                            double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, trackKvp.Value.Position - sensor.Sensor.Position);
+                            if (targetAngle <= sensor.Sensor.Aperture || trackKvp.Value.BoundingBox.Intersects(new RayD(sensor.Sensor.Position, sensor.Sensor.Direction)) != null)
                             {
                                 cont = true;
                                 break;
@@ -153,8 +155,6 @@ namespace DetectionEquipment.Server.SensorBlocks
 
                         if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
                             continue;
-
-                        
 
                         if (gT != null)
                         {
