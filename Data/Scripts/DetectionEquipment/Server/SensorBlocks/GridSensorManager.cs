@@ -133,6 +133,24 @@ namespace DetectionEquipment.Server.SensorBlocks
                         if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
                             continue;
 
+                        bool cont = false;
+                        foreach (var sensor in Sensors)
+                        {
+                            if (sensor.Block == null || sensor.Sensor == null || !sensor.Block.IsFunctional)
+                                continue;
+
+                            double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, gT.BoundingBox.ClosestCorner(sensor.Sensor.Position) - sensor.Sensor.Position);
+                            if (targetAngle <= sensor.Sensor.Aperture)
+                            {
+                                cont = true;
+                                break;
+                            }
+                        }
+                        if (!cont)
+                        {
+                            continue;
+                        }
+
                         if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
                             continue;
 
