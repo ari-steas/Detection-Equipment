@@ -184,10 +184,10 @@ namespace DetectionEquipment.Server.SensorBlocks
         internal void LoadDefaultSettings()
         {
             AllowMechanicalControl = true;
-            _minAzimuth = (float) Definition.Movement.MinAzimuth;
-            _maxAzimuth = (float) Definition.Movement.MaxAzimuth;
-            _minElevation = (float) Definition.Movement.MinElevation;
-            _maxElevation = (float) Definition.Movement.MaxElevation;
+            _minAzimuth = (float) (Definition.Movement?.MinAzimuth ?? 0);
+            _maxAzimuth = (float) (Definition.Movement?.MaxAzimuth ?? 0);
+            _minElevation = (float) (Definition.Movement?.MinElevation ?? 0);
+            _maxElevation = (float) (Definition.Movement?.MaxElevation ?? 0);
             _settingsUpdated = true;
         }
 
