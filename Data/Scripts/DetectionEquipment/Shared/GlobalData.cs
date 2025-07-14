@@ -126,7 +126,7 @@ namespace DetectionEquipment.Shared
         /// </summary>
         public static IniSetting<float> VcsModifier = new IniSetting<float>(
             _iniConfig,
-            "RcsModifier",
+            "VcsModifier",
             "Multiplier on all visual cross-sections for all entities.",
             1f);
 
@@ -153,7 +153,7 @@ namespace DetectionEquipment.Shared
         /// </summary>
         public static IniSetting<float> FatblockRcsModifier = new IniSetting<float>(
             _iniConfig,
-            "HeavyRcsModifier",
+            "FatblockRcsModifier",
             "Multiplier on fatblock (\"functional\" block) RCS for all grids.",
             2f);
 
