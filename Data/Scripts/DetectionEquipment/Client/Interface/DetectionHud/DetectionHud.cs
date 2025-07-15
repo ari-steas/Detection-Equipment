@@ -100,6 +100,8 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         public static void UpdateColors(Color color)
         {
+            if (_hudItems == null)
+                return;
             foreach (var hudItem in _hudItems)
                 hudItem.Value.Update(hudItem.Value.Detection);
         }

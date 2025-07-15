@@ -48,7 +48,7 @@ namespace DetectionEquipment.Shared.Utils
                 }
                 catch (Exception ex)
                 {
-                    Log.Info("IniConfig", $"Failed to read {FileName}.{SectionName}.{setting.Name} - {ex.Message}");
+                    Log.Info("IniConfig", $"Failed to read {FileName}.{SectionName}.{setting.Name} - {ex}");
                 }
             }
             Log.DecreaseIndent();
