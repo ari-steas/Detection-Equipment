@@ -1,22 +1,23 @@
 ﻿using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
-using System;
-using System.Collections.Generic;
 using DetectionEquipment.Shared.Networking;
 using VRage.Game.Components;
-using VRage.Game.ModAPI;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
+using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Helpers;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector", "IffReflector_Small", "TorpIFF")]
-    internal class IffReflectorBlock : ControlBlockBase<IMyConveyorSorter>
+    internal class IffReflectorBlock : ControlBlockBase<IMyFunctionalBlock>, IIffComponent
     {
         public readonly SimpleSync<string> IffCode = new SimpleSync<string>("");
         public readonly SimpleSync<bool> ReturnHash = new SimpleSync<bool>(true);
 
         public string IffCodeCache { get; private set; } = "";
+        public virtual SensorDefinition.SensorType SensorType => SensorDefinition.SensorType.Radar;
+        public bool Enabled => Block.Enabled;
+
         protected override ControlBlockSettingsBase GetSettings => new IffReflectorSettings(this);
         protected override ITerminalControlAdder GetControls => new IffControls();
 
@@ -42,42 +43,16 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 
             base.UpdateOnceBeforeFrame();
 
-            if (!_iffMap.ContainsKey(Block.CubeGrid))
-                _iffMap.Add(Block.CubeGrid, new HashSet<IffReflectorBlock>());
-            _iffMap[Block.CubeGrid].Add(this);
+            IffHelper.RegisterComponent(Block.CubeGrid, this);
         }
 
         public override void MarkForClose()
         {
             base.MarkForClose();
-            if (!_iffMap.ContainsKey(Block.CubeGrid) || GlobalData.Killswitch)
+            if (GlobalData.Killswitch)
                 return;
 
-            _iffMap[Block.CubeGrid].Remove(this);
-            if (_iffMap[Block.CubeGrid].Count == 0)
-                _iffMap.Remove(Block.CubeGrid);
-        }
-
-        private static Dictionary<IMyCubeGrid, HashSet<IffReflectorBlock>> _iffMap = new Dictionary<IMyCubeGrid, HashSet<IffReflectorBlock>>();
-        public static string[] GetIffCodes(IMyCubeGrid grid)
-        {
-            HashSet<IffReflectorBlock> map;
-            if (!_iffMap.TryGetValue(grid, out map))
-                return Array.Empty<string>();
-            var codes = new HashSet<string>();
-            foreach (var reflector in map)
-                if (reflector.Block.Enabled)
-                    codes.Add(reflector.IffCodeCache);
-
-            var array = new string[codes.Count];
-            int i = 0;
-            foreach (var code in codes)
-            {
-                array[i] = code;
-                i++;
-            }
-
-            return array;
+            IffHelper.RemoveComponent(Block.CubeGrid, this);
         }
     }
 }

@@ -1,5 +1,4 @@
 ﻿using DetectionEquipment.Server.Tracking;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
@@ -8,6 +7,7 @@ using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
+using DetectionEquipment.Shared.Helpers;
 
 namespace DetectionEquipment.Server.Sensors
 {
@@ -107,7 +107,7 @@ namespace DetectionEquipment.Server.Sensors
             double maxRangeError = range * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-            var iffCodes = track is GridTrack ? IffReflectorBlock.GetIffCodes(((GridTrack)track).Grid) : Array.Empty<string>();
+            var iffCodes = track is GridTrack ? IffHelper.GetIffCodes(((GridTrack)track).Grid, SensorDefinition.SensorType.Radar) : Array.Empty<string>();
 
             var detection = new DetectionInfo
             (

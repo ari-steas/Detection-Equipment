@@ -158,6 +158,7 @@ namespace DetectionEquipment.Client.Interface.Apps
                 case SensorDefinition.SensorType.Radar:
                     return "SquareSimple";
                 case SensorDefinition.SensorType.PassiveRadar:
+                case SensorDefinition.SensorType.Antenna:
                     return "Triangle";
                 case SensorDefinition.SensorType.Optical:
                     return "Circle";

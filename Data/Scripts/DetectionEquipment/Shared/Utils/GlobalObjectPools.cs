@@ -28,6 +28,10 @@ namespace DetectionEquipment.Shared.Utils
         /// Please return these cleared!
         /// </summary>
         //public static ObjectPool<List<MyLineSegmentOverlapResult<MyVoxelBase>>> VoxelLineOverlapPool;
+        public static ObjectPool<HashSet<MyDataBroadcaster>> DataBroadcasterPool;
+        public static ObjectPool<Queue<MyDataReceiver>> DataReceiverPool;
+
+
         public static void Init()
         {
             Vector3IPool = new ObjectPool<List<Vector3I>>(
@@ -50,6 +54,14 @@ namespace DetectionEquipment.Shared.Utils
             //    () => new List<MyLineSegmentOverlapResult<MyVoxelBase>>(),
             //    startSize: 100
             //);
+            DataBroadcasterPool = new ObjectPool<HashSet<MyDataBroadcaster>>(
+                () => new HashSet<MyDataBroadcaster>(),
+                startSize: 10
+            );
+            DataReceiverPool = new ObjectPool<Queue<MyDataReceiver>>(
+                () => new Queue<MyDataReceiver>(),
+                startSize: 10
+            );
         }
 
         public static void Unload()
@@ -59,6 +71,8 @@ namespace DetectionEquipment.Shared.Utils
             HitInfoPool = null;
             EntityLineOverlapPool = null;
             //VoxelLineOverlapPool = null;
+            DataBroadcasterPool = null;
+            DataReceiverPool = null;
         }
     }
 }

@@ -173,6 +173,7 @@ namespace DetectionEquipment.Shared.Definitions
             PassiveRadar = 2,
             Optical = 3,
             Infrared = 4,
+            Antenna = 5,
         }
 
         public int FieldCount => 10;

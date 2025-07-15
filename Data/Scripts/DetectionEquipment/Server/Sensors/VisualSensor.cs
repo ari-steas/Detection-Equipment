@@ -1,4 +1,6 @@
-﻿using DetectionEquipment.Shared.Definitions;
+﻿using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
@@ -16,7 +18,7 @@ namespace DetectionEquipment.Server.Sensors
 
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
-        public double Aperture { get; set; } = MathHelper.ToRadians(15);
+        public double Aperture { get; set; }
 
         public bool IsInfrared = false;
         public double CountermeasureNoise { get; set; } = 0;
@@ -30,8 +32,6 @@ namespace DetectionEquipment.Server.Sensors
             
             ServerMain.I.SensorIdMap[Id] = this;
         }
-
-        private VisualSensor() { }
 
         public void Close()
         {
@@ -66,6 +66,9 @@ namespace DetectionEquipment.Server.Sensors
             double maxRangeError = Math.Sqrt(range) * Definition.RangeErrorModifier * errorScalar + CountermeasureNoise/100;
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
+            var gT = visibilitySet.Track as GridTrack;
+            var iffCodes = gT != null ? IffHelper.GetIffCodes(gT.Grid, IsInfrared ? SensorDefinition.SensorType.Infrared : SensorDefinition.SensorType.Optical) : Array.Empty<string>();
+
             var detection = new DetectionInfo
             (
                 visibilitySet.Track,
@@ -74,7 +77,8 @@ namespace DetectionEquipment.Server.Sensors
                 range,
                 maxRangeError,
                 bearing,
-                maxBearingError
+                maxBearingError,
+                iffCodes
             );
 
             OnDetection?.Invoke(ObjectPackager.Package(detection));

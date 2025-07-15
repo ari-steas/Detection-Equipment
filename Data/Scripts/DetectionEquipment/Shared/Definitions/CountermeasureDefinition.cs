@@ -72,6 +72,10 @@ namespace DetectionEquipment.Shared.Definitions
             Radar = 1,
             Optical = 2,
             Infrared = 4,
+            /// <summary>
+            /// Note - this only applies to SENSORS and has no effect on IGC.
+            /// </summary>
+            Antenna = 5,
         }
 
         public enum FalloffTypeEnum
