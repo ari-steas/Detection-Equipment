@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using DetectionEquipment.Shared.Definitions;
-using DetectionEquipment.Shared.Utils;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.Helpers
@@ -29,7 +27,6 @@ namespace DetectionEquipment.Shared.Helpers
                 return;
             }
             _iffMap[grid].Add(component);
-            Log.Info($"IffManager", string.Join(", ", grid.Components.GetComponentTypes().Select(t => t.Name)));
         }
 
         public static void RemoveComponent(IMyCubeGrid grid, IIffComponent component)
