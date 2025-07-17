@@ -8,6 +8,7 @@ using Sandbox.ModAPI.Interfaces.Terminal;
 using System;
 using System.Collections.Generic;
 using DetectionEquipment.Shared.Helpers;
+using DetectionEquipment.Shared.Utils;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -57,6 +58,41 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             ControlBlockManager.I.BlockControls[_id] = this;
         }
 
+        public void UpdateSelectedFromPersistent(IControlBlockBase logic, long[] selectedPersistent)
+        {
+            var thisLogic = logic as TLogicType;
+            if (thisLogic == null)
+                return;
+
+            // sometimes stuff breaks and I don't know why
+            if (selectedPersistent == null)
+                selectedPersistent = Array.Empty<long>();
+
+            var entIds = new List<long>(selectedPersistent.Length);
+            if (_useSubgrids)
+                logic.CubeBlock.CubeGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(_gridBuffer);
+            foreach (var id in selectedPersistent)
+            {
+                var block = logic.CubeBlock.CubeGrid.GetBlockByPersistentId(id);
+                if (block == null && _useSubgrids)
+                {
+                    foreach (var subgrid in _gridBuffer)
+                    {
+                        if (subgrid == logic.CubeBlock.CubeGrid)
+                            continue;
+                        block = subgrid.GetBlockByPersistentId(id);
+                        if (block != null)
+                            break;
+                    }
+                }
+
+                if (block != null)
+                    entIds.Add(block.EntityId);
+            }
+
+            UpdateSelected(logic, entIds.ToArray());
+        }
+
         public void UpdateSelected(IControlBlockBase logic, long[] selected, bool fromNetwork = false)
         {
             var thisLogic = logic as TLogicType;
@@ -67,29 +103,20 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             if (selected == null)
                 selected = Array.Empty<long>();
 
-            SelectedBlocks[thisLogic] = selected;
+            List<long> persistentIds = new List<long>(selected.Length);
+            foreach (var id in selected)
+            {
+                var block = MyAPIGateway.Entities.GetEntityById(id) as IMyCubeBlock;
+                if (block != null)
+                {
+                    _selectedBuffer.Add(block);
+                    persistentIds.Add(block.GetOrCreatePersistentId());
+                }
+            }
+            SelectedBlocks[thisLogic] = persistentIds.ToArray();
+
             if (_onListChanged != null)
             {
-                if (_useSubgrids)
-                    logic.CubeBlock.CubeGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(_gridBuffer);
-                foreach (var id in selected)
-                {
-                    var block = logic.CubeBlock.CubeGrid.GetBlockByPersistentId(id);
-                    if (block == null && _useSubgrids)
-                    {
-                        foreach (var subgrid in _gridBuffer)
-                        {
-                            if (subgrid == logic.CubeBlock.CubeGrid)
-                                continue;
-                            block = subgrid.GetBlockByPersistentId(id);
-                            if (block != null)
-                                break;
-                        }
-                    }
-                    if (block != null)
-                        _selectedBuffer.Add(block);
-                }
-
                 _onListChanged?.Invoke(thisLogic, _selectedBuffer);
                 _selectedBuffer.Clear();
                 _gridBuffer.Clear();
@@ -101,7 +128,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 {
                     ServerNetwork.SendToEveryoneInSync(new BlockSelectControlPacket
                     {
-                        BlockId = logic.CubeBlock.GetOrCreatePersistentId(),
+                        BlockId = logic.CubeBlock.EntityId,
                         ControlId = _id,
                         Selected = selected
                     }, logic.CubeBlock.GetPosition());
@@ -110,7 +137,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 {
                     ClientNetwork.SendToServer(new BlockSelectControlPacket
                     {
-                        BlockId = logic.CubeBlock.GetOrCreatePersistentId(),
+                        BlockId = logic.CubeBlock.EntityId,
                         ControlId = _id,
                         Selected = selected
                     });
@@ -133,7 +160,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
             foreach (var available in _availableBlocks.Invoke(logic))
             {
-                var item = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(available.DisplayNameText), MyStringId.NullOrEmpty, available.GetOrCreatePersistentId());
+                var item = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute(available.DisplayNameText), MyStringId.NullOrEmpty, available.EntityId);
                 content.Add(item);
                 if (SelectedBlocks[logic].Contains(available.GetOrCreatePersistentId()))
                     selected.Add(item);
@@ -165,7 +192,10 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             var block = MyAPIGateway.Entities.GetEntityById(BlockId);
             IControlBlockBase controller;
             IBlockSelectControl control;
-            if (block == null || !ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock)block, out controller) || !ControlBlockManager.I.BlockControls.TryGetValue(ControlId, out control)) return;
+            Log.Info("BlockSelectControl", $"Packet received {BlockId} {Selected?.Length ?? -1}\n" +
+                                           $"{block != null}, {block != null && ControlBlockManager.I.Blocks.ContainsKey((MyCubeBlock)block)}, {ControlBlockManager.I.BlockControls.ContainsKey(ControlId)}");
+            if (block == null || !ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock)block, out controller) || !ControlBlockManager.I.BlockControls.TryGetValue(ControlId, out control))
+                return;
             control.UpdateSelected(controller, Selected, true);
 
             if (!fromServer)
