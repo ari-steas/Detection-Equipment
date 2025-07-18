@@ -294,11 +294,15 @@ namespace DetectionEquipment.Shared
                     return;
                 }
 
-                var ini = new MyIni();
-                ini.TryParse(data);
-
                 Log.Info("GlobalData",
-                    $"Read settings data from network:\n===========================================\n\n{data}\n===========================================\n");
+                    $"Reading settings data from network:\n===========================================\n\n{data}\n===========================================\n");
+
+                var ini = new MyIni();
+                if (!ini.TryParse(data))
+                {
+                    Log.Info("GlobalData", "Failed to read settings data!");
+                    return;
+                }
 
                 foreach (var setting in _iniConfig.AllSettings)
                     setting.Read(ini, "General Config");
@@ -329,6 +333,8 @@ namespace DetectionEquipment.Shared
             LowRcsSubtypes = null;
             if (MyAPIGateway.Session.IsServer)
                 MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(DataNetworkId, ServerMessageHandler);
+            else
+                MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(DataNetworkId, ClientMessageHandler);
             _iniConfig = null;
             Log.Info("GlobalData", "Data cleared.");
         }
