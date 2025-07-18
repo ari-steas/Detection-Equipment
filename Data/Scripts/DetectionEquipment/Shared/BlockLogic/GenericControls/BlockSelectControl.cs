@@ -192,8 +192,8 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             var block = MyAPIGateway.Entities.GetEntityById(BlockId);
             IControlBlockBase controller;
             IBlockSelectControl control;
-            Log.Info("BlockSelectControl", $"Packet received {BlockId} {Selected?.Length ?? -1}\n" +
-                                           $"{block != null}, {block != null && ControlBlockManager.I.Blocks.ContainsKey((MyCubeBlock)block)}, {ControlBlockManager.I.BlockControls.ContainsKey(ControlId)}");
+            //Log.Info("BlockSelectControl", $"Packet received {BlockId} {Selected?.Length ?? -1}\n" +
+            //                               $"{block != null}, {block != null && ControlBlockManager.I.Blocks.ContainsKey((MyCubeBlock)block)}, {ControlBlockManager.I.BlockControls.ContainsKey(ControlId)}");
             if (block == null || !ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock)block, out controller) || !ControlBlockManager.I.BlockControls.TryGetValue(ControlId, out control))
                 return;
             control.UpdateSelected(controller, Selected, true);
