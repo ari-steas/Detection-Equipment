@@ -86,8 +86,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                             if (sensor.Block != item || sensor.Definition.Movement == null)
                                 continue;
                             ActiveSensors[logic].Add(sensor);
-                            sensor.DesiredAzimuth = 0;
-                            sensor.DesiredElevation = 0;
+                            if (sensor.AllowMechanicalControl)
+                            {
+                                sensor.DesiredAzimuth = 0;
+                                sensor.DesiredElevation = 0;
+                            }
                             logic.DirectionSigns[sensor] = Vector2I.One;
                             break;
                         }
