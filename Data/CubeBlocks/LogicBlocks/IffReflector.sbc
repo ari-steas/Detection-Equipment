@@ -18,9 +18,12 @@
 			<ModelOffset x="0" y="0" z="0"/>
 			<Model>Models\IffReflector.mwm</Model>
 			<Components>
+				<Component Subtype="SteelPlate" Count="5"/>
+				<Component Subtype="SmallTube" Count="10"/>
+				<Component Subtype="Computer" Count="25"/>
 				<Component Subtype="SteelPlate" Count="10"/>
 			</Components>
-			<CriticalComponent Subtype="SteelPlate" Index="0"/>
+			<CriticalComponent Subtype="Computer" Index="0"/>
 			<MountPoints>
 				<MountPoint Side="Front" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
 				<MountPoint Side="Back" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
@@ -29,6 +32,42 @@
 				<MountPoint Side="Bottom" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
 			</MountPoints>
 			<BlockPairName>IffReflector</BlockPairName>
+		</Definition>
+		
+		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
+			<Id>
+				<TypeId>ConveyorSorter</TypeId>
+				<SubtypeId>IffReflector_Small</SubtypeId>
+			</Id>
+			<DisplayName>IFF Reflector</DisplayName>
+			<Description>
+				When this grid is painted by a radar, adds selected IFF code to the track.
+				Can display either a plaintext code or a hashed string - the latter is more secure, and the former is human-readable.
+			</Description>
+			<Icon>Textures\GUI\Icons\Cubes\IffReflector_Small.dds</Icon>
+			<CubeSize>Small</CubeSize>
+			<BlockTopology>TriangleMesh</BlockTopology>
+			<Size x="1" y="1" z="2"/>
+			<ModelOffset x="0" y="0" z="0"/>
+			<Model>Models\IffReflector_Small.mwm</Model>
+			<Components>
+				<Component Subtype="SteelPlate" Count="1"/>
+				<Component Subtype="SmallTube" Count="1"/>
+				<Component Subtype="Computer" Count="5"/>
+				<Component Subtype="SteelPlate" Count="2"/>
+			</Components>
+			<CriticalComponent Subtype="Computer" Index="0"/>
+			<MountPoints>
+				<MountPoint Side="Back" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
+				<MountPoint Side="Left" StartX="1.00" StartY="0.00" EndX="2.00" EndY="1.00"/>
+				<MountPoint Side="Right" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
+				<MountPoint Side="Top" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
+				<MountPoint Side="Bottom" StartX="0.00" StartY="1.00" EndX="1.00" EndY="2.00"/>
+			</MountPoints>
+			<BlockPairName>IffReflector</BlockPairName>
+			<MirroringX>MinusHalfZ</MirroringX>
+			<MirroringY>HalfZ</MirroringY>
+			<MirroringZ>XHalfZ</MirroringZ>
 		</Definition>
 	</CubeBlocks>
 </Definitions>
