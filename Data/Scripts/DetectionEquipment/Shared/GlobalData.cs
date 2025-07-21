@@ -157,6 +157,15 @@ namespace DetectionEquipment.Shared
             "Multiplier on fatblock (\"functional\" block) RCS for all grids.",
             2f);
 
+        /// <summary>
+        /// If true, IFF reflectors will always return a code regardless of their functional state.
+        /// </summary>
+        public static IniSetting<bool> ForceEnableIff = new IniSetting<bool>(
+            _iniConfig,
+            "ForceEnableIff",
+            "If true, IFF reflectors will always return a code regardless of their functional state.",
+            false);
+
 
         private static void SyncDistanceUpdated(int distance)
         {

@@ -1,5 +1,4 @@
 ﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Text;
 
@@ -14,7 +13,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
                 "IFF Code",
                 "IFF code returned when a sensor pings this grid",
                 b => new StringBuilder(b.GameLogic.GetAs<IffReflectorBlock>()?.IffCode.Value),
-                (b, v) => b.GameLogic.GetAs<IffReflectorBlock>().IffCode.Value = v?.ToString().RemoveChars(',', '#', '&').Trim()
+                (b, v) => b.GameLogic.GetAs<IffReflectorBlock>().IffCode.Value = v?.ToString()
                 );
             CreateToggle(
                 "ReturnHash",

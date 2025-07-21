@@ -5,18 +5,20 @@ using VRage.Game.Components;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Helpers;
+using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector", "IffReflector_Small", "TorpIFF")]
     internal class IffReflectorBlock : ControlBlockBase<IMyFunctionalBlock>, IIffComponent
     {
-        public readonly SimpleSync<string> IffCode = new SimpleSync<string>("");
+        public readonly SimpleSync<string> IffCode = new SimpleSync<string>("NOCODE");
         public readonly SimpleSync<bool> ReturnHash = new SimpleSync<bool>(true);
 
-        public string IffCodeCache { get; private set; } = "";
+        public string IffCodeCache { get; private set; } = "NOCODE";
         public virtual SensorDefinition.SensorType SensorType => SensorDefinition.SensorType.Radar;
-        public bool Enabled => Block.Enabled;
+        public bool Enabled => Block.IsWorking || GlobalData.ForceEnableIff.Value;
+        public string DefaultCode => Block.CubeGrid.CustomName;
 
         protected override ControlBlockSettingsBase GetSettings => new IffReflectorSettings(this);
         protected override ITerminalControlAdder GetControls => new IffControls();
@@ -26,8 +28,9 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
 
-            IffCode.Value = Block.CubeGrid.CustomName;
+            IffCode.Value = DefaultCode;
             IffCode.Component = this;
+            IffCode.Validate = value => value.RemoveChars(',', '#', '&').Trim();
             IffCode.OnValueChanged = (value, fromNetwork) =>
             {
                 IffCodeCache =
@@ -35,12 +38,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
                         ? "#" + IffCode.Value.GetHashCode()
                         : "&" + IffCode.Value; // note that commas aren't allowed.
             };
+
             ReturnHash.Component = this;
             ReturnHash.OnValueChanged = (value, fromNetwork) =>
             {
                 IffCodeCache = ReturnHash.Value ? "#" + IffCode.Value.GetHashCode() : "&" + IffCode.Value;
             };
 
+            IffCode.OnValueChanged.Invoke(IffCode.Value, false);
             base.UpdateOnceBeforeFrame();
 
             IffHelper.RegisterComponent(Block.CubeGrid, this);
