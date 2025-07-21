@@ -229,6 +229,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         public void UpdateFromNetwork(BlockLogicUpdatePacket updateData)
         {
             var packet = (SensorUpdatePacket) updateData;
+            if (!Sensors.ContainsKey(packet.Id))
+                return;
 
             var data = Sensors[packet.Id];
             data.Aperture = packet.Aperture;
