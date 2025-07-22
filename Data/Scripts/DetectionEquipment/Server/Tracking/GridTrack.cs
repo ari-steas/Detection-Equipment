@@ -10,6 +10,7 @@ using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game.Models;
 using VRageMath;
+using DetectionEquipment.Shared.ExternalApis;
 
 namespace DetectionEquipment.Server.Tracking
 {
@@ -33,22 +34,42 @@ namespace DetectionEquipment.Server.Tracking
         protected int NextCacheUpdate = 0;
 
         private HashSet<IMyThrust> ThrusterCache = new HashSet<IMyThrust>();
+        private HashSet<MyEntity> WcWeaponCache = new HashSet<MyEntity>();
         private int LastThrustCacheUpdate = -1;
 
         public GridTrack(IMyCubeGrid grid) : base((MyEntity)grid)
         {
             Grid = grid;
-            foreach (var thrust in Grid.GetFatBlocks<IMyThrust>())
-                ThrusterCache.Add(thrust);
+
+            foreach (var block in Grid.GetFatBlocks<IMyFunctionalBlock>())
+            {
+                if (block is IMyThrust)
+                    ThrusterCache.Add((IMyThrust)block);
+
+                if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
+                {
+                    WcWeaponCache.Add((MyEntity)block);
+                }
+            }
             Grid.OnBlockAdded += block =>
             {
                 if (block.FatBlock is IMyThrust)
                     ThrusterCache.Add((IMyThrust)block.FatBlock);
+
+                if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
+                {
+                    WcWeaponCache.Add((MyEntity)block);
+                }
             };
             Grid.OnBlockRemoved += block =>
             {
                 if (block.FatBlock is IMyThrust)
                     ThrusterCache.Remove((IMyThrust)block.FatBlock);
+
+                if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
+                {
+                    WcWeaponCache.Remove((MyEntity)block);
+                }
             };
         }
 
@@ -119,8 +140,22 @@ namespace DetectionEquipment.Server.Tracking
                     thrustWattage += dotProduct * thisWattage;
                 }
             }
+            double WCHeatWattage = 0;
+            {
+                if (ApiManager.WcApi.IsReady)
+                {
+                    foreach (var weapon in WcWeaponCache)
+                    {
+                        WCHeatWattage += ApiManager.WcApi.GetHeatLevel(weapon);
+                    }
+                    // arbitrary conversion from Wc's Proprietary Heat Measurement Unit™ to Watts
+                    // also this is assuming that radiated heat from a WC weapon is proportional to its current heat value
+                    WCHeatWattage *= GlobalData.WcHeatToWattConversionRatio;
+                }
+            }
 
-            double visFromHeat = (heatWattage + thrustWattage) / Vector3D.DistanceSquared(source, Position);
+
+            double visFromHeat = (heatWattage + thrustWattage + WCHeatWattage) / Vector3D.DistanceSquared(source, Position);
 
             // base visibility is already divided by distancesq
             return base.InfraredVisibility(source, opticalVisibility) + visFromHeat;

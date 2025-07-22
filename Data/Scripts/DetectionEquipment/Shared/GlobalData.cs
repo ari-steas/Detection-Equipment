@@ -158,6 +158,15 @@ namespace DetectionEquipment.Shared
             2f);
 
 
+        /// <summary>
+        /// Multiplier on fatblock ("functional" block) RCS for all grids.
+        /// </summary>
+        public static IniSetting<float> WcHeatToWattConversionRatio = new IniSetting<float>(
+            _iniConfig,
+            "WcHeatToWattConversionRatio",
+            "Conversion ratio from WC Heat to Watts for IRS, if WC is present.",
+            500);
+
         private static void SyncDistanceUpdated(int distance)
         {
             if (OverrideSyncDistance > 0)
