@@ -14,6 +14,7 @@ using VRageMath;
 
 namespace DetectionEquipment.Client.BlockLogic.Countermeasures
 {
+    [ProtoContract]
     internal class CountermeasureInitPacket : BlockLogicInitPacket
     {
         [ProtoMember(2)] public List<uint> Ids;
@@ -54,6 +55,7 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
         }
     }
 
+    [ProtoContract]
     internal class CountermeasureUpdatePacket : BlockLogicUpdatePacket
     {
         [ProtoMember(2)] public uint Id;

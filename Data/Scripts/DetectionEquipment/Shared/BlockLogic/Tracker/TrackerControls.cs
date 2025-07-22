@@ -1,12 +1,13 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
+﻿using DetectionEquipment.Client.BlockLogic;
+using DetectionEquipment.Client.BlockLogic.Sensors;
+using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.BlockLogic.Search;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
-using DetectionEquipment.Client.BlockLogic;
-using DetectionEquipment.Client.BlockLogic.Sensors;
 using VRage.Game.ModAPI;
-using DetectionEquipment.Shared.BlockLogic.GenericControls;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
@@ -46,11 +47,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 "Sensors this block should direct. Ctrl+Click to select multiple.",
                 true,
                 false,
-                logic => (MyAPIGateway.Session.IsServer ?
-                         logic.GridSensors.BlockSensorMap.Keys :
-                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid])
-                    // BRIMSTONE LINQ HELL
-                    .Where(sb => sb.GetLogic<ClientSensorLogic>()?.Sensors.Values.Any(s => s.Definition.Movement != null) ?? false),
+                AvailableSensors,
                 (logic, selected) =>
                 {
                     if (!MyAPIGateway.Session.IsServer)
@@ -98,6 +95,17 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         protected override void CreateTerminalProperties()
         {
 
+        }
+
+        private IEnumerable<IMyCubeBlock> AvailableSensors(TrackerBlock logic)
+        {
+            if (MyAPIGateway.Session.IsServer)
+            {
+                return logic.GridSensors.BlockSensorMap.Keys;
+            }
+
+            return SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid].Where(sb =>
+                sb.GetLogic<ClientSensorLogic>()?.Sensors.Values.Any(s => s.Definition.Movement != null) ?? false);
         }
     }
 }

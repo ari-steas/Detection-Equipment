@@ -145,6 +145,8 @@ namespace DetectionEquipment.Shared.Utils
 
         public static double ToDecibels(double power, double reference = 1)
         {
+            if (power <= 0)
+                return double.NegativeInfinity;
             return 10 * Math.Log10(power / reference);
         }
 

@@ -35,8 +35,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AttachedLogic.VelocityErrorThreshold.Value = _velocityErrorThreshold;
             AttachedLogic.UseAllSensors.Value = _useAllSensors;
 
-            AggregatorControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
-            AggregatorControls.ActiveWeaponSelect?.UpdateSelected(AttachedLogic, _selectedWeapons ?? Array.Empty<long>()); // this might be null if WC isn't loaded
+            AggregatorControls.ActiveSensorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
+            AggregatorControls.ActiveWeaponSelect?.UpdateSelectedFromPersistent(AttachedLogic, _selectedWeapons ?? Array.Empty<long>()); // this might be null if WC isn't loaded
 
             AttachedLogic.DatalinkOutChannel.Value = _datalinkOutChannel;
             AttachedLogic.DatalinkInChannels = _datalinkInChannels;

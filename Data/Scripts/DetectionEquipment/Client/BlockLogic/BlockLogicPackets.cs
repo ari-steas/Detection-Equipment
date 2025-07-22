@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Client.BlockLogic.Sensors;
+﻿using DetectionEquipment.Client.BlockLogic.Countermeasures;
+using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Networking;
@@ -10,6 +11,7 @@ namespace DetectionEquipment.Client.BlockLogic
 {
     [ProtoContract]
     [ProtoInclude(567 + 0, typeof(SensorInitPacket))]
+    [ProtoInclude(567 + 1, typeof(CountermeasureInitPacket))]
     internal abstract class BlockLogicInitPacket : PacketBase
     {
         [ProtoMember(1)] public long AttachedBlockId;
@@ -39,6 +41,7 @@ namespace DetectionEquipment.Client.BlockLogic
 
     [ProtoContract]
     [ProtoInclude(567 + 0, typeof(SensorUpdatePacket))]
+    [ProtoInclude(567 + 1, typeof(CountermeasureUpdatePacket))]
     internal abstract class BlockLogicUpdatePacket : PacketBase
     {
         [ProtoMember(1)] public long AttachedBlockId;

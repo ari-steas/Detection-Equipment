@@ -126,7 +126,7 @@ namespace DetectionEquipment.Shared
         /// </summary>
         public static IniSetting<float> VcsModifier = new IniSetting<float>(
             _iniConfig,
-            "RcsModifier",
+            "VcsModifier",
             "Multiplier on all visual cross-sections for all entities.",
             1f);
 
@@ -153,9 +153,18 @@ namespace DetectionEquipment.Shared
         /// </summary>
         public static IniSetting<float> FatblockRcsModifier = new IniSetting<float>(
             _iniConfig,
-            "HeavyRcsModifier",
+            "FatblockRcsModifier",
             "Multiplier on fatblock (\"functional\" block) RCS for all grids.",
             2f);
+
+        /// <summary>
+        /// If true, IFF reflectors will always return a code regardless of their functional state.
+        /// </summary>
+        public static IniSetting<bool> ForceEnableIff = new IniSetting<bool>(
+            _iniConfig,
+            "ForceEnableIff",
+            "If true, IFF reflectors will always return a code regardless of their functional state.",
+            false);
 
 
         /// <summary>
@@ -303,11 +312,15 @@ namespace DetectionEquipment.Shared
                     return;
                 }
 
-                var ini = new MyIni();
-                ini.TryParse(data);
-
                 Log.Info("GlobalData",
-                    $"Read settings data from network:\n===========================================\n\n{data}\n===========================================\n");
+                    $"Reading settings data from network:\n===========================================\n\n{data}\n===========================================\n");
+
+                var ini = new MyIni();
+                if (!ini.TryParse(data))
+                {
+                    Log.Info("GlobalData", "Failed to read settings data!");
+                    return;
+                }
 
                 foreach (var setting in _iniConfig.AllSettings)
                     setting.Read(ini, "General Config");
@@ -338,6 +351,8 @@ namespace DetectionEquipment.Shared
             LowRcsSubtypes = null;
             if (MyAPIGateway.Session.IsServer)
                 MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(DataNetworkId, ServerMessageHandler);
+            else
+                MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(DataNetworkId, ClientMessageHandler);
             _iniConfig = null;
             Log.Info("GlobalData", "Data cleared.");
         }

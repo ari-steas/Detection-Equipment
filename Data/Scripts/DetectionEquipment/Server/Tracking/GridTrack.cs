@@ -161,6 +161,33 @@ namespace DetectionEquipment.Server.Tracking
             return base.InfraredVisibility(source, opticalVisibility) + visFromHeat;
         }
 
+        public override double CommsVisibility(Vector3D source)
+        {
+            double strongestCaster = 0;
+            var casterPos = Vector3D.Zero;
+            int casterCount = 0;
+
+            foreach (var block in ((MyCubeGrid)Grid).GetFatBlocks()) // TODO: Cache antennas.
+            {
+                var funcBlock = block as IMyFunctionalBlock;
+                if (funcBlock == null || !funcBlock.Enabled)
+                    continue;
+
+                var antenna = block as IMyRadioAntenna;
+                if ((antenna != null && antenna.IsBroadcasting) || block is IMyBeacon)
+                {
+                    strongestCaster += 1000000 * funcBlock.ResourceSink.CurrentInputByType(GlobalData.ElectricityId);
+                    casterPos += funcBlock.GetPosition();
+                    casterCount++;
+                }
+            }
+
+            if (strongestCaster == 0)
+                return 0;
+
+            return strongestCaster / (4 * Math.PI * Vector3D.DistanceSquared(casterPos/casterCount, source));
+        }
+
         /// <summary>
         /// Update a portion of the visibility caches.
         /// </summary>

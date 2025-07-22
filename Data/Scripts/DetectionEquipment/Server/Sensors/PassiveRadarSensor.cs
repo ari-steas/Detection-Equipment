@@ -1,10 +1,12 @@
-﻿using DetectionEquipment.Shared.Definitions;
+﻿using DetectionEquipment.Server.Tracking;
+using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
+using Sandbox.ModAPI;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
@@ -77,6 +79,8 @@ namespace DetectionEquipment.Server.Sensors
             double maxRangeError = range * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
             range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
+            var iffCodes = track is GridTrack ? IffHelper.GetIffCodes(((GridTrack)track).Grid, SensorDefinition.SensorType.PassiveRadar) : Array.Empty<string>();
+
             var data = new DetectionInfo
             (
                 track,
@@ -85,7 +89,8 @@ namespace DetectionEquipment.Server.Sensors
                 range,
                 maxRangeError,
                 bearing,
-                maxBearingError
+                maxBearingError,
+                iffCodes
             );
 
             OnDetection?.Invoke(ObjectPackager.Package(data));

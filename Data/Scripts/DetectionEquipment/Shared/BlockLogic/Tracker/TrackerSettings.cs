@@ -21,8 +21,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
         protected override void AssignData()
         {
-            TrackerControls.ActiveAggregatorSelect.UpdateSelected(AttachedLogic, _selectedAggregators ?? Array.Empty<long>());
-            TrackerControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
+            TrackerControls.ActiveAggregatorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedAggregators ?? Array.Empty<long>());
+            TrackerControls.ActiveSensorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
             AttachedLogic.ResetAngleTime.Value = _resetAngleTime;
         }
 

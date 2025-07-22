@@ -512,6 +512,7 @@ namespace IngameScript
                 PassiveRadar = 2,
                 Optical = 3,
                 Infrared = 4,
+                Antenna = 5,
             }
         }
 

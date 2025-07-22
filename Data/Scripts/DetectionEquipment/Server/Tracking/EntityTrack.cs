@@ -42,5 +42,7 @@ namespace DetectionEquipment.Server.Tracking
         {
             return ProjectedArea(source, VisibilityType.Radar) * GlobalData.RcsModifier;
         }
+
+        public virtual double CommsVisibility(Vector3D source) => 0;
     }
 }

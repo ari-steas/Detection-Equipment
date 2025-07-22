@@ -1,4 +1,5 @@
-﻿using Sandbox.Game;
+﻿using System;
+using Sandbox.Game;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
 using System.Linq;
@@ -94,14 +95,15 @@ namespace DetectionEquipment.Shared.Utils
                 delta.Z < 0 ? boundingBoxD.Max.Z : boundingBoxD.Min.Z);
         }
 
-        private static readonly HashSet<MyDataBroadcaster> Broadcasters = new HashSet<MyDataBroadcaster>();
-        private static readonly Queue<MyDataReceiver> BroadcastToCheck = new Queue<MyDataReceiver>();
         public static List<MyDataBroadcaster> GetAllRelayedBroadcasters(MyDataReceiver receiver, long identityId, bool mutual)
         {
-            BroadcastToCheck.Enqueue(receiver);
-            while (BroadcastToCheck.Count > 0)
+            var rcvToCheck = GlobalObjectPools.DataReceiverPool.Pop();
+            var broadcasters = GlobalObjectPools.DataBroadcasterPool.Pop();
+            
+            rcvToCheck.Enqueue(receiver);
+            while (rcvToCheck.Count > 0)
             {
-                var next = BroadcastToCheck.Dequeue();
+                var next = rcvToCheck.Dequeue();
 
                 foreach (MyDataBroadcaster current in next.BroadcastersInRange)
                 {
@@ -115,22 +117,30 @@ namespace DetectionEquipment.Shared.Utils
                         continue;
 
                     if (current.Receiver != null && current.CanBeUsedByPlayer(identityId))
-                        Broadcasters.Add(current);
+                        broadcasters.Add(current);
                 }
             }
 
-            var list = Broadcasters.ToList();
-            Broadcasters.Clear();
+            var list = broadcasters.ToList();
+            broadcasters.Clear();
+            GlobalObjectPools.DataBroadcasterPool.Push(broadcasters);
+
+            rcvToCheck.Clear();
+            GlobalObjectPools.DataReceiverPool.Push(rcvToCheck);
+
             return list;
         }
 
         public static List<MyDataBroadcaster> GetAllRelayedBroadcasters(IEnumerable<MyDataReceiver> receivers, long identityId, bool mutual)
         {
+            var rcvToCheck = GlobalObjectPools.DataReceiverPool.Pop();
+            var broadcasters = GlobalObjectPools.DataBroadcasterPool.Pop();
+
             foreach (var receiver in receivers)
-                BroadcastToCheck.Enqueue(receiver);
-            while (BroadcastToCheck.Count > 0)
+                rcvToCheck.Enqueue(receiver);
+            while (rcvToCheck.Count > 0)
             {
-                var next = BroadcastToCheck.Dequeue();
+                var next = rcvToCheck.Dequeue();
 
                 foreach (MyDataBroadcaster current in next.BroadcastersInRange)
                 {
@@ -146,13 +156,18 @@ namespace DetectionEquipment.Shared.Utils
                     // Prevent neutrals from seeing all broadcasters
                     bool canAccess = (identityId != 0 || current.Owner == 0) && current.CanBeUsedByPlayer(identityId);
 
-                    if (canAccess && Broadcasters.Add(current) && current.Receiver != null)
-                        BroadcastToCheck.Enqueue(current.Receiver);
+                    if (canAccess && broadcasters.Add(current) && current.Receiver != null)
+                        rcvToCheck.Enqueue(current.Receiver);
                 }
             }
 
-            var list = Broadcasters.ToList();
-            Broadcasters.Clear();
+            var list = broadcasters.ToList();
+            broadcasters.Clear();
+            GlobalObjectPools.DataBroadcasterPool.Push(broadcasters);
+
+            rcvToCheck.Clear();
+            GlobalObjectPools.DataReceiverPool.Push(rcvToCheck);
+
             return list;
         }
 

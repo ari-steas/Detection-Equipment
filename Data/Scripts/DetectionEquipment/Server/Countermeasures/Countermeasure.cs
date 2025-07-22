@@ -123,6 +123,7 @@ namespace DetectionEquipment.Server.Countermeasures
             sensorIsVisual &= !sensorIsInfrared;
 
             if (sensor is RadarSensor && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Radar) == 0 ||
+                sensor is AntennaSensor && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Antenna) == 0 ||
                 sensorIsVisual && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Optical) == 0 ||
                 sensorIsInfrared && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Infrared) == 0
                 )

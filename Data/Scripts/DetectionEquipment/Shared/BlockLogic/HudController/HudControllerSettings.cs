@@ -22,7 +22,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
         protected override void AssignData()
         {
-            HudControllerControls.ActiveAggregatorSelect.UpdateSelected(AttachedLogic, SelectedAggregator);
+            HudControllerControls.ActiveAggregatorSelect.UpdateSelectedFromPersistent(AttachedLogic, SelectedAggregator);
             AttachedLogic.AlwaysDisplay.Value = AlwaysDisplay;
             AttachedLogic.CombineAngle.Value = CombineAngle;
             AttachedLogic.ShowSelf.Value = ShowSelf;

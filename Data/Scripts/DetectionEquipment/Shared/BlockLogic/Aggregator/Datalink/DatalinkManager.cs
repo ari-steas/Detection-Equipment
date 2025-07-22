@@ -27,15 +27,15 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
 
         public static Dictionary<int, HashSet<AggregatorBlock>> GetActiveDatalinkChannels(IMyCubeGrid grid, long ownerIdentityId)
         {
-            var recievers = new List<MyDataReceiver>();
+            var receivers = new List<MyDataReceiver>();
             foreach (var block in ((MyCubeGrid)grid).GetFatBlocks()) // TODO: Cache antennas.
-                if (block is IMyRadioAntenna || block is IMyLaserAntenna && ((IMyFunctionalBlock)block).Enabled)
-                    recievers.Add(block.Components.Get<MyDataReceiver>());
+                if ((block is IMyRadioAntenna || block is IMyLaserAntenna) && ((IMyFunctionalBlock)block).Enabled)
+                    receivers.Add(block.Components.Get<MyDataReceiver>());
 
             var connectedGrids = new HashSet<IMyCubeGrid>();
             grid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(connectedGrids);
 
-            foreach (var reciever in TrackingUtils.GetAllRelayedBroadcasters(recievers, ownerIdentityId, false))
+            foreach (var reciever in TrackingUtils.GetAllRelayedBroadcasters(receivers, ownerIdentityId, false))
                 if (reciever.Entity is IMyCubeBlock)
                     connectedGrids.Add(((IMyCubeBlock)reciever.Entity).CubeGrid);
 

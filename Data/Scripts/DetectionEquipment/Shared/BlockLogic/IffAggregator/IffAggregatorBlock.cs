@@ -1,8 +1,8 @@
 ﻿using System;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Structs;
 using Sandbox.Common.ObjectBuilders;
@@ -46,7 +46,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
 
             string[] ownIffCodes = null;
             if (AutoSelfIff.Value)
-                ownIffCodes = IffReflectorBlock.GetIffCodes(Block.CubeGrid);
+                ownIffCodes = IffHelper.GetIffCodes(Block.CubeGrid, SensorDefinition.SensorType.None);
 
             foreach (var code in info.IffCodes)
             {

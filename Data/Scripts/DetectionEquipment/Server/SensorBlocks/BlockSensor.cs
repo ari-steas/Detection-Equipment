@@ -222,6 +222,9 @@ namespace DetectionEquipment.Server.SensorBlocks
                 case SensorType.Infrared:
                     Sensor = new VisualSensor(definition);
                     break;
+                case SensorType.Antenna:
+                    Sensor = new AntennaSensor(definition);
+                    break;
                 default:
                     throw new Exception($"Invalid SensorType {definition.Type}");
             }

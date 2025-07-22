@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Game;
@@ -22,12 +23,12 @@ namespace DetectionEquipment.Client.Interface
 
         private static int _ticks = 0;
         private static string _name = "";
-        private static double _rcs = 0, _vcs = 0, _irs = 0, _rawIrs = 0;
+        private static double _rcs = 0, _vcs = 0, _irs = 0, _rawIrs = 0, _commSig, _rawCommSig;
         private static bool _shouldShow = false;
         public static void Update()
         {
             if (_ticks++ % 10 == 0 || GlobalData.DebugLevel > 0)
-                _shouldShow = GetData(out _name, out _rcs, out _vcs, out _irs, out _rawIrs);
+                _shouldShow = GetData(out _name, out _rcs, out _vcs, out _irs, out _rawIrs, out _commSig, out _rawCommSig);
 
             // Updating every tick to prevent flashing
             if (_shouldShow)
@@ -41,7 +42,9 @@ namespace DetectionEquipment.Client.Interface
                     $"    RCS: {_rcs:N} m^2\n" +
                     $"    VCS: {_vcs:N} m^2\n" +
                     $"    IRS: {_rawIrs:N} Wm^2\n" +
-                    $"      @ Camera: {_irs:N} Wm^2",
+                    $"      @ Camera: {_irs:N} Wm^2\n" +
+                    $"    COMM: {_rawCommSig:N} W\n" +
+                    $"      @ Camera: {_commSig:N} W",
                     false, false);
 
                 _questlogDisposed = false;
@@ -55,13 +58,15 @@ namespace DetectionEquipment.Client.Interface
             //MyAPIGateway.Utilities.ShowNotification($"{name}: RCS: {rcs:F} VCS: {vcs:F} IRS: {irs:F}", 950/6);
         }
 
-        private static bool GetData(out string name, out double rcs, out double vcs, out double irs, out double rawIrs)
+        private static bool GetData(out string name, out double rcs, out double vcs, out double irs, out double rawIrs, out double commSig, out double rawCommSig)
         {
             name = "No target";
             vcs = 0;
             rcs = 0;
             irs = 0;
             rawIrs = 0;
+            commSig = 0;
+            rawCommSig = 0;
 
             var rifle = MyAPIGateway.Session.Player?.Character?.EquippedTool as IMyAutomaticRifleGun;
             //MyAPIGateway.Utilities.ShowNotification($"{rifle?.DefinitionId.SubtypeName ?? "None"}", 950/6);
@@ -95,6 +100,8 @@ namespace DetectionEquipment.Client.Interface
                     vcs += trackVcs;
                     irs += track.InfraredVisibility(camPos, trackVcs);
                     rawIrs += irs * Vector3D.DistanceSquared(camPos, track.Position);
+                    commSig += track.CommsVisibility(camPos);
+                    rawCommSig += track.CommsVisibility(grid.WorldAABB.Center);
                 }
                 name = $"\"{castGrid.CustomName}\" & {attached.Count-1} subgrids";
             }
@@ -105,6 +112,9 @@ namespace DetectionEquipment.Client.Interface
                 vcs = track.OpticalVisibility(camPos);
                 irs = track.InfraredVisibility(camPos, vcs);
                 rawIrs = irs * Vector3D.DistanceSquared(camPos, track.Position);
+                commSig = track.CommsVisibility(camPos);
+                rawCommSig = track.CommsVisibility(castEnt.WorldAABB.Center);
+
                 name = $"\"{castEnt.DisplayName}\"";
             }
 

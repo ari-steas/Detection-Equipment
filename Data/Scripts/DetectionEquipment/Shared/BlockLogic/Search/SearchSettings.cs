@@ -20,7 +20,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
         protected override void AssignData()
         {
-            SearchControls.ActiveSensorSelect.UpdateSelected(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
+            SearchControls.ActiveSensorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
             AttachedLogic.SearchMode.Value = _searchMode;
         }
 

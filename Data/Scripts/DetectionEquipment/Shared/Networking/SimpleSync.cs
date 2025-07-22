@@ -25,6 +25,8 @@ namespace DetectionEquipment.Shared.Networking
         /// </summary>
         public Action<TValue, bool> OnValueChanged = null;
 
+        public Func<TValue, TValue> Validate = null;
+
         private MyGameLogicComponent _component;
         public MyGameLogicComponent Component
         {
@@ -66,7 +68,7 @@ namespace DetectionEquipment.Shared.Networking
             {
                 if (value.Equals(_value))
                     return;
-                _value = value;
+                _value = Validate != null ? Validate.Invoke(value) : value;
 
                 SendUpdate();
                 OnValueChanged?.Invoke(value, false);

@@ -191,6 +191,9 @@ namespace DetectionEquipment.Client.BlockLogic
 
         public static bool HasLogic(long blockId)
         {
+            if (Logics == null)
+                return false;
+
             lock (Logics)
             {
                 return Logics.ContainsKey(blockId);

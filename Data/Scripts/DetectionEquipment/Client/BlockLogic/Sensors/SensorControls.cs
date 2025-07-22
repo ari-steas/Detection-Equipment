@@ -16,7 +16,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         public override string IdPrefix => "SensorControls_";
 
         private static bool HasMovement(IMyTerminalBlock block) =>
-            block.GetLogic<ClientSensorLogic>().CurrentDefinition.Movement != null;
+            block.GetLogic<ClientSensorLogic>()?.CurrentDefinition?.Movement != null;
 
         protected override void CreateTerminalActions()
         {
