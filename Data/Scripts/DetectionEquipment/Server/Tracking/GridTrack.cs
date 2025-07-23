@@ -8,7 +8,6 @@ using RichHudFramework;
 using Sandbox.Game.Entities;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.Game.Models;
 using VRageMath;
 using DetectionEquipment.Shared.ExternalApis;
 
@@ -52,6 +51,9 @@ namespace DetectionEquipment.Server.Tracking
             }
             Grid.OnBlockAdded += block =>
             {
+                if (block.FatBlock == null)
+                    return;
+
                 if (block.FatBlock is IMyThrust)
                     _thrustCache.Add((IMyThrust)block.FatBlock);
                 else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
@@ -61,6 +63,9 @@ namespace DetectionEquipment.Server.Tracking
             };
             Grid.OnBlockRemoved += block =>
             {
+                if (block.FatBlock == null)
+                    return;
+
                 if (block.FatBlock is IMyThrust)
                     _thrustCache.Remove((IMyThrust)block.FatBlock);
                 else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
