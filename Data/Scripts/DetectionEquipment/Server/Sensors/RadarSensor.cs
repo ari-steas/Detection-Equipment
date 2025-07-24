@@ -74,7 +74,7 @@ namespace DetectionEquipment.Server.Sensors
                 //   4 * pi * receiverArea * angleOffsetScalar * outputDensity^3
                 // ---------------------------------------------------------------
                 //                            lambda^2
-                double gain = 4 * Math.PI * receiverAreaAtAngle / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
+                double gain = 4 * Math.PI * receiverAreaAtAngle / (lambda * lambda) * (Definition.RadarProperties.AccountForRadarAngle ? MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) : 1) * outputDensity * outputDensity * outputDensity;
 
                 // Can make this fancier if I want later.
                 // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
