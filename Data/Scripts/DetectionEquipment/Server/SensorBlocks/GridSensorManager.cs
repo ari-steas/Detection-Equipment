@@ -89,9 +89,13 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 if (!aggregatorSet.Key.UseAllWeapons && !aggregatorSet.Value.Contains(weapon))
                     continue;
-                foreach (var item in aggregatorSet.Key.DetectionSet)
-                    if (item.Entity == target)
-                        return true;
+                var detSet = aggregatorSet.Key.DetectionSet;
+                lock (detSet)
+                {
+                    foreach (var item in detSet)
+                        if (item.Entity == target)
+                            return true;
+                }
             }
             return false;
         }
