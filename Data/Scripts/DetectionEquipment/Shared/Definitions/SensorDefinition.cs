@@ -155,13 +155,19 @@ namespace DetectionEquipment.Shared.Definitions
             /// </summary>
             [ProtoMember(4)] public double Frequency = 2800E6;
 
-            public int FieldCount => 4;
+            /// <summary>
+            /// Determines whether the angle of the radar's cone matters for the reciever area in gain calcs.
+            /// </summary>
+            [ProtoMember(5)] public bool AccountForRadarAngle = true;
+
+            public int FieldCount => 5;
             public void Package(object[] fieldArray)
             {
                 fieldArray[0] = ReceiverArea;
                 fieldArray[1] = PowerEfficiencyModifier;
                 fieldArray[2] = Bandwidth;
                 fieldArray[3] = Frequency;
+                fieldArray[4] = AccountForRadarAngle;
             }
         }
 

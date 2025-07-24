@@ -69,7 +69,7 @@ namespace DetectionEquipment.Server.Sensors
                 double lambda = c / Definition.RadarProperties.Frequency;
                 double outputDensity = (2 * Math.PI) / Aperture; // Inverse output density
                 // If the aperture is more than 180 degrees, assume that it's a spheroid.
-                double receiverAreaAtAngle = Aperture <= Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
+                double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
 
                 //   4 * pi * receiverArea * angleOffsetScalar * outputDensity^3
                 // ---------------------------------------------------------------
