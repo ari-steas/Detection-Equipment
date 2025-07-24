@@ -1,5 +1,6 @@
 ﻿using System;
 using DetectionEquipment.Shared.Definitions;
+using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
@@ -93,7 +94,18 @@ namespace DetectionEquipment.Shared.Structs
             Velocity = info.Velocity;
             VelocityVariance = info.VelocityVariance;
             DetectionType = info.DetectionType;
-            IffCodes = info.IffCodes;
+
+            IffCodes = new string[info.IffCodes.Length];
+            for (int i = 0; i < IffCodes.Length; i++)
+            {
+                int hashCode;
+                if (info.IffCodes[i].Length > 0 && info.IffCodes[i][0] == '#' &&
+                    int.TryParse(info.IffCodes[i].Substring(1), out hashCode))
+                    IffCodes[i] = $"#{hashCode:X}";
+                else
+                    IffCodes[i] = info.IffCodes[i];
+            }
+
             Relations = info.Relations;
         }
     }
