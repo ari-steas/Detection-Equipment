@@ -8,7 +8,6 @@ using RichHudFramework;
 using Sandbox.Game.Entities;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.Game.Models;
 using VRageMath;
 using DetectionEquipment.Shared.ExternalApis;
 
@@ -33,9 +32,9 @@ namespace DetectionEquipment.Server.Tracking
         /// </summary>
         protected int NextCacheUpdate = 0;
 
-        private HashSet<IMyThrust> ThrusterCache = new HashSet<IMyThrust>();
-        private HashSet<MyEntity> WcWeaponCache = new HashSet<MyEntity>();
-        private int LastThrustCacheUpdate = -1;
+        private readonly HashSet<IMyThrust> _thrustCache = new HashSet<IMyThrust>();
+        private readonly HashSet<MyCubeBlock> _wcWeaponCache = new HashSet<MyCubeBlock>();
+        private int _lastThrustCacheUpdate = -1;
 
         public GridTrack(IMyCubeGrid grid) : base((MyEntity)grid)
         {
@@ -44,31 +43,34 @@ namespace DetectionEquipment.Server.Tracking
             foreach (var block in Grid.GetFatBlocks<IMyFunctionalBlock>())
             {
                 if (block is IMyThrust)
-                    ThrusterCache.Add((IMyThrust)block);
-
-                if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
+                    _thrustCache.Add((IMyThrust)block);
+                else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
                 {
-                    WcWeaponCache.Add((MyEntity)block);
+                    _wcWeaponCache.Add((MyCubeBlock) block);
                 }
             }
             Grid.OnBlockAdded += block =>
             {
-                if (block.FatBlock is IMyThrust)
-                    ThrusterCache.Add((IMyThrust)block.FatBlock);
+                if (block.FatBlock == null)
+                    return;
 
-                if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
+                if (block.FatBlock is IMyThrust)
+                    _thrustCache.Add((IMyThrust)block.FatBlock);
+                else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
                 {
-                    WcWeaponCache.Add((MyEntity)block);
+                    _wcWeaponCache.Add((MyCubeBlock) block.FatBlock);
                 }
             };
             Grid.OnBlockRemoved += block =>
             {
-                if (block.FatBlock is IMyThrust)
-                    ThrusterCache.Remove((IMyThrust)block.FatBlock);
+                if (block.FatBlock == null)
+                    return;
 
-                if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
+                if (block.FatBlock is IMyThrust)
+                    _thrustCache.Remove((IMyThrust)block.FatBlock);
+                else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
                 {
-                    WcWeaponCache.Remove((MyEntity)block);
+                    _wcWeaponCache.Remove((MyCubeBlock) block.FatBlock);
                 }
             };
         }
@@ -112,6 +114,7 @@ namespace DetectionEquipment.Server.Tracking
             // -   Base visibility (sun heating).
             // -   Power usage per surface area times visible area; a smaller object with the same power draw as a larger object is hotter.
             // -   Thruster wattage for visible thrust directions, times the dot product (thruster facing the sensor is more visible)
+            // -   Weapon heat (if applicable) per visible area
             // Then divide by distance squared (inverse square falloff).
 
             double heatWattage;
@@ -140,22 +143,38 @@ namespace DetectionEquipment.Server.Tracking
                     thrustWattage += dotProduct * thisWattage;
                 }
             }
-            double WCHeatWattage = 0;
+
+            double wcHeatWattage = 0;
             {
                 if (ApiManager.WcApi.IsReady)
                 {
-                    foreach (var weapon in WcWeaponCache)
+                    const double stefanBoltzmann = 5.6704E-8;
+
+                    foreach (var weapon in _wcWeaponCache)
                     {
-                        WCHeatWattage += ApiManager.WcApi.GetHeatLevel(weapon);
+                        // arbitrary conversion from Wc's Proprietary Heat Measurement Unit™ to degrees K
+                        double wcTemperature = ApiManager.WcApi.GetHeatLevel(weapon) * GlobalData.WcHeatToDegreeConversionRatio + 298;
+
+                        // I (aristeas) reworked this to follow the blackbody radiation formula; thanks for writing the original, Nerd
+                        // if we ever want to make this a bit fancier, can add an emissivity multiplier
+                        
+                        // stefanBoltzmann * temp^4 * area
+                        // "room temperature" is counted elsewhere, so it's removed
+                        double weaponWattage = stefanBoltzmann *
+                                               (wcTemperature * wcTemperature * wcTemperature * wcTemperature - 7886150416d) *
+                                               weapon.PositionComp.LocalAABB.SurfaceArea();
+                        wcHeatWattage += weaponWattage;
+
+                        //MyAPIGateway.Utilities.ShowNotification($"{((IMyTerminalBlock)weapon).CustomName}: {wcTemperature-273.15:N0}°C ({weaponWattage:N0}W)", 1000/60);
                     }
-                    // arbitrary conversion from Wc's Proprietary Heat Measurement Unit™ to Watts
-                    // also this is assuming that radiated heat from a WC weapon is proportional to its current heat value
-                    WCHeatWattage *= GlobalData.WcHeatToWattConversionRatio;
+
+                    // scale by grid's area to visible area ratio; while it would be better to check for each weapon's visibility individually, that would involve a Performance Overhead (horror)
+                    wcHeatWattage = wcHeatWattage / Grid.LocalAABB.SurfaceArea() * opticalVisibility;
+                    //MyAPIGateway.Utilities.ShowNotification($"Sum: {wcHeatWattage:N0}W", 1000/60);
                 }
             }
 
-
-            double visFromHeat = (heatWattage + thrustWattage + WCHeatWattage) / Vector3D.DistanceSquared(source, Position);
+            double visFromHeat = (heatWattage + thrustWattage + wcHeatWattage) / Vector3D.DistanceSquared(source, Position);
 
             // base visibility is already divided by distancesq
             return base.InfraredVisibility(source, opticalVisibility) + visFromHeat;
@@ -309,12 +328,12 @@ namespace DetectionEquipment.Server.Tracking
         private Dictionary<Vector3, float> GetGridThrust()
         {
             var thrustCache = new Dictionary<Vector3, float>(6);
-            if (MyAPIGateway.Session.GameplayFrameCounter == LastThrustCacheUpdate)
+            if (MyAPIGateway.Session.GameplayFrameCounter == _lastThrustCacheUpdate)
                 return thrustCache;
 
             thrustCache.Clear();
 
-            foreach (var thrust in ThrusterCache)
+            foreach (var thrust in _thrustCache)
             {
                 if (thrustCache.ContainsKey(thrust.LocalMatrix.Forward))
                     thrustCache[thrust.LocalMatrix.Forward] += thrust.CurrentThrust;
@@ -322,7 +341,7 @@ namespace DetectionEquipment.Server.Tracking
                     thrustCache.Add(thrust.LocalMatrix.Forward, thrust.CurrentThrust);
             }
 
-            LastThrustCacheUpdate = MyAPIGateway.Session.GameplayFrameCounter;
+            _lastThrustCacheUpdate = MyAPIGateway.Session.GameplayFrameCounter;
             return thrustCache;
         }
 
