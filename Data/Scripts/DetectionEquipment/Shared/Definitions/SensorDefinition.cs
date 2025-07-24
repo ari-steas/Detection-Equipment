@@ -2,6 +2,7 @@
 using ProtoBuf;
 using System;
 using DetectionEquipment.Shared.Structs;
+using System.ComponentModel;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -158,7 +159,7 @@ namespace DetectionEquipment.Shared.Definitions
             /// <summary>
             /// Determines whether the angle of the radar's cone matters for the reciever area in gain calcs.
             /// </summary>
-            [ProtoMember(5)] public bool AccountForRadarAngle = true;
+            [ProtoMember(5)] [DefaultValue(true)] public bool AccountForRadarAngle = true;
 
             public int FieldCount => 5;
             public void Package(object[] fieldArray)
