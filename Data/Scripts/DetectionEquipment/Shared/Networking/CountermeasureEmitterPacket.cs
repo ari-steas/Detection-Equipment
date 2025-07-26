@@ -68,8 +68,11 @@ namespace DetectionEquipment.Shared.Networking
                 uint renderId = entity.Render?.GetRenderObjectID() ?? uint.MaxValue;
                 var matrix = (MatrixD) muzzleDummy.Matrix;
                 var pos = (matrix * entity.WorldMatrix).Translation;
-                if (!MyParticlesManager.TryCreateParticleEffect(definition.FireParticle, ref matrix, ref pos, renderId, out discard))
-                    Log.Exception("CountermeasureEmitterPacket", new Exception($"Failed to create new projectile particle \"{definition.FireParticle}\"!"));
+                if (!MyParticlesManager.TryCreateParticleEffect(definition.FireParticle, ref matrix, ref pos, renderId,
+                        out discard))
+                {
+                    //Log.Exception("CountermeasureEmitterPacket", new Exception($"Failed to create new projectile particle \"{definition.FireParticle}\"!"));
+                }
                 return true;
             }
 

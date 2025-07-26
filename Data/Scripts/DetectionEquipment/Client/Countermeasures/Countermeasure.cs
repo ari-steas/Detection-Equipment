@@ -47,7 +47,7 @@ namespace DetectionEquipment.Client.Countermeasures
                 var matrix = MatrixD.CreateWorld(_position, _direction, Vector3D.CalculatePerpendicularVector(_direction));
                 if (!MyParticlesManager.TryCreateParticleEffect(_definition.ParticleEffect, ref matrix, ref _position, uint.MaxValue, out _particle))
                 {
-                    Log.Exception("Countermeasure", new Exception($"Failed to create new projectile particle \"{_definition.ParticleEffect}\"!"));
+                    //Log.Exception("Countermeasure", new Exception($"Failed to create new projectile particle \"{_definition.ParticleEffect}\"!"));
                 }
             }
 
