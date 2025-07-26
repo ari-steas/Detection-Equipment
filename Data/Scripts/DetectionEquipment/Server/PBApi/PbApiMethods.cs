@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared;
 using VRageMath;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 
@@ -20,7 +21,12 @@ namespace DetectionEquipment.Server.PBApi
 {
     internal static class PbApiMethods
     {
-        public static ImmutableDictionary<string, Delegate> SafeMethods => ImmutableDictionary.CreateRange(Methods);
+        public static ImmutableDictionary<string, Delegate> SafeMethods => ImmutableDictionary.CreateRange(GlobalData.AllowPbApi.Value ? Methods : ApiDisallowedMethods);
+
+        private static readonly Dictionary<string, Delegate> ApiDisallowedMethods = new Dictionary<string, Delegate>
+        {
+            ["ApiDisallowedKey"] = null
+        };
 
         private static readonly Dictionary<string, Delegate> Methods = new Dictionary<string, Delegate>
         {

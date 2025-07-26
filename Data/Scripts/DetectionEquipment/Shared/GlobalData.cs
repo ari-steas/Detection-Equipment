@@ -185,6 +185,15 @@ namespace DetectionEquipment.Shared
             "Frequency of updating IFF salts in hours. Note - this exists to make rainbow table IFF hash cracking harder.",
             1f);
 
+        /// <summary>
+        /// Toggles pbapi access. If you turn this off you're cringe and I hate you.
+        /// </summary>
+        public static IniSetting<bool> AllowPbApi = new IniSetting<bool>(
+            _iniConfig,
+            "AllowPbApi",
+            "Toggles pbapi access. If you turn this off you're cringe and I hate you.",
+            true);
+
         private static void SyncDistanceUpdated(int distance)
         {
             if (OverrideSyncDistance > 0)

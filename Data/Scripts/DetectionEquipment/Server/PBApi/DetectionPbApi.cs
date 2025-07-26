@@ -46,8 +46,10 @@ namespace IngameScript
                 throw new Exception("Failed to get DetectionPbApi!"); // This is expected to occur once on world load; Detection Equipment automatically recompiles affected programmable blocks.
             InitializeApi();
             _methodMap = null;
-            program.Echo("DetectionPbApi loaded!");
+            _program.Echo("DetectionPbApi loaded!");
         }
+
+        public bool ApiEnabled { get; private set; } = false;
 
         #region Public Methods
 
@@ -171,6 +173,13 @@ namespace IngameScript
 
         private void InitializeApi()
         {
+            if (_methodMap.ContainsKey("ApiDisallowedKey"))
+            {
+                ApiEnabled = false;
+                _program.Echo("DetectionPbApi disabled by server config - methods will not work.");
+                return;
+            }
+
             SetApiMethod("ReturnFieldArray", ref _returnFieldArray);
 
             SetApiMethod("GetSensorIds", ref _getSensorIds);
@@ -207,6 +216,8 @@ namespace IngameScript
             SetApiMethod("SetIffCode", ref _setIffCode);
             SetApiMethod("GetIffReturnHashed", ref _getIffReturnHashed);
             SetApiMethod("SetIffReturnHashed", ref _setIffReturnHashed);
+
+            ApiEnabled = true;
         }
 
         /// <summary>
