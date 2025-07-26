@@ -42,7 +42,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
             foreach (var sensor in ControlledSensors)
             {
-                if (sensor.AllowMechanicalControl ^ !InvertAllowControl.Value)
+                if (!(sensor.AllowMechanicalControl ^ InvertAllowControl.Value))
                     continue;
 
                 var autoMode = sensor.Definition.Movement.AzimuthRate > sensor.Definition.Movement.ElevationRate ? SearchModes.AziFirst : SearchModes.ElevFirst;

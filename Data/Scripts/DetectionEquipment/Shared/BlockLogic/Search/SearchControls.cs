@@ -79,21 +79,18 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
                     ActiveSensors[logic].Clear();
                     logic.DirectionSigns.Clear();
-                    foreach (var item in selected)
+
+                    foreach (var sensor in logic.GridSensors.Sensors)
                     {
-                        foreach (var sensor in logic.GridSensors.Sensors)
+                        if (sensor.Definition.Movement == null || !selected.Contains(sensor.Block))
+                            continue;
+                        ActiveSensors[logic].Add(sensor);
+                        if (sensor.AllowMechanicalControl ^ logic.InvertAllowControl.Value)
                         {
-                            if (sensor.Block != item || sensor.Definition.Movement == null)
-                                continue;
-                            ActiveSensors[logic].Add(sensor);
-                            if (!(sensor.AllowMechanicalControl ^ !logic.InvertAllowControl.Value))
-                            {
-                                sensor.DesiredAzimuth = 0;
-                                sensor.DesiredElevation = 0;
-                            }
-                            logic.DirectionSigns[sensor] = Vector2I.One;
-                            break;
+                            sensor.DesiredAzimuth = 0;
+                            sensor.DesiredElevation = 0;
                         }
+                        logic.DirectionSigns[sensor] = Vector2I.One;
                     }
                 }
             );

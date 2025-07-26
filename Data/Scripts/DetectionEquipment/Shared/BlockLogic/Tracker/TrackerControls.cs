@@ -55,15 +55,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
                     ActiveSensors[logic].Clear();
                     logic.LockDecay.Clear();
-                    foreach (var item in selected)
+
+                    foreach (var sensor in logic.GridSensors.Sensors)
                     {
-                        foreach (var sensor in logic.GridSensors.Sensors)
-                        {
-                            if (sensor.Block != item || sensor.Definition.Movement == null)
-                                continue;
-                            ActiveSensors[logic].Add(sensor);
-                            break;
-                        }
+                        if (sensor.Definition.Movement == null || !selected.Contains(sensor.Block))
+                            continue;
+                        ActiveSensors[logic].Add(sensor);
+                        break;
                     }
                 }
                 );
