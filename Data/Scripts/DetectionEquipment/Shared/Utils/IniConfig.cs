@@ -160,7 +160,12 @@ namespace DetectionEquipment.Shared.Utils
             {
                 Config = config;
                 Name = name;
-                Description = description;
+
+                Description = description.TrimEnd();
+                if (!Description.EndsWith("."))
+                    Description += ".";
+                Description += $" Default {value}";
+
                 _value = value;
                 Config.AllSettings.Add(this);
                 _onChanged = onChanged;

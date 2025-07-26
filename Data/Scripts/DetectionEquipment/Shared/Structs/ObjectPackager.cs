@@ -5,6 +5,10 @@ namespace DetectionEquipment.Shared.Structs
 {
     internal static class ObjectPackager
     {
+        // yes, there is a reference exploit for the PbApi related to this class.
+        // if I catch wind of someone abusing it, everyone will suffer
+        // pretty please don't do that
+        // :(
         private static Dictionary<int, ObjectPool<object[]>> _objectBuffers;
 
         public static void Load()

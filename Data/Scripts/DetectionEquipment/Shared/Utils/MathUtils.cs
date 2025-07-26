@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.Utils
@@ -227,6 +229,59 @@ namespace DetectionEquipment.Shared.Utils
                 vec.X = 0;
                 vec.Y = 0;
             }
+        }
+
+        /// <summary>
+        /// Generates <paramref name="count"/> random prime numbers within integer range [2, sqrt(<paramref name="maxExcl"/>)).
+        /// <remarks>
+        ///     This method is *very slow* and memory intensive, so consider caching the results!
+        /// </remarks>
+        /// </summary>
+        /// <param name="refCollection"></param>
+        /// <param name="count"></param>
+        /// <param name="maxExcl"></param>
+        public static int[] GeneratePrimes(int count, int maxExcl = int.MaxValue)
+        {
+            if (Random == null)
+                throw new Exception("MathUtils.Random is null!");
+
+            // silly lil sieve of eratosthenes
+            int lim = (int) Math.Sqrt(maxExcl);
+            bool[] nonPrime = new bool[lim + 1];
+            nonPrime[0] = nonPrime[1] = true;
+
+            List<int> primes = new List<int>();
+            for (int i = 2; i <= lim; ++i) {
+                if (!nonPrime[i]) {
+                    primes.Add(i);
+                    for (int j = i * i; j <= lim; j += i)
+                        nonPrime[j] = true;
+                }
+            }
+
+            int[] refCollection = new int[count];
+            for (int refIdx = 0; refIdx < refCollection.Length; refIdx++)
+                refCollection[refIdx] = primes[Random.Next(0, primes.Count-1)];
+            return refCollection;
+        }
+
+        /// <summary>
+        /// Generates <paramref name="count"/> random prime numbers within integer range [2, sqrt(<paramref name="maxExcl"/>)). Profiled.
+        /// <remarks>
+        ///     This method is *very slow* and memory intensive, so consider caching the results!
+        /// </remarks>
+        /// </summary>
+        /// <param name="refCollection"></param>
+        /// <param name="count"></param>
+        /// <param name="maxExcl"></param>
+        public static int[] GeneratePrimesProfiled(int count, out TimeSpan time, int maxExcl = int.MaxValue)
+        {
+            Stopwatch sw = new Stopwatch();
+            sw.Start();
+            int[] generated = GeneratePrimes(count, maxExcl);
+            sw.Stop();
+            time = sw.Elapsed;
+            return generated;
         }
     }
 }

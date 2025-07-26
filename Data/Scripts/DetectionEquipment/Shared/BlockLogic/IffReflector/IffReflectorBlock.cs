@@ -10,7 +10,7 @@ using DetectionEquipment.Shared.Utils;
 namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
     [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector", "IffReflector_Small", "TorpIFF")]
-    internal class IffReflectorBlock : ControlBlockBase<IMyFunctionalBlock>, IIffComponent
+    internal class IffReflectorBlock : ControlBlockBase<IMyFunctionalBlock>
     {
         public readonly SimpleSync<string> IffCode = new SimpleSync<string>("NOCODE");
         public readonly SimpleSync<bool> ReturnHash = new SimpleSync<bool>(true);
@@ -35,7 +35,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             {
                 IffCodeCache =
                     ReturnHash.Value
-                        ? "#" + IffCode.Value.GetHashCode()
+                        ? "#" + IffHelper.GetIffHashCode(IffCode.Value)
                         : "&" + IffCode.Value; // note that commas aren't allowed.
             };
 
@@ -58,6 +58,13 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
                 return;
 
             IffHelper.RemoveComponent(Block.CubeGrid, this);
+        }
+
+        public void ForceUpdateHash()
+        {
+            if (!ReturnHash.Value)
+                return;
+            IffCode.OnValueChanged.Invoke(IffCode.Value, false);
         }
     }
 }

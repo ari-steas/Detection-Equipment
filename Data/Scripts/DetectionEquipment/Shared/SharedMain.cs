@@ -67,6 +67,7 @@ namespace DetectionEquipment.Shared
                     GlobalData.UpdatePlayers();
                 }
 
+                IffHelper.Update();
                 Log.Update();
                 Ticks++;
             }

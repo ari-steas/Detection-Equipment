@@ -109,7 +109,7 @@ namespace DetectionEquipment.Shared
         public static IniSetting<float> MinLockForWcTarget = new IniSetting<float>(
             _iniConfig,
             "MinLockForWcTarget",
-            "Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance",
+            "Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance.",
             0.25f);
 
         /// <summary>
@@ -175,6 +175,15 @@ namespace DetectionEquipment.Shared
             "WcHeatToDegreeConversionRatio",
             "Conversion ratio from WC Heat to Degrees for IRS, if WC is present.",
             0.5f);
+
+        /// <summary>
+        /// Frequency of updating IFF salts in hours. Note - this exists to make rainbow table IFF hash cracking harder. I suggest making this relatively infrequent to avoid performance issues.
+        /// </summary>
+        public static IniSetting<float> IffResaltInterval = new IniSetting<float>(
+            _iniConfig,
+            "IffResaltInterval",
+            "Frequency of updating IFF salts in hours. Note - this exists to make rainbow table IFF hash cracking harder.",
+            1f);
 
         private static void SyncDistanceUpdated(int distance)
         {

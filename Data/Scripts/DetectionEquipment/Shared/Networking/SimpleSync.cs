@@ -89,7 +89,7 @@ namespace DetectionEquipment.Shared.Networking
         /// Updates the SimpleSync from network.
         /// </summary>
         /// <param name="contents"></param>
-        public void Update(byte[] contents)
+        public void UpdateFromNetwork(byte[] contents)
         {
             _value = MyAPIGateway.Utilities.SerializeFromBinary<TValue>(contents);
             OnValueChanged?.Invoke(_value, true);
@@ -167,7 +167,7 @@ namespace DetectionEquipment.Shared.Networking
                 ISimpleSync theSync;
                 if (!SyncIdMap.TryGetValue(SyncId, out theSync))
                     return;
-                theSync.Update(Contents);
+                theSync.UpdateFromNetwork(Contents);
             }
         }
     }
@@ -176,6 +176,6 @@ namespace DetectionEquipment.Shared.Networking
     {
         long SyncId { get; set; }
         MyGameLogicComponent Component { get; }
-        void Update(byte[] data);
+        void UpdateFromNetwork(byte[] data);
     }
 }
