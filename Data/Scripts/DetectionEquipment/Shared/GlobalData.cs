@@ -16,12 +16,6 @@ namespace DetectionEquipment.Shared
 {
     public static class GlobalData
     {
-        private static IniConfig _iniConfig = new IniConfig(
-            FileLocation.WorldStorage,
-            "config.ini",
-            "General Config",
-            " Detection Equipment World Settings\n\n Set config values below,\n   then restart the world.\n Delete a line to reset it to default.\n ");
-
         /// <summary>
         /// Kill switch for the entire mod
         /// </summary>
@@ -47,11 +41,66 @@ namespace DetectionEquipment.Shared
         public static readonly MyDefinitionId ElectricityId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Electricity");
         public static readonly MyDefinitionId HydrogenId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Hydrogen");
 
+        #region General Config
+
+        private static IniConfig _generalConfig = new IniConfig(
+            FileLocation.WorldStorage,
+            "config.ini",
+            "General Config",
+            " Detection Equipment World Settings\n\n Set config values below,\n   then restart the world.\n Delete a line to reset it to default.\n ");
+
+        /// <summary>
+        /// If true, IFF reflectors will always return a code regardless of their functional state.
+        /// </summary>
+        public static IniSetting<bool> ForceEnableIff = new IniSetting<bool>(
+            _generalConfig,
+            "ForceEnableIff",
+            "If true, IFF reflectors will always return a code regardless of their functional state.",
+            false);
+
+        /// <summary>
+        /// Frequency of updating IFF salts in hours. Note - this exists to make rainbow table IFF hash cracking harder. I suggest making this relatively infrequent to avoid performance issues.
+        /// </summary>
+        public static IniSetting<float> IffResaltInterval = new IniSetting<float>(
+            _generalConfig,
+            "IffResaltInterval",
+            "Frequency of updating IFF salts in hours. Note - this exists to make rainbow table IFF hash cracking harder.",
+            1f);
+
+        /// <summary>
+        /// Toggles pbapi access. If you turn this off you're cringe and I hate you.
+        /// </summary>
+        public static IniSetting<bool> AllowPbApi = new IniSetting<bool>(
+            _generalConfig,
+            "AllowPbApi",
+            "Toggles pbapi access. If you turn this off you're cringe and I hate you.",
+            true);
+
+        /// <summary>
+        /// Required for extended-range WeaponCore integration. Increases sync distance; set to 0 or a negative number to disable.
+        /// </summary>
+        public static IniSetting<int> OverrideSyncDistance = new IniSetting<int>(
+            _generalConfig,
+            "OverrideSyncDistance",
+            "Required for extended-range WeaponCore integration. Increases sync distance; set to 0 or a negative number to disable.",
+            150000,
+            SyncDistanceUpdated);
+
+        #endregion
+
+        #region Sensor Config
+
+        private static IniConfig _sensorConfig = new IniConfig(
+            FileLocation.WorldStorage,
+            "config.ini",
+            "Sensor Config",
+            " Controls sensors.");
+
         /// <summary>
         /// Furthest distance (in meters) a radar can lock onto a target. Don't increase this too high or syncing will break.
         /// </summary>
         public static IniSetting<double> MaxSensorRange = new IniSetting<double>(
-            _iniConfig,
+            _sensorConfig,
             "MaxSensorRange",
             "Furthest distance (in meters) a radar can lock onto a target. Don't increase this too high or syncing will break.",
             150000);
@@ -60,26 +109,71 @@ namespace DetectionEquipment.Shared
         /// Furthest distance (in meters) a camera can lock onto a target. Cannot be further than MaxSensorRange.
         /// </summary>
         public static IniSetting<double> MaxVisualSensorRange = new IniSetting<double>(
-            _iniConfig,
+            _sensorConfig,
             "MaxVisualSensorRange",
             "Furthest distance (in meters) a camera can lock onto a target. Cannot be further than MaxSensorRange.",
             Math.Max(MaxSensorRange, 50000));
 
         /// <summary>
-        /// Required for extended-range WeaponCore integration. Increases sync distance; set to 0 or a negative number to disable.
+        /// Multiplier on all radar cross-sections for all entities.
         /// </summary>
-        public static IniSetting<int> OverrideSyncDistance = new IniSetting<int>(
-            _iniConfig,
-            "OverrideSyncDistance",
-            "Required for extended-range WeaponCore integration. Increases sync distance; set to 0 or a negative number to disable.",
-            (int) MaxSensorRange,
-            SyncDistanceUpdated);
+        public static IniSetting<float> RcsModifier = new IniSetting<float>(
+            _sensorConfig,
+            "RcsModifier",
+            "Multiplier on all radar cross-sections for all entities.",
+            1f);
+
+        /// <summary>
+        /// Multiplier on all visual cross-sections for all entities.
+        /// </summary>
+        public static IniSetting<float> VcsModifier = new IniSetting<float>(
+            _sensorConfig,
+            "VcsModifier",
+            "Multiplier on all visual cross-sections for all entities.",
+            1f);
+
+        /// <summary>
+        /// Multiplier on light armor RCS for all grids.
+        /// </summary>
+        public static IniSetting<float> LightRcsModifier = new IniSetting<float>(
+            _sensorConfig,
+            "LightRcsModifier",
+            "Multiplier on light armor RCS for all grids.",
+            0.5f);
+
+        /// <summary>
+        /// Multiplier on heavy armor RCS for all grids.
+        /// </summary>
+        public static IniSetting<float> HeavyRcsModifier = new IniSetting<float>(
+            _sensorConfig,
+            "HeavyRcsModifier",
+            "Multiplier on heavy armor RCS for all grids.",
+            1f);
+
+        /// <summary>
+        /// Multiplier on fatblock ("functional" block) RCS for all grids.
+        /// </summary>
+        public static IniSetting<float> FatblockRcsModifier = new IniSetting<float>(
+            _sensorConfig,
+            "FatblockRcsModifier",
+            "Multiplier on fatblock (\"functional\" block) RCS for all grids.",
+            2f);
+
+        #endregion
+
+        #region External Config
+
+        private static IniConfig _externalConfig = new IniConfig(
+            FileLocation.WorldStorage,
+            "config.ini",
+            "External Config",
+            " Controls how DetEq interacts with other mods.");
 
         /// <summary>
         /// Should aggregators be able to provide targeting to WeaponCore guns?
         /// </summary>
         public static IniSetting<bool> ContributeWcTargeting = new IniSetting<bool>(
-            _iniConfig,
+            _externalConfig,
             "ContributeWcTargeting",
             "Should aggregators be able to provide targeting to WeaponCore guns?",
             true);
@@ -88,7 +182,7 @@ namespace DetectionEquipment.Shared
         /// Should vanilla WeaponCore magic targeting be disabled? If true, forces <see cref="ContributeWcTargeting"/> enabled.
         /// </summary>
         public static IniSetting<bool> OverrideWcTargeting = new IniSetting<bool>(
-            _iniConfig,
+            _externalConfig,
             "OverrideWcTargeting",
             "Should vanilla WeaponCore magic targeting be disabled? If true, forces ContributeWcTargeting enabled.",
             true,
@@ -98,7 +192,7 @@ namespace DetectionEquipment.Shared
         /// Maximum range for WeaponCore magic targeting, in meters. Only applies if OverrideWcTargeting is false. Set to zero or less to disable.
         /// </summary>
         public static IniSetting<float> MaxWcMagicTargetingRange = new IniSetting<float>(
-            _iniConfig,
+            _externalConfig,
             "MaxWcMagicTargetingRange",
             "Maximum range for WeaponCore magic targeting, in meters. Only applies if OverrideWcTargeting is false. Set to zero or less to disable.",
             -1f);
@@ -107,92 +201,23 @@ namespace DetectionEquipment.Shared
         /// Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance
         /// </summary>
         public static IniSetting<float> MinLockForWcTarget = new IniSetting<float>(
-            _iniConfig,
+            _externalConfig,
             "MinLockForWcTarget",
             "Maximum relative error at which aggregator locks should be added to WeaponCore targeting. E_r = error / distance.",
             0.25f);
 
         /// <summary>
-        /// Multiplier on all radar cross-sections for all entities.
-        /// </summary>
-        public static IniSetting<float> RcsModifier = new IniSetting<float>(
-            _iniConfig,
-            "RcsModifier",
-            "Multiplier on all radar cross-sections for all entities.",
-            1f);
-
-        /// <summary>
-        /// Multiplier on all visual cross-sections for all entities.
-        /// </summary>
-        public static IniSetting<float> VcsModifier = new IniSetting<float>(
-            _iniConfig,
-            "VcsModifier",
-            "Multiplier on all visual cross-sections for all entities.",
-            1f);
-
-        /// <summary>
-        /// Multiplier on light armor RCS for all grids.
-        /// </summary>
-        public static IniSetting<float> LightRcsModifier = new IniSetting<float>(
-            _iniConfig,
-            "LightRcsModifier",
-            "Multiplier on light armor RCS for all grids.",
-            0.5f);
-
-        /// <summary>
-        /// Multiplier on heavy armor RCS for all grids.
-        /// </summary>
-        public static IniSetting<float> HeavyRcsModifier = new IniSetting<float>(
-            _iniConfig,
-            "HeavyRcsModifier",
-            "Multiplier on heavy armor RCS for all grids.",
-            1f);
-
-        /// <summary>
-        /// Multiplier on fatblock ("functional" block) RCS for all grids.
-        /// </summary>
-        public static IniSetting<float> FatblockRcsModifier = new IniSetting<float>(
-            _iniConfig,
-            "FatblockRcsModifier",
-            "Multiplier on fatblock (\"functional\" block) RCS for all grids.",
-            2f);
-
-        /// <summary>
-        /// If true, IFF reflectors will always return a code regardless of their functional state.
-        /// </summary>
-        public static IniSetting<bool> ForceEnableIff = new IniSetting<bool>(
-            _iniConfig,
-            "ForceEnableIff",
-            "If true, IFF reflectors will always return a code regardless of their functional state.",
-            false);
-
-
-        /// <summary>
         /// Multiplier on fatblock ("functional" block) RCS for all grids.
         /// </summary>
         public static IniSetting<float> WcHeatToDegreeConversionRatio = new IniSetting<float>(
-            _iniConfig,
+            _externalConfig,
             "WcHeatToDegreeConversionRatio",
             "Conversion ratio from WC Heat to Degrees for IRS, if WC is present.",
             0.5f);
 
-        /// <summary>
-        /// Frequency of updating IFF salts in hours. Note - this exists to make rainbow table IFF hash cracking harder. I suggest making this relatively infrequent to avoid performance issues.
-        /// </summary>
-        public static IniSetting<float> IffResaltInterval = new IniSetting<float>(
-            _iniConfig,
-            "IffResaltInterval",
-            "Frequency of updating IFF salts in hours. Note - this exists to make rainbow table IFF hash cracking harder.",
-            1f);
+        #endregion
 
-        /// <summary>
-        /// Toggles pbapi access. If you turn this off you're cringe and I hate you.
-        /// </summary>
-        public static IniSetting<bool> AllowPbApi = new IniSetting<bool>(
-            _iniConfig,
-            "AllowPbApi",
-            "Toggles pbapi access. If you turn this off you're cringe and I hate you.",
-            true);
+        
 
         private static void SyncDistanceUpdated(int distance)
         {
@@ -246,8 +271,12 @@ namespace DetectionEquipment.Shared
 
             if (MyAPIGateway.Session.IsServer)
             {
-                _iniConfig.ReadSettings();
-                _iniConfig.WriteSettings();
+                _generalConfig.ReadSettings();
+                _generalConfig.WriteSettings();
+                _sensorConfig.ReadSettings();
+                _sensorConfig.WriteSettings();
+                _externalConfig.ReadSettings();
+                _externalConfig.WriteSettings();
                 MyAPIGateway.Multiplayer.RegisterSecureMessageHandler(DataNetworkId, ServerMessageHandler);
                 IsReady = true;
             }
@@ -306,7 +335,7 @@ namespace DetectionEquipment.Shared
                 if (isSenderServer)
                     return;
 
-                var file = _iniConfig.ReadFile();
+                var file = _generalConfig.ReadFile();
 
                 MyAPIGateway.Multiplayer.SendMessageTo(DataNetworkId, MyAPIGateway.Utilities.SerializeToBinary(file), senderSteamId);
             }
@@ -340,8 +369,12 @@ namespace DetectionEquipment.Shared
                     return;
                 }
 
-                foreach (var setting in _iniConfig.AllSettings)
-                    setting.Read(ini, "General Config");
+                foreach (var setting in _generalConfig.AllSettings)
+                    setting.Read(ini, _generalConfig.SectionName);
+                foreach (var setting in _sensorConfig.AllSettings)
+                    setting.Read(ini, _sensorConfig.SectionName);
+                foreach (var setting in _externalConfig.AllSettings)
+                    setting.Read(ini, _externalConfig.SectionName);
 
                 // Can't unregister network handlers inside a network handler call
                 MyAPIGateway.Utilities.InvokeOnGameThread(() =>
@@ -371,7 +404,9 @@ namespace DetectionEquipment.Shared
                 MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(DataNetworkId, ServerMessageHandler);
             else
                 MyAPIGateway.Multiplayer.UnregisterSecureMessageHandler(DataNetworkId, ClientMessageHandler);
-            _iniConfig = null;
+            _generalConfig = null;
+            _sensorConfig = null;
+            _externalConfig = null;
             Log.Info("GlobalData", "Data cleared.");
         }
 

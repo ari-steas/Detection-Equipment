@@ -57,7 +57,14 @@ namespace DetectionEquipment.Shared.Utils
 
         public void WriteSettings()
         {
+            // persist other sections
             var ini = new MyIni();
+            if (FileExists())
+            {
+                ini.TryParse(ReadFile());
+            }
+
+            ini.DeleteSection(SectionName);
             ini.AddSection(SectionName);
             ini.SetSectionComment(SectionName, SectionComment);
         
@@ -84,6 +91,9 @@ namespace DetectionEquipment.Shared.Utils
 
         public string ReadFile()
         {
+            if (!FileExists())
+                return "";
+
             TextReader reader;
             switch (Location)
             {
@@ -104,7 +114,7 @@ namespace DetectionEquipment.Shared.Utils
             return result;
         }
 
-        public void WriteFile(string data)
+        private void WriteFile(string data)
         {
             TextWriter writer;
             switch (Location)
