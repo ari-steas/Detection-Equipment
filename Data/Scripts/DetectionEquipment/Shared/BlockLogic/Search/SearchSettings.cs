@@ -9,6 +9,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
     {
         [ProtoMember(1)] private long[] _selectedSensors = Array.Empty<long>();
         [ProtoMember(2)] private SearchBlock.SearchModes _searchMode = SearchBlock.SearchModes.Auto;
+        [ProtoMember(3)] private bool _invertAllowControl = false;
 
         [ProtoIgnore] private new SearchBlock AttachedLogic => (SearchBlock)base.AttachedLogic;
 
@@ -22,6 +23,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
         {
             SearchControls.ActiveSensorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
             AttachedLogic.SearchMode.Value = _searchMode;
+            AttachedLogic.InvertAllowControl.Value = _invertAllowControl;
         }
 
         protected override void RetrieveData()
@@ -29,6 +31,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
             if (!SearchControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedSensors))
                 _selectedSensors = Array.Empty<long>();
             _searchMode = AttachedLogic.SearchMode.Value;
+            _invertAllowControl = AttachedLogic.InvertAllowControl.Value;
         }
     }
 }

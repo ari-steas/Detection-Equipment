@@ -18,6 +18,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
         internal Dictionary<BlockSensor, Vector2> DirectionSigns = new Dictionary<BlockSensor, Vector2>();
 
         public SimpleSync<SearchModes> SearchMode = new SimpleSync<SearchModes>(SearchModes.Auto);
+        public SimpleSync<bool> InvertAllowControl = new SimpleSync<bool>(false);
 
         protected override ControlBlockSettingsBase GetSettings => new SearchSettings(this);
         protected override ITerminalControlAdder GetControls => new SearchControls();
@@ -29,6 +30,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 return;
 
             SearchMode.Component = this;
+            InvertAllowControl.Component = this;
 
             base.UpdateOnceBeforeFrame();
         }
@@ -40,7 +42,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
             foreach (var sensor in ControlledSensors)
             {
-                if (!sensor.AllowMechanicalControl)
+                if (sensor.AllowMechanicalControl ^ !InvertAllowControl.Value)
                     continue;
 
                 var autoMode = sensor.Definition.Movement.AzimuthRate > sensor.Definition.Movement.ElevationRate ? SearchModes.AziFirst : SearchModes.ElevFirst;

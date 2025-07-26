@@ -41,6 +41,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             }
         }
         public readonly SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
+        public readonly SimpleSync<bool> InvertAllowControl = new SimpleSync<bool>(false);
 
         private readonly SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
         public readonly Dictionary<BlockSensor, LockSet> LockDecay = new Dictionary<BlockSensor, LockSet>();
@@ -53,6 +54,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
                 return;
             ResetAngleTime.Component = this;
+            InvertAllowControl.Component = this;
             base.UpdateOnceBeforeFrame();
         }
 
@@ -75,7 +77,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
                 foreach (var sensor in ControlledSensors)
                 {
-                    if (!sensor.AllowMechanicalControl)
+                    if (sensor.AllowMechanicalControl ^ !InvertAllowControl.Value)
                         continue;
 
                     var target = GetFirstTarget(sensor);

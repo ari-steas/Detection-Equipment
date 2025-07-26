@@ -86,7 +86,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                             if (sensor.Block != item || sensor.Definition.Movement == null)
                                 continue;
                             ActiveSensors[logic].Add(sensor);
-                            if (sensor.AllowMechanicalControl)
+                            if (!(sensor.AllowMechanicalControl ^ !logic.InvertAllowControl.Value))
                             {
                                 sensor.DesiredAzimuth = 0;
                                 sensor.DesiredElevation = 0;
@@ -96,6 +96,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                         }
                     }
                 }
+            );
+
+            CreateToggle(
+                "InvertAllowControl",
+                "Invert Allow Control",
+                "If disabled, this block inverts \"Allow Mechanical Control\" on sensors.",
+                b => b.GameLogic.GetAs<SearchBlock>().InvertAllowControl.Value,
+                (b, selected) => b.GameLogic.GetAs<SearchBlock>().InvertAllowControl.Value = selected
             );
         }
 

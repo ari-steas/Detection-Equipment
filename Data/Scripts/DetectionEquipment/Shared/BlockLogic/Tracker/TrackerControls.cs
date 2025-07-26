@@ -90,6 +90,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 }
                 );
             ActiveAggregatorSelect.ListBox.VisibleRowsCount = 5;
+
+            CreateToggle(
+                "InvertAllowControl",
+                "Invert Allow Control",
+                "If disabled, this block inverts \"Allow Mechanical Control\" on sensors.",
+                b => b.GameLogic.GetAs<TrackerBlock>().InvertAllowControl.Value,
+                (b, selected) => b.GameLogic.GetAs<TrackerBlock>().InvertAllowControl.Value = selected
+            );
         }
 
         protected override void CreateTerminalProperties()

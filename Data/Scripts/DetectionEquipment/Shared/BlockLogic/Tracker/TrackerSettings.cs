@@ -10,6 +10,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         [ProtoMember(1)] private long[] _selectedAggregators = Array.Empty<long>();
         [ProtoMember(2)] private long[] _selectedSensors = Array.Empty<long>();
         [ProtoMember(3)] private float _resetAngleTime = 4;
+        [ProtoMember(4)] private bool _invertAllowControl = false;
 
         [ProtoIgnore] private new TrackerBlock AttachedLogic => (TrackerBlock)base.AttachedLogic;
 
@@ -24,6 +25,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             TrackerControls.ActiveAggregatorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedAggregators ?? Array.Empty<long>());
             TrackerControls.ActiveSensorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
             AttachedLogic.ResetAngleTime.Value = _resetAngleTime;
+            AttachedLogic.InvertAllowControl.Value = _invertAllowControl;
         }
 
         protected override void RetrieveData()
@@ -33,6 +35,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             if (!TrackerControls.ActiveSensorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedSensors))
                 _selectedSensors = Array.Empty<long>();
             _resetAngleTime = AttachedLogic.ResetAngleTime.Value;
+            _invertAllowControl = AttachedLogic.InvertAllowControl.Value;
         }
     }
 }
