@@ -1,10 +1,9 @@
-﻿using Sandbox.ModAPI;
-using System;
+﻿using System;
+using System.Collections.Generic;
+using Sandbox.ModAPI;
+using VRage;
 using VRage.Game.ModAPI;
 using VRage.Utils;
-using System.Collections.Generic;
-using VRage;
-using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -59,7 +58,6 @@ namespace DetectionEquipment.Shared.Definitions
             MyAPIGateway.Utilities.SendModMessage(ApiChannel, "ApiEndpointRequest");
             MyLog.Default.WriteLineAndConsole(
                 $"{_modContext.ModName}: DefinitionAPI listening for API methods...");
-            Log.Info("DefinitionApi", "Listening for API methods...");
         }
 
         /// <summary>
@@ -81,9 +79,8 @@ namespace DetectionEquipment.Shared.Definitions
             IsReady = false;
             OnReady = null;
             MyLog.Default.WriteLineAndConsole($"{_modContext.ModName}: DefinitionAPI unloaded.");
-            Log.Info("DefinitionApi", "Unloaded.");
         }
-
+        
         // These sections are what the user can actually see when referencing the API, and can be used freely. //
         // Note the null checks. //
 
@@ -126,6 +123,14 @@ namespace DetectionEquipment.Shared.Definitions
         /// <typeparam name="T"></typeparam>
         /// <param name="definitionId"></param>
         public void RemoveDefinition<T>(string definitionId) where T : class => _removeDefinition?.Invoke(definitionId, typeof(T));
+
+        /// <summary>
+        /// Checks if a given definition and its type exist.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="definitionId"></param>
+        /// <returns></returns>
+        public bool HasDefinition<T>(string definitionId) where T : class => _hasDefinition?.Invoke(definitionId, typeof(T)) ?? false;
 
         #endregion
 
@@ -194,6 +199,7 @@ namespace DetectionEquipment.Shared.Definitions
         private Func<string, Type, byte[]> _getDefinition;
         private Func<Type, string[]> _getDefinitionsOfType;
         private Action<string, Type> _removeDefinition;
+        private Func<string, Type, bool> _hasDefinition;
 
         // Delegates
         private Action<string, Type, Dictionary<string, Delegate>> _registerDelegates;
@@ -208,7 +214,7 @@ namespace DetectionEquipment.Shared.Definitions
         private Action<string> _logInfo;
 
         #endregion
-
+        
         #region API Initialization
 
         private bool _isRegistered;
@@ -230,6 +236,7 @@ namespace DetectionEquipment.Shared.Definitions
             SetApiMethod("GetDefinition", ref _getDefinition);
             SetApiMethod("GetDefinitionsOfType", ref _getDefinitionsOfType);
             SetApiMethod("RemoveDefinition", ref _removeDefinition);
+            SetApiMethod("HasDefinition", ref _hasDefinition);
 
             // Delegates
             SetApiMethod("RegisterDelegates", ref _registerDelegates);
@@ -289,7 +296,7 @@ namespace DetectionEquipment.Shared.Definitions
                 if (_apiInit || obj is string || obj == null) // the "ApiEndpointRequest" message will also be received here, we're ignoring that
                     return;
 
-                var tuple = (MyTuple<int, IReadOnlyDictionary<string, Delegate>>)obj;
+                var tuple = (MyTuple<int, IReadOnlyDictionary<string, Delegate>>) obj;
                 var receivedVersion = tuple.Item1;
                 var dict = tuple.Item2;
 
@@ -303,7 +310,6 @@ namespace DetectionEquipment.Shared.Definitions
 
                 IsReady = true;
                 LogInfo($"Definition API v{ApiVersion} loaded!");
-                Log.Info("DefinitionApi", $"Definition API v{ApiVersion} loaded!");
                 OnReady?.Invoke();
             }
             catch (Exception ex)

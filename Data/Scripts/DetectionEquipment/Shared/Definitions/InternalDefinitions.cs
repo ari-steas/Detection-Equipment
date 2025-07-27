@@ -324,11 +324,22 @@ namespace DetectionEquipment.Shared.Definitions
             Log.IncreaseIndent();
 
             foreach (var definitionKvp in SensorDefinitions)
-                DefinitionManager.DefinitionApi.RegisterDefinition( definitionKvp.Key, definitionKvp.Value);
+            {
+                if (!DefinitionManager.DefinitionApi.HasDefinition<SensorDefinition>(definitionKvp.Key))
+                    DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+            }
+
             foreach (var definitionKvp in CountermeasureDefinitions)
-                DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+            {
+                if (!DefinitionManager.DefinitionApi.HasDefinition<CountermeasureDefinition>(definitionKvp.Key))
+                    DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+            }
+
             foreach (var definitionKvp in CountermeasureEmitterDefinitions)
-                DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+            {
+                if (!DefinitionManager.DefinitionApi.HasDefinition<CountermeasureEmitterDefinition>(definitionKvp.Key))
+                    DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+            }
 
             Log.DecreaseIndent();
             Log.Info("InternalDefinitions", "Complete.");
