@@ -2,6 +2,7 @@
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.HudController;
+using DetectionEquipment.Shared.Helpers;
 using ProtoBuf;
 
 namespace DetectionEquipment.Shared.Networking
@@ -15,6 +16,7 @@ namespace DetectionEquipment.Shared.Networking
     [ProtoInclude(GlobalData.ServerNetworkId + 8, typeof(HudControllerBlock.HudUpdatePacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 9, typeof(BlockLogicInitPacket))]
     [ProtoInclude(GlobalData.ServerNetworkId + 10, typeof(BlockLogicUpdatePacket))]
+    [ProtoInclude(GlobalData.ServerNetworkId + 11, typeof(IffHelper.IffSaltPacket))]
     [ProtoContract(UseProtoMembersOnly = true)]
     public abstract class PacketBase
     {
