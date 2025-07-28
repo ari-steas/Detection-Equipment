@@ -92,7 +92,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             CreateToggle(
                 "InvertAllowControl",
                 "Invert Allow Control",
-                "If disabled, this block inverts \"Allow Mechanical Control\" on sensors.",
+                "If enabled, this block inverts \"Allow Mechanical Control\" on sensors.",
                 b => b.GameLogic.GetAs<TrackerBlock>().InvertAllowControl.Value,
                 (b, selected) => b.GameLogic.GetAs<TrackerBlock>().InvertAllowControl.Value = selected
             );
