@@ -82,6 +82,8 @@ namespace DetectionEquipment.Client.Interface.Apps
                 foreach (var sensorBlock in sensorBlocks)
                 {
                     var logic = sensorBlock.GetLogic<ClientSensorLogic>();
+                    if (logic == null)
+                        continue;
                     var sensorScreenPos = ClampToLcd(sensorBlock.LocalMatrix.Translation) * lcdScale + gridLcdCenter;
 
                     // Sensor block sprite
