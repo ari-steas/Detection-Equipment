@@ -6,8 +6,12 @@ using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using DetectionEquipment.Shared.BlockLogic;
+using Sandbox.Game.Entities.Cube;
+using Sandbox.ModAPI.Interfaces.Terminal;
 using VRage.Game.ModAPI;
 using VRageMath;
+using static DetectionEquipment.Client.BlockLogic.Sensors.SensorUpdatePacket;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
@@ -29,7 +33,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 if (Sensors[CurrentSensorId].Aperture == value)
                     return;
                 Sensors[CurrentSensorId].Aperture = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId], FieldId.Aperture));
             }
         }
         public float CurrentDesiredAzimuth
@@ -43,7 +47,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 if (Sensors[CurrentSensorId].DesiredAzimuth == value)
                     return;
                 Sensors[CurrentSensorId].DesiredAzimuth = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId], FieldId.Azimuth));
             }
         }
         public float CurrentDesiredElevation
@@ -57,7 +61,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 if (Sensors[CurrentSensorId].DesiredElevation == value)
                     return;
                 Sensors[CurrentSensorId].DesiredElevation = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId], FieldId.Elevation));
             }
         }
         public float CurrentMinAzimuth
@@ -71,7 +75,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 if (Sensors[CurrentSensorId].MinAzimuth == value)
                     return;
                 Sensors[CurrentSensorId].MinAzimuth = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId], FieldId.MinAzimuth));
             }
         }
         public float CurrentMaxAzimuth
@@ -85,7 +89,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 if (Sensors[CurrentSensorId].MaxAzimuth == value)
                     return;
                 Sensors[CurrentSensorId].MaxAzimuth = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId], FieldId.MaxAzimuth));
             }
         }
         public float CurrentMinElevation
@@ -99,7 +103,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 if (Sensors[CurrentSensorId].MinElevation == value)
                     return;
                 Sensors[CurrentSensorId].MinElevation = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId], FieldId.MinElevation));
             }
         }
         public float CurrentMaxElevation
@@ -113,7 +117,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 if (Sensors[CurrentSensorId].MaxElevation == value)
                     return;
                 Sensors[CurrentSensorId].MaxElevation = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId], FieldId.MaxElevation));
             }
         }
 
@@ -128,7 +132,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 if (Sensors[CurrentSensorId].AllowMechanicalControl == value)
                     return;
                 Sensors[CurrentSensorId].AllowMechanicalControl = value;
-                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId]));
+                ClientNetwork.SendToServer(new SensorUpdatePacket(Block.EntityId, Sensors[CurrentSensorId], FieldId.AllowMechanicalControl));
             }
         }
 
@@ -233,14 +237,22 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 return;
 
             var data = Sensors[packet.Id];
-            data.Aperture = packet.Aperture;
-            data.DesiredAzimuth = packet.Azimuth;
-            data.DesiredElevation = packet.Elevation;
-            data.MinAzimuth = packet.MinAzimuth;
-            data.MaxAzimuth = packet.MaxAzimuth;
-            data.MinElevation = packet.MinElevation;
-            data.MaxElevation = packet.MaxElevation;
-            data.AllowMechanicalControl = packet.AllowMechanicalControl;
+            packet.SetField(FieldId.Aperture, ref data.Aperture);
+            packet.SetField(FieldId.Azimuth, ref data._desiredAzimuth);
+            packet.SetField(FieldId.Elevation, ref data._desiredElevation);
+            packet.SetField(FieldId.MinAzimuth, ref data._minAzimuth);
+            packet.SetField(FieldId.MaxAzimuth, ref data._maxAzimuth);
+            packet.SetField(FieldId.MinElevation, ref data._minElevation);
+            packet.SetField(FieldId.MaxElevation, ref data._maxElevation);
+            packet.SetField(FieldId.AllowMechanicalControl, ref data.AllowMechanicalControl);
+
+            if (packet.Id == CurrentSensorId && MyAPIGateway.Gui.GetCurrentScreen == MyTerminalPageEnum.ControlPanel && Block.EntityId == ControlBlockManager.I.TerminalSelectedBlock)
+            {
+                List<IMyTerminalControl> controls;
+                MyAPIGateway.TerminalControls.GetControls<IMyCameraBlock>(out controls);
+                foreach (var control in controls)
+                    control.UpdateVisual();
+            }
         }
 
         private void OnCustomDataChanged(IMyTerminalBlock obj)

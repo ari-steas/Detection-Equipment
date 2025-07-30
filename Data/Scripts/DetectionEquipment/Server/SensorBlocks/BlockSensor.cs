@@ -3,20 +3,20 @@ using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
-using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Serialization;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
+using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.Countermeasures;
 using Sandbox.Game.EntityComponents;
-using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
+using static DetectionEquipment.Client.BlockLogic.Sensors.SensorUpdatePacket;
 
 namespace DetectionEquipment.Server.SensorBlocks
 {
@@ -40,7 +40,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             ? MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _sensorDummy.Matrix * _dummyParent.WorldMatrix
             : _sensorDummy.Matrix * _dummyParent.WorldMatrix;
         
-        private bool _settingsUpdated = false;
+        private FieldId _settingsUpdated = FieldId.None;
         public double Azimuth { get; private set;} = 0;
         public double Elevation { get; private set; } = 0;
 
@@ -57,7 +57,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (_desiredAzimuth == normalized)
                     return;
                 _desiredAzimuth = normalized;
-                _settingsUpdated = true;
+                _settingsUpdated |= FieldId.Azimuth;
             }
         }
         public double MinAzimuth
@@ -75,7 +75,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     MaxAzimuth = MinAzimuth;
                 if (DesiredAzimuth < MinAzimuth)
                     DesiredAzimuth = MinAzimuth;
-                _settingsUpdated = true;
+                _settingsUpdated |= FieldId.MinAzimuth;
             }
         }
         public double MaxAzimuth
@@ -93,7 +93,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     MinAzimuth = MaxAzimuth;
                 if (DesiredAzimuth > MaxAzimuth)
                     DesiredAzimuth = MaxAzimuth;
-                _settingsUpdated = true;
+                _settingsUpdated |= FieldId.MaxAzimuth;
             }
         }
         public double DesiredElevation
@@ -108,7 +108,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (_desiredElevation == normalized)
                     return;
                 _desiredElevation = normalized;
-                _settingsUpdated = true;
+                _settingsUpdated |= FieldId.Elevation;
             }
         }
         public double MinElevation
@@ -126,7 +126,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     MaxElevation = MinElevation;
                 if (DesiredElevation < MinElevation)
                     DesiredElevation = MinElevation;
-                _settingsUpdated = true;
+                _settingsUpdated |= FieldId.MinElevation;
             }
         }
         public double MaxElevation
@@ -144,7 +144,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     MinElevation = MaxElevation;
                 if (DesiredElevation > MaxElevation)
                     DesiredElevation = MaxElevation;
-                _settingsUpdated = true;
+                _settingsUpdated |= FieldId.MaxElevation;
             }
         }
         public double Aperture
@@ -159,26 +159,36 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (Sensor.Aperture == normalized)
                     return;
                 Sensor.Aperture = normalized;
-                _settingsUpdated = true;
+                _settingsUpdated |= FieldId.Aperture;
             }
         }
 
         public bool AllowMechanicalControl;
 
-        public void UpdateFromPacket(Client.BlockLogic.Sensors.SensorUpdatePacket packet)
+        public void UpdateFromPacket(SensorUpdatePacket packet)
         {
-            if (_settingsUpdated)
-                return;
+            if ((_settingsUpdated & FieldId.Azimuth) == 0)
+                packet.SetField(FieldId.Azimuth, ref _desiredAzimuth);
+            if ((_settingsUpdated & FieldId.Elevation) == 0)
+                packet.SetField(FieldId.Elevation, ref _desiredElevation);
+            if ((_settingsUpdated & FieldId.Aperture) == 0)
+            {
+                double sensorAperture = Sensor.Aperture;
+                packet.SetField(FieldId.Aperture, ref sensorAperture);
+                Sensor.Aperture = sensorAperture;
+            }
+            if ((_settingsUpdated & FieldId.MinAzimuth) == 0)
+                packet.SetField(FieldId.MinAzimuth, ref _minAzimuth);
+            if ((_settingsUpdated & FieldId.MaxAzimuth) == 0)
+                packet.SetField(FieldId.MaxAzimuth, ref _maxAzimuth);
+            if ((_settingsUpdated & FieldId.MinElevation) == 0)
+                packet.SetField(FieldId.MinElevation, ref _minElevation);
+            if ((_settingsUpdated & FieldId.MaxElevation) == 0)
+                packet.SetField(FieldId.MaxElevation, ref _maxElevation);
+            if ((_settingsUpdated & FieldId.AllowMechanicalControl) == 0)
+                packet.SetField(FieldId.AllowMechanicalControl, ref AllowMechanicalControl);
 
-            _desiredAzimuth = packet.Azimuth;
-            _desiredElevation = packet.Elevation;
-            Sensor.Aperture = packet.Aperture;
-            _minAzimuth = packet.MinAzimuth;
-            _maxAzimuth = packet.MaxAzimuth;
-            _maxElevation = packet.MaxElevation;
-            _minElevation = packet.MinElevation;
-            AllowMechanicalControl = packet.AllowMechanicalControl;
-            _settingsUpdated = true;
+            _settingsUpdated |= packet.Fields;
         }
 
         internal void LoadDefaultSettings()
@@ -188,7 +198,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             _maxAzimuth = (float) (Definition.Movement?.MaxAzimuth ?? 0);
             _minElevation = (float) (Definition.Movement?.MinElevation ?? 0);
             _maxElevation = (float) (Definition.Movement?.MaxElevation ?? 0);
-            _settingsUpdated = true;
+            _settingsUpdated = FieldId.All;
         }
 
         private MyEntitySubpart _aziPart, _elevPart;
@@ -240,11 +250,11 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             UpdateSensorMatrix();
 
-            if (_settingsUpdated && MyAPIGateway.Session.GameplayFrameCounter % 3 == 0)
+            if (_settingsUpdated != FieldId.None && MyAPIGateway.Session.GameplayFrameCounter % 3 == 0)
             {
-                ServerNetwork.SendToEveryoneInSync(new Client.BlockLogic.Sensors.SensorUpdatePacket(this), Block.GetPosition());
+                ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this, _settingsUpdated), Block.GetPosition());
                 BlockSensorSettings.SaveBlockSettings(Block);
-                _settingsUpdated = false;
+                _settingsUpdated = FieldId.None;
             }
 
             if (!Sensor.Enabled)

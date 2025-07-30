@@ -1,9 +1,12 @@
-﻿using System.Collections.Generic;
-using DetectionEquipment.Server;
+﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
+using System;
+using System.Collections.Generic;
 using VRageMath;
+using static DetectionEquipment.Client.BlockLogic.Sensors.SensorUpdatePacket;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
@@ -41,7 +44,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 defIds.Add(sensor.Definition.Id);
 
                 // prep and send update packets, receive order doesn't matter
-                ServerNetwork.SendToPlayer(new SensorUpdatePacket(sensor), requesterId);
+                ServerNetwork.SendToPlayer(new SensorUpdatePacket(sensor, FieldId.All), requesterId);
             }
             return new SensorInitPacket
             {
@@ -56,45 +59,117 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
     internal class SensorUpdatePacket : BlockLogicUpdatePacket
     {
         [ProtoMember(2)] public uint Id;
-        [ProtoMember(3)] public float Azimuth;
-        [ProtoMember(4)] public float Elevation;
-        [ProtoMember(5)] public float Aperture;
-        [ProtoMember(6)] public float MinAzimuth;
-        [ProtoMember(7)] public float MaxAzimuth;
-        [ProtoMember(8)] public float MinElevation;
-        [ProtoMember(9)] public float MaxElevation;
-        [ProtoMember(10)] public bool AllowMechanicalControl;
+        [ProtoMember(3)] public FieldId Fields;
+        [ProtoMember(4)] private float[] _values;
 
-        public SensorUpdatePacket(long blockId, ClientSensorData sensor) // TODO make this only update one value at a time
+        public SensorUpdatePacket(long blockId, ClientSensorData sensor, FieldId fields) // TODO make this only update one value at a time
         {
             AttachedBlockId = blockId;
             Id = sensor.Id;
-            Azimuth = sensor.DesiredAzimuth;
-            Elevation = sensor.DesiredElevation;
-            Aperture = sensor.Aperture;
-            MinAzimuth = sensor.MinAzimuth;
-            MaxAzimuth = sensor.MaxAzimuth;
-            MinElevation = sensor.MinElevation;
-            MaxElevation = sensor.MaxElevation;
-            AllowMechanicalControl = sensor.AllowMechanicalControl;
+            Fields = fields;
+
+            List<float> valuesSet = new List<float>();
+            if ((fields & FieldId.Azimuth) != 0)
+                valuesSet.Add(sensor.DesiredAzimuth);
+            if ((fields & FieldId.Elevation) != 0)
+                valuesSet.Add(sensor.DesiredElevation);
+            if ((fields & FieldId.Aperture) != 0)
+                valuesSet.Add(sensor.Aperture);
+            if ((fields & FieldId.MinAzimuth) != 0)
+                valuesSet.Add(sensor.MinAzimuth);
+            if ((fields & FieldId.MaxAzimuth) != 0)
+                valuesSet.Add(sensor.MaxAzimuth);
+            if ((fields & FieldId.MinElevation) != 0)
+                valuesSet.Add(sensor.MinElevation);
+            if ((fields & FieldId.MaxElevation) != 0)
+                valuesSet.Add(sensor.MaxElevation);
+            if ((fields & FieldId.AllowMechanicalControl) != 0)
+                valuesSet.Add(sensor.AllowMechanicalControl ? 1 : 0);
+            _values = valuesSet.ToArray();
         }
 
-        public SensorUpdatePacket(Server.SensorBlocks.BlockSensor sensor)
+        public SensorUpdatePacket(Server.SensorBlocks.BlockSensor sensor, FieldId fields)
         {
             AttachedBlockId = sensor.Block.EntityId;
             Id = sensor.Sensor.Id;
-            Azimuth = (float) sensor.DesiredAzimuth;
-            Elevation = (float) sensor.DesiredElevation;
-            Aperture = (float) sensor.Aperture;
-            MinAzimuth = (float) sensor.MinAzimuth;
-            MaxAzimuth = (float) sensor.MaxAzimuth;
-            MinElevation = (float) sensor.MinElevation;
-            MaxElevation = (float) sensor.MaxElevation;
-            AllowMechanicalControl = sensor.AllowMechanicalControl;
+            Fields = fields;
+
+            List<float> valuesSet = new List<float>();
+            if ((fields & FieldId.Azimuth) != 0)
+                valuesSet.Add((float) sensor.DesiredAzimuth);
+            if ((fields & FieldId.Elevation) != 0)
+                valuesSet.Add((float) sensor.DesiredElevation);
+            if ((fields & FieldId.Aperture) != 0)
+                valuesSet.Add((float) sensor.Aperture);
+            if ((fields & FieldId.MinAzimuth) != 0)
+                valuesSet.Add((float) sensor.MinAzimuth);
+            if ((fields & FieldId.MaxAzimuth) != 0)
+                valuesSet.Add((float) sensor.MaxAzimuth);
+            if ((fields & FieldId.MinElevation) != 0)
+                valuesSet.Add((float) sensor.MinElevation);
+            if ((fields & FieldId.MaxElevation) != 0)
+                valuesSet.Add((float) sensor.MaxElevation);
+            if ((fields & FieldId.AllowMechanicalControl) != 0)
+                valuesSet.Add(sensor.AllowMechanicalControl ? 1 : 0);
+            _values = valuesSet.ToArray();
         }
 
         private SensorUpdatePacket()
         {
+        }
+
+        public void SetField(FieldId fieldId, ref float field)
+        {
+            // skip if this packet doesn't contain the field
+            if ((Fields & fieldId) == 0)
+                return;
+
+            int valuesIdx = 0;
+            int iterVal = 1;
+            while (iterVal < (int) fieldId)
+            {
+                if (((int) Fields & iterVal) == iterVal) // count number of preceding occupied fields
+                    valuesIdx++;
+                iterVal <<= 1;
+            }
+
+            field = _values[valuesIdx];
+        }
+
+        public void SetField(FieldId fieldId, ref double field)
+        {
+            // skip if this packet doesn't contain the field
+            if ((Fields & fieldId) == 0)
+                return;
+
+            int valuesIdx = 0;
+            int iterVal = 1;
+            while (iterVal < (int) fieldId)
+            {
+                if (((int) Fields & iterVal) == iterVal) // count number of preceding occupied fields
+                    valuesIdx++;
+                iterVal <<= 1;
+            }
+
+            field = _values[valuesIdx];
+        }
+
+        public void SetField(FieldId fieldId, ref bool field)
+        {
+            // skip if this packet doesn't contain the field
+            if ((Fields & fieldId) == 0)
+                return;
+
+            int valuesIdx = 0;
+            int iterVal = 1;
+            while (iterVal < (int) fieldId)
+            {
+                if (((int) Fields & iterVal) == iterVal) // count number of preceding occupied fields
+                    valuesIdx++;
+                iterVal <<= 1;
+            }
+
+            field = _values[valuesIdx] > 0;
         }
 
         protected override void TryUpdateLogicClient()
@@ -117,6 +192,22 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         public override bool CanUpdate(IBlockLogic logic)
         {
             return logic is ClientSensorLogic;
+        }
+
+        [Flags]
+        internal enum FieldId
+        {
+            None = 0,
+            Azimuth = 1,
+            Elevation = 2,
+            Aperture = 4,
+            MinAzimuth = 8,
+            MaxAzimuth = 16,
+            MinElevation = 32,
+            MaxElevation = 64,
+            AllowMechanicalControl = 128,
+
+            All = int.MaxValue
         }
     }
 }
