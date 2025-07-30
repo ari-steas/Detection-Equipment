@@ -28,6 +28,8 @@
 			<BlockPairName>GimbalCamera</BlockPairName>
 			<MirroringY>Z</MirroringY>
 			<MirroringZ>Y</MirroringZ>
+			<ResourceSinkGroup>Utility</ResourceSinkGroup>
+			<IsAirTight>false</IsAirTight>
 		</Definition>
 	</CubeBlocks>
 </Definitions>

@@ -30,6 +30,7 @@
 			<OverlayTexture></OverlayTexture>
 			<MinFov>0.1</MinFov>
 			<MaxFov>1.04719755</MaxFov>
+			<ResourceSinkGroup>Utility</ResourceSinkGroup>
 		</Definition>
 	</CubeBlocks>
 </Definitions>

@@ -32,6 +32,7 @@
 				<MountPoint Side="Bottom" StartX="0.00" StartY="0.00" EndX="1.00" EndY="1.00"/>
 			</MountPoints>
 			<BlockPairName>IffReflector</BlockPairName>
+			<ResourceSinkGroup>Defense</ResourceSinkGroup>
 		</Definition>
 		
 		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
@@ -68,6 +69,7 @@
 			<MirroringX>MinusHalfZ</MirroringX>
 			<MirroringY>HalfZ</MirroringY>
 			<MirroringZ>XHalfZ</MirroringZ>
+			<ResourceSinkGroup>Defense</ResourceSinkGroup>
 		</Definition>
 	</CubeBlocks>
 </Definitions>

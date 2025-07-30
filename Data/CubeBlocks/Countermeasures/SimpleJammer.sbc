@@ -30,6 +30,7 @@
 			</MountPoints>
 			<BlockPairName>SimpleJammer</BlockPairName>
 			<MirroringY>Z</MirroringY>
+			<ResourceSinkGroup>Defense</ResourceSinkGroup>
 		</Definition>
 	</CubeBlocks>
 </Definitions>

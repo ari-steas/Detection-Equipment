@@ -54,6 +54,7 @@
             <DestroySound>WepSmallWarheadExpl</DestroySound>
             <PCU>100</PCU>
             <IsAirTight>false</IsAirTight>
+			<ResourceSinkGroup>Utility</ResourceSinkGroup>
         </Definition>
 		
 		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
@@ -111,6 +112,7 @@
             <DestroySound>WepSmallWarheadExpl</DestroySound>
             <PCU>100</PCU>
             <IsAirTight>false</IsAirTight>
+			<ResourceSinkGroup>Utility</ResourceSinkGroup>
         </Definition>
 	</CubeBlocks>
 </Definitions>

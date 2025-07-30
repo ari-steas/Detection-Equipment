@@ -35,6 +35,7 @@
 			<BlockPairName>ActiveRadar_Simple</BlockPairName>
 			<MirroringY>Z</MirroringY>
 			<MirroringZ>Y</MirroringZ>
+			<ResourceSinkGroup>Utility</ResourceSinkGroup>
 		</Definition>
 	</CubeBlocks>
 </Definitions>

@@ -33,6 +33,7 @@
 			</MountPoints>
 			<MirroringY>Z</MirroringY>
 			<MirroringZ>Y</MirroringZ>
+			<ResourceSinkGroup>Defense</ResourceSinkGroup>
 		</Definition>
 	</CubeBlocks>
 </Definitions>
