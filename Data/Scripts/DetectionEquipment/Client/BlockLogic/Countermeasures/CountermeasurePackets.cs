@@ -42,7 +42,7 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
 
             if (ids.Count == 0)
             {
-                Log.Exception("CountermeasurePacket", new Exception($"Failed to create emitter for {blockEntityId}!"));
+                //Log.Exception("CountermeasurePacket", new Exception($"Failed to create emitter for {blockEntityId}!"));
                 return null;
             }
 
