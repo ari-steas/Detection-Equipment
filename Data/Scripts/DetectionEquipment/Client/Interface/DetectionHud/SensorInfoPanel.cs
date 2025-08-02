@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.HudController;
 using DetectionEquipment.Shared.Definitions;
-using RichHudFramework.Client;
+using RichHudFramework;
 using RichHudFramework.UI;
-using RichHudFramework.UI.Rendering;
+using Sandbox.Game.EntityComponents;
+using Sandbox.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Client.Interface.DetectionHud
@@ -22,25 +22,19 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         public SensorInfoPanel(HudParentBase parent) : base(parent)
         {
-            ParentAlignment = ParentAlignments.Right | ParentAlignments.Top;
+            Size = new Vector2(1920, 1080);
             _mainLabel = new Label(this)
             {
-                Format = UserData.StandardFont,
-                BuilderMode = TextBuilderModes.Lined
+                Format = UserData.StandardFont.WithAlignment(TextAlignment.Right),
+                BuilderMode = TextBuilderModes.Lined,
+                ParentAlignment = ParentAlignments.Right | ParentAlignments.Top | ParentAlignments.Inner,
+                Padding = Vector2.One * 50,
             };
         }
 
         public void UpdateDraw()
         {
-//            _mainLabel.Text = @"Weapon
-//├── Projectile
-//│   ├── GridSystem
-//│   │   └── Blocks
-//│   └── VehicleController
-//├── Player
-//└── Environment";
-
-            if (_needsTextUpdate)
+            if (_needsTextUpdate || MyAPIGateway.Session.GameplayFrameCounter % 10 == 0)
             {
                 UpdateText();
                 _needsTextUpdate = false;
@@ -49,7 +43,17 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
         private void UpdateText()
         {
+            if (_controllers.Count == 0)
+            {
+                _mainLabel.Text = "";
+                return;
+            }
+
             StringBuilder sb = new StringBuilder();
+
+            float totalPowerDraw = 0;
+
+            // sensors
             foreach (var controller in _controllers)
             {
                 if (controller.SourceAggregator == null)
@@ -73,25 +77,43 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
 
                     if (!sensor.Block.IsWorking)
                         damagedSensors[sensor.Definition.Type].Add(sensor);
+
+                    if (sensor.Block.Enabled && sensor.Block.IsFunctional)
+                        totalPowerDraw += sensor.Block.ResourceSink.MaxRequiredInputByType(GlobalData.ElectricityId);
                 }
 
                 int typeCount = aggregatorSensors.Count;
                 foreach (var sensorType in aggregatorSensors)
                 {
                     typeCount--;
-                    sb.Append(typeCount == 0 ? @"└─ " : @"├─ ");
-
-                    sb.Append(SensorTypeName(sensorType.Key)).Append(" x").AppendLine(sensorType.Value.Count.ToString());
+                    sb.Append("x").Append(sensorType.Value.Count.ToString()).Append(' ').Append(SensorTypeName(sensorType.Key));
+                    sb.AppendLine(typeCount == 0 ? @"─┘" : @"─┤");
 
                     for (var i = 0; i < damagedSensors[sensorType.Key].Count; i++)
                     {
                         var dmgedSensor = damagedSensors[sensorType.Key][i];
+                        // sensor name, trimmed to 10 characters
+                        string sName = dmgedSensor.Block.CustomName;
+                        sb.Append(sName.Length > 10 ? sName.Substring(0, 4) + ".." + sName.Substring(sName.Length-4, 4) : sName);
 
-                        sb.Append(typeCount == 0 ? @"    " : @"│   ");
-                        sb.Append(i == damagedSensors[sensorType.Key].Count - 1 ? @"└" : @"├");
-                        sb.Append(@"── ! ").Append(dmgedSensor.Block.CustomName).Append(" !");
+                        // alert symbol; delta for not enabled, x-in-circle for damaged, i-in-triangle otherwise (i.e. no power)
+                        sb.Append($" {GetAlertSymbol(dmgedSensor.Block)} ──");
+
+                        // right-aligned text tree
+                        sb.Append(i == damagedSensors[sensorType.Key].Count - 1 ? @"┘" : @"┤");
+                        sb.AppendLine(typeCount == 0 ? @"  " : @" │");
                     }
                 }
+
+                sb.AppendLine();
+            }
+
+            var distributor = (MyResourceDistributorComponent) _controllers.First().Block.CubeGrid.ResourceDistributor;
+            
+            float availablePower = distributor.MaxAvailableResourceByType(GlobalData.ElectricityId);
+            if (totalPowerDraw > availablePower)
+            {
+                sb.AppendLine($"{(char)0xE056} POWER OVERDRAW {(char)0xE056}\n{totalPowerDraw:N1}/{availablePower:N1}MW ");
             }
 
             _mainLabel.Text = sb;
@@ -119,19 +141,38 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             switch (type)
             {
                 case SensorDefinition.SensorType.Radar:
-                    return "RDR";
+                    return "ACT-RDR";
                 case SensorDefinition.SensorType.PassiveRadar:
-                    return "RWR";
+                    return "WRN-RDR";
                 case SensorDefinition.SensorType.Optical:
-                    return "VIS";
+                    return "VIS-OPT";
                 case SensorDefinition.SensorType.Infrared:
-                    return "IRS";
+                    return "IRS-OPT";
                 case SensorDefinition.SensorType.Antenna:
-                    return "COM";
+                    return "WRN-COM";
                 case SensorDefinition.SensorType.None:
                 default:
                     return "N/A";
             }
+        }
+
+        private static char GetAlertSymbol(IMyCameraBlock block, int blinkInterval = 60)
+        {
+            // blinking alert symbol; delta for not enabled, hashed block for damaged, i-in-triangle otherwise (i.e. no power)
+            float frame = (float) (MyAPIGateway.Session.GameplayFrameCounter % blinkInterval) / blinkInterval; // blink cycle interval 1 second
+
+            char[] activeAlerts = new char[2];
+            int idx = 0;
+            if (!block.Enabled)
+                activeAlerts[idx++] = (char)0x2206;
+            if (!block.IsFunctional)
+                activeAlerts[idx++] = (char)0x2591;
+            if (idx == 0)
+                activeAlerts[idx++] = (char)0xE056;
+            if (idx == 1)
+                activeAlerts[1] = ' ';
+            
+            return activeAlerts[(int)Math.Round((activeAlerts.Length-1) * frame)];
         }
     }
 }
