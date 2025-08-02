@@ -46,7 +46,7 @@
 				<MountPoint Side="Right" StartX="0.00" StartY="0.00" EndX="0.40" EndY="0.40"/>
 				<MountPoint Side="Bottom" StartX="0.00" StartY="0.60" EndX="1.00" EndY="1.00"/>
 			</MountPoints>
-            <ResourceSinkGroup>Utility</ResourceSinkGroup>
+            <ResourceSinkGroup>Defense</ResourceSinkGroup>
             <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
             <DamagedSound>ParticleElectrical</DamagedSound>
             <EmissiveColorPreset>Default</EmissiveColorPreset>
@@ -54,7 +54,6 @@
             <DestroySound>WepSmallWarheadExpl</DestroySound>
             <PCU>100</PCU>
             <IsAirTight>false</IsAirTight>
-			<ResourceSinkGroup>Utility</ResourceSinkGroup>
         </Definition>
 		
 		<Definition xsi:type="MyObjectBuilder_ConveyorSorterDefinition">
@@ -104,7 +103,7 @@
 				<MountPoint Side="Top" StartX="0.00" StartY="0.00" EndX="5.00" EndY="2.00"/>
 				<MountPoint Side="Bottom" StartX="0.00" StartY="0.00" EndX="5.00" EndY="2.00"/>
 			</MountPoints>
-            <ResourceSinkGroup>Utility</ResourceSinkGroup>
+            <ResourceSinkGroup>Defense</ResourceSinkGroup>
             <DamageEffectName>Damage_Electrical_Damaged</DamageEffectName>
             <DamagedSound>ParticleElectrical</DamagedSound>
             <EmissiveColorPreset>Default</EmissiveColorPreset>
@@ -112,7 +111,6 @@
             <DestroySound>WepSmallWarheadExpl</DestroySound>
             <PCU>100</PCU>
             <IsAirTight>false</IsAirTight>
-			<ResourceSinkGroup>Utility</ResourceSinkGroup>
         </Definition>
 	</CubeBlocks>
 </Definitions>

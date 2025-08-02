@@ -79,14 +79,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 foreach (var sensorType in aggregatorSensors)
                 {
                     typeCount--;
-                    if (damagedSensors[sensorType.Key].Count == 0 && typeCount == 0)
-                    {
-                        sb.Append(@"└─ ");
-                    }
-                    else
-                    {
-                        sb.Append(@"├─ ");
-                    }
+                    sb.Append(typeCount == 0 ? @"└─ " : @"├─ ");
 
                     sb.Append(SensorTypeName(sensorType.Key)).Append(" x").AppendLine(sensorType.Value.Count.ToString());
 
@@ -94,9 +87,9 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                     {
                         var dmgedSensor = damagedSensors[sensorType.Key][i];
 
-                        sb.Append(typeCount == 0 ? @"│   " : @"    ");
+                        sb.Append(typeCount == 0 ? @"    " : @"│   ");
                         sb.Append(i == damagedSensors[sensorType.Key].Count - 1 ? @"└" : @"├");
-                        sb.Append(@"── /!\ ").AppendLine(dmgedSensor.Block.CustomName);
+                        sb.Append(@"── ! ").Append(dmgedSensor.Block.CustomName).Append(" !");
                     }
                 }
             }
