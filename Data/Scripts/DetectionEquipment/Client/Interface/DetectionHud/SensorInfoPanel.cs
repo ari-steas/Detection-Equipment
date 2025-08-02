@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using DetectionEquipment.Client.BlockLogic.Sensors;
-using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.HudController;
 using DetectionEquipment.Shared.Definitions;
-using RichHudFramework;
 using RichHudFramework.UI;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
@@ -24,6 +22,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         public SensorInfoPanel(HudParentBase parent) : base(parent)
         {
             Size = new Vector2(1920, 1080);
+            Offset = new Vector2(UserData.HudSensorInfoX, UserData.HudSensorInfoY);
             _mainLabel = new Label(this)
             {
                 Format = UserData.StandardFont.WithAlignment(TextAlignment.Right),

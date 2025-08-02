@@ -51,6 +51,20 @@ namespace DetectionEquipment.Shared
             DetectionHud.UpdateColors
         );
 
+        public static IniConfig.IniSetting<float> HudSensorInfoX = new IniConfig.IniSetting<float>(
+            _config,
+            "HudSensorInfoX",
+            "X-offset for HUD sensor info panel. Scaled by 1920x1080.",
+            0
+        );
+
+        public static IniConfig.IniSetting<float> HudSensorInfoY = new IniConfig.IniSetting<float>(
+            _config,
+            "HudSensorInfoY",
+            "Y-offset for HUD sensor info panel. Scaled by 1920x1080.",
+            0
+        );
+
         public static GlyphFormat StandardFont => new GlyphFormat(HudTextColor, TextAlignment.Left, 0.75f, new Vector2I(1 /*mono*/, (int) FontStyles.Regular));
 
         public static void Init()
