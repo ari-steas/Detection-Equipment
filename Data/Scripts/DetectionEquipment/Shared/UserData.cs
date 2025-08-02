@@ -1,5 +1,11 @@
-﻿using DetectionEquipment.Client.Interface.DetectionHud;
+﻿using System.Linq;
+using DetectionEquipment.Client.Interface.DetectionHud;
+using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Utils;
+using RichHudFramework.Client;
+using RichHudFramework.UI;
+using RichHudFramework.UI.Rendering;
+using RichHudFramework.UI.Rendering.Client;
 using VRageMath;
 
 namespace DetectionEquipment.Shared
@@ -44,6 +50,8 @@ namespace DetectionEquipment.Shared
             Color.Lime,
             DetectionHud.UpdateColors
         );
+
+        public static GlyphFormat StandardFont => new GlyphFormat(HudTextColor, TextAlignment.Left, 0.75f, new Vector2I(1 /*mono*/, (int) FontStyles.Regular));
 
         public static void Init()
         {

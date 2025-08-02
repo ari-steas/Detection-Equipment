@@ -17,7 +17,7 @@ namespace DetectionEquipment.Shared.ExternalApis
             try
             {
                 WcApi = new WcApi.WcApi();
-                WcApi.Load(_onWcReady);
+                WcApi.Load(() => _onWcReady.Invoke());
             }
             catch (Exception ex)
             {
@@ -26,7 +26,7 @@ namespace DetectionEquipment.Shared.ExternalApis
 
             try
             {
-                RichHudClient.Init("Detection Equipment", _onRichHudReady, null);
+                RichHudClient.Init("Detection Equipment", () => _onRichHudReady.Invoke(), null);
             }
             catch (Exception ex)
             {

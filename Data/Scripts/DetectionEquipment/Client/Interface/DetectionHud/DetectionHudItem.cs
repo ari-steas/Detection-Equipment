@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using DetectionEquipment.Shared;
-using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using RichHudFramework.UI;
@@ -22,7 +21,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         {
             ParentAlignment = ParentAlignments.Right | ParentAlignments.Top | ParentAlignments.InnerV,
             Color = Color.Transparent,
-            Format = GlyphFormat.White.WithColor(UserData.HudTextColor),
+            Format = UserData.StandardFont,
             Padding = new Vector2(2, 1),
             TextBoard =
             {
@@ -65,7 +64,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 OutlineBox.RegisterChild(InfoLabel);
             }
             if (InfoLabel.Format.Color != UserData.HudTextColor)
-                InfoLabel.Format = GlyphFormat.White.WithColor(UserData.HudTextColor);
+                InfoLabel.Format = InfoLabel.Format.WithColor(UserData.HudTextColor);
             Update();
         }
 

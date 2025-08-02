@@ -49,7 +49,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         protected override ControlBlockSettingsBase GetSettings => new AggregatorSettings(this);
         protected override ITerminalControlAdder GetControls => new AggregatorControls();
 
-        internal HashSet<BlockSensor> ActiveSensors => AggregatorControls.ActiveSensors[this];
+        internal HashSet<BlockSensor> ActiveSensors => UseAllSensors.Value ? GridSensors.Sensors : AggregatorControls.ActiveSensors[this];
         internal HashSet<IMyTerminalBlock> ActiveWeapons => AggregatorControls.ActiveWeapons[this];
 
         private int[] _datalinkInChannels = new[] { 0 };
@@ -238,7 +238,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             {
                 var infosCache = ControlBlockManager.I.GroupInfoBuffer.Pop();
 
-                foreach (var sensor in UseAllSensors.Value ? GridSensors.Sensors : ActiveSensors)
+                foreach (var sensor in ActiveSensors)
                 {
                     foreach (var sensorDetection in sensor.Detections)
                     {

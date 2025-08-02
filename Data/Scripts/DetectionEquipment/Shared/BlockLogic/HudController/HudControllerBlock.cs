@@ -105,7 +105,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
             {
                 DetectionHud.AlwaysShow = AlwaysDisplay.Value;
                 DetectionHud.CombineAngle = CombineAngle.Value;
-                DetectionHud.UpdateDetections(Detections);
+                DetectionHud.UpdateDetections(this, Detections);
             }
 
             for (var i = 0; i < Detections.Count; i++)
