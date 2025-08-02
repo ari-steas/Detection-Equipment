@@ -5,6 +5,9 @@ using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using DetectionEquipment.Client.BlockLogic;
+using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Definitions;
@@ -18,6 +21,7 @@ using VRage.ModAPI;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using Sandbox.ModAPI.Ingame;
+using VRage.Game.ModAPI;
 using VRage.Scripting;
 using VRageMath;
 using IMyConveyorSorter = Sandbox.ModAPI.IMyConveyorSorter;
@@ -50,6 +54,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         protected override ITerminalControlAdder GetControls => new AggregatorControls();
 
         internal HashSet<BlockSensor> ActiveSensors => UseAllSensors.Value ? GridSensors.Sensors : AggregatorControls.ActiveSensors[this];
+        internal IEnumerable<ClientSensorLogic> ClientActiveSensors => (UseAllSensors.Value ? SensorBlockManager.SensorBlocks.GetValueOrDefault(Block.CubeGrid) : AggregatorControls.ClientActiveSensors.GetValueOrDefault(this)).Select(b => b.GetLogic<ClientSensorLogic>());
         internal HashSet<IMyTerminalBlock> ActiveWeapons => AggregatorControls.ActiveWeapons[this];
 
         private int[] _datalinkInChannels = new[] { 0 };

@@ -95,11 +95,11 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         private readonly IMyModelDummy _sensorDummy = null;
         private readonly MyEntity _dummyParent = null;
-        private readonly IMyCameraBlock _block;
+        public readonly IMyCameraBlock Block;
         public Color Color;
 
         private MatrixD SensorMatrix => _sensorDummy == null
-            ? (_elevPart == null ? (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _block.WorldMatrix) : _elevPart.WorldMatrix)
+            ? (_elevPart == null ? (MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * Block.WorldMatrix) : _elevPart.WorldMatrix)
             : SensorDummyMatrix;
 
         private MatrixD SensorDummyMatrix => (_elevPart == null && Definition.Movement != null)
@@ -110,7 +110,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         {
             Id = id;
             Definition = definition;
-            _block = block;
+            Block = block;
 
             if (Definition.Movement != null)
             {
@@ -146,7 +146,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 UpdateCameraView();
 
             // HUD
-            if (_block.ShowOnHUD && _block.HasLocalPlayerAccess())
+            if (Block.ShowOnHUD && Block.HasLocalPlayerAccess())
             {
                 var matrix = SensorMatrix;
                 if (Aperture < Math.PI)
@@ -189,16 +189,16 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 return;
 
             // Hide/show & rotate block based on whether a player is in the camera. TODO: This doesn't quite work.
-            if (_block.IsActive)
+            if (Block.IsActive)
             {
-                _block.Visible = false;
+                Block.Visible = false;
 
-                _block.LocalMatrix = SensorMatrix * MatrixD.Invert(_block.CubeGrid.WorldMatrix);
+                Block.LocalMatrix = SensorMatrix * MatrixD.Invert(Block.CubeGrid.WorldMatrix);
             }
-            else if (!_block.Visible)
+            else if (!Block.Visible)
             {
-                _block.Visible = true;
-                _block.LocalMatrix = _baseLocalMatrix;
+                Block.Visible = true;
+                Block.LocalMatrix = _baseLocalMatrix;
             }
         }
 

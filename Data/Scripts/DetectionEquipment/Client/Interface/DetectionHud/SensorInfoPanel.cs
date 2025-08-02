@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.HudController;
@@ -63,23 +64,26 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 }
                 sb.AppendLine(controller.SourceAggregator.Block.CustomName);
 
-                var aggregatorSensors = new Dictionary<SensorDefinition.SensorType, List<BlockSensor>>();
-                var damagedSensors = new Dictionary<SensorDefinition.SensorType, List<BlockSensor>>();
-                foreach (var sensor in controller.SourceAggregator.ActiveSensors)
+                var aggregatorSensors = new Dictionary<SensorDefinition.SensorType, List<ClientSensorData>>();
+                var damagedSensors = new Dictionary<SensorDefinition.SensorType, List<ClientSensorData>>();
+                foreach (var sensorLogic in controller.SourceAggregator.ClientActiveSensors)
                 {
-                    if (!aggregatorSensors.ContainsKey(sensor.Definition.Type))
+                    foreach (var sensor in sensorLogic.Sensors.Values)
                     {
-                        aggregatorSensors.Add(sensor.Definition.Type, new List<BlockSensor> { sensor });
-                        damagedSensors.Add(sensor.Definition.Type, new List<BlockSensor>());
+                        if (!aggregatorSensors.ContainsKey(sensor.Definition.Type))
+                        {
+                            aggregatorSensors.Add(sensor.Definition.Type, new List<ClientSensorData> { sensor });
+                            damagedSensors.Add(sensor.Definition.Type, new List<ClientSensorData>());
+                        }
+                        else
+                            aggregatorSensors[sensor.Definition.Type].Add(sensor);
+
+                        if (!sensorLogic.Block.IsWorking)
+                            damagedSensors[sensor.Definition.Type].Add(sensor);
                     }
-                    else
-                        aggregatorSensors[sensor.Definition.Type].Add(sensor);
 
-                    if (!sensor.Block.IsWorking)
-                        damagedSensors[sensor.Definition.Type].Add(sensor);
-
-                    if (sensor.Block.Enabled && sensor.Block.IsFunctional)
-                        totalPowerDraw += sensor.Block.ResourceSink.MaxRequiredInputByType(GlobalData.ElectricityId);
+                    if (((IMyCameraBlock)sensorLogic.Block).Enabled && sensorLogic.Block.IsFunctional)
+                        totalPowerDraw += sensorLogic.Block.ResourceSink.MaxRequiredInputByType(GlobalData.ElectricityId);
                 }
 
                 int typeCount = aggregatorSensors.Count;
@@ -113,7 +117,8 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             float availablePower = distributor.MaxAvailableResourceByType(GlobalData.ElectricityId);
             if (totalPowerDraw > availablePower)
             {
-                sb.AppendLine($"{(char)0xE056} POWER OVERDRAW {(char)0xE056}\n{totalPowerDraw:N1}/{availablePower:N1}MW ");
+                int a = 5 * 500;
+                sb.AppendLine($"\uE056 POWER OVERDRAW \uE056\n{totalPowerDraw:N1}/{availablePower:N1}MW ");
             }
 
             _mainLabel.Text = sb;
@@ -164,11 +169,11 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             char[] activeAlerts = new char[2];
             int idx = 0;
             if (!block.Enabled)
-                activeAlerts[idx++] = (char)0x2206;
+                activeAlerts[idx++] = '\u2206';
             if (!block.IsFunctional)
-                activeAlerts[idx++] = (char)0x2591;
+                activeAlerts[idx++] = '\u2591';
             if (idx == 0)
-                activeAlerts[idx++] = (char)0xE056;
+                activeAlerts[idx++] = '\uE056';
             if (idx == 1)
                 activeAlerts[1] = ' ';
             

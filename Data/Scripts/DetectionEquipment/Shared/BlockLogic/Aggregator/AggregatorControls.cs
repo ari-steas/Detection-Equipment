@@ -11,7 +11,6 @@ using VRage.ModAPI;
 using VRage.Utils;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
-using DetectionEquipment.Shared.Helpers;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -20,6 +19,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public static BlockSelectControl<AggregatorBlock, IMyConveyorSorter> ActiveSensorSelect = null;
         public static BlockSelectControl<AggregatorBlock, IMyConveyorSorter> ActiveWeaponSelect = null;
         public static Dictionary<AggregatorBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<AggregatorBlock, HashSet<BlockSensor>>();
+        public static Dictionary<AggregatorBlock, HashSet<IMyCubeBlock>> ClientActiveSensors = new Dictionary<AggregatorBlock, HashSet<IMyCubeBlock>>();
         public static Dictionary<AggregatorBlock, HashSet<IMyTerminalBlock>> ActiveWeapons = new Dictionary<AggregatorBlock, HashSet<IMyTerminalBlock>>();
 
         public override void DoOnce(IControlBlockBase thisLogic)
@@ -29,6 +29,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             base.DoOnce(thisLogic);
             ActiveSensors[(AggregatorBlock)thisLogic] = new HashSet<BlockSensor>();
             ActiveWeapons[(AggregatorBlock)thisLogic] = new HashSet<IMyTerminalBlock>();
+            ClientActiveSensors[(AggregatorBlock)thisLogic] = new HashSet<IMyCubeBlock>();
         }
 
         protected override void CreateTerminalActions()
@@ -76,19 +77,39 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                         (IEnumerable<IMyCubeBlock>)SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid]),
                 (logic, selected) =>
                 {
-                    if (!MyAPIGateway.Session.IsServer)
-                        return;
-
-                    ActiveSensors[logic].Clear();
-
-                    foreach (var block in selected)
+                    if (!MyAPIGateway.Utilities.IsDedicated)
                     {
-                        foreach (var sensor in logic.GridSensors.Sensors)
+                        ClientActiveSensors[logic].Clear();
+
+                        HashSet<IMyCubeBlock> gridSensorBlocks;
+                        if (SensorBlockManager.SensorBlocks.TryGetValue(logic.Block.CubeGrid, out gridSensorBlocks))
                         {
-                            if (sensor.Block != block)
-                                continue;
-                            ActiveSensors[logic].Add(sensor);
-                            break;
+                            foreach (var block in selected)
+                            {
+                                foreach (var sensor in gridSensorBlocks)
+                                {
+                                    if (sensor != block)
+                                        continue;
+                                    ClientActiveSensors[logic].Add(sensor);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+
+                    if (MyAPIGateway.Session.IsServer)
+                    {
+                        ActiveSensors[logic].Clear();
+
+                        foreach (var block in selected)
+                        {
+                            foreach (var sensor in logic.GridSensors.Sensors)
+                            {
+                                if (sensor.Block != block)
+                                    continue;
+                                ActiveSensors[logic].Add(sensor);
+                                break;
+                            }
                         }
                     }
                 }
