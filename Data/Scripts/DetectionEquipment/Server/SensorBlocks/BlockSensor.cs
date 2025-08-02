@@ -308,12 +308,13 @@ namespace DetectionEquipment.Server.SensorBlocks
         {
             GridSensorManager manager;
             List<BlockSensor> sensors;
-            if (!block.Enabled || !ServerMain.I.GridSensorMangers.TryGetValue(block.CubeGrid, out manager) || !manager.BlockSensorMap.TryGetValue(block, out sensors))
+            if (!block.Enabled || !block.IsFunctional || !ServerMain.I.GridSensorMangers.TryGetValue(block.CubeGrid, out manager) || !manager.BlockSensorMap.TryGetValue(block, out sensors))
                 return 0;
 
             float totalDraw = 0;
             foreach (var sensor in sensors)
-                totalDraw += (float) sensor.Definition.MaxPowerDraw;
+                if (sensor.Sensor.Enabled)
+                    totalDraw += (float) sensor.Definition.MaxPowerDraw;
             block.ResourceSink.SetMaxRequiredInputByType(GlobalData.ElectricityId, totalDraw / 1000000);
             return totalDraw / 1000000;
         }

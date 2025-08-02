@@ -179,7 +179,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
                 resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () =>
                 {
-                    if (!((IMyFunctionalBlock)Block).Enabled)
+                    if (!((IMyFunctionalBlock)Block).Enabled || !((IMyFunctionalBlock)Block).IsFunctional)
                         return 0;
 
                     float totalDraw = 0;
