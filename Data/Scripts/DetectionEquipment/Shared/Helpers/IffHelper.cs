@@ -120,19 +120,34 @@ namespace DetectionEquipment.Shared.Helpers
 
             // also if you make me add a config option to restrict IFF codes to faction ID or whatever I am GOING to crack some skulls. probably my own first.
 
-            // adapted from default C# non-randomized hashcode generator
+            // custom hashing algorithm featuring a strong avalanche effect to prevent reverse-engineering
+            // uses large prime numbers, bit shifts and XORs to cause massive changes in the output when input is changed
             int num1 = _saltA;
-            int num2 = num1;
-            for (int i = 0; i < baseCode.Length; i += 2)
-            {
-                num1 = (num1 << 5) + num1 ^ baseCode[i];
-                if (i + 1 >= baseCode.Length)
-                    break;
-                int num4 = baseCode[i+1];
-                if (num4 != 0)
-                    num2 = (num2 << 5) + num2 ^ num4;
-            }
-            return num1 + num2 * _saltB;
+            int num2 = _saltB;
+            
+            for (int i = 0; i < str.Length; ++i)
+    		{
+    			int c = str[i];
+    
+    			num1 ^= c;
+    			num1 *= unchecked((int)0x85ebca6b);
+    			num1 ^= (num1 >> 13);
+    			num1 *= unchecked((int)0xc2b2ae35);
+    			num1 ^= (num1 >> 16);
+    
+    			num2 ^= c + num1;
+    			num2 *= 0x27d4eb2d;
+    			num2 ^= (num2 >> 15);
+    		}
+    
+    		int result = num1 ^ num2;
+    		result ^= (result >> 16);
+    		result *= unchecked((int)0x85ebca6b);
+    		result ^= (result >> 13);
+    		result *= unchecked((int)0xc2b2ae35);
+    		result ^= (result >> 16);
+            
+            return result;
         }
 
         [ProtoContract]
