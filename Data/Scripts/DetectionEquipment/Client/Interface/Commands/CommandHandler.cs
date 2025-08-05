@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
-using RichHudFramework.Internal;
 using Sandbox.ModAPI;
 
 namespace DetectionEquipment.Client.Interface.Commands
@@ -38,6 +36,11 @@ namespace DetectionEquipment.Client.Interface.Commands
                 "DetEq",
                 "render <rcs | vcs | irs | reset> <scalemult>. Renders a given detection value sphere from 'calcallangles'. Value (<type>) must be specified as an argument, as either 'RCS', 'VCS', 'IRS', or 'reset' if you wish to stop rendering. 1m away from grid center corresponds to 10m^2 RCS/VCS, or 100000Wm^2 for IRS by default, or corresponds to the given scale value if <scalemult> is specified.",
                 NerdRCSSphereCalc.RenderSphere),
+
+            ["testhash"] = new Command(
+                "DetEq",
+                "Generates a set of IFF hashes for debug testing. Takes integer number of salt pairs as an optional argument.",
+                CommandMethods.TestHashing),
 
             #endregion
         };

@@ -1,5 +1,6 @@
 ﻿using System;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 
@@ -31,6 +32,16 @@ namespace DetectionEquipment.Client.Interface.Commands
             var infoStr = GlobalData.DebugLevel == 0 ? "Disabled debug mode." : $"Set debug mode to LEVEL {GlobalData.DebugLevel}.";
             Log.Info("CommandHandler", infoStr);
             MyAPIGateway.Utilities.ShowMessage("DetEq", infoStr);
+        }
+
+        public static void TestHashing(string[] args)
+        {
+            int numSaltPairs;
+            if (args.Length < 1 || !int.TryParse(args[0], out numSaltPairs))
+                numSaltPairs = 4;
+
+            IffHelper.TestHashing(numSaltPairs);
+            Log.Info("CommandHandler", "Finished hash testing - results sent to log file.");
         }
 
         #endregion
