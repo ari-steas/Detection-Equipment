@@ -138,10 +138,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 if (!sensor.CanAimAt(target.Key.Position))
                     continue;
 
-                var thisGridHit = sensor.Block.CubeGrid.RayCastBlocks(sensor.Sensor.Position + Vector3D.Normalize(target.Key.Position - sensor.Sensor.Position) * sensorGridSize, sensor.Sensor.Position);
-                //DebugDraw.AddLine(sensor.Sensor.Position + Vector3D.Normalize(target.Key.Position - sensor.Sensor.Position) * sensorGridSize, sensor.Sensor.Position, Color.Blue, 4);
-                if (thisGridHit != sensor.Block.Position)
-                    continue;
+                // TODO re-introduce this
+                // commented out to avoid crash on dediserver start related to list overflow in MyGridIntersection.Calculate()
+
+                //var thisGridHit = sensor.Block.CubeGrid.RayCastBlocks(sensor.Sensor.Position + Vector3D.Normalize(target.Key.Position - sensor.Sensor.Position) * sensorGridSize, sensor.Sensor.Position);
+                ////DebugDraw.AddLine(sensor.Sensor.Position + Vector3D.Normalize(target.Key.Position - sensor.Sensor.Position) * sensorGridSize, sensor.Sensor.Position, Color.Blue, 4);
+                //if (thisGridHit != sensor.Block.Position)
+                //    continue;
 
                 //if (Vector3D.Angle(sensor.Sensor.Direction, target.Key.Position - sensor.Sensor.Position) < sensor.Sensor.Aperture && target.Value <= targetDict.Values.Min())
                 //{
