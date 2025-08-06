@@ -7,6 +7,7 @@ using ProtoBuf;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Text;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.Helpers
@@ -108,7 +109,7 @@ namespace DetectionEquipment.Shared.Helpers
             Log.Info("IffHelper", $"Cycled salts!\nA: {_saltA}\nB: {_saltB}");
         }
 
-        public static int GetIffHashCode(string baseCode)
+        public static int GetIffHashCode(string baseCode, int saltA = int.MinValue, int saltB = int.MinValue)
         {
             // honestly this was kind of a waste of time on my part; getting the codes directly from the enemy grid is a lot faster & more reliable than brute forcing.
             // *however*, between you and me - actually cracking the hashcode sounds a lot more interesting, so maybe give that a try? not that there's anything I can really do to stop you, haha
@@ -120,20 +121,83 @@ namespace DetectionEquipment.Shared.Helpers
 
             // also if you make me add a config option to restrict IFF codes to faction ID or whatever I am GOING to crack some skulls. probably my own first.
 
-            // adapted from default C# non-randomized hashcode generator
-            int num1 = _saltA;
-            int num2 = num1;
-            for (int i = 0; i < baseCode.Length; i += 2)
-            {
-                num1 = (num1 << 5) + num1 ^ baseCode[i];
-                if (i + 1 >= baseCode.Length)
-                    break;
-                int num4 = baseCode[i+1];
-                if (num4 != 0)
-                    num2 = (num2 << 5) + num2 ^ num4;
-            }
-            return num1 + num2 * _saltB;
+            // custom hashing algorithm featuring a strong avalanche effect to prevent reverse-engineering
+            // uses large prime numbers, bit shifts and XORs to cause massive changes in the output when input is changed
+            // courtesy of @its.taco.time
+            int num1 = saltA < 0  ? _saltA : saltA;
+    		int num2 = saltB < 0 ? _saltB : saltB;
+    
+    		for (int i = 0; i < baseCode.Length; ++i)
+    		{
+    			int c = baseCode[i];
+    
+    			num1 ^= c;
+    			num1 *= -2048144789; // Multiply by large prime to create chaotic diffusion
+    			num1 ^= (num1 >> 13); // Spread high entropy bits to low entropy areas
+    			num1 *= -1028477387;
+    			num1 ^= (num1 >> 16);
+    
+    			num2 ^= c + num1;
+    			num2 *= 0x27d4eb2d;
+    			num2 ^= (num2 >> 15);
+    		}
+    
+    		int result = num1 ^ num2;
+    		result ^= (result >> 16);
+    		result *= -2048144789;
+    		result ^= (result >> 13);
+    		result *= -1028477387;
+    		result ^= (result >> 16);
+            
+            return result;
         }
+
+        /// <summary>
+        /// Hashes all individual letters [aA-zZ] and some random phrases, outputs results to deteq log.
+        /// </summary>
+        public static void TestHashing(int numSaltPairs)
+        {
+            TimeSpan genDuration;
+            var primes = MathUtils.GeneratePrimesProfiled(numSaltPairs*2, out genDuration);
+
+            string[] customTestCases = {
+                "a", "b", "c", "d", "A", "B", "C", "D", "ari says hi", $"today is {DateTime.Now.DayOfWeek}", ""
+            };
+
+            int testColumnLength = 0;
+            foreach (var test in customTestCases)
+            {
+                if (test.Length  > testColumnLength)
+                    testColumnLength = test.Length;
+            }
+
+            StringBuilder sb = new StringBuilder()
+                .Append(
+                    "\n          IFF HASH TEST RESULTS\n=========================================\nNumber of salt pairs: ")
+                .Append(numSaltPairs)
+                .Append("\nGeneration time: ")
+                .Append(genDuration.TotalMilliseconds)
+                .Append("ms\n");
+
+            for (int i = 0; i < primes.Length; i += 2)
+            {
+                int saltA = primes[i];
+                int saltB = primes[i+1];
+
+                sb.AppendLine($"\nSalt pair {i/2}: <{saltA}, {saltB}>");
+                foreach (var test in customTestCases)
+                {
+                    int hashed = GetIffHashCode(test, saltA, saltB);
+                    sb.Append((test == "" ? "(empty string)" : test).PadRight(testColumnLength)).Append(" | ").Append(hashed.ToString("N0").PadLeft(13)).Append(" | ").Append(Convert.ToString(hashed, 2).PadLeft(32, '0'));
+                    sb.AppendLine();
+                }
+            }
+            
+
+            sb.Append("\n=========================================\n");
+            Log.Info("IffHelper", sb.ToString());
+        }
+
 
         [ProtoContract]
         internal class IffSaltPacket : PacketBase
