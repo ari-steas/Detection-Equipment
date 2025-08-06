@@ -123,6 +123,7 @@ namespace DetectionEquipment.Shared.Helpers
 
             // custom hashing algorithm featuring a strong avalanche effect to prevent reverse-engineering
             // uses large prime numbers, bit shifts and XORs to cause massive changes in the output when input is changed
+            // courtesy of @its.taco.time
             int num1 = saltA < 0  ? _saltA : saltA;
     		int num2 = saltB < 0 ? _saltB : saltB;
     
@@ -160,7 +161,7 @@ namespace DetectionEquipment.Shared.Helpers
             var primes = MathUtils.GeneratePrimesProfiled(numSaltPairs*2, out genDuration);
 
             string[] customTestCases = {
-                "a", "b", "c", "d", "A", "B", "C", "D", "hi i'm ari", "awawawa", "awawaw"
+                "a", "b", "c", "d", "A", "B", "C", "D", "ari says hi", $"today is {DateTime.Now.DayOfWeek}", ""
             };
 
             int testColumnLength = 0;
@@ -172,22 +173,22 @@ namespace DetectionEquipment.Shared.Helpers
 
             StringBuilder sb = new StringBuilder()
                 .Append(
-                    "\n=========================================\n    IFF HASH TEST RESULTS    \nNumber of salt pairs: ")
+                    "\n          IFF HASH TEST RESULTS\n=========================================\nNumber of salt pairs: ")
                 .Append(numSaltPairs)
                 .Append("\nGeneration time: ")
                 .Append(genDuration.TotalMilliseconds)
-                .Append("ms\n\n");
+                .Append("ms\n");
 
             for (int i = 0; i < primes.Length; i += 2)
             {
                 int saltA = primes[i];
                 int saltB = primes[i+1];
 
-                sb.AppendLine($"Salt pair {i/2}: <{saltA}, {saltB}>");
+                sb.AppendLine($"\nSalt pair {i/2}: <{saltA}, {saltB}>");
                 foreach (var test in customTestCases)
                 {
                     int hashed = GetIffHashCode(test, saltA, saltB);
-                    sb.Append(test.PadRight(testColumnLength)).Append(" | ").Append(hashed.ToString("D10")).Append(" | ").Append(Convert.ToString(hashed, 2));
+                    sb.Append((test == "" ? "(empty string)" : test).PadRight(testColumnLength)).Append(" | ").Append(hashed.ToString("N0").PadLeft(13)).Append(" | ").Append(Convert.ToString(hashed, 2).PadLeft(32, '0'));
                     sb.AppendLine();
                 }
             }

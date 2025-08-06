@@ -41,7 +41,7 @@ namespace DetectionEquipment.Client.Interface.Commands
                 numSaltPairs = 4;
 
             IffHelper.TestHashing(numSaltPairs);
-            Log.Info("CommandHandler", "Finished hash testing - results sent to log file.");
+            MyAPIGateway.Utilities.ShowMessage("DetEq", "Finished hash testing - results sent to log file.");
         }
 
         #endregion
