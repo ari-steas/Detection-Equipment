@@ -237,66 +237,78 @@ namespace DetectionEquipment.Shared.Utils
         private static bool IsBlocked(IMyEntity thisEnt, IMyEntity toCheck, Vector3D from, Vector3D to)
         {
             var entityList = GlobalObjectPools.EntityLineOverlapPool.Pop();
-
-            LineD raycast = new LineD(from, to);
-
-            MyGamePruningStructure.GetTopmostEntitiesOverlappingRay(ref raycast, entityList);
-
-            if (GlobalData.DebugLevel > 1)
-                DebugDraw.AddLine(raycast, Color.Cyan.SetAlphaPct(0.05f), 0);
-
             bool isValid = true;
-            foreach (var segementOverlapResult in entityList)
+
+            try
             {
+                LineD raycast = new LineD(from, to);
 
-
-                if (segementOverlapResult.Element == thisEnt || segementOverlapResult.Element == toCheck)
-                    continue;
+                MyGamePruningStructure.GetTopmostEntitiesOverlappingRay(ref raycast, entityList);
 
                 if (GlobalData.DebugLevel > 1)
-                    DebugDraw.AddPoint(from + raycast.Direction * segementOverlapResult.Distance, Color.Green.SetAlphaPct(1f), 0);
+                    DebugDraw.AddLine(raycast, Color.Cyan.SetAlphaPct(0.05f), 0);
 
-                // raycast extents can be optimized further
+                foreach (var segementOverlapResult in entityList)
+                {
+                    if (segementOverlapResult.Element == thisEnt || segementOverlapResult.Element == toCheck)
+                        continue;
 
-                Vector3D? result;
-                if (segementOverlapResult.Element is MyCubeGrid)
-                {
-                    MyCubeGrid.MyCubeGridHitInfo intersect = new MyCubeGrid.MyCubeGridHitInfo();
-                    if (((MyCubeGrid)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast, ref intersect))
-                    {
-                        if (GlobalData.DebugLevel > 1)
-                            DebugDraw.AddPoint(intersect.Triangle.IntersectionPointInWorldSpace, Color.Red.SetAlphaPct(1f), 0);
-                        isValid = false;
-                        break;
-                    }
-                }
-                else if (segementOverlapResult.Element is MyVoxelBase)
-                {
-                    //if (segementOverlapResult.Element is MyPlanet)
-                    //{
-                    //    ((MyPlanet)segementOverlapResult.Element).PrefetchShapeOnRay(ref raycast);
-                    //}
-
-                    MyIntersectionResultLineTriangleEx? tri;
-                    if (((MyVoxelBase)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast, out tri))
-                    {
-                        if (GlobalData.DebugLevel > 1)
-                            DebugDraw.AddPoint(tri.Value.IntersectionPointInWorldSpace, Color.MediumVioletRed.SetAlphaPct(1f), 0);
-                        isValid = false;
-                        break;
-                    }
-                }
-                else if (segementOverlapResult.Element.GetIntersectionWithLine(ref raycast, out result))
-                {
                     if (GlobalData.DebugLevel > 1)
-                        DebugDraw.AddPoint(result.Value, Color.Red.SetAlphaPct(1f), 0);
-                    isValid = false;
-                    break;
+                        DebugDraw.AddPoint(from + raycast.Direction * segementOverlapResult.Distance,
+                            Color.Green.SetAlphaPct(1f), 0);
+
+                    // raycast extents can be optimized further
+
+                    Vector3D? result;
+                    if (segementOverlapResult.Element is MyCubeGrid)
+                    {
+                        MyCubeGrid.MyCubeGridHitInfo intersect = new MyCubeGrid.MyCubeGridHitInfo();
+                        if (((MyCubeGrid)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast,
+                                ref intersect))
+                        {
+                            if (GlobalData.DebugLevel > 1)
+                                DebugDraw.AddPoint(intersect.Triangle.IntersectionPointInWorldSpace,
+                                    Color.Red.SetAlphaPct(1f), 0);
+                            isValid = false;
+                            break;
+                        }
+                    }
+                    else if (segementOverlapResult.Element is MyVoxelBase)
+                    {
+                        //if (segementOverlapResult.Element is MyPlanet)
+                        //{
+                        //    ((MyPlanet)segementOverlapResult.Element).PrefetchShapeOnRay(ref raycast);
+                        //}
+
+                        MyIntersectionResultLineTriangleEx? tri;
+                        if (((MyVoxelBase)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast, out tri))
+                        {
+                            if (GlobalData.DebugLevel > 1)
+                                DebugDraw.AddPoint(tri.Value.IntersectionPointInWorldSpace,
+                                    Color.MediumVioletRed.SetAlphaPct(1f), 0);
+                            isValid = false;
+                            break;
+                        }
+                    }
+                    else if (segementOverlapResult.Element.GetIntersectionWithLine(ref raycast, out result))
+                    {
+                        if (GlobalData.DebugLevel > 1)
+                            DebugDraw.AddPoint(result.Value, Color.Red.SetAlphaPct(1f), 0);
+                        isValid = false;
+                        break;
+                    }
                 }
             }
-            entityList.Clear();
+            catch (Exception ex)
+            {
+                Log.Exception("TrackingUtils", ex);
+            }
+            finally
+            {
+                entityList.Clear();
+                GlobalObjectPools.EntityLineOverlapPool.Push(entityList);
+            }
 
-            GlobalObjectPools.EntityLineOverlapPool.Push(entityList);
             return isValid;
         }
 
