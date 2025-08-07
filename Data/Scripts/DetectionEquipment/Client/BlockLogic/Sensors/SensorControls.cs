@@ -8,7 +8,7 @@ using VRageMath;
 
 namespace DetectionEquipment.Client.BlockLogic.Sensors
 {
-    internal class SensorControls : TerminalControlAdder<IMyCameraBlock>
+    internal class SensorControls<TBlockType> : TerminalControlAdder<TBlockType> where TBlockType : IMyFunctionalBlock
     {
         private IMyTerminalControlSlider _apeSlider, _aziSlider, _eleSlider, _minAziSlider, _maxAziSlider, _minEleSlider, _maxEleSlider;
 

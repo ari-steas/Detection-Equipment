@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
@@ -43,7 +44,7 @@ namespace DetectionEquipment.Client.Interface
                     $"    VCS: {_vcs:N} m^2\n" +
                     $"    IRS: {_rawIrs:N} Wm^2\n" +
                     $"      @ Camera: {_irs:N} Wm^2\n" +
-                    $"    COMM: {_rawCommSig:N} W\n" +
+                    $"    COMM: {_rawCommSig:N0} W\n" +
                     $"      @ Camera: {_commSig:N} W",
                     false, false);
 
@@ -100,7 +101,7 @@ namespace DetectionEquipment.Client.Interface
                     vcs += trackVcs;
                     irs += track.InfraredVisibility(camPos, trackVcs);
                     rawIrs += irs * Vector3D.DistanceSquared(camPos, track.Position);
-                    commSig += track.CommsVisibility(camPos);
+                    commSig += 4 * Math.PI * track.CommsVisibility(camPos) / Vector3D.Distance(camPos, track.Position);
                     rawCommSig += track.CommsVisibility(grid.WorldAABB.Center);
                 }
                 name = $"\"{castGrid.CustomName}\" & {attached.Count-1} subgrids";

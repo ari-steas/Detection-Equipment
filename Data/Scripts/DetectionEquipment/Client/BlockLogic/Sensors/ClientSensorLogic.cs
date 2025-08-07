@@ -167,14 +167,18 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             OnCustomDataChanged(Block);
             Block.CustomDataChanged += OnCustomDataChanged;
 
-            new SensorControls().DoOnce();
+            // can't add terminal controls to imyfunctional/imyterminalblock so this is the least messy workaround
+            if (block is IMyCameraBlock)
+                new SensorControls<IMyCameraBlock>().DoOnce();
+            if (block is IMyRadioAntenna)
+                new SensorControls<IMyRadioAntenna>().DoOnce();
 
             for (int i = 0; i < _sensorIds.Count; i++)
                 RegisterSensor(_sensorIds[i], _definitionIds[i]);
             _sensorIds = null;
             _definitionIds = null;
 
-            if (!MyAPIGateway.Session.IsServer)
+            if (!MyAPIGateway.Session.IsServer && Block is IMyCameraBlock)
             {
                 var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
                 resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () =>
@@ -222,7 +226,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             Sensors[sensorId] = new ClientSensorData(
                 sensorId,
                 DefinitionManager.GetSensorDefinition(definitionId),
-                (IMyCameraBlock) Block,
+                (IMyFunctionalBlock) Block,
                 _colorSet.Count > 0 ? (Color?)_colorSet.Dequeue() : null
             );
             if (CurrentSensorId == uint.MaxValue)
@@ -249,7 +253,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             if (packet.Id == CurrentSensorId && MyAPIGateway.Gui.GetCurrentScreen == MyTerminalPageEnum.ControlPanel && Block.EntityId == ControlBlockManager.I.TerminalSelectedBlock)
             {
                 List<IMyTerminalControl> controls;
-                MyAPIGateway.TerminalControls.GetControls<IMyCameraBlock>(out controls);
+                MyAPIGateway.TerminalControls.GetControls<IMyFunctionalBlock>(out controls);
                 foreach (var control in controls)
                     control.UpdateVisual();
             }

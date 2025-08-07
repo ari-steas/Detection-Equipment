@@ -196,7 +196,8 @@ namespace DetectionEquipment.Shared.Structs
             Radar = 1,
             PassiveRadar = 2,
             Optical = 4,
-            Infrared = 8
+            Infrared = 8,
+            Antenna = 16,
         }
 
         public int CompareTo(WorldDetectionInfo other)

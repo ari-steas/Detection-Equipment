@@ -4,6 +4,7 @@ using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
+using Sandbox.ModAPI;
 using VRage.Game.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
@@ -44,26 +45,26 @@ namespace DetectionEquipment.Server.Sensors
             if (track == null)
                 return null;
 
-            if (Aperture < Math.PI)
-            {
-                double targetAngle = 0;
-                if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                    targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
-                if (targetAngle > Aperture)
-                    return null;
-            }
-
-            const double inherentNoise = 3;
-            var sensorSignal = MathUtils.ToDecibels(
-                track.CommsVisibility(Position)
-                /
-                (inherentNoise + CountermeasureNoise)
-                );
-            if (double.IsNegativeInfinity(sensorSignal) || sensorSignal < 0)
+            double targetAngle = 0;
+            if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
+                targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
+            if (targetAngle > Aperture)
                 return null;
 
             Vector3D bearing = track.Position - Position;
             double range = bearing.Normalize();
+            double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
+
+            const double inherentNoise = 3;
+            var sensorSignal = MathUtils.ToDecibels(
+                4 * Math.PI * receiverAreaAtAngle * track.CommsVisibility(Position) // antenna range is linearly proportional to power draw and that's silly.
+                /
+                range * (inherentNoise + CountermeasureNoise)
+                );
+
+            if (double.IsNegativeInfinity(sensorSignal) || sensorSignal < 15)
+                return null;
+
 
             double maxBearingError = Definition.BearingErrorModifier * (1 - MathHelper.Clamp(sensorSignal / Definition.DetectionThreshold, 0, 1));
             bearing = MathUtils.RandomCone(bearing, maxBearingError);

@@ -81,7 +81,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                             damagedSensors[sensor.Definition.Type].Add(sensor);
                     }
 
-                    if (((IMyCameraBlock)sensorLogic.Block).Enabled && sensorLogic.Block.IsFunctional)
+                    if (((IMyFunctionalBlock)sensorLogic.Block).Enabled && sensorLogic.Block.IsFunctional)
                         totalPowerDraw += sensorLogic.Block.ResourceSink.MaxRequiredInputByType(GlobalData.ElectricityId);
                 }
 
@@ -160,7 +160,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             }
         }
 
-        private static char GetAlertSymbol(IMyCameraBlock block, int blinkInterval = 60)
+        private static char GetAlertSymbol(IMyFunctionalBlock block, int blinkInterval = 60)
         {
             // blinking alert symbol; delta for not enabled, hashed block for damaged, i-in-triangle otherwise (i.e. no power)
             float frame = (float) (MyAPIGateway.Session.GameplayFrameCounter % blinkInterval) / blinkInterval; // blink cycle interval 1 second

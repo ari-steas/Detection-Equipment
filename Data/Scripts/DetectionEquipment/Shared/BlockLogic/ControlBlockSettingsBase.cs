@@ -44,7 +44,7 @@ namespace DetectionEquipment.Shared.BlockLogic
             }
 
             string rawData;
-            if (!AttachedLogic.CubeBlock.Storage.TryGetValue(GlobalData.SettingsGuid, out rawData))
+            if (!AttachedLogic.CubeBlock.Storage.TryGetValue(GlobalData.LogicSettingsGuid, out rawData))
             {
                 AssignData();
                 //Log.Info("ControlBlockSettingsBase", $"Failed to load {AttachedLogic.CubeBlock.EntityId} {AttachedLogic.CubeBlock.DefinitionDisplayNameText} data because storage does not contain relevant data.");
@@ -73,7 +73,7 @@ namespace DetectionEquipment.Shared.BlockLogic
             }
             catch (Exception e)
             {
-                Log.Exception("ControlBlockSettingsBase", e);
+                Log.Exception($"ControlBlockSettingsBase::{AttachedLogic.CubeBlock.BlockDefinition.SubtypeName}", e);
             }
         }
 
@@ -89,7 +89,7 @@ namespace DetectionEquipment.Shared.BlockLogic
             }
 
             RetrieveData();
-            AttachedLogic.CubeBlock.Storage.SetValue(GlobalData.SettingsGuid, Convert.ToBase64String(MyAPIGateway.Utilities.SerializeToBinary(this)));
+            AttachedLogic.CubeBlock.Storage.SetValue(GlobalData.LogicSettingsGuid, Convert.ToBase64String(MyAPIGateway.Utilities.SerializeToBinary(this)));
             //Log.Info("ControlBlockSettingsBase", $"Saved {AttachedLogic.CubeBlock.DefinitionDisplayNameText} data for block {AttachedLogic.CubeBlock.EntityId}.");
         }
     }

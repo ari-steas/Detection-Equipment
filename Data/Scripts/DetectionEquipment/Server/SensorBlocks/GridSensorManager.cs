@@ -237,6 +237,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
                     BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
 
+                    if (cubeBlock is IMyCameraBlock)
                     {
                         var resourceSink = (MyResourceSinkComponent)cubeBlock.ResourceSink;
                         resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () => BlockSensor.GetPowerDraw(cubeBlock));

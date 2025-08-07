@@ -183,8 +183,6 @@ namespace DetectionEquipment.Server.Tracking
         public override double CommsVisibility(Vector3D source)
         {
             double strongestCaster = 0;
-            var casterPos = Vector3D.Zero;
-            int casterCount = 0;
 
             foreach (var block in ((MyCubeGrid)Grid).GetFatBlocks()) // TODO: Cache antennas.
             {
@@ -196,15 +194,13 @@ namespace DetectionEquipment.Server.Tracking
                 if ((antenna != null && antenna.IsBroadcasting) || block is IMyBeacon)
                 {
                     strongestCaster += 1000000 * funcBlock.ResourceSink.CurrentInputByType(GlobalData.ElectricityId);
-                    casterPos += funcBlock.GetPosition();
-                    casterCount++;
                 }
             }
 
             if (strongestCaster == 0)
                 return 0;
 
-            return strongestCaster / (4 * Math.PI * Vector3D.DistanceSquared(casterPos/casterCount, source));
+            return strongestCaster;
         }
 
         /// <summary>

@@ -122,6 +122,8 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 detectionTypePrefix.Add("VCS");
             if ((Detection.DetectionType & DetectionFlags.Infrared) == DetectionFlags.Infrared)
                 detectionTypePrefix.Add("IRS");
+            if ((Detection.DetectionType & DetectionFlags.Antenna) == DetectionFlags.Antenna)
+                detectionTypePrefix.Add("CMS");
 
             switch (Detection.DetectionType)
             {
@@ -129,6 +131,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                     detectionTypeSuffix = "m^2";
                     break;
                 case DetectionFlags.PassiveRadar:
+                case DetectionFlags.Antenna:
                     detectionTypeSuffix = "dB";
                     break;
                 case DetectionFlags.Optical:

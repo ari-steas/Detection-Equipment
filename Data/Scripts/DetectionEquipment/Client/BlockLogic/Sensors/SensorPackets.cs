@@ -27,7 +27,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         protected override BlockLogicInitPacket CreateServerInitPacket(long blockEntityId, ulong requesterId)
         {
-            var block = MyAPIGateway.Entities.GetEntityById(blockEntityId) as IMyCameraBlock;
+            var block = MyAPIGateway.Entities.GetEntityById(blockEntityId) as IMyFunctionalBlock;
             if (block == null)
                 return null;
 

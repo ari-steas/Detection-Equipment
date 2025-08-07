@@ -149,6 +149,29 @@ namespace DetectionEquipment.Shared.Definitions
                     ReceiverArea = 2.5 * 2.5,
                 }
             },
+
+            // Antennae
+            ["DetEq_AntennaSnooperLarge"] = new SensorDefinition
+            {
+                BlockSubtypes = new[]
+                {
+                    "LargeBlockRadioAntenna",
+                    "LargeBlockCompactRadioAntenna",
+                    "LargeBlockRadioAntennaDish",
+                },
+                Type = SensorType.Antenna,
+                MaxAperture = Math.PI,
+                MinAperture = Math.PI,
+                DetectionThreshold = 30,
+                MaxPowerDraw = -1,
+                BearingErrorModifier = 0.1,
+                RangeErrorModifier = 0.0001,
+                Movement = null,
+                RadarProperties = new RadarPropertiesDefinition
+                {
+                    ReceiverArea = 2.5 * 2.5,
+                }
+            },
         };
 
         private static readonly Dictionary<string, CountermeasureDefinition> CountermeasureDefinitions = new Dictionary<string, CountermeasureDefinition>

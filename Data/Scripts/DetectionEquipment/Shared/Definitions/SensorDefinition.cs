@@ -140,7 +140,7 @@ namespace DetectionEquipment.Shared.Definitions
         public class RadarPropertiesDefinition : IPackageable
         {
             /// <summary>
-            /// Receiver area, in square meters.
+            /// Receiver area, in square meters. Applies to active radar, passive radar, and comms sensors.
             /// </summary>
             [ProtoMember(1)] public double ReceiverArea = 2.5 * 2.5;
             /// <summary>

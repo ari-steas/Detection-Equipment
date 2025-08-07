@@ -26,7 +26,8 @@ namespace DetectionEquipment.Shared
         public static int MainThreadId = -1;
         public static double SyncRange => MyAPIGateway.Session.SessionSettings.SyncDistance;
         public static double SyncRangeSq => (double) MyAPIGateway.Session.SessionSettings.SyncDistance * MyAPIGateway.Session.SessionSettings.SyncDistance;
-        public static readonly Guid SettingsGuid = new Guid("b4e33a2c-0406-4aea-bf0a-d1ad04266a14");
+        public static readonly Guid LogicSettingsGuid = new Guid("b4e33a2c-0406-4aea-bf0a-d1ad04266a14");
+        public static readonly Guid SensorSettingsGuid = new Guid("ed7fde7f-c8a4-4c1b-9c07-cfd31aa0226e");
         public static readonly Guid PersistentBlockIdGuid = new Guid("385ace88-f770-4241-a02c-af63e0851c06");
         public static List<IMyPlayer> Players = new List<IMyPlayer>();
         public static IMyModContext ModContext;

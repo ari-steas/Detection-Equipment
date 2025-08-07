@@ -22,7 +22,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 {
     internal class BlockSensor
     {
-        public IMyCameraBlock Block;
+        public IMyFunctionalBlock Block;
         public ISensor Sensor;
         public SubpartManager SubpartManager;
         public readonly SensorDefinition Definition;
@@ -205,7 +205,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public BlockSensor(IMyFunctionalBlock block, SensorDefinition definition)
         {
-            Block = (IMyCameraBlock) block;
+            Block = block;
             Definition = definition;
             SubpartManager = new SubpartManager();
 

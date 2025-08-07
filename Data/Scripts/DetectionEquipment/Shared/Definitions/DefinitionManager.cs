@@ -205,8 +205,8 @@ namespace DetectionEquipment.Shared.Definitions
             {
                 if (!definition.BlockSubtypes.Contains(block.BlockDefinition.SubtypeName))
                     continue;
-                if (!(block is IMyCameraBlock))
-                    throw new Exception($"Sensor with subtype \"{block.BlockDefinition.SubtypeId}\" is not a camera block!");
+                //if (!(block is IMyCameraBlock))
+                //    throw new Exception($"Sensor with subtype \"{block.BlockDefinition.SubtypeId}\" is not a camera block!");
 
                 BlockSensor newSensor = null;
                 foreach (var sensor in ServerMain.I.BlockSensorIdMap.Values)

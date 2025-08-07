@@ -95,7 +95,10 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         private readonly IMyModelDummy _sensorDummy = null;
         private readonly MyEntity _dummyParent = null;
-        public readonly IMyCameraBlock Block;
+
+        public readonly IMyFunctionalBlock Block;
+        public readonly IMyCameraBlock CameraBlock;
+
         public Color Color;
 
         private MatrixD SensorMatrix => _sensorDummy == null
@@ -106,11 +109,12 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             ? MatrixD.CreateFromYawPitchRoll(Azimuth, Elevation, 0) * _sensorDummy.Matrix * _dummyParent.WorldMatrix
             : _sensorDummy.Matrix * _dummyParent.WorldMatrix;
 
-        public ClientSensorData(uint id, SensorDefinition definition, IMyCameraBlock block, Color? color)
+        public ClientSensorData(uint id, SensorDefinition definition, IMyFunctionalBlock block, Color? color)
         {
             Id = id;
             Definition = definition;
             Block = block;
+            CameraBlock = block as IMyCameraBlock;
 
             if (Definition.Movement != null)
             {
@@ -185,20 +189,20 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         private void UpdateCameraView()
         {
-            if (MyAPIGateway.Session.IsServer)
+            if (MyAPIGateway.Session.IsServer || CameraBlock == null)
                 return;
 
             // Hide/show & rotate block based on whether a player is in the camera. TODO: This doesn't quite work.
-            if (Block.IsActive)
+            if (CameraBlock.IsActive)
             {
-                Block.Visible = false;
+                CameraBlock.Visible = false;
 
-                Block.LocalMatrix = SensorMatrix * MatrixD.Invert(Block.CubeGrid.WorldMatrix);
+                CameraBlock.LocalMatrix = SensorMatrix * MatrixD.Invert(CameraBlock.CubeGrid.WorldMatrix);
             }
-            else if (!Block.Visible)
+            else if (!CameraBlock.Visible)
             {
-                Block.Visible = true;
-                Block.LocalMatrix = _baseLocalMatrix;
+                CameraBlock.Visible = true;
+                CameraBlock.LocalMatrix = _baseLocalMatrix;
             }
         }
 

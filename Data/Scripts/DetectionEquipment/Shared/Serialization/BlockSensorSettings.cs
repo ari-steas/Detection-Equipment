@@ -92,7 +92,7 @@ namespace DetectionEquipment.Shared.Serialization
 
 
             string rawData;
-            if (!block.Storage.TryGetValue(GlobalData.SettingsGuid, out rawData))
+            if (!block.Storage.TryGetValue(GlobalData.SensorSettingsGuid, out rawData))
             {
                 LoadDefaultSettings(block, sensors);
                 //Log.Info("BlockSensorSettings", $"Failed to load {block.EntityId} sensor data because storage does not contain relevant data.");
@@ -151,7 +151,7 @@ namespace DetectionEquipment.Shared.Serialization
             }
             catch (Exception e)
             {
-                Log.Exception("LoadSensorBlockSettings", e);
+                Log.Exception($"LoadSensorBlockSettings::{block.BlockDefinition.SubtypeName}", e);
             }
         }
 
@@ -189,7 +189,7 @@ namespace DetectionEquipment.Shared.Serialization
                 //Log.Info("BlockSensorSettings", $"Created new storage component for block {block.EntityId}.");
             }
 
-            block.Storage.SetValue(GlobalData.SettingsGuid, Convert.ToBase64String(MyAPIGateway.Utilities.SerializeToBinary(settings)));
+            block.Storage.SetValue(GlobalData.SensorSettingsGuid, Convert.ToBase64String(MyAPIGateway.Utilities.SerializeToBinary(settings)));
             //Log.Info("BlockSensorSettings", $"Saved {sensors.Count} sensor data(s) for block {block.EntityId}.");
         }
     }
