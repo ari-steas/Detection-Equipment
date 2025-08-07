@@ -4,21 +4,24 @@ using System.Collections.Generic;
 namespace DetectionEquipment.Shared.Utils
 {
     /// <summary>
-    /// Thread-safe object pool with automatic factory and cleaner.
+    /// Thread-safe object pool with automatic factory, preparer, and cleaner.
     /// </summary>
     /// <typeparam name="TObject"></typeparam>
-    internal class ObjectPool<TObject>
+    public class ObjectPool<TObject>
     {
         private Stack<TObject> _internalPool = new Stack<TObject>();
         private readonly object _lockObj = new object();
 
         private readonly Func<TObject> _factory;
-        private readonly Action<TObject> _cleaner;
-        private readonly bool _hasCleaner;
+        private readonly Action<TObject> _preparer, _cleaner;
+        private readonly bool _hasPreparer, _hasCleaner;
 
-        public ObjectPool(Func<TObject> factory, Action<TObject> cleanObj = null, int startSize = 10)
+        public ObjectPool(Func<TObject> factory, Action<TObject> prepareObj = null,
+            Action<TObject> cleanObj = null, int startSize = 10)
         {
             _factory = factory;
+            _preparer = prepareObj;
+            _hasPreparer = _preparer != null;
             _cleaner = cleanObj;
             _hasCleaner = _cleaner != null;
             for (int i = 0; i < startSize; i++)
@@ -31,12 +34,16 @@ namespace DetectionEquipment.Shared.Utils
         /// <returns></returns>
         public TObject Pop()
         {
+            TObject toPop;
+
             lock (_lockObj)
             {
-                if (_internalPool.Count == 0)
-                    return _factory.Invoke();
-                return _internalPool.Pop();
+                toPop = _internalPool.Count == 0 ? _factory.Invoke() : _internalPool.Pop();
             }
+
+            if (_hasPreparer)
+                _preparer.Invoke(toPop);
+            return toPop;
         }
 
         /// <summary>
@@ -45,10 +52,11 @@ namespace DetectionEquipment.Shared.Utils
         /// <param name="obj"></param>
         public void Push(TObject obj)
         {
+            if (_hasCleaner)
+                _cleaner.Invoke(obj);
+
             lock (_lockObj)
             {
-                if (_hasCleaner)
-                    _cleaner.Invoke(obj);
                 _internalPool.Push(obj);
             }
         }

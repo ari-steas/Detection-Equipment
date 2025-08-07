@@ -122,71 +122,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (_isUpdateComplete)
             {
                 _isUpdateComplete = false;
-                var tracksBuffer = new Dictionary<IMyEntity, ITrack>(ServerMain.I.Tracks);
-                MyAPIGateway.Parallel.Start(() =>
-                {
-                    var internalVisibility = new HashSet<VisibilitySet>(_trackVisibility.Count);
-                    foreach (var trackKvp in tracksBuffer)
-                    {
-                        // 500km max track range if radar is present, 50km otherwise
-                        if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
-                            continue;
-
-                        // move this before LOS check to save a few more raycasts
-                        var gT = trackKvp.Value as GridTrack;
-                        if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
-                            continue;
-
-                        // check sensor visibility before registering tracks
-                        bool cont = false;
-                        foreach (var sensor in Sensors)
-                        {
-                            if (sensor.Block == null || sensor.Sensor == null || !sensor.Sensor.Enabled)
-                                continue;
-
-                            double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, trackKvp.Value.Position - sensor.Sensor.Position);
-                            if (targetAngle <= sensor.Sensor.Aperture || trackKvp.Value.BoundingBox.Intersects(new RayD(sensor.Sensor.Position, sensor.Sensor.Direction)) != null)
-                            {
-                                cont = true;
-                                break;
-                            }
-                        }
-                        if (!cont)
-                        {
-                            continue;
-                        }
-
-                        if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
-                            continue;
-
-                        if (gT != null)
-                        {
-                            var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
-                            if (!_combineBuffer.ContainsKey(topmost))
-                                _combineBuffer[topmost] = new List<VisibilitySet>();
-                            _combineBuffer[topmost].Add(new VisibilitySet(Grid, trackKvp.Value));
-                        }
-                        else
-                        {
-                            internalVisibility.Add(new VisibilitySet(Grid, trackKvp.Value));
-                        }
-                    }
-
-                    foreach (var combineKvp in _combineBuffer)
-                    {
-                        if (combineKvp.Value.Count > 1)
-                            internalVisibility.Add(new VisibilitySet(combineKvp.Value));
-                        else
-                            internalVisibility.Add(combineKvp.Value[0]);
-                    }
-                    _combineBuffer.Clear();
-
-                    lock (_trackVisibility)
-                    {
-                        _trackVisibility = internalVisibility;
-                    }
-                    _isUpdateComplete = true;
-                });
+                MyAPIGateway.Parallel.Start(UpdateTracks);
             }
 
             //foreach (var sensor in Sensors)
@@ -196,6 +132,73 @@ namespace DetectionEquipment.Server.SensorBlocks
             {
                 sensor.Update(_trackVisibility);
             });
+        }
+
+        private void UpdateTracks()
+        {
+            var tracksBuffer = GlobalObjectPools.TrackSharedPool.Pop();
+            var internalVisibility = new HashSet<VisibilitySet>(_trackVisibility.Count);
+            foreach (var trackKvp in tracksBuffer)
+            {
+                // 500km max track range if radar is present, 50km otherwise
+                if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
+                    continue;
+
+                // move this before LOS check to save a few more raycasts
+                var gT = trackKvp.Value as GridTrack;
+                if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
+                    continue;
+
+                // check sensor visibility before registering tracks
+                bool cont = false;
+                foreach (var sensor in Sensors)
+                {
+                    if (sensor.Block == null || sensor.Sensor == null || !sensor.Sensor.Enabled)
+                        continue;
+
+                    double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, trackKvp.Value.Position - sensor.Sensor.Position);
+                    if (targetAngle <= sensor.Sensor.Aperture || trackKvp.Value.BoundingBox.Intersects(new RayD(sensor.Sensor.Position, sensor.Sensor.Direction)) != null)
+                    {
+                        cont = true;
+                        break;
+                    }
+                }
+                if (!cont)
+                {
+                    continue;
+                }
+
+                if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
+                    continue;
+
+                if (gT != null)
+                {
+                    var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
+                    if (!_combineBuffer.ContainsKey(topmost))
+                        _combineBuffer[topmost] = new List<VisibilitySet>();
+                    _combineBuffer[topmost].Add(new VisibilitySet(Grid, trackKvp.Value));
+                }
+                else
+                {
+                    internalVisibility.Add(new VisibilitySet(Grid, trackKvp.Value));
+                }
+            }
+            GlobalObjectPools.TrackSharedPool.Push(tracksBuffer);
+
+            foreach (var combineKvp in _combineBuffer)
+            {
+                if (combineKvp.Value.Count > 1)
+                    internalVisibility.Add(new VisibilitySet(combineKvp.Value));
+                else
+                    internalVisibility.Add(combineKvp.Value[0]);
+            }
+            _combineBuffer.Clear();
+
+            lock (_trackVisibility)
+            {
+                _trackVisibility = internalVisibility;
+            }
+            _isUpdateComplete = true;
         }
 
         public void Close()

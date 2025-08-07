@@ -18,10 +18,12 @@ namespace DetectionEquipment.Shared.BlockLogic
 
         public readonly ObjectPool<Dictionary<long, List<WorldDetectionInfo>>> GroupsCacheBuffer = new ObjectPool<Dictionary<long, List<WorldDetectionInfo>>>(
             () => new Dictionary<long, List<WorldDetectionInfo>>(),
+            null,
             dict => dict.Clear()
         );
         public readonly ObjectPool<List<WorldDetectionInfo>> GroupInfoBuffer = new ObjectPool<List<WorldDetectionInfo>>(
             () => new List<WorldDetectionInfo>(),
+            null,
             list => list.Clear()
         );
 

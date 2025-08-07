@@ -68,6 +68,7 @@ namespace DetectionEquipment.Shared
                 }
 
                 IffHelper.Update();
+                GlobalObjectPools.Update();
                 Log.Update();
                 Ticks++;
             }

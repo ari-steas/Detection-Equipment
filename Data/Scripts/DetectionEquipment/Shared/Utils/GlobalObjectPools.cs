@@ -1,7 +1,10 @@
-﻿using Sandbox.Game.Entities;
+﻿using DetectionEquipment.Server;
+using DetectionEquipment.Server.Tracking;
+using Sandbox.Game.Entities;
 using System.Collections.Generic;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.Utils
@@ -30,6 +33,10 @@ namespace DetectionEquipment.Shared.Utils
         //public static ObjectPool<List<MyLineSegmentOverlapResult<MyVoxelBase>>> VoxelLineOverlapPool;
         public static ObjectPool<HashSet<MyDataBroadcaster>> DataBroadcasterPool;
         public static ObjectPool<Queue<MyDataReceiver>> DataReceiverPool;
+        /// <summary>
+        /// For use in GridSensorManager.cs
+        /// </summary>
+        public static AsyncSharedObjectPool<Dictionary<IMyEntity, ITrack>> TrackSharedPool;
 
 
         public static void Init()
@@ -62,6 +69,23 @@ namespace DetectionEquipment.Shared.Utils
                 () => new Queue<MyDataReceiver>(),
                 startSize: 10
             );
+            TrackSharedPool = new AsyncSharedObjectPool<Dictionary<IMyEntity, ITrack>>(
+                () => new Dictionary<IMyEntity, ITrack>(50),
+                (dict) =>
+                {
+                    foreach (var kvp in ServerMain.I.Tracks)
+                    {
+                        dict.Add(kvp.Key, kvp.Value);
+                    }
+                },
+                (dict) => dict.Clear(),
+                3
+                );
+        }
+
+        public static void Update()
+        {
+            TrackSharedPool.UpdateTick();
         }
 
         public static void Unload()

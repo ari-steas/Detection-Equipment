@@ -31,6 +31,7 @@ namespace DetectionEquipment.Shared.Structs
             {
                 buffer = new ObjectPool<object[]>(
                     () => new object[toPackage.FieldCount],
+                    null,
                     CleanArray
                 );
                 _objectBuffers[toPackage.FieldCount] = buffer;

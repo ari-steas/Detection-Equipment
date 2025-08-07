@@ -32,7 +32,7 @@ namespace DetectionEquipment.Server.Countermeasures
             _deadEmitters = new List<CountermeasureEmitterBlock>();
             HighestCountermeasureEmitterId = 0;
 
-            InventoryItemPool = new ObjectPool<List<MyInventoryItem>>(() => new List<MyInventoryItem>(), list => list.Clear(), 100);
+            InventoryItemPool = new ObjectPool<List<MyInventoryItem>>(() => new List<MyInventoryItem>(), null, list => list.Clear(), 100);
 
             ServerMain.I.OnBlockPlaced += OnBlockPlaced;
 
