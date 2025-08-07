@@ -33,6 +33,7 @@ namespace DetectionEquipment.Server.Tracking
         protected int NextCacheUpdate = 0;
 
         private readonly HashSet<IMyThrust> _thrustCache = new HashSet<IMyThrust>();
+        private readonly HashSet<IMyFunctionalBlock> _broadcasterCache = new HashSet<IMyFunctionalBlock>();
         private readonly HashSet<MyCubeBlock> _wcWeaponCache = new HashSet<MyCubeBlock>();
         private int _lastThrustCacheUpdate = -1;
 
@@ -44,6 +45,8 @@ namespace DetectionEquipment.Server.Tracking
             {
                 if (block is IMyThrust)
                     _thrustCache.Add((IMyThrust)block);
+                if (block is IMyRadioAntenna || block is IMyBeacon)
+                    _broadcasterCache.Add(block);
                 else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
                 {
                     _wcWeaponCache.Add((MyCubeBlock) block);
@@ -56,9 +59,11 @@ namespace DetectionEquipment.Server.Tracking
 
                 if (block.FatBlock is IMyThrust)
                     _thrustCache.Add((IMyThrust)block.FatBlock);
+                if (block.FatBlock is IMyRadioAntenna || block.FatBlock is IMyBeacon)
+                    _broadcasterCache.Add((IMyFunctionalBlock)block.FatBlock);
                 else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
                 {
-                    _wcWeaponCache.Add((MyCubeBlock) block.FatBlock);
+                    _wcWeaponCache.Add((MyCubeBlock)block.FatBlock);
                 }
             };
             Grid.OnBlockRemoved += block =>
@@ -68,6 +73,8 @@ namespace DetectionEquipment.Server.Tracking
 
                 if (block.FatBlock is IMyThrust)
                     _thrustCache.Remove((IMyThrust)block.FatBlock);
+                if (block.FatBlock is IMyRadioAntenna || block.FatBlock is IMyBeacon)
+                    _broadcasterCache.Remove((IMyFunctionalBlock)block.FatBlock);
                 else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
                 {
                     _wcWeaponCache.Remove((MyCubeBlock) block.FatBlock);
@@ -184,16 +191,12 @@ namespace DetectionEquipment.Server.Tracking
         {
             double strongestCaster = 0;
 
-            foreach (var block in ((MyCubeGrid)Grid).GetFatBlocks()) // TODO: Cache antennas.
+            foreach (var broadcaster in _broadcasterCache)
             {
-                var funcBlock = block as IMyFunctionalBlock;
-                if (funcBlock == null || !funcBlock.Enabled)
-                    continue;
-
-                var antenna = block as IMyRadioAntenna;
-                if ((antenna != null && antenna.IsBroadcasting) || block is IMyBeacon)
+                var antenna = broadcaster as IMyRadioAntenna;
+                if (broadcaster.Enabled && (antenna == null || antenna.IsBroadcasting))
                 {
-                    strongestCaster += 1000000 * funcBlock.ResourceSink.CurrentInputByType(GlobalData.ElectricityId);
+                    strongestCaster += 1000000 * broadcaster.ResourceSink.CurrentInputByType(GlobalData.ElectricityId);
                 }
             }
 
