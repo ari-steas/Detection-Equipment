@@ -9,6 +9,15 @@
         <guid>b4e33a2c-0406-4aea-bf0a-d1ad04266a14</guid>
       </RegisteredStorageGuids>
     </EntityComponent>
+    <EntityComponent xsi:type="MyObjectBuilder_ModStorageComponentDefinition">
+      <Id>
+        <TypeId>ModStorageComponent</TypeId>
+        <SubtypeId>DetectionEquipmentModStorage_Sensor</SubtypeId>
+      </Id>
+      <RegisteredStorageGuids>
+        <guid>ed7fde7f-c8a4-4c1b-9c07-cfd31aa0226e</guid>
+      </RegisteredStorageGuids>
+    </EntityComponent>
 	
 	<EntityComponent xsi:type="MyObjectBuilder_ModStorageComponentDefinition">
       <Id>
