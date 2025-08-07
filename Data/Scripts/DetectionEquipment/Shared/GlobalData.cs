@@ -35,10 +35,6 @@ namespace DetectionEquipment.Shared
         public static int DebugLevel = 0;
         public static List<MyPlanet> Planets = new List<MyPlanet>();
 
-        public static string[] IgnoredEntityTypes = {
-            "MyVoxelPhysics",
-            "MyDebrisTree"
-        };
         public static readonly MyDefinitionId ElectricityId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Electricity");
         public static readonly MyDefinitionId HydrogenId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Hydrogen");
 

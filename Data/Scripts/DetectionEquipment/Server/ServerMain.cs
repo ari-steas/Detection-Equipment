@@ -25,6 +25,13 @@ namespace DetectionEquipment.Server
     {
         public static ServerMain I;
 
+        public readonly Type[] ValidEntityTypes =
+        {
+            typeof(IMyCubeGrid),
+            typeof(IMyCharacter),
+            typeof(MyVoxelMap),
+        };
+
         public Dictionary<IMyEntity, ITrack> Tracks = new Dictionary<IMyEntity, ITrack>();
         public Dictionary<IMyCubeGrid, GridSensorManager> GridSensorMangers = new Dictionary<IMyCubeGrid, GridSensorManager>();
 
@@ -194,7 +201,7 @@ namespace DetectionEquipment.Server
                 {
                     // Ignore planet voxel maps
                     if (obj is MyVoxelMap && obj.Name == "") return;
-                    if (GlobalData.IgnoredEntityTypes.Contains(obj.GetType().Name))
+                    if (!ValidEntityTypes.Contains(obj.GetType()))
                         return;
 
                     Tracks.Add(obj, new EntityTrack((MyEntity)obj));
