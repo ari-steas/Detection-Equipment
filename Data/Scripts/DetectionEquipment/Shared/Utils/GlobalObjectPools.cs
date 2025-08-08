@@ -73,6 +73,9 @@ namespace DetectionEquipment.Shared.Utils
                 () => new Dictionary<IMyEntity, ITrack>(50),
                 (dict) =>
                 {
+                    if (ServerMain.I?.Tracks == null)
+                        return;
+
                     foreach (var kvp in ServerMain.I.Tracks)
                     {
                         dict.Add(kvp.Key, kvp.Value);
