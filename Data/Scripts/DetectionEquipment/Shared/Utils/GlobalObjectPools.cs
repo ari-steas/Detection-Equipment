@@ -90,7 +90,10 @@ namespace DetectionEquipment.Shared.Utils
 
         public static void Update()
         {
-            TrackSharedPool.UpdateTick();
+            if (MyAPIGateway.Session.IsServer)
+            {
+                TrackSharedPool.UpdateTick();
+            }
         }
 
         public static void Unload()
