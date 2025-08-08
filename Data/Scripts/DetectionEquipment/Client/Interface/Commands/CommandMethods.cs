@@ -2,6 +2,7 @@
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Utils;
+using Sandbox.Game;
 using Sandbox.ModAPI;
 
 namespace DetectionEquipment.Client.Interface.Commands
@@ -42,6 +43,25 @@ namespace DetectionEquipment.Client.Interface.Commands
 
             IffHelper.TestHashing(numSaltPairs);
             MyAPIGateway.Utilities.ShowMessage("DetEq", "Finished hash testing - results sent to log file.");
+        }
+
+        #endregion
+
+        #region Info
+
+        public static void ShowGit(string[] args)
+        {
+            MyVisualScriptLogicProvider.OpenSteamOverlayLocal(@"https://steamcommunity.com/linkfilter/?url=https://github.com/ari-steas/Detection-Equipment"); //hey dumbass, use this before the url. fucking keen https://steamcommunity.com/linkfilter/?url={url}
+        }
+
+        public static void ShowReport(string[] args)
+        {
+            MyVisualScriptLogicProvider.OpenSteamOverlayLocal(@"https://steamcommunity.com/linkfilter/?url=https://github.com/ari-steas/Detection-Equipment/issues/new/choose"); //hey dumbass, use this before the url. fucking keen https://steamcommunity.com/linkfilter/?url={url}
+        }
+
+        public static void ShowWorkshop(string[] args)
+        {
+            MyVisualScriptLogicProvider.OpenSteamOverlayLocal(@"https://steamcommunity.com/workshop/filedetails/?id=3476173167");
         }
 
         #endregion

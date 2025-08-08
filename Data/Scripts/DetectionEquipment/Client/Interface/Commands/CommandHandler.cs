@@ -43,6 +43,25 @@ namespace DetectionEquipment.Client.Interface.Commands
                 CommandMethods.TestHashing),
 
             #endregion
+
+            #region Info Commands
+
+            ["git"] = new Command(
+                "DetEq",
+                "Opens the mod's GitHub page in your browser.",
+                CommandMethods.ShowGit),
+
+            ["bug"] = new Command(
+                "DetEq",
+                "Opens the mod's issue submission page in your browser.",
+                CommandMethods.ShowReport),
+
+            ["ws"] = new Command(
+                "DetEq",
+                "Opens the mod's workshop page in your browser.",
+                CommandMethods.ShowWorkshop),
+
+            #endregion
         };
 
         private CommandHandler()
