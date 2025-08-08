@@ -2,6 +2,7 @@
 using DetectionEquipment.Server.Tracking;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
+using Sandbox.ModAPI;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -69,21 +70,22 @@ namespace DetectionEquipment.Shared.Utils
                 () => new Queue<MyDataReceiver>(),
                 startSize: 10
             );
-            TrackSharedPool = new AsyncSharedObjectPool<Dictionary<IMyEntity, ITrack>>(
-                () => new Dictionary<IMyEntity, ITrack>(50),
-                (dict) =>
-                {
-                    if (ServerMain.I?.Tracks == null)
-                        return;
 
-                    foreach (var kvp in ServerMain.I.Tracks)
+            if (MyAPIGateway.Session.IsServer)
+            {
+                TrackSharedPool = new AsyncSharedObjectPool<Dictionary<IMyEntity, ITrack>>(
+                    () => new Dictionary<IMyEntity, ITrack>(50),
+                    (dict) =>
                     {
-                        dict.Add(kvp.Key, kvp.Value);
-                    }
-                },
-                (dict) => dict.Clear(),
-                3
+                        foreach (var kvp in ServerMain.I.Tracks)
+                        {
+                            dict.Add(kvp.Key, kvp.Value);
+                        }
+                    },
+                    (dict) => dict.Clear(),
+                    3
                 );
+            }
         }
 
         public static void Update()
