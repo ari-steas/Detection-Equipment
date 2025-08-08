@@ -189,6 +189,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
 
         private void UpdateCameraView()
         {
+            return; // TODO bring this back
+
             if (MyAPIGateway.Session.IsServer || CameraBlock == null)
                 return;
 
