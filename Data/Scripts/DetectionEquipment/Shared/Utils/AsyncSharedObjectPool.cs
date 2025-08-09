@@ -44,10 +44,10 @@ namespace DetectionEquipment.Shared.Utils
             {
                 _nextObject = _internalPool.Pop();
                 _nextObjectUsers = 0;
-            }
 
-            if (_hasPreparer)
-                _preparer.Invoke(_nextObject);
+                if (_hasPreparer)
+                    _preparer.Invoke(_nextObject);
+            }
         }
 
         /// <summary>
