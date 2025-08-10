@@ -238,7 +238,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (ids.Count > 0)
                 {
                     BlockSensorSettings.LoadBlockSettings(cubeBlock, sensors);
-                    BlockSensorSettings.SaveBlockSettings(cubeBlock, sensors);
+                    BlockSensorSettings.SaveBlockSettings(cubeBlock, new BlockSensorSettings(sensors));
 
                     if (cubeBlock is IMyCameraBlock)
                     {

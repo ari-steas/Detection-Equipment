@@ -257,6 +257,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 foreach (var control in controls)
                     control.UpdateVisual();
             }
+
+
         }
 
         private void OnCustomDataChanged(IMyTerminalBlock obj)

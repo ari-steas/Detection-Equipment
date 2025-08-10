@@ -1,5 +1,8 @@
-﻿using DetectionEquipment.Server;
+﻿using DetectionEquipment.Client.BlockLogic;
+using DetectionEquipment.Client.BlockLogic.Sensors;
+using DetectionEquipment.Server;
 using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.Game.EntityComponents;
@@ -7,7 +10,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DetectionEquipment.Client.BlockLogic.Sensors;
 using VRage.Game.ModAPI;
 
 namespace DetectionEquipment.Shared.Serialization
@@ -165,21 +167,30 @@ namespace DetectionEquipment.Shared.Serialization
 
         internal static void SaveBlockSettings(IMyCubeBlock block)
         {
-            GridSensorManager manager;
-            if (!ServerMain.I.GridSensorMangers.TryGetValue(block.CubeGrid, out manager))
-                return;
+            if (MyAPIGateway.Session.IsServer)
+            {
+                GridSensorManager manager;
+                if (!ServerMain.I.GridSensorMangers.TryGetValue(block.CubeGrid, out manager))
+                    return;
 
-            List<BlockSensor> sensors;
-            if (!manager.BlockSensorMap.TryGetValue(block, out sensors) || sensors.Count == 0)
-                return;
+                List<BlockSensor> sensors;
+                if (!manager.BlockSensorMap.TryGetValue(block, out sensors) || sensors.Count == 0)
+                    return;
 
-            SaveBlockSettings(block, sensors);
+                SaveBlockSettings(block, new BlockSensorSettings(sensors));
+            }
+            else
+            {
+                var logic = block.GetLogic<ClientSensorLogic>();
+                if (logic == null)
+                    return;
+
+                SaveBlockSettings(block, new BlockSensorSettings(logic));
+            }
         }
 
-        internal static void SaveBlockSettings(IMyCubeBlock block, List<BlockSensor> sensors)
+        internal static void SaveBlockSettings(IMyCubeBlock block, BlockSensorSettings settings)
         {
-            var settings = new BlockSensorSettings(sensors);
-
             if (block == null)
                 return; // called too soon or after it was already closed, ignore
 
