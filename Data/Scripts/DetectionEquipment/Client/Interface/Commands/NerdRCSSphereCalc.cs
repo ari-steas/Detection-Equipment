@@ -370,7 +370,7 @@ namespace DetectionEquipment.Client.Interface.Commands
                             return;
                         }
 
-                        if (!TrackingUtils.HasLoSDir(SpherePoints[i], track.Grid))
+                        if (!TrackingUtils.HasLoSDir(SpherePoints[i], MyAPIGateway.Session.Player?.Character, track.Grid))
                             continue;
 
                         double trackVcs, trackRcs;

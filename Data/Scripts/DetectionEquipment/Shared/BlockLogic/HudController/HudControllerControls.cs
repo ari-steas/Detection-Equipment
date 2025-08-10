@@ -55,6 +55,9 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 logic => ControlBlockManager.I.Blocks.Values.Where(control => control is AggregatorBlock && control.CubeBlock.CubeGrid == logic.Block.CubeGrid).Select(c => c.CubeBlock),
                 (logic, selected) =>
                 {
+                    if (!MyAPIGateway.Session.IsServer)
+                        return;
+
                     foreach (var control in ControlBlockManager.I.Blocks.Values)
                     {
                         if (!(control is AggregatorBlock) || control.CubeBlock.CubeGrid != logic.Block.CubeGrid || !selected.Contains(control.CubeBlock))

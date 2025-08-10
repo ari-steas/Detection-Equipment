@@ -171,7 +171,7 @@ namespace DetectionEquipment.Shared.Utils
             return list;
         }
 
-        public static bool HasLoS(Vector3D thisPos, IMyEntity toCheck)
+        public static bool HasLoS(Vector3D thisPos, IMyEntity thisEnt, IMyEntity toCheck)
         {
             // Look for at least two visible corners
             bool oneHit = false;
@@ -180,21 +180,31 @@ namespace DetectionEquipment.Shared.Utils
             {
                 Vector3D corner = Vector3D.Transform(cornerLocal, toCheck.WorldMatrix);
 
-                IHitInfo hitInfo;
-                MyAPIGateway.Physics.CastRay(thisPos, corner, out hitInfo, 30 /* ignore characters */);
+                // MyAPIGateway.Physics.CastRay(thisPos, toCheck.PositionComp.WorldAABB.GetCorner(i), castList);
+                // threadsafe but only goes by AABBs
+                bool isValid = IsBlocked(thisEnt, toCheck, corner, thisPos);
 
-                if (hitInfo != null && hitInfo.HitEntity != toCheck)
+                if (!isValid)
                     continue;
 
                 if (oneHit)
+                {
                     return true;
+                }
                 oneHit = true;
+            }
+
+            if (oneHit && !IsBlocked(thisEnt, toCheck, toCheck.WorldAABB.Center, thisPos))
+            {
+                return true;
             }
 
             return false;
         }
 
-        public static bool HasLoSDir(Vector3D direction, IMyEntity toCheck)
+        
+
+        public static bool HasLoSDir(Vector3D direction, IMyEntity thisEnt, IMyEntity toCheck)
         {
             // Look for at least two visible corners
             bool oneHit = false;
@@ -203,19 +213,103 @@ namespace DetectionEquipment.Shared.Utils
             foreach (var cornerLocal in toCheck.LocalAABB.Corners)
             {
                 Vector3D corner = Vector3D.Transform(cornerLocal, toCheck.WorldMatrix);
+                // MyAPIGateway.Physics.CastRay(thisPos, toCheck.PositionComp.WorldAABB.GetCorner(i), castList);
+                // threadsafe but only goes by AABBs
+                bool isValid = IsBlocked(thisEnt, toCheck, corner, corner - distToRaycast * direction);
 
-                IHitInfo hitInfo;
-                MyAPIGateway.Physics.CastRay(corner, corner - distToRaycast * direction, out hitInfo, 30 /* ignore characters */);
-
-                if (hitInfo != null && hitInfo.HitEntity != toCheck)
+                if (!isValid)
                     continue;
 
                 if (oneHit)
+                {
                     return true;
+                }
                 oneHit = true;
             }
 
+            if (oneHit && !IsBlocked(thisEnt, toCheck, toCheck.WorldAABB.Center, toCheck.WorldAABB.Center - distToRaycast * direction))
+            {
+                return true;
+            }
+
             return false;
+        }
+        private static bool IsBlocked(IMyEntity thisEnt, IMyEntity toCheck, Vector3D from, Vector3D to)
+        {
+            var entityList = GlobalObjectPools.EntityLineOverlapPool.Pop();
+            bool isValid = true;
+
+            try
+            {
+                LineD raycast = new LineD(from, to);
+
+                MyGamePruningStructure.GetTopmostEntitiesOverlappingRay(ref raycast, entityList);
+
+                if (GlobalData.DebugLevel > 1)
+                    DebugDraw.AddLine(raycast, Color.Cyan.SetAlphaPct(0.05f), 0);
+
+                foreach (var segementOverlapResult in entityList)
+                {
+                    if (segementOverlapResult.Element == thisEnt || segementOverlapResult.Element == toCheck)
+                        continue;
+
+                    if (GlobalData.DebugLevel > 1)
+                        DebugDraw.AddPoint(from + raycast.Direction * segementOverlapResult.Distance,
+                            Color.Green.SetAlphaPct(1f), 0);
+
+                    // raycast extents can be optimized further
+
+                    Vector3D? result;
+                    if (segementOverlapResult.Element is MyCubeGrid)
+                    {
+                        MyCubeGrid.MyCubeGridHitInfo intersect = new MyCubeGrid.MyCubeGridHitInfo();
+                        if (((MyCubeGrid)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast,
+                                ref intersect))
+                        {
+                            if (GlobalData.DebugLevel > 1)
+                                DebugDraw.AddPoint(intersect.Triangle.IntersectionPointInWorldSpace,
+                                    Color.Red.SetAlphaPct(1f), 0);
+                            isValid = false;
+                            break;
+                        }
+                    }
+                    else if (segementOverlapResult.Element is MyVoxelBase)
+                    {
+                        //if (segementOverlapResult.Element is MyPlanet)
+                        //{
+                        //    ((MyPlanet)segementOverlapResult.Element).PrefetchShapeOnRay(ref raycast);
+                        //}
+
+                        MyIntersectionResultLineTriangleEx? tri;
+                        if (((MyVoxelBase)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast, out tri))
+                        {
+                            if (GlobalData.DebugLevel > 1)
+                                DebugDraw.AddPoint(tri.Value.IntersectionPointInWorldSpace,
+                                    Color.MediumVioletRed.SetAlphaPct(1f), 0);
+                            isValid = false;
+                            break;
+                        }
+                    }
+                    else if (segementOverlapResult.Element.GetIntersectionWithLine(ref raycast, out result))
+                    {
+                        if (GlobalData.DebugLevel > 1)
+                            DebugDraw.AddPoint(result.Value, Color.Red.SetAlphaPct(1f), 0);
+                        isValid = false;
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("TrackingUtils", ex);
+            }
+            finally
+            {
+                entityList.Clear();
+                GlobalObjectPools.EntityLineOverlapPool.Push(entityList);
+            }
+
+            return isValid;
         }
 
         //public static DetectionInfo AverageDetection(params DetectionInfo[] args)

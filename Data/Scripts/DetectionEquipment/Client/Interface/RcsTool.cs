@@ -91,7 +91,7 @@ namespace DetectionEquipment.Client.Interface
                 foreach (var grid in attached)
                 {
                     // Only track objects the grid can see
-                    if (!TrackingUtils.HasLoS(camPos, grid))
+                    if (!TrackingUtils.HasLoS(camPos, MyAPIGateway.Session.Player?.Character, grid))
                         continue;
 
                     var track = new Server.Tracking.GridTrack(grid);
