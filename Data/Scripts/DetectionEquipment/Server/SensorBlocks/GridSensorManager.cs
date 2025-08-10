@@ -35,6 +35,8 @@ namespace DetectionEquipment.Server.SensorBlocks
         private readonly Dictionary<IMyEntity, int> _losBuffer = new Dictionary<IMyEntity, int>();
         private bool _isUpdateComplete = true;
 
+        private int _nextUpdate;
+
         public static void ScanTargetsAction(MyCubeGrid mainGrid, BoundingSphereD sphere, List<MyEntity> targets)
         {
             // Vanilla WC targeting
@@ -139,6 +141,10 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         private void UpdateTracks()
         {
+            bool needsLosUpdate = _nextUpdate <= MyAPIGateway.Session.GameplayFrameCounter;
+            if (needsLosUpdate)
+                _nextUpdate = MyAPIGateway.Session.GameplayFrameCounter + 11;
+
             var tracksBuffer = GlobalObjectPools.TrackSharedPool.Pop();
             var internalVisibility = new HashSet<VisibilitySet>(_trackVisibility.Count);
             foreach (var trackKvp in tracksBuffer)
@@ -153,13 +159,16 @@ namespace DetectionEquipment.Server.SensorBlocks
                     continue;
 
                 // delayed LoS check
-                var nearCorner = Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center);
-                foreach (var cornerLocal in trackKvp.Key.LocalAABB.Corners)
+                if (needsLosUpdate)
                 {
-                    Vector3D corner = Vector3D.Transform(cornerLocal, trackKvp.Key.WorldMatrix);
-                    if (GlobalData.DebugLevel >= 2)
-                        DebugDraw.AddLine(nearCorner, corner, Color.Cyan.SetAlphaPct(0.05f), 0);
-                    MyAPIGateway.Physics.CastRayParallel(ref nearCorner, ref corner, 30 /* default no character */, hitInfo => LosRaycastCallback(trackKvp.Key, hitInfo));
+                    var nearCorner = Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center);
+                    foreach (var cornerLocal in trackKvp.Key.LocalAABB.Corners)
+                    {
+                        Vector3D corner = Vector3D.Transform(cornerLocal, trackKvp.Key.WorldMatrix);
+                        if (GlobalData.DebugLevel >= 2)
+                            DebugDraw.AddLine(nearCorner, corner, Color.Cyan.SetAlphaPct(0.05f), 11/60f);
+                        MyAPIGateway.Physics.CastRayParallel(ref nearCorner, ref corner, 30 /* default no character */, hitInfo => LosRaycastCallback(trackKvp.Key, hitInfo));
+                    }
                 }
 
                 // actual LoS check
@@ -170,7 +179,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     {
                         if (GlobalData.DebugLevel >= 2)
                         {
-                            DebugDraw.AddLine(nearCorner, trackKvp.Value.Position, Color.Red.SetAlphaPct(0.05f), 0);
+                            DebugDraw.AddLine(Grid.WorldAABB.Center, trackKvp.Value.Position, Color.Red.SetAlphaPct(0.05f), 11/60f);
                         }
                         continue;
                     }
@@ -208,9 +217,13 @@ namespace DetectionEquipment.Server.SensorBlocks
                 }
             }
             GlobalObjectPools.TrackSharedPool.Push(tracksBuffer);
-            lock (_losBuffer)
+
+            if (needsLosUpdate)
             {
-                _losBuffer.Clear();
+                lock (_losBuffer)
+                {
+                    _losBuffer.Clear();
+                }
             }
 
             foreach (var combineKvp in _combineBuffer)
@@ -235,7 +248,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 return;
 
             if (GlobalData.DebugLevel >= 2)
-                DebugDraw.AddPoint(hitInfo.Position, Color.Red.SetAlphaPct(1f), 2/60f);
+                DebugDraw.AddPoint(hitInfo.Position, Color.Red.SetAlphaPct(1f), 11/60f);
 
             lock (_losBuffer)
             {
