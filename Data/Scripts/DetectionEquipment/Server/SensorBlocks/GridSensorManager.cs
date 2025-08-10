@@ -13,6 +13,8 @@ using Sandbox.ModAPI;
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using RichHudFramework;
+using Sandbox.Engine.Physics;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -30,6 +32,7 @@ namespace DetectionEquipment.Server.SensorBlocks
         private bool _hasRadar = false;
 
         private readonly Dictionary<IMyGridGroupData, List<VisibilitySet>> _combineBuffer = new Dictionary<IMyGridGroupData, List<VisibilitySet>>();
+        private readonly Dictionary<IMyEntity, int> _losBuffer = new Dictionary<IMyEntity, int>();
         private bool _isUpdateComplete = true;
 
         public static void ScanTargetsAction(MyCubeGrid mainGrid, BoundingSphereD sphere, List<MyEntity> targets)
@@ -149,6 +152,30 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
                     continue;
 
+                // delayed LoS check
+                var nearCorner = Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center);
+                foreach (var cornerLocal in trackKvp.Key.LocalAABB.Corners)
+                {
+                    Vector3D corner = Vector3D.Transform(cornerLocal, trackKvp.Key.WorldMatrix);
+                    if (GlobalData.DebugLevel >= 2)
+                        DebugDraw.AddLine(nearCorner, corner, Color.Cyan.SetAlphaPct(0.05f), 0);
+                    MyAPIGateway.Physics.CastRayParallel(ref nearCorner, ref corner, 30 /* default no character */, hitInfo => LosRaycastCallback(trackKvp.Key, hitInfo));
+                }
+
+                // actual LoS check
+                lock (_losBuffer)
+                {
+                    int losFailures = 0;
+                    if (_losBuffer.TryGetValue(trackKvp.Key, out losFailures) && losFailures >= 6) // require 2 passing corners to succeed check
+                    {
+                        if (GlobalData.DebugLevel >= 2)
+                        {
+                            DebugDraw.AddLine(nearCorner, trackKvp.Value.Position, Color.Red.SetAlphaPct(0.05f), 0);
+                        }
+                        continue;
+                    }
+                }
+
                 // check sensor visibility before registering tracks
                 bool cont = false;
                 foreach (var sensor in Sensors)
@@ -168,9 +195,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                     continue;
                 }
 
-                if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
-                    continue;
-
                 if (gT != null)
                 {
                     var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
@@ -184,6 +208,10 @@ namespace DetectionEquipment.Server.SensorBlocks
                 }
             }
             GlobalObjectPools.TrackSharedPool.Push(tracksBuffer);
+            lock (_losBuffer)
+            {
+                _losBuffer.Clear();
+            }
 
             foreach (var combineKvp in _combineBuffer)
             {
@@ -199,6 +227,23 @@ namespace DetectionEquipment.Server.SensorBlocks
                 _trackVisibility = internalVisibility;
             }
             _isUpdateComplete = true;
+        }
+
+        private void LosRaycastCallback(IMyEntity targetEntity, IHitInfo hitInfo)
+        {
+            if (hitInfo.HitEntity == targetEntity)
+                return;
+
+            if (GlobalData.DebugLevel >= 2)
+                DebugDraw.AddPoint(hitInfo.Position, Color.Red.SetAlphaPct(1f), 2/60f);
+
+            lock (_losBuffer)
+            {
+                if (!_losBuffer.ContainsKey(targetEntity))
+                    _losBuffer.Add(targetEntity, 1);
+                else
+                    _losBuffer[targetEntity]++;
+            }
         }
 
         public void Close()
