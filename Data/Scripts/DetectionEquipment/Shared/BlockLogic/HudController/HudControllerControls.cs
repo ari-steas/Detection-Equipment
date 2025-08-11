@@ -55,8 +55,8 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 logic => ControlBlockManager.I.Blocks.Values.Where(control => control is AggregatorBlock && control.CubeBlock.CubeGrid == logic.Block.CubeGrid).Select(c => c.CubeBlock),
                 (logic, selected) =>
                 {
-                    if (!MyAPIGateway.Session.IsServer)
-                        return;
+                    // if (!MyAPIGateway.Session.IsServer) // clients need access to this for HUD sensor info
+                    //     return;
 
                     foreach (var control in ControlBlockManager.I.Blocks.Values)
                     {
