@@ -16,6 +16,7 @@ namespace DetectionEquipment.Shared.Utils
     internal static class TrackingUtils
     {
         public static Vector3D GetSunDirection() => MyVisualScriptLogicProvider.GetSunDirection();
+        private static object _voxelCastLockObj = new object();
 
         /// <summary>
         /// Stores cardinal and ordinal directions for performance
@@ -281,12 +282,15 @@ namespace DetectionEquipment.Shared.Utils
                         //}
 
                         MyIntersectionResultLineTriangleEx? tri;
-                        if (((MyVoxelBase)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast, out tri))
+                        lock (_voxelCastLockObj) // vain attempt to limit concurrency exceptions caused by MyVoxelGeometry.GetCellLineIntersectionOctree()
+                        {
+                            isValid &= !((MyVoxelBase)segementOverlapResult.Element).GetIntersectionWithLine(ref raycast, out tri);
+                        }
+
+                        if (!isValid)
                         {
                             if (GlobalData.DebugLevel > 1)
-                                DebugDraw.AddPoint(tri.Value.IntersectionPointInWorldSpace,
-                                    Color.MediumVioletRed.SetAlphaPct(1f), 0);
-                            isValid = false;
+                                DebugDraw.AddPoint(tri.Value.IntersectionPointInWorldSpace, Color.MediumVioletRed.SetAlphaPct(1f), 0);
                             break;
                         }
                     }
