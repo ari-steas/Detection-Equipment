@@ -4,10 +4,7 @@ using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using VRage.Game.ModAPI;
-using VRage.Game.ModAPI.Ingame;
-using IMyCubeBlock = VRage.Game.ModAPI.IMyCubeBlock;
-using IMyCubeGrid = VRage.Game.ModAPI.IMyCubeGrid;
-using IMySlimBlock = VRage.Game.ModAPI.IMySlimBlock;
+using VRage.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
 {
