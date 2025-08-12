@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using DetectionEquipment.Shared.Definitions;
+﻿using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
+using System;
+using System.Collections.Generic;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
+using static DetectionEquipment.Client.BlockLogic.Sensors.SensorUpdatePacket;
 
 namespace DetectionEquipment.Shared.Networking
 {
@@ -78,6 +79,27 @@ namespace DetectionEquipment.Shared.Networking
 
             bufferDict.Clear();
             return false;
+        }
+
+        public override PacketInfo GetInfo()
+        {
+            return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(_emitterEntityId),
+                    PacketSize = sizeof(long)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(_muzzleIdx),
+                    PacketSize = sizeof(int)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(_definitionId),
+                    PacketSize = sizeof(int)
+                }
+            );
         }
     }
 }

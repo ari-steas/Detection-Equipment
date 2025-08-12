@@ -1,6 +1,5 @@
 ﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.Networking;
-using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
 using System;
@@ -52,6 +51,22 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 Ids = ids,
                 DefinitionIds = defIds
             };
+        }
+
+        public override PacketInfo GetInfo()
+        {
+            return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(Ids),
+                    PacketSize = sizeof(int) * Ids.Count
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(DefinitionIds),
+                    PacketSize = sizeof(int) * DefinitionIds.Count
+                }
+            );
         }
     }
 
@@ -208,6 +223,27 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             AllowMechanicalControl = 128,
 
             All = int.MaxValue
+        }
+
+        public override PacketInfo GetInfo()
+        {
+            return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(Id),
+                    PacketSize = sizeof(uint)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(Fields),
+                    PacketSize = sizeof(FieldId)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(_values),
+                    PacketSize = sizeof(float) * _values.Length
+                }
+            );
         }
     }
 }

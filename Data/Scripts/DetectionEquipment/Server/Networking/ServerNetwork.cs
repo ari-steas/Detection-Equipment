@@ -2,13 +2,11 @@
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using System.Threading;
 using VRage.Game.ModAPI;
 using VRageMath;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Utils;
 using DetectionEquipment.Shared.Networking;
-using VRage.Utils;
 
 namespace DetectionEquipment.Server.Networking
 {
@@ -16,6 +14,7 @@ namespace DetectionEquipment.Server.Networking
     {
         public static ServerNetwork I;
         private readonly Dictionary<ulong, HashSet<PacketBase>> _packetQueue = new Dictionary<ulong, HashSet<PacketBase>>();
+        public NetworkProfiler Profiler = new NetworkProfiler(true);
 
 
         public void LoadData()
@@ -47,7 +46,7 @@ namespace DetectionEquipment.Server.Networking
                 {
                     if (!MyAPIGateway.Utilities.IsDedicated)
                     {
-                        foreach (var packet in queuePair.Value)
+                        foreach (var packet in queuePair.Value.ToArray())
                         {
                             try
                             {
@@ -64,8 +63,10 @@ namespace DetectionEquipment.Server.Networking
                 {
                     try
                     {
-                        MyAPIGateway.Multiplayer.SendMessageTo(GlobalData.ClientNetworkId,
-                            MyAPIGateway.Utilities.SerializeToBinary(queuePair.Value.ToArray()), queuePair.Key);
+                        byte[] serialized = MyAPIGateway.Utilities.SerializeToBinary(queuePair.Value.ToArray());
+                        MyAPIGateway.Multiplayer.SendMessageTo(GlobalData.ClientNetworkId, serialized, queuePair.Key);
+                        if (Profiler.Active)
+                            Profiler.LogUpPackets(queuePair.Value, serialized.Length);
                     }
                     catch (Exception ex)
                     {
@@ -75,14 +76,19 @@ namespace DetectionEquipment.Server.Networking
 
                 queuePair.Value.Clear();
             }
+
+            Profiler.Update();
         }
 
         private void ReceivedPacket(ushort channelId, byte[] serialized, ulong senderSteamId, bool isSenderServer)
         {
             try
             {
-                foreach (var packet in MyAPIGateway.Utilities.SerializeFromBinary<PacketBase[]>(serialized))
+                var packets = MyAPIGateway.Utilities.SerializeFromBinary<PacketBase[]>(serialized);
+                foreach (var packet in packets)
                     packet.Received(senderSteamId, false);
+                if (Profiler.Active)
+                    Profiler.LogDownPackets(packets, serialized.Length);
             }
             catch (Exception ex)
             {

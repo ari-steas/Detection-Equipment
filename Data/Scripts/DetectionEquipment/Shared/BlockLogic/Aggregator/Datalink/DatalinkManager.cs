@@ -1,5 +1,4 @@
-﻿using DetectionEquipment.Shared.BlockLogic.Aggregator;
-using DetectionEquipment.Shared.Utils;
+﻿using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System.Collections.Generic;

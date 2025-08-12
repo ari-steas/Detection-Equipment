@@ -337,6 +337,22 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 if (MyAPIGateway.Session.IsServer)
                     ServerNetwork.SendToEveryoneInSync(this, block.Block.GetPosition());
             }
+
+            public override PacketInfo GetInfo()
+            {
+                return PacketInfo.FromPacket(this,
+                    new PacketInfo
+                    {
+                        PacketTypeName = nameof(_blockId),
+                        PacketSize = sizeof(long)
+                    },
+                    new PacketInfo
+                    {
+                        PacketTypeName = nameof(_datalinkInChannels),
+                        PacketSize = sizeof(int) * _datalinkInChannels.Length
+                    }
+                );
+            }
         }
     }
 }

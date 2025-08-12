@@ -1,18 +1,19 @@
 ﻿using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Networking;
+using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using System;
 using System.Collections.Generic;
-using DetectionEquipment.Shared.Helpers;
-using DetectionEquipment.Shared.Utils;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
+using static DetectionEquipment.Client.BlockLogic.Sensors.SensorUpdatePacket;
 
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
@@ -200,6 +201,27 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
             if (!fromServer)
                 ServerNetwork.SendToEveryoneInSync(this, block.GetPosition());
+        }
+
+        public override PacketInfo GetInfo()
+        {
+            return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(BlockId),
+                    PacketSize = sizeof(long)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(Selected),
+                    PacketSize = sizeof(long) * Selected.Length
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(ControlId),
+                    PacketSize = sizeof(char) * ControlId.Length
+                }
+            );
         }
     }
 }

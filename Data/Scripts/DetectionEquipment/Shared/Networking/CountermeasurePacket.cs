@@ -1,5 +1,6 @@
 ﻿using ProtoBuf;
 using VRageMath;
+using static DetectionEquipment.Client.BlockLogic.Sensors.SensorUpdatePacket;
 
 namespace DetectionEquipment.Shared.Networking
 {
@@ -49,6 +50,32 @@ namespace DetectionEquipment.Shared.Networking
             if (!fromServer)
                 return;
             Client.Countermeasures.CountermeasureManager.RegisterNew(new Client.Countermeasures.Countermeasure(this));
+        }
+
+        public override PacketInfo GetInfo()
+        {
+            return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(DefinitionId),
+                    PacketSize = sizeof(int)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = "_pos",
+                    PacketSize = sizeof(double) * 3
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = "_dir",
+                    PacketSize = sizeof(float) * 3
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = "_vel",
+                    PacketSize = sizeof(float) * 3
+                }
+            );
         }
     }
 }

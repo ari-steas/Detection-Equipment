@@ -169,6 +169,22 @@ namespace DetectionEquipment.Shared.Networking
                     return;
                 theSync.UpdateFromNetwork(Contents);
             }
+
+            public override PacketInfo GetInfo()
+            {
+                return PacketInfo.FromPacket(this,
+                    new PacketInfo
+                    {
+                        PacketTypeName = nameof(SyncId),
+                        PacketSize = sizeof(long)
+                    },
+                    new PacketInfo
+                    {
+                        PacketTypeName = nameof(Contents),
+                        PacketSize = Contents.Length
+                    }
+                );
+            }
         }
     }
 

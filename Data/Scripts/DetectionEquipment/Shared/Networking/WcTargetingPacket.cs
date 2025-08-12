@@ -49,5 +49,21 @@ namespace DetectionEquipment.Shared.Networking
             //Log.Info("WcTargetingPacket", $"Received targeting packet for {((IMyCubeGrid)grid).CustomName} - {validEnts.Count} of {_visibleTargets?.Length ?? 0} targets valid.");
             WcInteractionManager.VisibleTargets[grid] = validEnts;
         }
+
+        public override PacketInfo GetInfo()
+        {
+            return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(_gridId),
+                    PacketSize = sizeof(long)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(_visibleTargets),
+                    PacketSize = _visibleTargets.Length * sizeof(long)
+                }
+            );
+        }
     }
 }

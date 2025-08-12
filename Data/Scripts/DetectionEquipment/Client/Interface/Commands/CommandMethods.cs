@@ -1,4 +1,5 @@
 ﻿using System;
+using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Utils;
@@ -38,11 +39,29 @@ namespace DetectionEquipment.Client.Interface.Commands
         public static void TestHashing(string[] args)
         {
             int numSaltPairs;
-            if (args.Length < 1 || !int.TryParse(args[0], out numSaltPairs))
+            if (args.Length < 2 || !int.TryParse(args[1], out numSaltPairs))
                 numSaltPairs = 4;
 
             IffHelper.TestHashing(numSaltPairs);
             MyAPIGateway.Utilities.ShowMessage("DetEq", "Finished hash testing - results sent to log file.");
+        }
+
+        public static void NetworkProfile(string[] args)
+        {
+            if (!MyAPIGateway.Multiplayer.MultiplayerActive)
+            {
+                MyAPIGateway.Utilities.ShowMessage("DetEq", "This command should only be run in multiplayer.");
+                return;
+            }
+
+            float duration;
+            if (args.Length < 2 || !float.TryParse(args[1], out duration))
+            {
+                MyAPIGateway.Utilities.ShowMessage("DetEq", "Please specify a valid duration.");
+                return;
+            }
+
+            ClientNetwork.I.Profiler.Activate(duration);
         }
 
         #endregion

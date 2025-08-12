@@ -42,6 +42,11 @@ namespace DetectionEquipment.Client.Interface.Commands
                 "Generates a set of IFF hashes for debug testing. Takes integer number of salt pairs as an optional argument.",
                 CommandMethods.TestHashing),
 
+            ["netprofile"] = new Command(
+                "DetEq",
+                "Tests Detection Equipment network performance. Takes float duration in seconds as an optional argument.",
+                CommandMethods.NetworkProfile),
+
             #endregion
 
             #region Info Commands

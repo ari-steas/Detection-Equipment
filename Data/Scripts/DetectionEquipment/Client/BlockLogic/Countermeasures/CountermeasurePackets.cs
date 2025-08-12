@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using DetectionEquipment.Client.BlockLogic.Sensors;
-using DetectionEquipment.Server;
+﻿using System.Collections.Generic;
 using DetectionEquipment.Server.Networking;
-using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
-using Sandbox.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Client.BlockLogic.Countermeasures
@@ -52,6 +43,22 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
                 Ids = ids,
                 DefinitionIds = defIds,
             };
+        }
+
+        public override PacketInfo GetInfo()
+        {
+            return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(Ids),
+                    PacketSize = sizeof(int) * Ids.Count
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(DefinitionIds),
+                    PacketSize = sizeof(int) * DefinitionIds.Count
+                }
+            );
         }
     }
 
@@ -102,6 +109,27 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
         public override bool CanUpdate(IBlockLogic logic)
         {
             return logic is ClientCountermeasureLogic;
+        }
+
+        public override PacketInfo GetInfo()
+        {
+            return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(Id),
+                    PacketSize = sizeof(uint)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(Firing),
+                    PacketSize = sizeof(bool)
+                },
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(Reloading),
+                    PacketSize = sizeof(bool)
+                }
+            );
         }
     }
 }

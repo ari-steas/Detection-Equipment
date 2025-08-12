@@ -233,6 +233,22 @@ namespace DetectionEquipment.Shared.Helpers
                     }
                 }
             }
+
+            public override PacketInfo GetInfo()
+            {
+                return PacketInfo.FromPacket(this,
+                    new PacketInfo
+                    {
+                        PacketTypeName = nameof(_saltA),
+                        PacketSize = sizeof(int)
+                    },
+                    new PacketInfo
+                    {
+                        PacketTypeName = nameof(_saltB),
+                        PacketSize = sizeof(int)
+                    }
+                );
+            }
         }
     }
 }
