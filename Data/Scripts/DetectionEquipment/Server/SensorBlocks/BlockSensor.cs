@@ -250,7 +250,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             UpdateSensorMatrix();
 
-            if (_settingsUpdated != FieldId.None && MyAPIGateway.Session.GameplayFrameCounter % 3 == 0)
+            if (_settingsUpdated != FieldId.None && MyAPIGateway.Session.GameplayFrameCounter % 7 == 0)
             {
                 ServerNetwork.SendToEveryoneInSync(new SensorUpdatePacket(this, _settingsUpdated), Block.GetPosition());
                 BlockSensorSettings.SaveBlockSettings(Block);
