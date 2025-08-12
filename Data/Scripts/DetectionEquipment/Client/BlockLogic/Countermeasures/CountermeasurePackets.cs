@@ -51,12 +51,12 @@ namespace DetectionEquipment.Client.BlockLogic.Countermeasures
                 new PacketInfo
                 {
                     PacketTypeName = nameof(Ids),
-                    PacketSize = sizeof(int) * Ids.Count
+                    PacketSize = Ids == null ? 0 : Ids.Count * sizeof(int)
                 },
                 new PacketInfo
                 {
                     PacketTypeName = nameof(DefinitionIds),
-                    PacketSize = sizeof(int) * DefinitionIds.Count
+                    PacketSize = DefinitionIds == null ? 0 : DefinitionIds.Count * sizeof(int)
                 }
             );
         }

@@ -59,12 +59,12 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 new PacketInfo
                 {
                     PacketTypeName = nameof(Ids),
-                    PacketSize = sizeof(int) * Ids.Count
+                    PacketSize = Ids == null ? 0 : Ids.Count * sizeof(int)
                 },
                 new PacketInfo
                 {
                     PacketTypeName = nameof(DefinitionIds),
-                    PacketSize = sizeof(int) * DefinitionIds.Count
+                    PacketSize = DefinitionIds == null ? 0 : DefinitionIds.Count * sizeof(int)
                 }
             );
         }
@@ -241,7 +241,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 new PacketInfo
                 {
                     PacketTypeName = nameof(_values),
-                    PacketSize = sizeof(float) * _values.Length
+                    PacketSize = _values == null ? 0 : _values.Length * sizeof(float)
                 }
             );
         }

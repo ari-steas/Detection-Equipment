@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -143,12 +142,22 @@ namespace DetectionEquipment.Shared.Networking
 
         private string FormatResults()
         {
-            ulong lowestBytesDown = 0;
-            string downLog = FormatPacketLog(_downPacketLog, out lowestBytesDown);
+            const float timelineInterval = 1;
 
-            ulong lowestBytesUp = 0;
-            string upLog = FormatPacketLog(_upPacketLog, out lowestBytesUp);
+            TimelineTick[] timeline = new TimelineTick[(int)Math.Ceiling(TotalDuration/timelineInterval)];
+            long lowestBytesDown = 0;
+            string downLog = FormatPacketLog(_downPacketLog, timelineInterval, false, out lowestBytesDown, ref timeline);
+
+            long lowestBytesUp = 0;
+            string upLog = FormatPacketLog(_upPacketLog, timelineInterval, true, out lowestBytesUp, ref timeline);
             
+            StringBuilder timelineBuilder = new StringBuilder();
+            timelineBuilder.AppendLine("TIME | PACKET COUNT | SIZE (bytes)");
+            for (int i = 0; i < timeline.Length; i++)
+            {
+                TimelineTick tick = timeline[i];
+                timelineBuilder.AppendLine($"{((i+1) == timeline.Length ? "└" : "├")} {(i+1) * timelineInterval:N}s | {tick.UpCount:N0}u {tick.DownCount:N0}d | {tick.UpSize:N0}b u {tick.DownSize:N0}b d");
+            }
 
             StringBuilder fullSb = new StringBuilder();
             fullSb.AppendLine($"{(IsServer ? "SERVER" : "CLIENT")} Profiling Results");
@@ -158,37 +167,52 @@ namespace DetectionEquipment.Shared.Networking
             fullSb.AppendLine($"Sent Packets: {_upPacketLog.Count}");
             fullSb.AppendLine($"    Total size: {_totalBytesUp:N0}b");
             fullSb.AppendLine($"    Logged size: {lowestBytesUp:N0}b"); // at lowest level
-            fullSb.AppendLine($"    Estimated efficiency: {100*((double) lowestBytesUp / _totalBytesUp):N0}%");
+            fullSb.AppendLine($"    Estimated efficiency: {100*((double) lowestBytesUp / _totalBytesUp):N}%");
             fullSb.AppendLine();
-            fullSb.AppendLine($"Received Packets: {_upPacketLog.Count} - {_totalBytesUp:N0}b");
+            fullSb.AppendLine($"Received Packets: {_downPacketLog.Count}");
             fullSb.AppendLine($"    Total size: {_totalBytesDown:N0}b");
             fullSb.AppendLine($"    Logged size: {lowestBytesDown:N0}b"); // at lowest level
-            fullSb.AppendLine($"    Estimated efficiency: {100*((double) lowestBytesDown / _totalBytesDown):N0}%");
+            fullSb.AppendLine($"    Estimated efficiency: {100*((double) lowestBytesDown / _totalBytesDown):N}%");
             fullSb.AppendLine();
-            fullSb.AppendLine($"RESULTS");
-            fullSb.AppendLine($"=====================================================");
-            fullSb.AppendLine();
-            fullSb.AppendLine();
-            fullSb.AppendLine($"   DOWN");
+            fullSb.AppendLine($"DOWN RESULTS\n=====================================================");
             fullSb.AppendLine(downLog);
             fullSb.AppendLine();
-            fullSb.AppendLine();
-            fullSb.AppendLine($"   UP");
+            fullSb.AppendLine($"UP RESULTS\n=====================================================");
             fullSb.AppendLine(upLog);
+            fullSb.AppendLine();
+            fullSb.AppendLine($"TIMELINE");
+            fullSb.Append(timelineBuilder);
 
             return fullSb.ToString();
         }
 
-        private string FormatPacketLog(Dictionary<long, PacketBase.PacketInfo> log, out ulong lowestBytesSum)
+        private string FormatPacketLog(Dictionary<long, PacketBase.PacketInfo> log, float timelineInterval, bool isUp, out long lowestBytesSum, ref TimelineTick[] timeline)
         {
             lowestBytesSum = 0;
-            StringBuilder timelineBuilder = new StringBuilder();
             Dictionary<string, AveragingPacketInfo> averagePackets = new Dictionary<string, AveragingPacketInfo>();
 
             int i = 0;
             foreach (var tickRoot in log)
             {
-                timelineBuilder.AppendLine($"   {(++i == log.Count ? "└" : "├")} {(double)(tickRoot.Key - _startTick) / TimeSpan.TicksPerSecond:N}s | {tickRoot.Value.SubPackets.Length} packets | {tickRoot.Value.PacketSize:N0}b");
+                TimelineTick tick;
+                if (isUp)
+                {
+                    tick = new TimelineTick
+                    {
+                        UpCount = tickRoot.Value.SubPackets.Length,
+                        UpSize = tickRoot.Value.PacketSize
+                    };
+                }
+                else
+                {
+                    tick = new TimelineTick
+                    {
+                        DownCount = tickRoot.Value.SubPackets.Length,
+                        DownSize = tickRoot.Value.PacketSize
+                    };
+                }
+
+                timeline[(int)Math.Ceiling((double)(tickRoot.Key - _startTick) / TimeSpan.TicksPerSecond / timelineInterval)] += tick;
 
                 foreach (var packet in tickRoot.Value.SubPackets)
                 {
@@ -200,20 +224,33 @@ namespace DetectionEquipment.Shared.Networking
             }
 
             StringBuilder fullBuilder = new StringBuilder();
-
+            
             fullBuilder.AppendLine($"Packet Types:");
-            foreach (var type in averagePackets.Values)
+            foreach (var type in new SortedSet<AveragingPacketInfo>(averagePackets.Values).Reverse())
+            {
                 fullBuilder.AppendLine(type.Format("    "));
-            fullBuilder.AppendLine();
-            fullBuilder.AppendLine();
-            fullBuilder.AppendLine($"Timeline:");
-            fullBuilder.Append(timelineBuilder);
+                lowestBytesSum += type.SubpacketTotalSize.Values.Sum();
+            }
             fullBuilder.AppendLine();
 
             return fullBuilder.ToString();
         }
 
-        private struct AveragingPacketInfo
+        private struct TimelineTick
+        {
+            public int UpCount, DownCount;
+            public long UpSize, DownSize;
+
+            public static TimelineTick operator +(TimelineTick left, TimelineTick right) => new TimelineTick
+            {
+                UpCount = left.UpCount + right.UpCount,
+                UpSize = left.UpSize + right.UpSize,
+                DownCount = left.DownCount + right.DownCount,
+                DownSize = left.DownSize + right.DownSize,
+            };
+        }
+
+        private class AveragingPacketInfo : IComparable<AveragingPacketInfo>
         {
             public string Name;
             public long TotalSize;
@@ -240,13 +277,22 @@ namespace DetectionEquipment.Shared.Networking
 
             public string Format(string linePrefix)
             {
-                StringBuilder sb = new StringBuilder($"{Name} - {TotalCount} Instances");
+                StringBuilder sb = new StringBuilder();
+                sb.AppendLine($"{Name} - {TotalCount} Instance(s)");
                 sb.AppendLine($"{linePrefix}Average Size: {(double)TotalSize / TotalCount:N1}b ({TotalSize:N0}b total)");
+                sb.AppendLine($"{linePrefix}Estimated Efficiency: {100*(double)SubpacketTotalSize.Values.Sum() / TotalSize:N}%");
                 int i = 0;
                 foreach (var subpacket in SubpacketTotalSize)
-                    sb.AppendLine($"{linePrefix}   {(++i == SubpacketTotalSize.Count ? "└" : "├")} {subpacket.Key}: {(double)subpacket.Value / TotalCount:N1}b ({subpacket.Value:N0}b total)");
+                    sb.AppendLine($"{linePrefix}{(++i == SubpacketTotalSize.Count ? "└" : "├")}─ {subpacket.Key}: {(double)subpacket.Value / TotalCount:N1}b ({subpacket.Value:N0}b total)");
 
                 return sb.ToString();
+            }
+
+            public int CompareTo(AveragingPacketInfo other)
+            {
+                if (other == null) return 1;
+
+                return TotalSize.CompareTo(other.TotalSize);
             }
         }
 
@@ -282,6 +328,7 @@ namespace DetectionEquipment.Shared.Networking
             // TODO
         }
 
+        [ProtoContract]
         internal class NetworkProfilePacket : PacketBase
         {
             [ProtoMember(1)] private float _duration;
@@ -313,7 +360,7 @@ namespace DetectionEquipment.Shared.Networking
                     Log.Info("NetworkProfiler", $"Network profiling requested by \"{requesterName}\" (SteamId {senderSteamId}) for {_duration:N}s.");
 
                     // prevent non-admins from requesting profile results
-                    if (ServerNetwork.I.Profiler.Active || !CanUserRequestProfile(senderSteamId))
+                    if (_duration <= 0 || ServerNetwork.I.Profiler.Active || !CanUserRequestProfile(senderSteamId))
                         return;
 
                     MyVisualScriptLogicProvider.SendChatMessageColored($"Network profiling requested by \"{requesterName}\" for {_duration:N}s - performance may drop.", Color.Red, "Detection Equipment");
@@ -321,6 +368,7 @@ namespace DetectionEquipment.Shared.Networking
                     return;
                 }
 
+                MiscUtils.SafeChat("NetworkProfiler", "Received results from server.");
                 DisplayResults(_results);
             }
 
@@ -335,7 +383,7 @@ namespace DetectionEquipment.Shared.Networking
                     new PacketInfo
                     {
                         PacketTypeName = nameof(_results),
-                        PacketSize = _results.Length * sizeof(char)
+                        PacketSize = _results == null ? 0 : _results.Length * sizeof(char)
                     }
                 );
             }

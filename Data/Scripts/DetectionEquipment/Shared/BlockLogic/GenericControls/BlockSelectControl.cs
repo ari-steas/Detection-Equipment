@@ -214,12 +214,12 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 new PacketInfo
                 {
                     PacketTypeName = nameof(Selected),
-                    PacketSize = sizeof(long) * Selected.Length
+                    PacketSize = Selected == null ? 0 : Selected.Length * sizeof(long)
                 },
                 new PacketInfo
                 {
                     PacketTypeName = nameof(ControlId),
-                    PacketSize = sizeof(char) * ControlId.Length
+                    PacketSize = ControlId == null ? 0 : ControlId.Length * sizeof(char)
                 }
             );
         }

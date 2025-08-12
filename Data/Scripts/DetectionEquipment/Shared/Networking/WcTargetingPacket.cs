@@ -61,7 +61,7 @@ namespace DetectionEquipment.Shared.Networking
                 new PacketInfo
                 {
                     PacketTypeName = nameof(_visibleTargets),
-                    PacketSize = _visibleTargets.Length * sizeof(long)
+                    PacketSize = _visibleTargets == null ? 0 : _visibleTargets.Length * sizeof(long)
                 }
             );
         }

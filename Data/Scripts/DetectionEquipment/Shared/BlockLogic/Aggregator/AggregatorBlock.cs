@@ -54,7 +54,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         protected override ITerminalControlAdder GetControls => new AggregatorControls();
 
         internal HashSet<BlockSensor> ActiveSensors => UseAllSensors.Value ? GridSensors.Sensors : AggregatorControls.ActiveSensors[this];
-        internal IEnumerable<ClientSensorLogic> ClientActiveSensors => (UseAllSensors.Value ? SensorBlockManager.SensorBlocks.GetValueOrDefault(Block.CubeGrid) : AggregatorControls.ClientActiveSensors.GetValueOrDefault(this)).Select(b => b.GetLogic<ClientSensorLogic>());
+        internal IEnumerable<ClientSensorLogic> ClientActiveSensors => (UseAllSensors.Value ? SensorBlockManager.SensorBlocks.GetValueOrDefault(Block.CubeGrid) : AggregatorControls.ClientActiveSensors.GetValueOrDefault(this))?.Select(b => b.GetLogic<ClientSensorLogic>()) ?? Array.Empty<ClientSensorLogic>();
         internal HashSet<IMyTerminalBlock> ActiveWeapons => AggregatorControls.ActiveWeapons[this];
 
         private int[] _datalinkInChannels = new[] { 0 };
@@ -349,7 +349,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     new PacketInfo
                     {
                         PacketTypeName = nameof(_datalinkInChannels),
-                        PacketSize = sizeof(int) * _datalinkInChannels.Length
+                        PacketSize = _datalinkInChannels == null ? 0 : _datalinkInChannels.Length * sizeof(int)
                     }
                 );
             }

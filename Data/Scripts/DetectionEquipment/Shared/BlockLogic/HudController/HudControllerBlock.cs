@@ -168,7 +168,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                     new PacketInfo
                     {
                         PacketTypeName = nameof(_detections),
-                        PacketSize = MyAPIGateway.Utilities.SerializeToBinary(_detections).Length
+                        PacketSize = _detections == null ? 0 : MyAPIGateway.Utilities.SerializeToBinary(_detections).Length
                     }
                 );
             }
