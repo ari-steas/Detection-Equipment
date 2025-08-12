@@ -58,6 +58,11 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             return PacketInfo.FromPacket(this,
                 new PacketInfo
                 {
+                    PacketTypeName = nameof(AttachedBlockId),
+                    PacketSize = sizeof(long)
+                },
+                new PacketInfo
+                {
                     PacketTypeName = nameof(Ids),
                     PacketSize = Ids == null ? 0 : Ids.Count * sizeof(int)
                 },
@@ -228,6 +233,11 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
         public override PacketInfo GetInfo()
         {
             return PacketInfo.FromPacket(this,
+                new PacketInfo
+                {
+                    PacketTypeName = nameof(AttachedBlockId),
+                    PacketSize = sizeof(long)
+                },
                 new PacketInfo
                 {
                     PacketTypeName = nameof(Id),
