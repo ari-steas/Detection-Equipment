@@ -38,6 +38,7 @@ namespace DetectionEquipment.Shared.Networking
         {
             public string Name => PacketType?.Name ?? PacketTypeName;
 
+            public long Timestamp;
             public Type PacketType;
             /// <summary>
             /// optional if PacketType is not available
