@@ -79,8 +79,22 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
     internal class SensorUpdatePacket : BlockLogicUpdatePacket
     {
         [ProtoMember(2)] public uint Id;
-        [ProtoMember(3)] public FieldId Fields;
-        [ProtoMember(4)] private float[] _values;
+
+        [ProtoMember(3)] private byte _fields;
+        public FieldId Fields
+        {
+            get
+            {
+                return (FieldId) _fields;
+            }
+            set
+            {
+                _fields = (byte) value;
+            }
+        }
+        [ProtoMember(4)] private short[] _values;
+
+        private const float AnglePackRatio = short.MaxValue / (float) Math.PI;
 
         public SensorUpdatePacket(long blockId, ClientSensorData sensor, FieldId fields) // TODO make this only update one value at a time
         {
@@ -88,23 +102,23 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             Id = sensor.Id;
             Fields = fields;
 
-            List<float> valuesSet = new List<float>();
+            List<short> valuesSet = new List<short>();
             if ((fields & FieldId.Azimuth) != 0)
-                valuesSet.Add(sensor.DesiredAzimuth);
+                valuesSet.Add((short)(AnglePackRatio * sensor.DesiredAzimuth));
             if ((fields & FieldId.Elevation) != 0)
-                valuesSet.Add(sensor.DesiredElevation);
+                valuesSet.Add((short)(AnglePackRatio * sensor.DesiredElevation));
             if ((fields & FieldId.Aperture) != 0)
-                valuesSet.Add(sensor.Aperture);
+                valuesSet.Add((short)(AnglePackRatio * sensor.Aperture));
             if ((fields & FieldId.MinAzimuth) != 0)
-                valuesSet.Add(sensor.MinAzimuth);
+                valuesSet.Add((short)(AnglePackRatio * sensor.MinAzimuth));
             if ((fields & FieldId.MaxAzimuth) != 0)
-                valuesSet.Add(sensor.MaxAzimuth);
+                valuesSet.Add((short)(AnglePackRatio * sensor.MaxAzimuth));
             if ((fields & FieldId.MinElevation) != 0)
-                valuesSet.Add(sensor.MinElevation);
+                valuesSet.Add((short)(AnglePackRatio * sensor.MinElevation));
             if ((fields & FieldId.MaxElevation) != 0)
-                valuesSet.Add(sensor.MaxElevation);
+                valuesSet.Add((short)(AnglePackRatio * sensor.MaxElevation));
             if ((fields & FieldId.AllowMechanicalControl) != 0)
-                valuesSet.Add(sensor.AllowMechanicalControl ? 1 : 0);
+                valuesSet.Add(sensor.AllowMechanicalControl ? (short) 1 : (short) 0);
             _values = valuesSet.ToArray();
         }
 
@@ -114,23 +128,23 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             Id = sensor.Sensor.Id;
             Fields = fields;
 
-            List<float> valuesSet = new List<float>();
+            List<short> valuesSet = new List<short>();
             if ((fields & FieldId.Azimuth) != 0)
-                valuesSet.Add((float) sensor.DesiredAzimuth);
+                valuesSet.Add((short)(AnglePackRatio * sensor.DesiredAzimuth));
             if ((fields & FieldId.Elevation) != 0)
-                valuesSet.Add((float) sensor.DesiredElevation);
+                valuesSet.Add((short)(AnglePackRatio * sensor.DesiredElevation));
             if ((fields & FieldId.Aperture) != 0)
-                valuesSet.Add((float) sensor.Aperture);
+                valuesSet.Add((short)(AnglePackRatio * sensor.Aperture));
             if ((fields & FieldId.MinAzimuth) != 0)
-                valuesSet.Add((float) sensor.MinAzimuth);
+                valuesSet.Add((short)(AnglePackRatio * sensor.MinAzimuth));
             if ((fields & FieldId.MaxAzimuth) != 0)
-                valuesSet.Add((float) sensor.MaxAzimuth);
+                valuesSet.Add((short)(AnglePackRatio * sensor.MaxAzimuth));
             if ((fields & FieldId.MinElevation) != 0)
-                valuesSet.Add((float) sensor.MinElevation);
+                valuesSet.Add((short)(AnglePackRatio * sensor.MinElevation));
             if ((fields & FieldId.MaxElevation) != 0)
-                valuesSet.Add((float) sensor.MaxElevation);
+                valuesSet.Add((short)(AnglePackRatio * sensor.MaxElevation));
             if ((fields & FieldId.AllowMechanicalControl) != 0)
-                valuesSet.Add(sensor.AllowMechanicalControl ? 1 : 0);
+                valuesSet.Add(sensor.AllowMechanicalControl ? (short) 1 : (short) 0);
             _values = valuesSet.ToArray();
         }
 
@@ -153,7 +167,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 iterVal <<= 1;
             }
 
-            field = _values[valuesIdx];
+            field = _values[valuesIdx] / AnglePackRatio;
         }
 
         public void SetField(FieldId fieldId, ref double field)
@@ -171,7 +185,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 iterVal <<= 1;
             }
 
-            field = _values[valuesIdx];
+            field = _values[valuesIdx] / AnglePackRatio;
         }
 
         public void SetField(FieldId fieldId, ref bool field)
@@ -245,13 +259,13 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
                 },
                 new PacketInfo
                 {
-                    PacketTypeName = nameof(Fields),
-                    PacketSize = sizeof(FieldId)
+                    PacketTypeName = nameof(_fields),
+                    PacketSize = sizeof(byte)
                 },
                 new PacketInfo
                 {
                     PacketTypeName = nameof(_values),
-                    PacketSize = _values == null ? 0 : _values.Length * sizeof(float)
+                    PacketSize = _values == null ? 0 : _values.Length * sizeof(short)
                 }
             );
         }
