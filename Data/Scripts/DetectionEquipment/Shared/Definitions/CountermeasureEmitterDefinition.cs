@@ -1,8 +1,9 @@
-﻿using System;
-using System.Data;
-using DetectionEquipment.Shared.Utils;
+﻿using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.Definitions;
+using System;
+using System.Collections.Generic;
+using System.Data;
 using VRage.Game;
 using VRageMath;
 
@@ -12,15 +13,8 @@ namespace DetectionEquipment.Shared.Definitions
     /// Definition for a countermeasure emitter; i.e. the block countermeasures are launched from.
     /// </summary>
     [ProtoContract]
-    public class CountermeasureEmitterDefinition
+    public class CountermeasureEmitterDefinition : DefinitionBase
     {
-        // can't define preprocessor directives, otherwise would have
-        [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
-        // /// <summary>
-        // /// Unique name for this definition.
-        // /// </summary>
-        // [ProtoIgnore] public string Name;
-
         /// <summary>
         /// Subtypes this emitter is attached to.
         /// </summary>
@@ -84,54 +78,50 @@ namespace DetectionEquipment.Shared.Definitions
         
         [ProtoIgnore] public MyDefinitionId MagazineItemDefinition;
 
-        public static bool Verify(string defName, CountermeasureEmitterDefinition def)
+        public override bool Verify(out string reason)
         {
             bool isValid = true;
+            reason = "";
 
-            if (def == null)
+            if (BlockSubtypes == null || BlockSubtypes.Length == 0)
             {
-                Log.Info(defName, "Definition null!");
-                return false;
-            }
-            if (def.BlockSubtypes == null || def.BlockSubtypes.Length == 0)
-            {
-                Log.Info(defName, "BlockSubtypes unset!");
+                reason += "BlockSubtypes unset!\n";
                 isValid = false;
             }
-            if (def.Muzzles == null || def.Muzzles.Length == 0)
+            if (Muzzles == null || Muzzles.Length == 0)
             {
-                Log.Info(defName, "Muzzles unset! Defaulting to center of block.");
-                def.Muzzles = Array.Empty<string>();
+                reason += "Muzzles unset! Defaulting to center of block.\n";
+                Muzzles = Array.Empty<string>();
             }
-            if (def.CountermeasureIds == null || def.CountermeasureIds.Length == 0)
+            if (CountermeasureIds == null || CountermeasureIds.Length == 0)
             {
-                Log.Info(defName, "CountermeasureIds unset!");
+                reason += "CountermeasureIds unset!\n";
                 isValid = false;
             }
-            if (string.IsNullOrEmpty(def.MagazineItem))
+            if (string.IsNullOrEmpty(MagazineItem))
             {
-                Log.Info(defName, "MagazineItem unset! Defaulting to no item.");
+                reason += "MagazineItem unset! Defaulting to no item.\n";
             }
 
-            if (def.InventorySize > 0 && def.BlockSubtypes != null)
+            if (InventorySize > 0 && BlockSubtypes != null)
             {
-                bool didSetItemDef = string.IsNullOrEmpty(def.MagazineItem);
+                bool didSetItemDef = string.IsNullOrEmpty(MagazineItem);
 
                 // this is pretty silly but it works
-                var inventorySize = new Vector3((float)Math.Pow(def.InventorySize, 1 / 3d));
+                var inventorySize = new Vector3((float)Math.Pow(InventorySize, 1 / 3d));
 
-                int remainingSubtypes = def.BlockSubtypes.Length;
+                int remainingSubtypes = BlockSubtypes.Length;
                 foreach (var gameDef in MyDefinitionManager.Static.GetAllDefinitions())
                 {
-                    if (!didSetItemDef && gameDef.Id.SubtypeName == def.MagazineItem)
+                    if (!didSetItemDef && gameDef.Id.SubtypeName == MagazineItem)
                     {
-                        def.MagazineItemDefinition = gameDef.Id;
+                        MagazineItemDefinition = gameDef.Id;
                         didSetItemDef = true;
                         continue;
                     }
 
                     var sorterDef = gameDef as MyConveyorSorterDefinition;
-                    if (sorterDef == null || !def.BlockSubtypes.Contains(sorterDef.Id.SubtypeName))
+                    if (sorterDef == null || !BlockSubtypes.Contains(sorterDef.Id.SubtypeName))
                         continue;
 
                     sorterDef.InventorySize = inventorySize;
@@ -141,15 +131,25 @@ namespace DetectionEquipment.Shared.Definitions
 
                 if (!didSetItemDef)
                 {
-                    Log.Info(defName, $"Failed to find magazine item definition \"{def.MagazineItem}\"!");
+                    reason += $"Failed to find magazine item definition \"{MagazineItem}\"!\n";
                     isValid = false;
                 }
             }
 
-            if (def.ActivePowerDraw <= 0)
-                def.ActivePowerDraw = 0.000001f;
+            if (ActivePowerDraw <= 0)
+                ActivePowerDraw = 0.000001f;
 
             return isValid;
+        }
+
+        protected override void AssignDelegates(Dictionary<string, Delegate> delegates)
+        {
+            // no delegates to assign
+        }
+
+        public override Dictionary<string, Delegate> GenerateDelegates()
+        {
+            return null;
         }
     }
 }

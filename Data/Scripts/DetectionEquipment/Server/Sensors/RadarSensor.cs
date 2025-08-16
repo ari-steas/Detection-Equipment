@@ -3,6 +3,7 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
+using DetectionEquipment.Server.Countermeasures;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
@@ -57,7 +58,8 @@ namespace DetectionEquipment.Server.Sensors
             if (targetAngle > Aperture)
                 return null;
 
-            double targetDistanceSq = Vector3D.DistanceSquared(Position, visibilitySet.Track.Position);
+            Vector3D targetBearing = visibilitySet.Track.Position - Position;
+            double targetRange = targetBearing.Normalize();
 
             double signalToNoiseRatio;
             {
@@ -75,6 +77,7 @@ namespace DetectionEquipment.Server.Sensors
                 // ---------------------------------------------------------------
                 //                            lambda^2
                 double gain = 4 * Math.PI * receiverAreaAtAngle / (lambda * lambda) * (Definition.RadarProperties.AccountForRadarAngle ? MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) : 1) * outputDensity * outputDensity * outputDensity;
+                double rangePFour = targetRange * targetRange * targetRange * targetRange;
 
                 // Can make this fancier if I want later.
                 // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
@@ -84,7 +87,7 @@ namespace DetectionEquipment.Server.Sensors
                 signalToNoiseRatio = MathUtils.ToDecibels(
                     (Definition.MaxPowerDraw * Definition.RadarProperties.PowerEfficiencyModifier * gain * gain * lambda * lambda * visibilitySet.RadarVisibility)
                     /
-                    (fourPi3 * targetDistanceSq * targetDistanceSq * bmConstant * (inherentNoise + CountermeasureNoise) * Definition.RadarProperties.Bandwidth)
+                    (fourPi3 * rangePFour * bmConstant * (inherentNoise + CountermeasureNoise) * Definition.RadarProperties.Bandwidth)
                     );
             }
 
@@ -100,23 +103,26 @@ namespace DetectionEquipment.Server.Sensors
                 return null;
             }
 
+            double trackCrossSection = visibilitySet.RadarVisibility;
+            double trackRange = targetRange;
+            double maxRangeError = targetRange * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
+            Vector3D trackBearing = targetBearing;
             double maxBearingError = Definition.BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
-            Vector3D bearing = MathUtils.RandomCone(Vector3D.Normalize(visibilitySet.Track.Position - Position), maxBearingError);
-
-            double range = Math.Sqrt(targetDistanceSq);
-            double maxRangeError = range * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
-            range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
-
             var iffCodes = track is GridTrack ? IffHelper.GetIffCodes(((GridTrack)track).Grid, SensorDefinition.SensorType.Radar) : Array.Empty<string>();
+
+            CountermeasureManager.ApplyDrfm(this, track, ref trackCrossSection, ref trackRange, ref maxRangeError, ref trackBearing, ref maxBearingError, ref iffCodes);
+
+            trackBearing = MathUtils.RandomCone(trackBearing, maxBearingError);
+            trackRange += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
             var detection = new DetectionInfo
             (
                 track,
                 this,
-                visibilitySet.RadarVisibility,
-                range,
+                trackCrossSection,
+                trackRange,
                 maxRangeError,
-                bearing,
+                trackBearing,
                 maxBearingError,
                 iffCodes
             );

@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using System;
+using System.Collections.Generic;
 using DetectionEquipment.Shared.Structs;
 using System.ComponentModel;
 
@@ -10,15 +11,8 @@ namespace DetectionEquipment.Shared.Definitions
     /// Basic definition for a single sensor.
     /// </summary>
     [ProtoContract(UseProtoMembersOnly = true)]
-    public class SensorDefinition : IPackageable
+    public class SensorDefinition : DefinitionBase, IPackageable
     {
-        // can't define preprocessor directives, otherwise would have
-        [ProtoIgnore] public int Id; // DO NOT NETWORK THIS!!! Hashcode of the definition name.
-        // /// <summary>
-        // /// Unique name for this definition.
-        // /// </summary>
-        // [ProtoIgnore] public string Name;
-
         /// <summary>
         /// Subtypes this sensor is attached to.
         /// </summary>
@@ -198,50 +192,56 @@ namespace DetectionEquipment.Shared.Definitions
             fieldArray[9] = ObjectPackager.Package(RadarProperties);
         }
 
-        public static bool Verify(string defName, SensorDefinition def)
+        public override bool Verify(out string reason)
         {
             bool isValid = true;
+            reason = "";
 
-            if (def == null)
+            if (BlockSubtypes == null || BlockSubtypes.Length == 0)
             {
-                Log.Info(defName, "Definition null!");
-                return false;
-            }
-            if (def.BlockSubtypes == null || def.BlockSubtypes.Length == 0)
-            {
-                Log.Info(defName, "BlockSubtypes unset!");
+                reason += "BlockSubtypes unset!\n";
                 isValid = false;
             }
-            if (def.MinAperture > def.MaxAperture || def.MinAperture < 0 || def.MaxAperture < 0)
+            if (MinAperture > MaxAperture || MinAperture < 0 || MaxAperture < 0)
             {
-                Log.Info(defName, "Aperture invalid! Make sure both Min and Max are greater than zero, and min is less than max.");
+                reason += "Aperture invalid! Make sure both Min and Max are greater than zero, and min is less than max.\n";
                 isValid = false;
             }
-            if (def.RadarProperties == null && def.Type == SensorType.Radar)
+            if (RadarProperties == null && Type == SensorType.Radar)
             {
-                Log.Info(defName, "Radar properties are null on a radar sensor!");
+                reason += "Radar properties are null on a radar sensor!\n";
                 isValid = false;
             }
 
-            if (def.Movement != null)
+            if (Movement != null)
             {
-                if (def.Movement.AzimuthPart.StartsWith("subpart"))
+                if (Movement.AzimuthPart.StartsWith("subpart"))
                 {
-                    Log.Info(defName, "Azimuth subpart starts with \"subpart_\" - this will likely result in part location failure.");
+                    reason += "Azimuth subpart starts with \"subpart_\" - this will likely result in part location failure.\n";
                     isValid = false;
                 }
-                if (def.Movement.ElevationPart.StartsWith("subpart"))
+                if (Movement.ElevationPart.StartsWith("subpart"))
                 {
-                    Log.Info(defName, "Elevation subpart starts with \"subpart_\" - this will likely result in part location failure.");
+                    reason += "Elevation subpart starts with \"subpart_\" - this will likely result in part location failure.\n";
                     isValid = false;
                 }
             }
 
-            if (def.MaxPowerDraw <= 0)
-                def.MaxPowerDraw = 1;
+            if (MaxPowerDraw <= 0)
+                MaxPowerDraw = 1;
             // TODO: more & better validation
 
             return isValid;
+        }
+
+        protected override void AssignDelegates(Dictionary<string, Delegate> delegates)
+        {
+            // no delegates to assign
+        }
+
+        public override Dictionary<string, Delegate> GenerateDelegates()
+        {
+            return null;
         }
     }
 }

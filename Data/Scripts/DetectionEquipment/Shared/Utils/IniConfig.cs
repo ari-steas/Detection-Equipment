@@ -34,7 +34,7 @@ namespace DetectionEquipment.Shared.Utils
                 return;
             }
 
-            Log.Info("IniConfig", $"Reading {FileName}.{SectionName} settings data...");
+            Log.Info("IniConfig", $"Reading {FileName}::{SectionName} settings data...");
             Log.IncreaseIndent();
             var file = ReadFile();
             var ini = new MyIni();
@@ -48,11 +48,11 @@ namespace DetectionEquipment.Shared.Utils
                 }
                 catch (Exception ex)
                 {
-                    Log.Info("IniConfig", $"Failed to read {FileName}.{SectionName}.{setting.Name} - {ex}");
+                    Log.Info("IniConfig", $"Failed to read {FileName}::{SectionName}.{setting.Name} - {ex}");
                 }
             }
             Log.DecreaseIndent();
-            Log.Info("IniConfig", $"Successfully read {FileName}.{SectionName} settings data.");
+            Log.Info("IniConfig", $"Successfully read {FileName}::{SectionName} settings data.");
         }
 
         public void WriteSettings()
@@ -72,7 +72,7 @@ namespace DetectionEquipment.Shared.Utils
                 setting.Write(ini, SectionName);
 
             WriteFile(ini.ToString());
-            Log.Info("GlobalData", $"Successfully wrote {FileName}.{SectionName} settings data.");
+            Log.Info("GlobalData", $"Successfully wrote {FileName}::{SectionName} settings data.");
         }
 
         public bool FileExists()

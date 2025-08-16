@@ -1,11 +1,10 @@
-﻿using DetectionEquipment.Server.Networking;
+﻿using System;
+using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
-using System.Reflection;
 using VRageMath;
 
 namespace DetectionEquipment.Server.Countermeasures
@@ -22,7 +21,7 @@ namespace DetectionEquipment.Server.Countermeasures
         public Vector3D Velocity;
         public float Intensity = 1;
 
-        private readonly CountermeasureEmitterBlock _parentEmitter;
+        public readonly CountermeasureEmitterBlock ParentEmitter;
         private readonly int _attachedMuzzleIdx = -1;
 
         public float EffectAperture;
@@ -55,7 +54,7 @@ namespace DetectionEquipment.Server.Countermeasures
         {
             if (emitter.Definition.IsCountermeasureAttached)
             {
-                _parentEmitter = emitter;
+                ParentEmitter = emitter;
                 _attachedMuzzleIdx = emitter.CurrentMuzzleIdx;
             }
             
@@ -81,15 +80,15 @@ namespace DetectionEquipment.Server.Countermeasures
 
         public void Update()
         {
-            if (_parentEmitter != null)
+            if (ParentEmitter != null)
             {
-                if (_parentEmitter.Block.Closed)
+                if (ParentEmitter.Block.Closed)
                 {
                     Close();
                     return;
                 }
 
-                var muzzleMatrix = _parentEmitter.Muzzles[_attachedMuzzleIdx].GetMatrix();
+                var muzzleMatrix = ParentEmitter.Muzzles[_attachedMuzzleIdx].GetMatrix();
                 Position = muzzleMatrix.Translation;
                 Direction = muzzleMatrix.Forward;
             }
@@ -113,10 +112,10 @@ namespace DetectionEquipment.Server.Countermeasures
                 Close();
         }
 
-        public double GetSensorNoise(ISensor sensor)
+        public bool CanApplyTo(ISensor sensor)
         {
             if (Definition.CountermeasureType == CountermeasureDefinition.CountermeasureTypeEnum.None)
-                return 0;
+                return false;
 
             bool sensorIsVisual = sensor is VisualSensor;
             bool sensorIsInfrared = sensorIsVisual && ((VisualSensor)sensor).IsInfrared;
@@ -126,12 +125,22 @@ namespace DetectionEquipment.Server.Countermeasures
                 sensor is AntennaSensor && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Antenna) == 0 ||
                 sensorIsVisual && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Optical) == 0 ||
                 sensorIsInfrared && (Definition.CountermeasureType & CountermeasureDefinition.CountermeasureTypeEnum.Infrared) == 0
-                )
+               )
+                return false;
+
+            return true;
+        }
+
+        public bool IsOutsideAperture(ISensor sensor) => (!Definition.ApplyOutsideSensorCone && sensor.Aperture < Math.PI && Vector3D.Angle(sensor.Direction, Position - sensor.Position) > sensor.Aperture) || (EffectAperture < (float) Math.PI && Vector3D.Angle(Direction, sensor.Position - Position) > EffectAperture);
+
+        public double GetSensorNoise(ISensor sensor)
+        {
+            if (Definition.MaxRange == 0 || Definition.FalloffScalar == 0 || !CanApplyTo(sensor))
                 return 0;
 
             var distance = Vector3D.Distance(sensor.Position, Position);
 
-            if (distance > Definition.MaxRange || Vector3D.Angle(sensor.Direction, Position - sensor.Position) > sensor.Aperture || Vector3D.Angle(Direction, sensor.Position - Position) > EffectAperture)
+            if (distance > Definition.MaxRange || IsOutsideAperture(sensor))
                 return 0;
 
             switch (Definition.FalloffType)

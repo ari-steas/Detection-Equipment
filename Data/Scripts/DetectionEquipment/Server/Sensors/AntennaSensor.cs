@@ -4,8 +4,7 @@ using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
-using Sandbox.ModAPI;
-using VRage.Game.ModAPI;
+using DetectionEquipment.Server.Countermeasures;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
@@ -51,37 +50,40 @@ namespace DetectionEquipment.Server.Sensors
             if (targetAngle > Aperture)
                 return null;
 
-            Vector3D bearing = track.Position - Position;
-            double range = bearing.Normalize();
+            Vector3D targetBearing = track.Position - Position;
+            double targetRange = targetBearing.Normalize();
             double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
 
             const double inherentNoise = 3;
             var sensorSignal = MathUtils.ToDecibels(
                 4 * Math.PI * receiverAreaAtAngle * track.CommsVisibility(Position) // antenna range is linearly proportional to power draw and that's silly.
                 /
-                range * (inherentNoise + CountermeasureNoise)
+                targetRange * (inherentNoise + CountermeasureNoise)
                 );
 
             if (double.IsNegativeInfinity(sensorSignal) || sensorSignal < 15)
                 return null;
 
-
+            double trackCrossSection = sensorSignal;
+            double trackRange = targetRange;
+            double maxRangeError = targetRange * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(sensorSignal / Definition.DetectionThreshold, 0, 1));
+            Vector3D trackBearing = targetBearing;
             double maxBearingError = Definition.BearingErrorModifier * (1 - MathHelper.Clamp(sensorSignal / Definition.DetectionThreshold, 0, 1));
-            bearing = MathUtils.RandomCone(bearing, maxBearingError);
-
-            double maxRangeError = range * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(sensorSignal / Definition.DetectionThreshold, 0, 1));
-            range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
-
             var iffCodes = IffHelper.GetIffCodes(track.Grid, SensorDefinition.SensorType.Antenna);
+
+            CountermeasureManager.ApplyDrfm(this, track, ref trackCrossSection, ref trackRange, ref maxRangeError, ref trackBearing, ref maxBearingError, ref iffCodes);
+
+            trackBearing = MathUtils.RandomCone(trackBearing, maxBearingError);
+            trackRange += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
             var data = new DetectionInfo
             (
                 track,
                 this,
-                sensorSignal,
-                range,
+                trackCrossSection,
+                trackRange,
                 maxRangeError,
-                bearing,
+                trackBearing,
                 maxBearingError,
                 iffCodes
             );

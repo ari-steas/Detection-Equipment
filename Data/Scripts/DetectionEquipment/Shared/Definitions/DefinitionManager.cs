@@ -92,108 +92,136 @@ namespace DetectionEquipment.Shared.Definitions
 
         private static void OnSensorDefinitionUpdate(string definitionId, int updateType)
         {
-            // We're caching data because getting it from the API is inefficient.
-            switch (updateType)
+            try
             {
-                case 0:
-                    var definition = DefinitionApi.GetDefinition<SensorDefinition>(definitionId);
+                // We're caching data because getting it from the API is inefficient.
+                switch (updateType)
+                {
+                    case 0:
+                        SensorDefinition definition;
+                        if (!InitAndVerify(definitionId, out definition))
+                            return;
 
-                    Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
-                    Log.IncreaseIndent();
-                    bool valid = SensorDefinition.Verify(definitionId, definition);
-                    Log.DecreaseIndent();
-                    if (!valid)
-                    {
-                        Log.Info("DefinitionManager", $"Did not register definition {definitionId}.");
-                        MyAPIGateway.Utilities.ShowMessage("Detection Equipment", $"Definition {definitionId} failed validation! Check logs for more info.");
-                        return;
-                    }
+                        SensorDefinitions[definition.Id] = definition;
+                        if (!MyAPIGateway.Utilities.IsDedicated)
+                            Client.Interface.BlockCategoryManager.RegisterFromDefinition(definition);
 
-                    definition.Id = definitionId.GetHashCode();
-                    SensorDefinitions[definition.Id] = definition;
-                    if (!MyAPIGateway.Utilities.IsDedicated)
-                        Client.Interface.BlockCategoryManager.RegisterFromDefinition(SensorDefinitions[definitionId.GetHashCode()]);
-
-                    Log.Info("DefinitionManager", $"Registered new sensor definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
-                    break;
-                case 1:
-                    SensorDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
-                    Log.Info("DefinitionManager", "Unregistered sensor definition " + definitionId);
-                    break;
-                case 2:
-                    // Live methods, ignored.
-                    break;
+                        Log.Info("DefinitionManager",
+                            $"Registered new sensor definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
+                        break;
+                    case 1:
+                        SensorDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
+                        Log.Info("DefinitionManager", "Unregistered sensor definition " + definitionId);
+                        break;
+                    case 2:
+                        // Live methods
+                        SensorDefinitions[definitionId.GetHashCode()].RetrieveDelegates<SensorDefinition>();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("DefinitionManager", ex);
             }
         }
 
         private static void OnCountermeasureDefinitionUpdate(string definitionId, int updateType)
         {
-            // We're caching data because getting it from the API is inefficient.
-            switch (updateType)
+            try
             {
-                case 0:
-                    var definition = DefinitionApi.GetDefinition<CountermeasureDefinition>(definitionId);
+                // We're caching data because getting it from the API is inefficient.
+                switch (updateType)
+                {
+                    case 0:
+                        CountermeasureDefinition definition;
+                        if (!InitAndVerify(definitionId, out definition))
+                            return;
 
-                    Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
-                    Log.IncreaseIndent();
-                    bool valid = CountermeasureDefinition.Verify(definitionId, definition);
-                    Log.DecreaseIndent();
-                    if (!valid)
-                    {
-                        Log.Info("DefinitionManager", $"Did not register definition {definitionId}.");
-                        MyAPIGateway.Utilities.ShowMessage("Detection Equipment", $"Definition {definitionId} failed validation! Check logs for more info.");
-                        return;
-                    }
+                        CountermeasureDefinitions[definition.Id] = definition;
 
-                    definition.Id = definitionId.GetHashCode();
-                    CountermeasureDefinitions[definition.Id] = definition;
-
-                    Log.Info("DefinitionManager", $"Registered new CM definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
-                    break;
-                case 1:
-                    SensorDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
-                    Log.Info("DefinitionManager", "Unregistered CM definition " + definitionId);
-                    break;
-                case 2:
-                    // Live methods, ignored.
-                    break;
+                        Log.Info("DefinitionManager", $"Registered new CM definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
+                        break;
+                    case 1:
+                        CountermeasureDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
+                        Log.Info("DefinitionManager", "Unregistered CM definition " + definitionId);
+                        break;
+                    case 2:
+                        // Live methods
+                        CountermeasureDefinitions[definitionId.GetHashCode()].RetrieveDelegates<CountermeasureDefinition>();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("DefinitionManager", ex);
             }
         }
 
         private static void OnCountermeasureEmitterDefinitionUpdate(string definitionId, int updateType)
         {
-            // We're caching data because getting it from the API is inefficient.
-            switch (updateType)
+            try
             {
-                case 0:
-                    var definition = DefinitionApi.GetDefinition<CountermeasureEmitterDefinition>(definitionId);
+                // We're caching data because getting it from the API is inefficient.
+                switch (updateType)
+                {
+                    case 0:
+                        CountermeasureEmitterDefinition definition;
+                        if (!InitAndVerify(definitionId, out definition))
+                            return;
 
-                    Log.Info("DefinitionManager", $"Validating definition {definitionId}...");
-                    Log.IncreaseIndent();
-                    bool valid = CountermeasureEmitterDefinition.Verify(definitionId, definition);
-                    Log.DecreaseIndent();
-                    if (!valid)
-                    {
-                        Log.Info("DefinitionManager", $"Did not register definition {definitionId}.");
-                        MyAPIGateway.Utilities.ShowMessage("Detection Equipment", $"Definition {definitionId} failed validation! Check logs for more info.");
-                        return;
-                    }
+                        CountermeasureEmitterDefinitions[definition.Id] = definition;
+                        if (!MyAPIGateway.Utilities.IsDedicated)
+                            Client.Interface.BlockCategoryManager.RegisterFromDefinition(definition);
 
-                    definition.Id = definitionId.GetHashCode();
-                    CountermeasureEmitterDefinitions[definition.Id] = definition;
-                    if (!MyAPIGateway.Utilities.IsDedicated)
-                        Client.Interface.BlockCategoryManager.RegisterFromDefinition(CountermeasureEmitterDefinitions[definitionId.GetHashCode()]);
-
-                    Log.Info("DefinitionManager", $"Registered new CM Emitter definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new
-                    break;
-                case 1:
-                    CountermeasureEmitterDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing
-                    Log.Info("DefinitionManager", "Unregistered CM Emitter definition " + definitionId);
-                    break;
-                case 2:
-                    // Live methods, ignored.
-                    break;
+                        Log.Info("DefinitionManager", $"Registered new CM Emitter definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new
+                        break;
+                    case 1:
+                        CountermeasureEmitterDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing
+                        Log.Info("DefinitionManager", "Unregistered CM Emitter definition " + definitionId);
+                        break;
+                    case 2:
+                        // Live methods
+                        CountermeasureEmitterDefinitions[definitionId.GetHashCode()].RetrieveDelegates<CountermeasureEmitterDefinition>();
+                        break;
+                }
             }
+            catch (Exception ex)
+            {
+                Log.Exception("DefinitionManager", ex);
+            }
+        }
+
+        private static bool InitAndVerify<TDefinition>(string definitionId, out TDefinition definition) where TDefinition : DefinitionBase
+        {
+            definition = DefinitionApi.GetDefinition<TDefinition>(definitionId);
+            if (definition == null)
+            {
+                Log.Info(definitionId, "Definition null!");
+                return false;
+            }
+
+            definition.Init<TDefinition>(definitionId);
+
+            string reason;
+            bool valid = definition.Verify(out reason);
+            if (reason != "")
+            {
+                Log.Info("DefinitionManager",
+                    valid
+                        ? $"Potential issues were found with {typeof(TDefinition).Name} {definitionId}:"
+                        : $"Validation failed on {typeof(TDefinition).Name} {definitionId}!");
+                Log.IncreaseIndent();
+                Log.Info(definitionId, reason.Trim());
+                Log.DecreaseIndent();
+            }
+            
+            if (valid)
+                return true;
+
+            Log.Info("DefinitionManager", $"Did not register {definitionId}.");
+            MyAPIGateway.Utilities.ShowMessage("Detection Equipment", $"{typeof(TDefinition).Name} {definitionId} failed validation! Check logs for more info.");
+            return false;
+
         }
 
         public static List<BlockSensor> TryCreateSensors(IMyFunctionalBlock block)

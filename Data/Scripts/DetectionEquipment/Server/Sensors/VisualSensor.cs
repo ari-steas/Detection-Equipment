@@ -4,6 +4,7 @@ using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
 using System;
+using DetectionEquipment.Server.Countermeasures;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 
@@ -49,10 +50,10 @@ namespace DetectionEquipment.Server.Sensors
             if (targetAngle > Aperture)
                 return null;
 
-            Vector3D bearing = visibilitySet.Track.Position - Position;
-            double range = bearing.Normalize();
+            Vector3D targetBearing = visibilitySet.Track.Position - Position;
+            double targetRange = targetBearing.Normalize();
             var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
-            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / range) / Aperture;
+            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / targetRange) / Aperture;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
             if (targetSizeRatio < Definition.DetectionThreshold)
@@ -60,23 +61,28 @@ namespace DetectionEquipment.Server.Sensors
 
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);
 
-            double maxBearingError = Aperture/2 * Definition.BearingErrorModifier * errorScalar + CountermeasureNoise/100;
-            bearing = MathUtils.RandomCone(bearing, maxBearingError);
-
-            double maxRangeError = Math.Sqrt(range) * Definition.RangeErrorModifier * errorScalar + CountermeasureNoise/100;
-            range += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
-
             var gT = visibilitySet.Track as GridTrack;
+
+            double trackCrossSection = visibility;
+            double trackRange = targetRange;
+            double maxRangeError = Math.Sqrt(targetRange) * Definition.RangeErrorModifier * errorScalar + CountermeasureNoise/100;
+            Vector3D trackBearing = targetBearing;
+            double maxBearingError = Aperture/2 * Definition.BearingErrorModifier * errorScalar + CountermeasureNoise/100;
             var iffCodes = gT != null ? IffHelper.GetIffCodes(gT.Grid, IsInfrared ? SensorDefinition.SensorType.Infrared : SensorDefinition.SensorType.Optical) : Array.Empty<string>();
+
+            CountermeasureManager.ApplyDrfm(this, visibilitySet.Track, ref trackCrossSection, ref trackRange, ref maxRangeError, ref trackBearing, ref maxBearingError, ref iffCodes);
+
+            trackBearing = MathUtils.RandomCone(trackBearing, maxBearingError);
+            trackRange += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
             var detection = new DetectionInfo
             (
                 visibilitySet.Track,
                 this,
-                visibility,
-                range,
+                trackCrossSection,
+                trackRange,
                 maxRangeError,
-                bearing,
+                trackBearing,
                 maxBearingError,
                 iffCodes
             );

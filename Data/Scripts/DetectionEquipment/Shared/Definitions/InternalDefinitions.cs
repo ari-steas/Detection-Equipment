@@ -1,6 +1,7 @@
 ﻿using DetectionEquipment.Shared.Utils;
 using System;
 using System.Collections.Generic;
+using VRage;
 using VRageMath;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
 
@@ -188,7 +189,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxLifetime = 300,
                 HasPhysics = true,
                 DragMultiplier = 0.001f,
-                ParticleEffect = "Smoke_Firework"
+                ParticleEffect = "Smoke_Firework",
             },
             ["DetEq_SimpleChaff"] = new CountermeasureDefinition
             {
@@ -202,7 +203,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxLifetime = 240,
                 HasPhysics = true,
                 DragMultiplier = 0.001f,
-                ParticleEffect = "SimpleChaffParticle"
+                ParticleEffect = "SimpleChaffParticle",
             },
             ["DetEq_SimpleAreaJammer"] = new CountermeasureDefinition
             {
@@ -216,7 +217,15 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxLifetime = uint.MaxValue,
                 HasPhysics = false,
                 DragMultiplier = 0f,
-                ParticleEffect = ""
+                ParticleEffect = "",
+
+                //ApplyDrfmToOtherTargets = true,
+                //MaxDrfmRange = 50000,
+                //DrfmEffects = (sensorId, counterId, emitter, targetId, targetCrossSection, targetRange, maxRangeErr, targetBearing, maxBearingErr, iffCodes) =>
+                //{
+                //    Log.Info("SimpleAreaJammer", $"DrfmEffects invoked! {sensorId} {counterId} {emitter?.CustomName ?? "NULLEMM"}, {targetId}, {targetCrossSection}, {targetRange}, {maxRangeErr}, {targetBearing}, {maxBearingErr}, {iffCodes.Length}");
+                //    return new MyTuple<double, double, double, Vector3D, double, string[]>(0, 0, 0, targetBearing, 0, iffCodes);
+                //}
             }
         };
 
@@ -348,20 +357,35 @@ namespace DetectionEquipment.Shared.Definitions
 
             foreach (var definitionKvp in SensorDefinitions)
             {
-                if (!DefinitionManager.DefinitionApi.HasDefinition<SensorDefinition>(definitionKvp.Key))
-                    DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+                if (DefinitionManager.DefinitionApi.HasDefinition<SensorDefinition>(definitionKvp.Key))
+                    continue;
+
+                DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+                var delegates = definitionKvp.Value.GenerateDelegates();
+                if (delegates != null)
+                    DefinitionManager.DefinitionApi.RegisterDelegates<SensorDefinition>(definitionKvp.Key, delegates);
             }
 
             foreach (var definitionKvp in CountermeasureDefinitions)
             {
-                if (!DefinitionManager.DefinitionApi.HasDefinition<CountermeasureDefinition>(definitionKvp.Key))
-                    DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+                if (DefinitionManager.DefinitionApi.HasDefinition<CountermeasureDefinition>(definitionKvp.Key))
+                    continue;
+
+                DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+                var delegates = definitionKvp.Value.GenerateDelegates();
+                if (delegates != null)
+                    DefinitionManager.DefinitionApi.RegisterDelegates<CountermeasureDefinition>(definitionKvp.Key, delegates);
             }
 
             foreach (var definitionKvp in CountermeasureEmitterDefinitions)
             {
-                if (!DefinitionManager.DefinitionApi.HasDefinition<CountermeasureEmitterDefinition>(definitionKvp.Key))
-                    DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+                if (DefinitionManager.DefinitionApi.HasDefinition<CountermeasureEmitterDefinition>(definitionKvp.Key))
+                    continue;
+
+                DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+                var delegates = definitionKvp.Value.GenerateDelegates();
+                if (delegates != null)
+                    DefinitionManager.DefinitionApi.RegisterDelegates<CountermeasureEmitterDefinition>(definitionKvp.Key, delegates);
             }
 
             Log.DecreaseIndent();

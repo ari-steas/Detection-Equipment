@@ -1,11 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using DetectionEquipment.Server.Sensors;
+﻿using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Server.Tracking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
+using System;
+using System.Collections.Generic;
+using System.Reflection;
 using VRage.Game.ModAPI;
+using VRageMath;
 using MyInventoryItem = VRage.Game.ModAPI.Ingame.MyInventoryItem;
 
 namespace DetectionEquipment.Server.Countermeasures
@@ -94,6 +97,41 @@ namespace DetectionEquipment.Server.Countermeasures
             if (GlobalData.DebugLevel > 1 && totalNoise > 0)
                 MyAPIGateway.Utilities.ShowNotification($"{sensor.GetType().Name}: {MathUtils.ToDecibels(totalNoise):F}dB noise ({CountermeasureIdMap.Count} source[s])", 1000/60);
             return totalNoise;
+        }
+
+        public static void ApplyDrfm(ISensor sensor, ITrack track, ref double trackCrossSection, ref double trackRange, ref double maxRangeError, ref Vector3D trackBearing, ref double maxBearingError, ref string[] iffCodes)
+        {
+            double crossSectionOffset = 0, rangeOffset = 0, rangeErrOffset = 0, bearingErrorOffset = 0;
+
+            foreach (var counter in CountermeasureIdMap)
+            {
+                var cdef = counter.Value.Definition;
+                if (cdef.MaxDrfmRange < trackRange || cdef.DrfmEffects == null)
+                    continue;
+
+                if (!counter.Value.CanApplyTo(sensor) || counter.Value.IsOutsideAperture(sensor))
+                    return;
+
+                if (!cdef.ApplyDrfmToOtherTargets)
+                {
+                    var gridTrack = track as GridTrack;
+                    if (gridTrack == null || counter.Value.ParentEmitter == null || !counter.Value.ParentEmitter.Block.CubeGrid.IsInSameLogicalGroupAs(gridTrack.Grid))
+                        continue;
+                }
+
+                var drfmResults = cdef.DrfmEffects.Invoke(sensor.Id, counter.Key, counter.Value.ParentEmitter?.Block, track.EntityId, trackCrossSection, trackRange, maxRangeError, trackBearing, maxBearingError, iffCodes);
+                crossSectionOffset += drfmResults.Item1;
+                rangeOffset += drfmResults.Item2;
+                rangeErrOffset += drfmResults.Item3;
+                trackBearing = drfmResults.Item4; // no clean way to combine this for multiple countermeasures
+                bearingErrorOffset += drfmResults.Item5;
+                iffCodes = drfmResults.Item6; // no clean way to combine this for multiple countermeasures
+            }
+
+            trackCrossSection += crossSectionOffset;
+            trackRange += rangeOffset;
+            maxRangeError += rangeErrOffset;
+            maxBearingError += bearingErrorOffset;
         }
 
         private static void OnBlockPlaced(IMyCubeBlock obj)

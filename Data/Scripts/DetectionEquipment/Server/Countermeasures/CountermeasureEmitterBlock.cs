@@ -148,14 +148,15 @@ namespace DetectionEquipment.Server.Countermeasures
             {
                 _shotAggregator += Definition.ShotsPerSecond / 60f;
                 int startMuzzleIdx = CurrentMuzzleIdx;
-                while (_shotAggregator >= 1 && _magazineShots > 0)
+                while (_shotAggregator >= 1 && (_magazineShots > 0 || Definition.MagazineSize <= 0))
                 {
                     FireOnce();
                     if (CurrentMuzzleIdx == startMuzzleIdx) // Prevent infinite loop if all muzzles are in use.
                         break;
                 }
+                _shotAggregator -= (float) Math.Floor(_shotAggregator); // aggregator shouldn't finish a cycle with shots available
 
-                if (_magazineShots <= 0 && Definition.ReloadTime > 1/60f)
+                if (Definition.MagazineSize > 0 && _magazineShots <= 0 && Definition.ReloadTime > 1/60f)
                 {
                     Reloading = true;
                     _hadReload = TryConsumeReload();
@@ -163,18 +164,21 @@ namespace DetectionEquipment.Server.Countermeasures
                 }
             }
 
-            if (Block.ShowOnHUD && Definition.IsCountermeasureAttached && Block.HasLocalPlayerAccess())
+            if (!MyAPIGateway.Utilities.IsDedicated && Block.ShowOnHUD && Definition.IsCountermeasureAttached && Block.HasLocalPlayerAccess())
             {
                 foreach (var counter in _attachedCountermeasures)
                 {
                     if (counter == null)
                         continue;
+                    
                     var matrix = MatrixD.CreateWorld(counter.Position, counter.Direction,
                         Vector3D.CalculatePerpendicularVector(counter.Direction));
                     var color = new Color((uint) ((50 + counter.Id) * Block.EntityId)).Alpha(0.1f);
 
-                    if (counter.EffectAperture < Math.PI)
+                    if (counter.EffectAperture < (float)Math.PI)
+                    {
                         MySimpleObjectDraw.DrawTransparentCone(ref matrix, (float) Math.Tan(counter.EffectAperture) * counter.Definition.MaxRange, counter.Definition.MaxRange, ref color, 8, DebugDraw.MaterialSquare);
+                    }
                     else
                     {
                         DebugDraw.AddLine(counter.Position, counter.Position + counter.Direction * counter.Definition.MaxRange, color, 0);
