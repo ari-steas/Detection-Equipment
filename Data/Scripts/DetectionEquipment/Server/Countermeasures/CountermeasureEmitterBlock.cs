@@ -136,8 +136,12 @@ namespace DetectionEquipment.Server.Countermeasures
             {
                 if (!Definition.IsCountermeasureAttached || _didCloseAttached)
                     return;
-                foreach (var counter in _attachedCountermeasures)
-                    counter?.Close();
+                for (var i = 0; i < _attachedCountermeasures.Length; i++)
+                {
+                    _attachedCountermeasures[i]?.Close();
+                    _attachedCountermeasures[i] = null;
+                }
+
                 _didCloseAttached = true;
             }
             _didCloseAttached = false;

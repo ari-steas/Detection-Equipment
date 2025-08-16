@@ -1,9 +1,7 @@
-﻿using DetectionEquipment.Shared.Utils;
-using ProtoBuf;
+﻿using ProtoBuf;
 using Sandbox.Definitions;
 using System;
 using System.Collections.Generic;
-using System.Data;
 using VRage.Game;
 using VRageMath;
 

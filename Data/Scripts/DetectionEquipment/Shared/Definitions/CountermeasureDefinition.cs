@@ -2,7 +2,6 @@
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using VRage;
 using VRageMath;
 

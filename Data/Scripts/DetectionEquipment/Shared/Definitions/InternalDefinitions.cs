@@ -221,6 +221,7 @@ namespace DetectionEquipment.Shared.Definitions
 
                 //ApplyDrfmToOtherTargets = true,
                 //MaxDrfmRange = 50000,
+                //ApplyOutsideSensorCone = false,
                 //DrfmEffects = (sensorId, counterId, emitter, targetId, targetCrossSection, targetRange, maxRangeErr, targetBearing, maxBearingErr, iffCodes) =>
                 //{
                 //    Log.Info("SimpleAreaJammer", $"DrfmEffects invoked! {sensorId} {counterId} {emitter?.CustomName ?? "NULLEMM"}, {targetId}, {targetCrossSection}, {targetRange}, {maxRangeErr}, {targetBearing}, {maxBearingErr}, {iffCodes.Length}");
