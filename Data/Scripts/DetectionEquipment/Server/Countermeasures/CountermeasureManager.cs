@@ -7,6 +7,7 @@ using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using DetectionEquipment.Shared.Structs;
 using VRage.Game.ModAPI;
 using VRageMath;
 using MyInventoryItem = VRage.Game.ModAPI.Ingame.MyInventoryItem;
@@ -106,11 +107,11 @@ namespace DetectionEquipment.Server.Countermeasures
             foreach (var counter in CountermeasureIdMap)
             {
                 var cdef = counter.Value.Definition;
-                if (cdef.MaxDrfmRange < trackRange || cdef.DrfmEffects == null)
+                if (cdef.DrfmEffects == null || cdef.MaxDrfmRange * cdef.MaxDrfmRange < Vector3D.DistanceSquared(sensor.Position, counter.Value.Position))
                     continue;
 
                 if (!counter.Value.CanApplyTo(sensor) || counter.Value.IsOutsideAperture(sensor))
-                    return;
+                    continue;
 
                 if (!cdef.ApplyDrfmToOtherTargets)
                 {
@@ -132,6 +133,28 @@ namespace DetectionEquipment.Server.Countermeasures
             trackRange += rangeOffset;
             maxRangeError += rangeErrOffset;
             maxBearingError += bearingErrorOffset;
+        }
+
+        public static IEnumerable<DetectionInfo> GenerateDrfmTracks(ISensor sensor, IMyFunctionalBlock sensorBlock)
+        {
+            double crossSectionOffset = 0, rangeOffset = 0, rangeErrOffset = 0, bearingErrorOffset = 0;
+
+            foreach (var counter in CountermeasureIdMap)
+            {
+                var cdef = counter.Value.Definition;
+                if (cdef.DrfmGenerator == null || cdef.MaxDrfmRange * cdef.MaxDrfmRange < Vector3D.DistanceSquared(sensor.Position, counter.Value.Position))
+                    continue;
+
+                if (!counter.Value.CanApplyTo(sensor) || counter.Value.IsOutsideAperture(sensor))
+                    continue;
+
+                var drfmResults = cdef.DrfmGenerator.Invoke(sensor.Id, sensorBlock, counter.Key, counter.Value.ParentEmitter?.Block);
+                foreach (var result in drfmResults)
+                {
+                    DrfmTrack track = new DrfmTrack(Vector3D.Zero, result.Item1);
+                    yield return new DetectionInfo(track, sensor, result.Item2, result.Item3.X, result.Item3.Y, result.Item4, result.Item5, result.Item6);
+                }
+            }
         }
 
         private static void OnBlockPlaced(IMyCubeBlock obj)

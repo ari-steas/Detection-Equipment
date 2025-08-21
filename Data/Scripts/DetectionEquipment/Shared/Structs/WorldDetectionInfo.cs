@@ -22,7 +22,7 @@ namespace DetectionEquipment.Shared.Structs
         public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
 
-        public Vector3D Position => PositionOffset + Entity.PositionComp.WorldAABB.Center;
+        public Vector3D Position => Entity == null ? PositionOffset : PositionOffset + Entity.PositionComp.WorldAABB.Center;
         public double SumError => MaxRangeError + MaxBearingError;
 
         public static WorldDetectionInfo Create(DetectionInfo info, AggregatorBlock aggregator = null)
@@ -90,11 +90,14 @@ namespace DetectionEquipment.Shared.Structs
 
             DetectionFlags proposedType = DetectionFlags.None;
             MyEntity entity = null;
+            long entId = -1;
             var allCodes = new List<string>();
             foreach (var info in args)
             {
                 if (info.Entity != null)
                     entity = info.Entity;
+                if (entId == -1 || info.Entity != null)
+                    entId = info.EntityId;
                 foreach (var code in info.IffCodes)
                     if (!allCodes.Contains(code))
                         allCodes.Add(code);
@@ -107,7 +110,7 @@ namespace DetectionEquipment.Shared.Structs
             var wInfo = new WorldDetectionInfo
             {
                 Entity = entity,
-                EntityId = entity?.EntityId ?? -1,
+                EntityId = entId,
                 CrossSection = averageCrossSection,
                 PositionOffset = averageRelPos,
                 MaxRangeError = minRangeError,
@@ -125,7 +128,10 @@ namespace DetectionEquipment.Shared.Structs
         /// </summary>
         /// <param name="args"></param>
         /// <param name="aggregator"></param>
-        /// <param name="totalError"></param>
+        /// <param name="entity"></param>
+        /// <param name="minRangeError"></param>
+        /// <param name="minBearingError"></param>
+        /// <param name="averageCrossSection"></param>
         /// <returns></returns>
         private static Vector3D AveragePositions(ICollection<WorldDetectionInfo> args, AggregatorBlock aggregator, MyEntity entity,
             out double minRangeError, out double minBearingError, out double averageCrossSection)
@@ -186,7 +192,7 @@ namespace DetectionEquipment.Shared.Structs
                 : rangeErrorPctSum;
             averageCrossSection /= args.Count;
 
-            return averageBearing * averageRange + aggregatorPos - entity.PositionComp.WorldAABB.Center;
+            return averageBearing * averageRange + aggregatorPos - (entity?.PositionComp.WorldAABB.Center ?? Vector3D.Zero);
         }
 
         [Flags]

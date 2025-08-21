@@ -7,7 +7,7 @@ namespace DetectionEquipment.Shared.Structs
 {
     internal struct DetectionInfo : IPackageable
     {
-        public ITrack Track;
+        public readonly ITrack Track;
         public readonly ISensor Sensor;
         public readonly double CrossSection;
         /// <summary>

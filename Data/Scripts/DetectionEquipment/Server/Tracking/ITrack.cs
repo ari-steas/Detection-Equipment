@@ -36,6 +36,12 @@ namespace DetectionEquipment.Server.Tracking
         /// <param name="source">Position of the sensor</param>
         /// <returns></returns>
         double RadarVisibility(Vector3D source);
+        /// <summary>
+        /// Visibility to comms sensors.
+        /// </summary>
+        /// <param name="source">Position of the sensor</param>
+        /// <returns></returns>
+        double CommsVisibility(Vector3D source);
     }
 
     public enum VisibilityType

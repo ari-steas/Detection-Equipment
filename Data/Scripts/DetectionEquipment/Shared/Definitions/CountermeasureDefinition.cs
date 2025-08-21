@@ -83,6 +83,13 @@ namespace DetectionEquipment.Shared.Definitions
         /// </summary>
         public Func<uint, uint, IMyFunctionalBlock, long, double, double, double, Vector3D, double, string[], MyTuple<double, double, double, Vector3D, double, string[]>> DrfmEffects = null;
 
+        /// <summary>
+        /// Allows generating new sensor returns directly. Leave null if unused.<br/>
+        /// In: SensorId, SensorBlock, CountermeasureId, AttachedEmitter?<br/>
+        /// Out: TrackId, CrossSection, Vector2D(Range, RangeErr), Bearing, BearingErr, IffCodes
+        /// </summary>
+        public Func<uint, IMyFunctionalBlock, uint, IMyFunctionalBlock, IEnumerable<MyTuple<long, double, Vector2D, Vector3D, double, string[]>>> DrfmGenerator = null;
+
         [Flags]
         public enum CountermeasureTypeEnum
         {
@@ -120,13 +127,15 @@ namespace DetectionEquipment.Shared.Definitions
         protected override void AssignDelegates(Dictionary<string, Delegate> delegates)
         {
             AssignDelegate(delegates, "DrfmEffects", out DrfmEffects);
+            AssignDelegate(delegates, "DrfmGenerator", out DrfmGenerator);
         }
 
         public override Dictionary<string, Delegate> GenerateDelegates()
         {
             return new Dictionary<string, Delegate>
             {
-                ["DrfmEffects"] = DrfmEffects
+                ["DrfmEffects"] = DrfmEffects,
+                ["DrfmGenerator"] = DrfmGenerator,
             };
         }
     }
