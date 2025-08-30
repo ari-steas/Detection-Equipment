@@ -70,9 +70,24 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 return;
 
             Detections.Clear();
-            Detections.EnsureCapacity(SourceAggregator.DetectionSet.Count);
+
+            var topmostParent = Block.GetTopMostParent();
+            var activePlayers = GlobalObjectPools.PlayerPool.Pop();
+            foreach (var player in GlobalData.Players)
+                if (player.Controller.ControlledEntity?.Entity.GetTopMostParent() == topmostParent)
+                    activePlayers.Add(player);
+
+            if (activePlayers.Count == 0)
+            {
+                GlobalObjectPools.PlayerPool.Push(activePlayers); // already empty
+                return;
+            }
+
+            var detSet = SourceAggregator.DetectionSet;
+
+            Detections.EnsureCapacity(detSet.Count);
             var blockParent = ShowSelf.Value ? null : Block.CubeGrid.GetTopMostParent(typeof(IMyCubeGrid));
-            foreach (var item in SourceAggregator.DetectionSet)
+            foreach (var item in detSet)
             {
                 if (!ShowSelf.Value && item.Entity is IMyCubeGrid && item.Entity.GetTopMostParent(typeof(IMyCubeGrid)) == blockParent)
                     continue;
@@ -90,11 +105,12 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
             }
 
             // Only send to players in relevant cockpits
-            var topmostParent = Block.GetTopMostParent();
             var updatePacket = new HudUpdatePacket(this);
-            foreach (var player in GlobalData.Players)
-                if (player.Controller.ControlledEntity?.Entity.GetTopMostParent() == topmostParent)
-                    ServerNetwork.SendToPlayer(updatePacket, player.SteamUserId);
+            foreach (var player in activePlayers)
+                ServerNetwork.SendToPlayer(updatePacket, player.SteamUserId);
+
+            activePlayers.Clear();
+            GlobalObjectPools.PlayerPool.Push(activePlayers);
         }
 
         protected void UpdateClient()

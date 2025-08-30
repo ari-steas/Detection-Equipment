@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Server;
+﻿using System;
+using DetectionEquipment.Server;
 using DetectionEquipment.Server.Tracking;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
@@ -15,18 +16,6 @@ namespace DetectionEquipment.Shared.Utils
         /// <summary>
         /// Please return these cleared!
         /// </summary>
-        public static ObjectPool<List<Vector3I>> Vector3IPool;
-        /// <summary>
-        /// Please return these cleared!
-        /// </summary>
-        public static ObjectPool<List<MyEntity>> MyEntityPool;
-        /// <summary>
-        /// Please return these cleared!
-        /// </summary>
-        public static ObjectPool<List<IHitInfo>> HitInfoPool;
-        /// <summary>
-        /// Please return these cleared!
-        /// </summary>
         public static ObjectPool<List<MyLineSegmentOverlapResult<MyEntity>>> EntityLineOverlapPool;
         /// <summary>
         /// Please return these cleared!
@@ -38,22 +27,10 @@ namespace DetectionEquipment.Shared.Utils
         /// For use in GridSensorManager.cs
         /// </summary>
         public static AsyncSharedObjectPool<Dictionary<IMyEntity, ITrack>> TrackSharedPool;
-
+        public static ObjectPool<HashSet<IMyPlayer>> PlayerPool;
 
         public static void Init()
         {
-            Vector3IPool = new ObjectPool<List<Vector3I>>(
-                () => new List<Vector3I>(),
-                startSize: 100
-                );
-            MyEntityPool = new ObjectPool<List<MyEntity>>(
-                () => new List<MyEntity>(),
-                startSize: 100
-            );
-            HitInfoPool = new ObjectPool<List<IHitInfo>>(
-                () => new List<IHitInfo>(),
-                startSize: 100
-            );
             EntityLineOverlapPool = new ObjectPool<List<MyLineSegmentOverlapResult<MyEntity>>>(
                 () => new List<MyLineSegmentOverlapResult<MyEntity>>(),
                 startSize: 100
@@ -69,6 +46,10 @@ namespace DetectionEquipment.Shared.Utils
             DataReceiverPool = new ObjectPool<Queue<MyDataReceiver>>(
                 () => new Queue<MyDataReceiver>(),
                 startSize: 10
+            );
+            PlayerPool = new ObjectPool<HashSet<IMyPlayer>>(
+                () => new HashSet<IMyPlayer>(),
+                startSize: 3
             );
 
             if (MyAPIGateway.Session.IsServer)
@@ -98,13 +79,11 @@ namespace DetectionEquipment.Shared.Utils
 
         public static void Unload()
         {
-            Vector3IPool = null;
-            MyEntityPool = null;
-            HitInfoPool = null;
             EntityLineOverlapPool = null;
             //VoxelLineOverlapPool = null;
             DataBroadcasterPool = null;
             DataReceiverPool = null;
+            PlayerPool = null;
         }
     }
 }

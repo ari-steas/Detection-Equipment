@@ -181,7 +181,7 @@ namespace DetectionEquipment.Shared.Networking
                     new PacketInfo
                     {
                         PacketTypeName = nameof(Contents),
-                        PacketSize = Contents == null ? 0 : Contents.Length * sizeof(int)
+                        PacketSize = Contents == null ? 0 : Contents.Length * sizeof(byte)
                     }
                 );
             }
