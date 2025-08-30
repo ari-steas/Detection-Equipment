@@ -6,4 +6,6 @@ This is the base mod, and must be referenced as a dependency for client mods. [C
 
 Client mod template: https://github.com/ari-steas/Detection-Equipment-Mod-Template
 
+Workshop Page: https://steamcommunity.com/workshop/filedetails/?id=3476173167
+
 By [@aristeas](https://github.com/ari-steas).
