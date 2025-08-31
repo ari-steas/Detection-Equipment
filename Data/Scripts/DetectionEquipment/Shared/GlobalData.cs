@@ -159,7 +159,7 @@ namespace DetectionEquipment.Shared
         public static IniSetting<int> CrossSectionDetail = new IniSetting<int>(
             _sensorConfig,
             "CrossSectionDetail",
-            "Detail level of grid radar and visual cross-sections. Lower values are more performant but less accurate. Scales by 2^n.",
+            "Detail level of grid radar and visual cross-section caches. Lower values are more performant but less accurate. Scales by 4^n.",
             3,
             TrackingUtils.UpdateVisibilityCache
             );
