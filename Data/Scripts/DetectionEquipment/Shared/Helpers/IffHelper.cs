@@ -7,6 +7,7 @@ using ProtoBuf;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using VRage.Game.ModAPI;
 
@@ -14,13 +15,13 @@ namespace DetectionEquipment.Shared.Helpers
 {
     internal static class IffHelper
     {
-        private static Dictionary<IMyCubeGrid, HashSet<IffReflectorBlock>> _iffMap;
+        private static Dictionary<IMyCubeGrid, IffInfo> _iffMap;
         private static Stack<int> _saltQueue = null;
         private static int _saltA = 5381, _saltB = 1566083941;
 
         public static void Load()
         {
-            _iffMap = new Dictionary<IMyCubeGrid, HashSet<IffReflectorBlock>>();
+            _iffMap = new Dictionary<IMyCubeGrid, IffInfo>();
             RefreshSalts();
         }
 
@@ -41,41 +42,26 @@ namespace DetectionEquipment.Shared.Helpers
         {
             if (!_iffMap.ContainsKey(grid))
             {
-                _iffMap.Add(grid, new HashSet<IffReflectorBlock> { component });
+                _iffMap.Add(grid, new IffInfo(new HashSet<IffReflectorBlock> { component }));
                 return;
             }
-            _iffMap[grid].Add(component);
+            _iffMap[grid].Blocks.Add(component);
         }
 
         public static void RemoveComponent(IMyCubeGrid grid, IffReflectorBlock component)
         {
-            HashSet<IffReflectorBlock> compSet;
+            IffInfo compSet;
             if (!_iffMap.TryGetValue(grid, out compSet))
                 return;
-            compSet.Remove(component);
-            if (compSet.Count == 0 || grid.Closed)
+            compSet.Blocks.Remove(component);
+            if (compSet.Blocks.Count == 0 || grid.Closed)
                 _iffMap.Remove(grid);
         }
 
         public static string[] GetIffCodes(IMyCubeGrid grid, SensorDefinition.SensorType sensorType)
         {
-            HashSet<IffReflectorBlock> map;
-            if (!_iffMap.TryGetValue(grid, out map))
-                return Array.Empty<string>();
-            var codes = new HashSet<string>();
-            foreach (var reflector in map)
-                if (reflector.Enabled && (sensorType == SensorDefinition.SensorType.None || reflector.SensorType == sensorType))
-                    codes.Add(reflector.IffCodeCache);
-
-            var array = new string[codes.Count];
-            int i = 0;
-            foreach (var code in codes)
-            {
-                array[i] = code;
-                i++;
-            }
-
-            return array;
+            IffInfo info;
+            return _iffMap.TryGetValue(grid, out info) ? info.GetCodes(sensorType) : Array.Empty<string>();
         }
 
         private static void RefreshSalts()
@@ -98,9 +84,10 @@ namespace DetectionEquipment.Shared.Helpers
             _saltA = _saltQueue.Pop();
             _saltB = _saltQueue.Pop();
             ServerNetwork.SendToEveryone(new IffSaltPacket(_saltA, _saltB));
-            foreach (var gridMap in _iffMap.Values)
+            foreach (var info in _iffMap.Values)
             {
-                foreach (var iff in gridMap)
+                info.LastUpdate = -1;
+                foreach (var iff in info.Blocks)
                 {
                     iff.ForceUpdateHash();
                 }
@@ -225,9 +212,9 @@ namespace DetectionEquipment.Shared.Helpers
                 IffHelper._saltA = _saltA;
                 IffHelper._saltB = _saltB;
 
-                foreach (var gridMap in _iffMap.Values)
+                foreach (var gridInfo in _iffMap.Values)
                 {
-                    foreach (var iff in gridMap)
+                    foreach (var iff in gridInfo.Blocks)
                     {
                         iff.ForceUpdateHash();
                     }
@@ -248,6 +235,58 @@ namespace DetectionEquipment.Shared.Helpers
                         PacketSize = sizeof(int)
                     }
                 );
+            }
+        }
+
+        private class IffInfo
+        {
+            public HashSet<IffReflectorBlock> Blocks;
+            public int LastUpdate;
+            private string[][] _codeCache;
+
+            private static readonly int IffCodeCacheSize = Enum.GetValues(typeof(SensorDefinition.SensorType)).Cast<int>().Max();
+
+            public IffInfo(HashSet<IffReflectorBlock> blocks)
+            {
+                Blocks = blocks;
+                LastUpdate = -1;
+                _codeCache = new string[IffCodeCacheSize][];
+                for (int i = 0; i < IffCodeCacheSize; i++)
+                    _codeCache[i] = Array.Empty<string>();
+            }
+
+            public string[] GetCodes(SensorDefinition.SensorType sensorType)
+            {
+                if (sensorType == SensorDefinition.SensorType.None)
+                    return Array.Empty<string>();
+
+                // don't pass in "None" otherwise it crashes )))
+                int sType = (int) sensorType - 1;
+                if (MyAPIGateway.Session.GameplayFrameCounter == LastUpdate)
+                    return _codeCache[sType];
+
+                var codes = new HashSet<string>();
+                foreach (var reflector in Blocks)
+                    if (reflector.Enabled && reflector.SensorType == sensorType)
+                        codes.Add(reflector.IffCodeCache);
+
+                string[] array;
+                if (_codeCache[sType].Length == codes.Count)
+                    array = _codeCache[sType];
+                else
+                    array = new string[codes.Count];
+
+                int i = 0;
+                foreach (var code in codes)
+                {
+                    array[i] = code;
+                    i++;
+                }
+
+                _codeCache[sType] = array;
+                LastUpdate = MyAPIGateway.Session.GameplayFrameCounter;
+
+                return array;
             }
         }
     }

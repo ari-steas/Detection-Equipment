@@ -125,8 +125,9 @@ namespace DetectionEquipment.Server.SensorBlocks
                 MyAPIGateway.Parallel.Start(UpdateTracks);
             }
 
-            //foreach (var sensor in Sensors)
-            //    sensor.Update(TrackVisibility);
+            var gridPos = Grid.WorldAABB.Center;
+            foreach (var track in _trackVisibility)
+                track.Update(gridPos);
 
             MyAPIGateway.Parallel.ForEach(Sensors, sensor =>
             {
@@ -295,8 +296,11 @@ namespace DetectionEquipment.Server.SensorBlocks
             public double RadarVisibility;
             public double OpticalVisibility;
             public double InfraredVisibility;
+
             public Vector3D ClosestCorner;
             public BoundingBoxD BoundingBox;
+            public Vector3D Position;
+            private int _lastUpdate;
 
             public VisibilitySet(IMyCubeGrid thisGrid, ITrack track)
             {
@@ -311,8 +315,12 @@ namespace DetectionEquipment.Server.SensorBlocks
                     OpticalVisibility = track.OpticalVisibility(thisGrid.WorldAABB.Center);
                 }
                 InfraredVisibility = track.InfraredVisibility(thisGrid.WorldAABB.Center, OpticalVisibility);
-                ClosestCorner = Track.BoundingBox.ClosestCorner(thisGrid.WorldAABB.Center);
+
                 BoundingBox = Track.BoundingBox;
+                ClosestCorner = BoundingBox.ClosestCorner(thisGrid.WorldAABB.Center);
+                Position = BoundingBox.Center;
+
+                _lastUpdate = MyAPIGateway.Session.GameplayFrameCounter;
             }
 
             public VisibilitySet(ICollection<VisibilitySet> toAverage)
@@ -324,6 +332,8 @@ namespace DetectionEquipment.Server.SensorBlocks
                 InfraredVisibility = 0;
                 ClosestCorner = Vector3D.Zero;
                 BoundingBox = default(BoundingBoxD);
+                Position = Vector3D.Zero;
+                _lastUpdate = MyAPIGateway.Session.GameplayFrameCounter;
 
                 foreach (var visibilitySet in toAverage)
                 {
@@ -333,11 +343,23 @@ namespace DetectionEquipment.Server.SensorBlocks
                         largestVisibility = visibilitySet.RadarVisibility + visibilitySet.OpticalVisibility;
                         ClosestCorner = visibilitySet.ClosestCorner;
                         BoundingBox = visibilitySet.BoundingBox;
+                        Position = visibilitySet.Position;
                     }
                     RadarVisibility += visibilitySet.RadarVisibility;
                     OpticalVisibility += visibilitySet.OpticalVisibility;
                     InfraredVisibility += visibilitySet.InfraredVisibility;
                 }
+            }
+
+            public void Update(Vector3D gridPosition)
+            {
+                if (_lastUpdate == MyAPIGateway.Session.GameplayFrameCounter)
+                    return;
+
+                BoundingBox = Track.BoundingBox;
+                ClosestCorner = BoundingBox.ClosestCorner(gridPosition);
+                Position = BoundingBox.Center;
+                _lastUpdate = MyAPIGateway.Session.GameplayFrameCounter;
             }
         }
     }

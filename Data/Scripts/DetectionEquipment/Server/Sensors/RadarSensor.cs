@@ -52,32 +52,44 @@ namespace DetectionEquipment.Server.Sensors
             var track = visibilitySet.Track;
             if (track == null) return null;
 
+            Vector3D targetBearing = visibilitySet.Position - Position;
+            double targetRange = targetBearing.Normalize();
+
             double targetAngle = 0;
+            double cosAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
+            {
+                cosAngle = Vector3D.Dot(Direction, targetBearing);
+                targetAngle = Math.Acos(cosAngle);
+            }
             if (targetAngle > Aperture)
                 return null;
 
-            Vector3D targetBearing = visibilitySet.Track.Position - Position;
-            double targetRange = targetBearing.Normalize();
-
             double signalToNoiseRatio;
             {
-                const double c = 299792458;
+                const double c = 299792458d;
                 const double fourPi3 = 64 * Math.PI * Math.PI * Math.PI;
                 const double bmConstant = 1.38E-23;
                 const double inherentNoise = 950;
 
-                double lambda = c / Definition.RadarProperties.Frequency;
-                double outputDensity = (2 * Math.PI) / Aperture; // Inverse output density
+                double lambdaSq = c / Definition.RadarProperties.Frequency;
+                lambdaSq *= lambdaSq;
+                double outputDensity = 2 * Math.PI / Aperture; // Inverse output density
+
                 // If the aperture is more than 180 degrees, assume that it's a spheroid.
-                double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
+                double receiverAreaAtAngle = Definition.RadarProperties.ReceiverArea;
+                if (Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle)
+                    receiverAreaAtAngle *= cosAngle;
 
                 //   4 * pi * receiverArea * angleOffsetScalar * outputDensity^3
                 // ---------------------------------------------------------------
                 //                            lambda^2
-                double gain = 4 * Math.PI * receiverAreaAtAngle / (lambda * lambda) * (Definition.RadarProperties.AccountForRadarAngle ? MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) : 1) * outputDensity * outputDensity * outputDensity;
-                double rangePFour = targetRange * targetRange * targetRange * targetRange;
+                double gain =
+                    4 * Math.PI * receiverAreaAtAngle *
+                    (Definition.RadarProperties.AccountForRadarAngle
+                        ? MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1)
+                        : 1) * outputDensity * outputDensity * outputDensity
+                    / lambdaSq;
 
                 // Can make this fancier if I want later.
                 // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
@@ -85,9 +97,9 @@ namespace DetectionEquipment.Server.Sensors
                 // --------------------------------------------------------
                 //  (4pi)^3 * range^4 * boltzmann * noise_system * bandwidth
                 signalToNoiseRatio = MathUtils.ToDecibels(
-                    (Definition.MaxPowerDraw * Definition.RadarProperties.PowerEfficiencyModifier * gain * gain * lambda * lambda * visibilitySet.RadarVisibility)
+                    Definition.MaxPowerDraw * Definition.RadarProperties.PowerEfficiencyModifier * gain * gain * lambdaSq * visibilitySet.RadarVisibility
                     /
-                    (fourPi3 * rangePFour * bmConstant * (inherentNoise + CountermeasureNoise) * Definition.RadarProperties.Bandwidth)
+                    (fourPi3 * targetRange * targetRange * targetRange * targetRange * bmConstant * (inherentNoise + CountermeasureNoise) * Definition.RadarProperties.Bandwidth)
                     );
             }
 
@@ -103,12 +115,15 @@ namespace DetectionEquipment.Server.Sensors
                 return null;
             }
 
+            double errorScalar = 1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1);
+
             double trackCrossSection = visibilitySet.RadarVisibility;
             double trackRange = targetRange;
-            double maxRangeError = targetRange * Definition.RangeErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
+            double maxRangeError = targetRange * Definition.RangeErrorModifier * errorScalar;
             Vector3D trackBearing = targetBearing;
-            double maxBearingError = Definition.BearingErrorModifier * (1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1));
-            var iffCodes = track is GridTrack ? IffHelper.GetIffCodes(((GridTrack)track).Grid, SensorDefinition.SensorType.Radar) : Array.Empty<string>();
+            double maxBearingError = Definition.BearingErrorModifier * errorScalar;
+            var gridTrack = track as GridTrack;
+            var iffCodes = gridTrack != null ? IffHelper.GetIffCodes(gridTrack.Grid, SensorDefinition.SensorType.Radar) : Array.Empty<string>();
 
             CountermeasureManager.ApplyDrfm(this, track, ref trackCrossSection, ref trackRange, ref maxRangeError, ref trackBearing, ref maxBearingError, ref iffCodes);
 

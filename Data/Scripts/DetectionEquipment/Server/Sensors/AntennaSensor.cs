@@ -44,15 +44,21 @@ namespace DetectionEquipment.Server.Sensors
             if (track == null)
                 return null;
 
+            Vector3D targetBearing = track.Position - Position;
+            double targetRange = targetBearing.Normalize();
+
             double targetAngle = 0;
+            double cosAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
+            {
+                cosAngle = Vector3D.Dot(Direction, targetBearing);
+                targetAngle = Math.Acos(cosAngle);
+            }
+
             if (targetAngle > Aperture)
                 return null;
 
-            Vector3D targetBearing = track.Position - Position;
-            double targetRange = targetBearing.Normalize();
-            double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
+            double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * targetAngle : Definition.RadarProperties.ReceiverArea;
 
             const double inherentNoise = 3;
             var sensorSignal = MathUtils.ToDecibels(

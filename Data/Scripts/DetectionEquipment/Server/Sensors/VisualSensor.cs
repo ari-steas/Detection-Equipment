@@ -44,14 +44,15 @@ namespace DetectionEquipment.Server.Sensors
             if (!Enabled)
                 return null;
 
+            Vector3D targetBearing = visibilitySet.Position - Position;
+            double targetRange = targetBearing.Normalize();
+
             double targetAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-                targetAngle = Vector3D.Angle(Direction, visibilitySet.ClosestCorner - Position);
+                targetAngle = Math.Acos(Vector3D.Dot(Direction, targetBearing));
             if (targetAngle > Aperture)
                 return null;
 
-            Vector3D targetBearing = visibilitySet.Track.Position - Position;
-            double targetRange = targetBearing.Normalize();
             var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
             double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / targetRange) / Aperture;
 
@@ -61,13 +62,13 @@ namespace DetectionEquipment.Server.Sensors
 
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);
 
-            var gT = visibilitySet.Track as GridTrack;
 
             double trackCrossSection = visibility;
             double trackRange = targetRange;
             double maxRangeError = Math.Sqrt(targetRange) * Definition.RangeErrorModifier * errorScalar + CountermeasureNoise/100;
             Vector3D trackBearing = targetBearing;
             double maxBearingError = Aperture/2 * Definition.BearingErrorModifier * errorScalar + CountermeasureNoise/100;
+            var gT = visibilitySet.Track as GridTrack;
             var iffCodes = gT != null ? IffHelper.GetIffCodes(gT.Grid, IsInfrared ? SensorDefinition.SensorType.Infrared : SensorDefinition.SensorType.Optical) : Array.Empty<string>();
 
             CountermeasureManager.ApplyDrfm(this, visibilitySet.Track, ref trackCrossSection, ref trackRange, ref maxRangeError, ref trackBearing, ref maxBearingError, ref iffCodes);

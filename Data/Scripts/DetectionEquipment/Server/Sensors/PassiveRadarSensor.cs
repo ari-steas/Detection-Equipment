@@ -62,13 +62,13 @@ namespace DetectionEquipment.Server.Sensors
             _queuedRadarHits.Remove(track.EntityId);
 
             Vector3D targetBearing = sensor.Position - Position;
-            double angleToTarget = Vector3D.Angle(Direction, targetBearing);
-            if (angleToTarget > Aperture)
+            double targetRange = targetBearing.Normalize();
+            double cosAngle = Vector3D.Dot(Direction, targetBearing);
+            double targetAngle = Math.Acos(cosAngle);
+            if (targetAngle > Aperture)
                 return null;
 
-            double signalToNoiseRatio = sensor.SignalRatioAtTarget(Position, Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(angleToTarget) : Definition.RadarProperties.ReceiverArea);
-
-            double targetRange = targetBearing.Normalize();
+            double signalToNoiseRatio = sensor.SignalRatioAtTarget(Position, Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * cosAngle : Definition.RadarProperties.ReceiverArea);
 
             if (signalToNoiseRatio < 0)
                 return null;

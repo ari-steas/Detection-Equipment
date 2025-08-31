@@ -136,7 +136,11 @@ namespace DetectionEquipment.Shared.Utils
             //    Math.Sin(elev)
             //);
 
-            Vector3D axis = Vector3D.CalculatePerpendicularVector(centerDirection).Rotate(centerDirection, Math.PI * 2 * Random.NextDouble());
+            Vector3D axis = (Math.Abs(centerDirection.Y + centerDirection.Z) > 9.9999997473787516E-05 || Math.Abs(centerDirection.X) > 9.9999997473787516E-05
+                ? new Vector3D(-(centerDirection.Y + centerDirection.Z), centerDirection.X, centerDirection.X)
+                : new Vector3D(centerDirection.Z, centerDirection.Z, -(centerDirection.X + centerDirection.Y)))
+                .Rotate(centerDirection, Math.PI * 2 * Random.NextDouble());
+
             return centerDirection.Rotate(axis, radius * Random.NextDouble());
         }
 
