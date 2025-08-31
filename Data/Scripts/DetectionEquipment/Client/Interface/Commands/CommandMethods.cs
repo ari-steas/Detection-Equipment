@@ -64,6 +64,22 @@ namespace DetectionEquipment.Client.Interface.Commands
             ClientNetwork.I.Profiler.Activate(duration);
         }
 
+        public static void UpdateVisibilityCache(string[] args)
+        {
+            if (!MyAPIGateway.Session.IsServer)
+            {
+                MyAPIGateway.Utilities.ShowMessage("DetEq", "This command can only be run by the server.");
+                return;
+            }
+
+            int nDivs = GlobalData.CrossSectionDetail.Value;
+            if (args.Length >= 2)
+                int.TryParse(args[1], out nDivs);
+
+            MyAPIGateway.Utilities.ShowMessage("DetEq", $"Updating visibility cache for {nDivs} divisions.");
+            TrackingUtils.UpdateVisibilityCache(nDivs);
+        }
+
         #endregion
 
         #region Info

@@ -47,6 +47,11 @@ namespace DetectionEquipment.Client.Interface.Commands
                 "Tests Detection Equipment network performance. Takes float duration in seconds as an optional argument.",
                 CommandMethods.NetworkProfile),
 
+            ["setcsdetail"] = new Command(
+                "DetEq",
+                "Sets cross-section visibility detail level.",
+                CommandMethods.UpdateVisibilityCache),
+
             #endregion
 
             #region Info Commands

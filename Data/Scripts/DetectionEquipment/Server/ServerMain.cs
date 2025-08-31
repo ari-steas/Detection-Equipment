@@ -11,7 +11,6 @@ using DetectionEquipment.Server.Countermeasures;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.ExternalApis;
 using Sandbox.Game.Entities;
-using Sandbox.Game.Entities.Debris;
 using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -33,6 +32,9 @@ namespace DetectionEquipment.Server
         };
 
         public Dictionary<IMyEntity, ITrack> Tracks = new Dictionary<IMyEntity, ITrack>();
+        private double _gridTrackUpdatesPerTick = 0;
+        private double _currentUpdateAccumulator = 0;
+        private Queue<GridTrack> _gridTracksToUpdate = new Queue<GridTrack>();
         public Dictionary<IMyCubeGrid, GridSensorManager> GridSensorMangers = new Dictionary<IMyCubeGrid, GridSensorManager>();
 
         public Dictionary<uint, ISensor> SensorIdMap = new Dictionary<uint, ISensor>();
@@ -134,11 +136,49 @@ namespace DetectionEquipment.Server
                 // Safety check for closed tracks that didn't notify
                 {
                     foreach (var ent in Tracks.Keys)
+                    {
                         if (ent.Closed)
+                        {
                             _deadTracks.Add(ent);
+                        }
+                    }
+                        
                     foreach (var ent in _deadTracks)
                         Tracks.Remove(ent);
                     _deadTracks.Clear();
+                }
+
+                // Update grid tracks
+                {
+                    if (MyAPIGateway.Session.GameplayFrameCounter % 293 == 0) // only update RCS every 5 seconds or so
+                    {
+                        foreach (var track in Tracks.Values)
+                        {
+                            var gT = track as GridTrack;
+                            if (gT == null)
+                                continue;
+
+                            if (gT.NeedsUpdate && !_gridTracksToUpdate.Contains(gT))
+                                _gridTracksToUpdate.Enqueue(gT);
+                        }
+
+                        _gridTrackUpdatesPerTick = _gridTracksToUpdate.Count / 293d; // process updates over the next 5 seconds
+                    }
+
+                    if (_gridTracksToUpdate.Count > 0)
+                        _currentUpdateAccumulator += _gridTrackUpdatesPerTick;
+                    else
+                        _currentUpdateAccumulator = 0;
+
+                    while (_currentUpdateAccumulator >= 1 && _gridTracksToUpdate.Count > 0)
+                    {
+                        var t = _gridTracksToUpdate.Dequeue();
+                        t.UpdateVisibilityCache();
+                        _currentUpdateAccumulator--;
+                    }
+
+                    if (GlobalData.DebugLevel >= 4)
+                        MyAPIGateway.Utilities.ShowNotification($"GridTrack Update Accumulator: {_currentUpdateAccumulator:N} + {_gridTrackUpdatesPerTick*60:N}", 1000/60);
                 }
 
                 foreach (var manager in GridSensorMangers.Values)
@@ -188,7 +228,9 @@ namespace DetectionEquipment.Server
                 var grid = obj as IMyCubeGrid;
                 if (grid != null)
                 {
-                    Tracks.Add(obj, new GridTrack(grid));
+                    var gT = new GridTrack(grid);
+                    Tracks.Add(obj, gT);
+                    _gridTracksToUpdate.Enqueue(gT);
                     GridSensorMangers.Add(grid, new GridSensorManager(grid));
                     grid.OnBlockAdded += InvokeOnBlockPlaced;
                     grid.GetBlocks(null, b =>

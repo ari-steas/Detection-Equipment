@@ -1,15 +1,16 @@
 ﻿using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Utils;
+using RichHudFramework;
+using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using RichHudFramework;
-using Sandbox.Game.Entities;
+using System.Security.Cryptography;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
-using DetectionEquipment.Shared.ExternalApis;
 
 namespace DetectionEquipment.Server.Tracking
 {
@@ -20,17 +21,16 @@ namespace DetectionEquipment.Server.Tracking
         /// <summary>
         /// Cache cardinal and ordinal directions for visible and IR sensors.
         /// </summary>
-        public OrderedDictionary<Vector3D, double> OpticalVisibilityCache = new OrderedDictionary<Vector3D, double>(TrackingUtils.VisibilityCacheBase);
+        public float[] OpticalVisibilityCache = new float[TrackingUtils.VisibilityDirectionCache.Length];
 
         /// <summary>
         /// Cache cardinal and ordinal directions for active radar.
         /// </summary>
-        public OrderedDictionary<Vector3D, double> RadarVisibilityCache = new OrderedDictionary<Vector3D, double>(TrackingUtils.VisibilityCacheBase);
+        public float[] RadarVisibilityCache = new float[TrackingUtils.VisibilityDirectionCache.Length];
 
-        /// <summary>
-        /// Next visibility cache item to be updated.
-        /// </summary>
-        protected int NextCacheUpdate = 0;
+        private HashSet<Vector3I> UpdatedCells = new HashSet<Vector3I>();
+        public bool NeedsRegenerateCache = true;
+        public bool NeedsUpdate => UpdatedCells.Count > 0 || NeedsRegenerateCache;
 
         private readonly HashSet<IMyThrust> _thrustCache = new HashSet<IMyThrust>();
         private readonly HashSet<IMyFunctionalBlock> _broadcasterCache = new HashSet<IMyFunctionalBlock>();
@@ -42,72 +42,201 @@ namespace DetectionEquipment.Server.Tracking
             Grid = grid;
 
             foreach (var block in Grid.GetFatBlocks<IMyFunctionalBlock>())
+                OnBlockAdded(block.SlimBlock);
+            UpdatedCells.Clear();
+            Grid.OnBlockAdded += OnBlockAdded;
+            Grid.OnBlockRemoved += OnBlockRemoved;
+        }
+
+        private void OnBlockAdded(IMySlimBlock block)
+        {
+            UpdatedCells.Add(block.Position);
+            if (block.FatBlock == null)
+                return;
+
+            if (block.FatBlock is IMyThrust)
+                _thrustCache.Add((IMyThrust)block.FatBlock);
+            if (block.FatBlock is IMyRadioAntenna || block.FatBlock is IMyBeacon)
+                _broadcasterCache.Add((IMyFunctionalBlock)block.FatBlock);
+            else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
             {
-                if (block is IMyThrust)
-                    _thrustCache.Add((IMyThrust)block);
-                if (block is IMyRadioAntenna || block is IMyBeacon)
-                    _broadcasterCache.Add(block);
-                else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block))
-                {
-                    _wcWeaponCache.Add((MyCubeBlock) block);
-                }
+                _wcWeaponCache.Add((MyCubeBlock)block.FatBlock);
             }
-            Grid.OnBlockAdded += block =>
-            {
-                if (block.FatBlock == null)
-                    return;
+        }
 
-                if (block.FatBlock is IMyThrust)
-                    _thrustCache.Add((IMyThrust)block.FatBlock);
-                if (block.FatBlock is IMyRadioAntenna || block.FatBlock is IMyBeacon)
-                    _broadcasterCache.Add((IMyFunctionalBlock)block.FatBlock);
-                else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
-                {
-                    _wcWeaponCache.Add((MyCubeBlock)block.FatBlock);
-                }
-            };
-            Grid.OnBlockRemoved += block =>
-            {
-                if (block.FatBlock == null)
-                    return;
+        private void OnBlockRemoved(IMySlimBlock block)
+        {
+            UpdatedCells.Add(block.Position);
+            if (block.FatBlock == null)
+                return;
 
-                if (block.FatBlock is IMyThrust)
-                    _thrustCache.Remove((IMyThrust)block.FatBlock);
-                if (block.FatBlock is IMyRadioAntenna || block.FatBlock is IMyBeacon)
-                    _broadcasterCache.Remove((IMyFunctionalBlock)block.FatBlock);
-                else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
+            if (block.FatBlock is IMyThrust)
+                _thrustCache.Remove((IMyThrust)block.FatBlock);
+            if (block.FatBlock is IMyRadioAntenna || block.FatBlock is IMyBeacon)
+                _broadcasterCache.Remove((IMyFunctionalBlock)block.FatBlock);
+            else if (ApiManager.WcApi.IsReady && ApiManager.WcApi.HasCoreWeapon((MyEntity)block.FatBlock))
+            {
+                _wcWeaponCache.Remove((MyCubeBlock) block.FatBlock);
+            }
+        }
+
+        /// <summary>
+        /// Generates the entire visibility cache.
+        /// </summary>
+        public void RegenerateVisibilityCache()
+        {
+            if (OpticalVisibilityCache.Length < TrackingUtils.VisibilityDirectionCache.Length)
+                OpticalVisibilityCache = new float[TrackingUtils.VisibilityDirectionCache.Length];
+            if (RadarVisibilityCache.Length < TrackingUtils.VisibilityDirectionCache.Length)
+                RadarVisibilityCache = new float[TrackingUtils.VisibilityDirectionCache.Length];
+
+            MyAPIGateway.Parallel.For(0, TrackingUtils.VisibilityDirectionCache.Length-1, i =>
+            {
+                var direction = TrackingUtils.VisibilityDirectionCache[i];
+                CalculateRcsLocal(direction, out RadarVisibilityCache[i], out OpticalVisibilityCache[i]);
+
+                if (GlobalData.DebugLevel >= 3)
                 {
-                    _wcWeaponCache.Remove((MyCubeBlock) block.FatBlock);
+                    float cSize = Grid.LocalAABB.HalfExtents.Length() * Grid.GridSize;
+                    var globalVertexOffset = Vector3D.Rotate(cSize * direction, Grid.WorldMatrix);
+                    var globalTailOffset = Vector3D.Rotate((cSize + RadarVisibilityCache[i]) * direction, Grid.WorldMatrix);
+                    DebugDraw.AddLine(Grid.WorldAABB.Center - globalVertexOffset, Grid.WorldAABB.Center - globalTailOffset, Color.Red, 30);
                 }
-            };
+            });
+
+            UpdatedCells.Clear();
+            NeedsRegenerateCache = false;
+
+            if (GlobalData.DebugLevel >= 1)
+            {
+                Log.Info("GridTrack", $"{Grid.EntityId} regenerated visibility cache.");
+            }
+        }
+
+        public void UpdateVisibilityCache()
+        {
+            if (NeedsRegenerateCache)
+            {
+                RegenerateVisibilityCache();
+                return;
+            }
+
+            UpdateVisibilityCache(UpdatedCells);
+            UpdatedCells.Clear();
+        }
+
+        /// <summary>
+        /// Updates a portion of the visibility cache.
+        /// </summary>
+        private void UpdateVisibilityCache(ICollection<Vector3I> blockPositions)
+        {
+            float maxCastLength = Grid.LocalAABB.HalfExtents.Length();
+            var grid = (MyCubeGrid) Grid;
+            var directionsNeedingUpdate = GlobalObjectPools.IntPool.Pop();
+
+            MyAPIGateway.Parallel.For(0, TrackingUtils.VisibilityDirectionCache.Length-1, i =>
+            {
+                var localDirection = TrackingUtils.VisibilityDirectionCache[i];
+                var globalCastOffset = Vector3D.Rotate(maxCastLength * localDirection, Grid.WorldMatrix);
+                foreach (var blockPosition in blockPositions)
+                {
+                    var blockPos = Grid.GridIntegerToWorld(blockPosition);
+                    LineD castLine = new LineD(blockPos - globalCastOffset, blockPos);
+                    var firstCastResult = grid.RayCastBlocks(castLine.From, castLine.To);
+                    if (firstCastResult != null && firstCastResult != blockPosition) // fast check failed, need to do slow check
+                    {
+                        MyCubeGrid.MyCubeGridHitInfo intersect = new MyCubeGrid.MyCubeGridHitInfo();
+                        if (grid.GetIntersectionWithLine(ref castLine, ref intersect) &&
+                            intersect.Position != blockPosition)
+                            continue;
+                    }
+
+                    if (GlobalData.DebugLevel >= 4)
+                        DebugDraw.AddLine(castLine, Color.Green, 2);
+
+                    lock (directionsNeedingUpdate)
+                    {
+                        directionsNeedingUpdate.Add(i);
+                        return;
+                    }
+                }
+            });
+
+            // TODO: Only run a few of these per tick
+            MyAPIGateway.Parallel.ForEach(directionsNeedingUpdate, directionIdx =>
+            {
+                CalculateRcsLocal(TrackingUtils.VisibilityDirectionCache[directionIdx], out RadarVisibilityCache[directionIdx], out OpticalVisibilityCache[directionIdx]);
+            });
+
+            if (GlobalData.DebugLevel >= 1)
+            {
+                Log.Info("GridTrack", $"{Grid.EntityId} updated visibility cache for {directionsNeedingUpdate.Count} directions.");
+            }
+
+            directionsNeedingUpdate.Clear();
+            GlobalObjectPools.IntPool.Push(directionsNeedingUpdate);
         }
 
         protected override double ProjectedArea(Vector3D source, VisibilityType type)
         {
             var cache = type == VisibilityType.Radar ? RadarVisibilityCache : OpticalVisibilityCache;
 
-            double totalVisibility = 0;
-            Vector3D sourceNormal = Vector3D.Transform(source, MatrixD.Invert(Entity.PositionComp.WorldMatrixRef)).Normalized();
+            Vector3D sourceDirection = Vector3D.Rotate(Vector3D.Normalize(source - Grid.WorldAABB.Center), MatrixD.Invert(Entity.PositionComp.WorldMatrixRef));
 
-            // We're calculating a weighted average between all "visible" angles. TODO: More accurate way to find this
-            var directionRelStrength = new Dictionary<Vector3D, double>();
-            double totalStrength = 0;
-            foreach (var direction in cache.Keys)
+            // select direction closest to source
+            double bestVisibility = 0, bestWeight = double.MinValue;
+            for (var i = 0; i < TrackingUtils.VisibilityDirectionCache.Length; i++)
             {
-                if (Vector3D.Dot(sourceNormal, direction) <= 0) // Ignore directions that aren't visible to the emitter
+                var direction = TrackingUtils.VisibilityDirectionCache[i];
+
+                double weight = -Vector3D.Dot(sourceDirection, direction);
+                if (weight < bestWeight)
                     continue;
 
-                var invDirection = -direction;
-                Vector3D.ProjectOnVector(ref invDirection, ref sourceNormal);
-                double strength = invDirection.LengthSquared(); // Prefer directions better aligned to the source
-                directionRelStrength[direction] = strength;
-                totalStrength += strength;
+                bestVisibility = cache[i];
+                bestWeight = weight;
             }
 
-            foreach (var direction in directionRelStrength.Keys)
-                totalVisibility += cache[direction] * (directionRelStrength[direction] / totalStrength);
+            return bestVisibility;
+        }
 
-            return totalVisibility;
+        /// <summary>
+        /// Combines radar and optical visibility; saves performance in some cases.
+        /// </summary>
+        public void RadarAndOpticalVisibility(Vector3D source, out double rcs, out double vcs)
+        {
+            Vector3D sourceDirection = Vector3D.Rotate(Vector3D.Normalize(source - Grid.WorldAABB.Center), MatrixD.Invert(Entity.PositionComp.WorldMatrixRef));
+            rcs = 0;
+            vcs = 0;
+
+            // select direction closest to source
+            double bestWeight = double.MinValue;
+            Vector3 bestLine = Vector3.Zero;
+            for (var i = 0; i < TrackingUtils.VisibilityDirectionCache.Length; i++)
+            {
+                var direction = TrackingUtils.VisibilityDirectionCache[i];
+
+                double weight = -Vector3D.Dot(sourceDirection, direction);
+                if (weight < bestWeight)
+                    continue;
+
+                rcs = RadarVisibilityCache[i];
+                vcs = OpticalVisibilityCache[i];
+                bestWeight = weight;
+
+                if (GlobalData.DebugLevel >= 3)
+                    bestLine = direction;
+            }
+
+            if (GlobalData.DebugLevel >= 3)
+            {
+                float cSize = Grid.LocalAABB.HalfExtents.Length() * Grid.GridSize;
+                var globalVertexOffset = Vector3D.Rotate(cSize * bestLine, Grid.WorldMatrix);
+                var globalTailOffset = Vector3D.Rotate((float)(cSize + rcs) * bestLine, Grid.WorldMatrix);
+                DebugDraw.AddLine(Grid.WorldAABB.Center - globalVertexOffset, source, Color.Red, 0);
+                DebugDraw.AddLine(Grid.WorldAABB.Center - globalVertexOffset, Grid.WorldAABB.Center, Color.Red, 0);
+                DebugDraw.AddLine(Grid.WorldAABB.Center - globalVertexOffset, Grid.WorldAABB.Center - globalTailOffset, Color.Green, 0);
+            }
         }
 
         public override double InfraredVisibility(Vector3D source)
@@ -206,124 +335,6 @@ namespace DetectionEquipment.Server.Tracking
             return strongestCaster;
         }
 
-        /// <summary>
-        /// Update a portion of the visibility caches.
-        /// </summary>
-        /// <param name="updatePercent">How much of the caches to update, ranging from 0 to 1.</param>
-        public void UpdateVisibilityCache(double updatePercent)
-        {
-            if (Grid.Physics == null)
-                return;
-
-            int itemsToUpdate = (int)Math.Ceiling(updatePercent * RadarVisibilityCache.Count);
-            MyAPIGateway.Utilities.ShowNotification($"Updating {itemsToUpdate} items...", 1000);
-
-            // TODO: Move this into a Parallel.For
-            for (int i = 0; i < itemsToUpdate; i++)
-            {
-                if (NextCacheUpdate + i >= RadarVisibilityCache.Count) // leaving this as an if statement for readability. Saves a bit on performance.
-                    UpdateVisibilityCache((NextCacheUpdate + i) % RadarVisibilityCache.Count);
-                else
-                    UpdateVisibilityCache(NextCacheUpdate + i);
-            }
-
-            NextCacheUpdate += itemsToUpdate;
-            if (NextCacheUpdate >= RadarVisibilityCache.Count)
-                NextCacheUpdate %= RadarVisibilityCache.Count;
-        }
-
-        protected virtual void UpdateVisibilityCache(int index)
-        {
-            Vector3D direction = -RadarVisibilityCache.GetKey(index);
-
-            // Estimate the max cast size
-            Vector3D minCheck = Vector3D.MaxValue, maxCheck = Vector3D.MinValue;
-            MatrixD rotationMatrix = MatrixD.CreateFromDir(direction, direction == Vector3D.Up ? Vector3D.Backward : (direction == Vector3D.Down ? Vector3D.Forward : Vector3D.Up));
-            foreach (var corner in Entity.PositionComp.LocalAABB.Corners)
-            {
-                var vec = Vector3D.Rotate(corner, rotationMatrix);
-                if (minCheck.X > vec.X)
-                    minCheck.X = vec.X;
-                if (minCheck.Y > vec.Y)
-                    minCheck.Y = vec.Y;
-                if (minCheck.Z > vec.Z)
-                    minCheck.Z = vec.Z;
-
-                if (maxCheck.X < vec.X)
-                    maxCheck.X = vec.X;
-                if (maxCheck.Y < vec.Y)
-                    maxCheck.Y = vec.Y;
-                if (maxCheck.Z < vec.Z)
-                    maxCheck.Z = vec.Z;
-            }
-
-            var invRMatrix = MatrixD.Invert(rotationMatrix);
-            minCheck = Vector3D.Rotate(minCheck, rotationMatrix);
-            maxCheck = Vector3D.Rotate(maxCheck, rotationMatrix);
-
-            minCheck = Vector3D.Rotate(Vector3D.ProjectOnPlane(ref minCheck, ref direction), invRMatrix);
-            maxCheck = Vector3D.Rotate(Vector3D.ProjectOnPlane(ref maxCheck, ref direction), invRMatrix);
-            
-            {
-                // Min and max can get mixed up a bit
-                var bufferMin = minCheck;
-                TrackingUtils.MinComponents(ref minCheck, maxCheck);
-                TrackingUtils.MaxComponents(ref maxCheck, bufferMin);
-                bufferMin = maxCheck - minCheck;
-                minCheck = -bufferMin/2;
-                maxCheck = bufferMin/2;
-            }
-
-            //MyAPIGateway.Utilities.ShowNotification($"Min: {minCheck.ToString("F")}", 1000);
-            //MyAPIGateway.Utilities.ShowNotification($"Max: {maxCheck.ToString("F")}", 1000);
-
-            var gridPos = Grid.WorldAABB.Center;
-            //DebugDraw.AddLine(gridPos, Vector3D.Rotate(direction * 10, Grid.WorldMatrix) + gridPos, Color.Blue, 1);
-
-            // Cast for occupied cells, if there's a hit then do a physics cast.
-            HashSet<Vector3I> visited = new HashSet<Vector3I>();
-            double maxCastLength = Grid.LocalAABB.HalfExtents.Length();
-            for (double x = minCheck.X; x <= maxCheck.X; x += Grid.GridSize)
-            {
-                for (double y = minCheck.Y; y <= maxCheck.Y; y += Grid.GridSize)
-                {
-                    var vecOffset = Vector3D.Rotate(new Vector3D(x, y, 0), rotationMatrix);
-
-                    var from = Vector3D.Rotate(direction * -maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
-                    var to = Vector3D.Rotate(direction * maxCastLength + vecOffset, Grid.WorldMatrix) + gridPos;
-
-                    var result = Grid.RayCastBlocks(from, to);
-                    if (result != null)
-                        visited.Add(result.Value);
-                }
-            }
-
-            double totalRcs = 0;
-            double totalVcs = 0;
-            var globalDirection = Vector3D.Rotate(-direction, Grid.WorldMatrix);
-
-            MyAPIGateway.Parallel.ForEach(visited, hitPos =>
-            {
-                Vector3D from = Vector3D.Transform(hitPos * Grid.GridSize, Grid.WorldMatrix) - direction * maxCastLength;
-                Vector3D to = direction * maxCastLength + from;
-            
-                IHitInfo hitInfo;
-                if (MyAPIGateway.Physics.CastRay(from, to, out hitInfo, 15))
-                {
-                    DebugDraw.AddLine(hitInfo.Position, hitInfo.Position + hitInfo.Normal, Color.Green, 1);
-                    totalVcs += 1;
-                    totalRcs += Math.Abs(Vector3D.Dot(globalDirection, hitInfo.Normal));
-                }
-            });
-
-            totalRcs *= Grid.GridSize * Grid.GridSize;
-            totalVcs *= Grid.GridSize * Grid.GridSize;
-            RadarVisibilityCache.SetValue(index, totalRcs);
-            OpticalVisibilityCache.SetValue(index, totalVcs);
-
-            MyAPIGateway.Utilities.ShowNotification($"Side RCS: {totalRcs:N0} m^2", 1000);
-        }
-
         private Dictionary<Vector3, float> GetGridThrust()
         {
             var thrustCache = new Dictionary<Vector3, float>(6);
@@ -347,8 +358,16 @@ namespace DetectionEquipment.Server.Tracking
         public virtual void CalculateRcs(Vector3D globalDirection, out double radarCrossSection, out double visualCrossSection)
         {
             globalDirection.Normalize();
-            Vector3D localDirection = Vector3D.Rotate(globalDirection, MatrixD.Invert(Grid.WorldMatrix));
+            Vector3 localDirection = Vector3D.Rotate(globalDirection, MatrixD.Invert(Grid.WorldMatrix));
 
+            float rcs, vcs;
+            CalculateRcsLocal(localDirection, out rcs, out vcs);
+            radarCrossSection = rcs;
+            visualCrossSection = vcs;
+        }
+
+        protected virtual void CalculateRcsLocal(Vector3 localDirection, out float radarCrossSection, out float visualCrossSection)
+        {
             // Estimate the max cast size
             Vector3D minCheck, maxCheck;
 
@@ -374,14 +393,16 @@ namespace DetectionEquipment.Server.Tracking
             }
 
 
-            radarCrossSection = totalRcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier;
-            visualCrossSection = totalVcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier;
+            radarCrossSection = (float)(totalRcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier);
+            visualCrossSection = (float)(totalVcs * Grid.GridSize * Grid.GridSize * scaleMultiplier * scaleMultiplier);
 
             // Failsafe for all raycasts missing
             if (radarCrossSection == 0 || visualCrossSection == 0)
             {
-                radarCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Radar) * GlobalData.RcsModifier;
-                visualCrossSection = base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Optical) * GlobalData.VcsModifier;
+                var globalDirection = Vector3D.Rotate(localDirection, Grid.WorldMatrix);
+
+                radarCrossSection = (float) base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Radar) * GlobalData.RcsModifier;
+                visualCrossSection = (float) base.ProjectedArea(Grid.WorldAABB.Center - globalDirection, VisibilityType.Optical) * GlobalData.VcsModifier;
             }
         }
 

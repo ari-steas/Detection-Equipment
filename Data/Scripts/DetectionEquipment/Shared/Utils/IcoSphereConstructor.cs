@@ -99,27 +99,27 @@ namespace DetectionEquipment.Shared.Utils
                     Tris = triangles.ToArray();
             }
 
-            public Vector3[] GenerateNormalArray(Func<Vector3, float> weights)
+            public Vector3[] GenerateVertexSet()
             {
-                Vector3[] normals = new Vector3[Tris.Length];
+                HashSet<Vector3> normals = new HashSet<Vector3>(Tris.Length/3);
 
-                for (int i = 0; i < normals.Length; i++)
+                foreach (var tri in Tris)
                 {
-                    var tri = Tris[i];
-                    Vector3 normal = Vector3.Normalize(tri.V1 + tri.V2 + tri.V3);
-                    normals[i] = normal * weights.Invoke(normal);
+                    normals.Add(tri.V1);
+                    normals.Add(tri.V2);
+                    normals.Add(tri.V3);
                 }
 
-                return normals;
+                return normals.ToArray();
             }
 
-            public void DrawDebug(float scale, Color color, float duration)
+            public void DrawDebug(float scale, MatrixD transform, Color color, float duration)
             {
                 foreach (var tri in Tris)
                 {
-                    DebugDraw.AddLine(scale * tri.V1, scale * tri.V2, color, duration);
-                    DebugDraw.AddLine(scale * tri.V1, scale * tri.V3, color, duration);
-                    DebugDraw.AddLine(scale * tri.V2, scale * tri.V3, color, duration);
+                    DebugDraw.AddLine(Vector3D.Transform(scale * tri.V1, transform), Vector3D.Transform(scale * tri.V2, transform), color, duration);
+                    DebugDraw.AddLine(Vector3D.Transform(scale * tri.V1, transform), Vector3D.Transform(scale * tri.V3, transform), color, duration);
+                    DebugDraw.AddLine(Vector3D.Transform(scale * tri.V2, transform), Vector3D.Transform(scale * tri.V3, transform), color, duration);
                 }
             }
 

@@ -3,9 +3,8 @@ using Sandbox.Game;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
 using System.Linq;
-using Sandbox.ModAPI;
-using VRage.Game.Entity;
-using VRage.Game.ModAPI;
+using DetectionEquipment.Server;
+using DetectionEquipment.Server.Tracking;
 using VRage.ModAPI;
 using VRageMath;
 using RichHudFramework;
@@ -19,31 +18,52 @@ namespace DetectionEquipment.Shared.Utils
         private static object _voxelCastLockObj = new object();
 
         /// <summary>
-        /// Stores cardinal and ordinal directions for performance
+        /// Stores local cross-section cast directions for performance.
         /// </summary>
-        public static Dictionary<Vector3D, double> VisibilityCacheBase = new Dictionary<Vector3D, double>
+        public static Vector3[] VisibilityDirectionCache;
+
+        private static int _prevDivs = -1;
+
+        public static void Load()
         {
-            [Vector3D.Forward] = 0,
-            [Vector3D.Normalize(Vector3D.Forward + Vector3D.Right)] = 0,
-            [Vector3D.Right] = 0,
-            [Vector3D.Normalize(Vector3D.Right + Vector3D.Backward)] = 0,
-            [Vector3D.Backward] = 0,
-            [Vector3D.Normalize(Vector3D.Backward + Vector3D.Left)] = 0,
-            [Vector3D.Left] = 0,
-            [Vector3D.Normalize(Vector3D.Left + Vector3D.Forward)] = 0,
+            UpdateVisibilityCache(GlobalData.CrossSectionDetail.Value);
+        }
 
-            [Vector3D.Normalize(Vector3D.Forward + Vector3D.Up)] = 0,
-            [Vector3D.Up] = 0,
-            [Vector3D.Normalize(Vector3D.Up + Vector3D.Backward)] = 0,
-            [Vector3D.Normalize(Vector3D.Backward + Vector3D.Down)] = 0,
-            [Vector3D.Down] = 0,
-            [Vector3D.Normalize(Vector3D.Down + Vector3D.Forward)] = 0,
+        public static void Unload()
+        {
+            _prevDivs = -1;
+            VisibilityDirectionCache = null;
+        }
 
-            [Vector3D.Normalize(Vector3D.Up + Vector3D.Left)] = 0,
-            [Vector3D.Normalize(Vector3D.Up + Vector3D.Right)] = 0,
-            [Vector3D.Normalize(Vector3D.Down + Vector3D.Left)] = 0,
-            [Vector3D.Normalize(Vector3D.Down + Vector3D.Right)] = 0,
-        };
+        public static void UpdateVisibilityCache(int numDivisions)
+        {
+            if (numDivisions == _prevDivs)
+                return;
+            _prevDivs = numDivisions;
+
+            var icoSphere = new IcoSphereConstructor(numDivisions);
+            VisibilityDirectionCache = icoSphere.Sphere.GenerateVertexSet();
+            Log.Info("TrackingUtils", $"Updated VisibilityDirectionCache for {numDivisions} divisions. New size: {VisibilityDirectionCache.Length}.");
+            
+            if (ServerMain.I == null)
+                return;
+
+            foreach (var track in ServerMain.I.Tracks)
+            {
+                var gT = track.Value as GridTrack;
+                if (gT == null)
+                    continue;
+
+                gT.NeedsRegenerateCache = true;
+
+                if (GlobalData.DebugLevel >= 3)
+                {
+                    var matrix = gT.Grid.WorldMatrix;
+                    matrix.Translation = gT.Grid.WorldAABB.Center;
+                    icoSphere.Sphere.DrawDebug(gT.Grid.LocalAABB.HalfExtents.Length() * gT.Grid.GridSize, matrix, Color.Blue, 30);
+                }
+            }
+        }
 
         public static void MinComponents(ref Vector3D a, Vector3D b)
         {

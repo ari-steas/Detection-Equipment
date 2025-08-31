@@ -63,12 +63,11 @@ namespace DetectionEquipment.Server.Sensors
 
             Vector3D targetBearing = sensor.Position - Position;
             double targetRange = targetBearing.Normalize();
-            double cosAngle = Vector3D.Dot(Direction, targetBearing);
-            double targetAngle = Math.Acos(cosAngle);
+            double targetAngle = Math.Acos(Vector3D.Dot(Direction, targetBearing));
             if (targetAngle > Aperture)
                 return null;
 
-            double signalToNoiseRatio = sensor.SignalRatioAtTarget(Position, Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * cosAngle : Definition.RadarProperties.ReceiverArea);
+            double signalToNoiseRatio = sensor.SignalRatioAtTarget(Position, Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea);
 
             if (signalToNoiseRatio < 0)
                 return null;

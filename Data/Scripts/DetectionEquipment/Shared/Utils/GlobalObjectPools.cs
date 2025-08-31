@@ -28,6 +28,7 @@ namespace DetectionEquipment.Shared.Utils
         /// </summary>
         public static AsyncSharedObjectPool<Dictionary<IMyEntity, ITrack>> TrackSharedPool;
         public static ObjectPool<HashSet<IMyPlayer>> PlayerPool;
+        public static ObjectPool<HashSet<int>> IntPool;
 
         public static void Init()
         {
@@ -50,6 +51,10 @@ namespace DetectionEquipment.Shared.Utils
             PlayerPool = new ObjectPool<HashSet<IMyPlayer>>(
                 () => new HashSet<IMyPlayer>(),
                 startSize: 3
+            );
+            IntPool = new ObjectPool<HashSet<int>>(
+                () => new HashSet<int>(),
+                startSize: 10
             );
 
             if (MyAPIGateway.Session.IsServer)
@@ -84,6 +89,7 @@ namespace DetectionEquipment.Shared.Utils
             DataBroadcasterPool = null;
             DataReceiverPool = null;
             PlayerPool = null;
+            IntPool = null;
         }
     }
 }

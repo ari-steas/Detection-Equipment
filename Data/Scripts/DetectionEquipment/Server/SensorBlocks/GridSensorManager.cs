@@ -307,7 +307,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 Track = track;
                 if (track is GridTrack)
                 {
-                    ((GridTrack)track).CalculateRcs(((GridTrack)track).Grid.WorldAABB.Center - thisGrid.WorldAABB.Center, out RadarVisibility, out OpticalVisibility);
+                    ((GridTrack)track).RadarAndOpticalVisibility(thisGrid.WorldAABB.Center, out RadarVisibility, out OpticalVisibility);
                 }
                 else
                 {

@@ -48,12 +48,8 @@ namespace DetectionEquipment.Server.Sensors
             double targetRange = targetBearing.Normalize();
 
             double targetAngle = 0;
-            double cosAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-            {
-                cosAngle = Vector3D.Dot(Direction, targetBearing);
-                targetAngle = Math.Acos(cosAngle);
-            }
+                targetAngle = Math.Acos(Vector3D.Dot(Direction, targetBearing));
 
             if (targetAngle > Aperture)
                 return null;

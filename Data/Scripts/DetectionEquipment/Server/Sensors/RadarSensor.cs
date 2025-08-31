@@ -9,6 +9,7 @@ using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 using DetectionEquipment.Shared.Helpers;
+using Sandbox.ModAPI;
 
 namespace DetectionEquipment.Server.Sensors
 {
@@ -56,12 +57,9 @@ namespace DetectionEquipment.Server.Sensors
             double targetRange = targetBearing.Normalize();
 
             double targetAngle = 0;
-            double cosAngle = 0;
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
-            {
-                cosAngle = Vector3D.Dot(Direction, targetBearing);
-                targetAngle = Math.Acos(cosAngle);
-            }
+                targetAngle = Math.Acos(Vector3D.Dot(Direction, targetBearing));
+
             if (targetAngle > Aperture)
                 return null;
 
@@ -79,7 +77,7 @@ namespace DetectionEquipment.Server.Sensors
                 // If the aperture is more than 180 degrees, assume that it's a spheroid.
                 double receiverAreaAtAngle = Definition.RadarProperties.ReceiverArea;
                 if (Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle)
-                    receiverAreaAtAngle *= cosAngle;
+                    receiverAreaAtAngle *= Math.Cos(targetAngle);
 
                 //   4 * pi * receiverArea * angleOffsetScalar * outputDensity^3
                 // ---------------------------------------------------------------

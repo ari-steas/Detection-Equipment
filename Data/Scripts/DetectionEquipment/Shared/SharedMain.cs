@@ -42,6 +42,7 @@ namespace DetectionEquipment.Shared
                 DefinitionManager.Load();
                 DatalinkManager.Load();
                 IffHelper.Load();
+                TrackingUtils.Load();
 
                 Log.DecreaseIndent();
                 Log.Info("SharedMain", "Initialized.");
@@ -87,8 +88,9 @@ namespace DetectionEquipment.Shared
             {
                 Log.Info("SharedMain", "Start unload...");
                 Log.IncreaseIndent();
-        
+                
                 ApiManager.Unload();
+                TrackingUtils.Unload();
                 IffHelper.Unload();
                 DatalinkManager.Unload();
                 ControlBlockManager.Unload();

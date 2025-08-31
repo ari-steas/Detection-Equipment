@@ -156,6 +156,14 @@ namespace DetectionEquipment.Shared
             "Multiplier on fatblock (\"functional\" block) RCS for all grids.",
             2f);
 
+        public static IniSetting<int> CrossSectionDetail = new IniSetting<int>(
+            _sensorConfig,
+            "CrossSectionDetail",
+            "Detail level of grid radar and visual cross-sections. Lower values are more performant but less accurate. Scales by 2^n.",
+            3,
+            TrackingUtils.UpdateVisibilityCache
+            );
+
         #endregion
 
         #region External Config
