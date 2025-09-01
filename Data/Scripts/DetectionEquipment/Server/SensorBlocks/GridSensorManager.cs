@@ -177,13 +177,14 @@ namespace DetectionEquipment.Server.SensorBlocks
                     var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
                     if (!_combineBuffer.ContainsKey(topmost))
                         _combineBuffer[topmost] = new List<VisibilitySet>();
-                    _combineBuffer[topmost].Add(new VisibilitySet(Grid, trackKvp.Value));
+                    _combineBuffer[topmost].Add(new VisibilitySet(Grid, gT));
                 }
                 else
                 {
-                    internalVisibility.Add(new VisibilitySet(Grid, trackKvp.Value));
+                    internalVisibility.Add(new VisibilitySet(Grid, gT));
                 }
             }
+
             GlobalObjectPools.TrackSharedPool.Push(tracksBuffer);
 
             foreach (var combineKvp in _combineBuffer)
@@ -353,7 +354,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             public void Update(Vector3D gridPosition)
             {
-                if (_lastUpdate == MyAPIGateway.Session.GameplayFrameCounter)
+                if (_lastUpdate == MyAPIGateway.Session.GameplayFrameCounter || Track == null)
                     return;
 
                 BoundingBox = Track.BoundingBox;
