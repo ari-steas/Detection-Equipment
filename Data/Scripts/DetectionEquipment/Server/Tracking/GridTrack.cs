@@ -373,7 +373,7 @@ namespace DetectionEquipment.Server.Tracking
 
             double maxCastLength = Grid.LocalAABB.HalfExtents.Length();
             double checkArea = CalcCheckArea(localDirection, out minCheck, out maxCheck);
-            int scaleMultiplier = (int) MathUtils.Clamp(Math.Round(Math.Pow(checkArea / 500, 1/3d)), 1, double.MaxValue);
+            int scaleMultiplier = (int) MathUtils.Clamp(Math.Round(Math.Pow(checkArea / (32 * Grid.GridSize * Grid.GridSize * Grid.GridSize), 1/3d)), 1, double.MaxValue);
 
             double totalRcs = 0;
             double totalVcs = 0;
