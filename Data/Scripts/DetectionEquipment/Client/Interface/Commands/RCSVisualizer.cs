@@ -7,6 +7,7 @@ using Sandbox.Game.Replication;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -396,18 +397,26 @@ namespace DetectionEquipment.Client.Interface.Commands
 
             IsJobActive = true;
 
-            int Len = TrackingUtils.CurrentConstructor.Sphere.Tris.Length;
+            
+            int len;
+
+            { // i think this lets the garbage collector eat the icosphere object earlier
+                var icoSphere = new IcoSphereConstructor(GlobalData.CrossSectionDetail.Value);
+                len = icoSphere.Sphere.Tris.Length;
+                SphereTris = new Triangle[len];
+                icoSphere.Sphere.Tris.CopyTo(SphereTris, 0);
+            }
+
+            
             UniquePointCount = TrackingUtils.VisibilityDirectionCache.Length; // going to hope this is always right
-            SphereTris = new Triangle[Len];
-            TrackingUtils.CurrentConstructor.Sphere.Tris.CopyTo(SphereTris, 0);
-            DetectionValues = new Triangle[Len];
+            DetectionValues = new Triangle[len];
 
 
             var attached = new List<IMyCubeGrid>();
             CurrentGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(attached);
 
             MatrixD gridWM = CurrentGrid.WorldMatrix;
-            MyAPIGateway.Parallel.For(0, Len, (i) =>
+            MyAPIGateway.Parallel.For(0, len, (i) =>
             {
                 SphereTris[i] = new Triangle(
                     Vector3D.Rotate(SphereTris[i].V1, gridWM),
@@ -442,7 +451,7 @@ namespace DetectionEquipment.Client.Interface.Commands
 
             bool IsValid = true;
             Dictionary<Vector3, Vector3> CachedPoints = new Dictionary<Vector3, Vector3>();
-            for (int i = 0; i < Len; i++)
+            for (int i = 0; i < len; i++)
             {
                 try
                 {

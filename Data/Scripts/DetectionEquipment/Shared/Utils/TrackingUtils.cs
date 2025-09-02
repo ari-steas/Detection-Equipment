@@ -21,7 +21,6 @@ namespace DetectionEquipment.Shared.Utils
         /// Stores local cross-section cast directions for performance.
         /// </summary>
         public static Vector3[] VisibilityDirectionCache;
-        public static IcoSphereConstructor CurrentConstructor;
 
         private static int _prevDivs = -1;
 
@@ -34,7 +33,6 @@ namespace DetectionEquipment.Shared.Utils
         {
             _prevDivs = -1;
             VisibilityDirectionCache = null;
-            CurrentConstructor = null;
         }
 
         public static void UpdateVisibilityCache(int numDivisions)
@@ -43,8 +41,8 @@ namespace DetectionEquipment.Shared.Utils
                 return;
             _prevDivs = numDivisions;
 
-            CurrentConstructor = new IcoSphereConstructor(numDivisions);
-            VisibilityDirectionCache = CurrentConstructor.Sphere.GenerateVertexSet();
+            var icoSphere = new IcoSphereConstructor(numDivisions);
+            VisibilityDirectionCache = icoSphere.Sphere.GenerateVertexSet();
             Log.Info("TrackingUtils", $"Updated VisibilityDirectionCache for {numDivisions} divisions. New size: {VisibilityDirectionCache.Length}.");
             
             if (ServerMain.I == null)
@@ -62,7 +60,7 @@ namespace DetectionEquipment.Shared.Utils
                 {
                     var matrix = gT.Grid.WorldMatrix;
                     matrix.Translation = gT.Grid.WorldAABB.Center;
-                    CurrentConstructor.Sphere.DrawDebug(gT.Grid.LocalAABB.HalfExtents.Length() * gT.Grid.GridSize, matrix, Color.Blue, 30);
+                    icoSphere.Sphere.DrawDebug(gT.Grid.LocalAABB.HalfExtents.Length() * gT.Grid.GridSize, matrix, Color.Blue, 30);
                 }
             }
         }

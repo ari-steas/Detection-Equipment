@@ -77,7 +77,7 @@ namespace DetectionEquipment.Client.Interface.Commands
                 int.TryParse(args[1], out nDivs);
 
             MyAPIGateway.Utilities.ShowMessage("DetEq", $"Updating visibility cache for {nDivs} divisions.");
-            TrackingUtils.UpdateVisibilityCache(nDivs);
+            GlobalData.CrossSectionDetail.Value = nDivs;
         }
 
         #endregion
