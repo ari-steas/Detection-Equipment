@@ -162,6 +162,31 @@ namespace DetectionEquipment.Shared.Utils
                     collection.Add(new Triangle(V3, v23, v13));
                     collection.Add(new Triangle(v12, v23, v13));
                 }
+
+                public Triangle MultiplyWith(Triangle other, int DirToUse)
+                {
+                    return new Triangle(
+                        V1 * other.V1.GetDim(DirToUse),
+                        V2 * other.V2.GetDim(DirToUse),
+                        V3 * other.V3.GetDim(DirToUse)
+                        );
+                }
+
+                public Vector3 GetVertex(int i)
+                {
+                    switch (i)
+                    {
+                        case 0:
+                            return V1;
+                        case 1:
+                            return V2;
+                        case 2:
+                            return V3;
+                        default:
+                            return GetVertex((i % 3 + 3) % 3);
+
+                    }
+                }
             }
         }
     }

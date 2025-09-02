@@ -57,7 +57,7 @@ namespace DetectionEquipment.Client
                 BlockLogicManager.UpdateAfterSimulation();
                 CountermeasureManager.Update();
                 RcsTool.Update();
-                NerdRCSSphereCalc.Update();
+                RCSVisualizer.Update();
                 ModderNotification.Update();
                 DetectionHud.UpdateAfterSimulation();
             }
@@ -75,7 +75,7 @@ namespace DetectionEquipment.Client
             try
             {
                 DetectionHud.Draw();
-                NerdRCSSphereCalc.Draw();
+                RCSVisualizer.Draw();
             }
             catch (Exception ex)
             {
@@ -97,7 +97,7 @@ namespace DetectionEquipment.Client
                 DetectionHud.Close();
                 WcInteractionManager.Close();
                 RcsTool.Close();
-                NerdRCSSphereCalc.Close();
+                RCSVisualizer.Close();
                 CountermeasureManager.Close();
                 BlockCategoryManager.Close();
                 ClientNetwork.I.UnloadData();
