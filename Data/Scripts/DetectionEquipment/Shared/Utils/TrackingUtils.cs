@@ -296,6 +296,8 @@ namespace DetectionEquipment.Shared.Utils
                     }
                     else if (segementOverlapResult.Element is MyVoxelBase)
                     {
+                        continue;
+
                         //if (segementOverlapResult.Element is MyPlanet)
                         //{
                         //    ((MyPlanet)segementOverlapResult.Element).PrefetchShapeOnRay(ref raycast);
