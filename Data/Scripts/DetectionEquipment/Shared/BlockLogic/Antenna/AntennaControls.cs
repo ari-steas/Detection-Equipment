@@ -1,8 +1,8 @@
-﻿using System.Text;
-using DetectionEquipment.Shared.BlockLogic.GenericControls;
+﻿using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
+using System.Text;
 
 namespace DetectionEquipment.Shared.BlockLogic.Antenna
 {
@@ -14,15 +14,15 @@ namespace DetectionEquipment.Shared.BlockLogic.Antenna
                 "IffCode",
                 "IFF Code",
                 "IFF code returned when a sensor pings this grid",
-                b => new StringBuilder(b.GameLogic.GetAs<IffReflectorBlock>()?.IffCode.Value),
-                (b, v) => b.GameLogic.GetAs<IffReflectorBlock>().IffCode.Value = v?.ToString().RemoveChars(',', '#', '&').Trim()
+                b => new StringBuilder(ControlBlockManager.GetLogic<IffReflectorBlock>(b)?.IffCode.Value),
+                (b, v) => ControlBlockManager.GetLogic<IffReflectorBlock>(b).IffCode.Value = v?.ToString().RemoveChars(',', '#', '&').Trim()
             );
             CreateToggle(
                 "ReturnHash",
                 "Return Hashed IFF Code",
                 "Whether the IFF code should be returned as a hash or a plain string.",
-                b => b.GameLogic.GetAs<IffReflectorBlock>()?.ReturnHash.Value ?? false,
-                (b, v) => b.GameLogic.GetAs<IffReflectorBlock>().ReturnHash.Value = v
+                b => ControlBlockManager.GetLogic<IffReflectorBlock>(b)?.ReturnHash.Value ?? false,
+                (b, v) => ControlBlockManager.GetLogic<IffReflectorBlock>(b).ReturnHash.Value = v
             );
         }
 

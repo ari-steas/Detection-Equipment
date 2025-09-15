@@ -24,8 +24,8 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 "AlwaysDisplay",
                 "Always Display",
                 "Should targets always display, regardless of HUD state?",
-                b => b.GameLogic.GetAs<HudControllerBlock>().AlwaysDisplay.Value,
-                (b, v) => b.GameLogic.GetAs<HudControllerBlock>().AlwaysDisplay.Value = v
+                b => ControlBlockManager.GetLogic<HudControllerBlock>(b).AlwaysDisplay.Value,
+                (b, v) => ControlBlockManager.GetLogic<HudControllerBlock>(b).AlwaysDisplay.Value = v
             );
             //CreateSlider(
             //    "CombineAngle",
@@ -41,8 +41,8 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
                 "DisplaySelf",
                 "Display Self",
                 "Should this grid's track be visible if detected over datalink?",
-                b => b.GameLogic.GetAs<HudControllerBlock>().ShowSelf.Value,
-                (b, v) => b.GameLogic.GetAs<HudControllerBlock>().ShowSelf.Value = v
+                b => ControlBlockManager.GetLogic<HudControllerBlock>(b).ShowSelf.Value,
+                (b, v) => ControlBlockManager.GetLogic<HudControllerBlock>(b).ShowSelf.Value = v
             );
             ActiveAggregatorSelect = new BlockSelectControl<HudControllerBlock, IMyConveyorSorter>(
                 this,

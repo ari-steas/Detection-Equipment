@@ -1,21 +1,21 @@
-﻿using Sandbox.Game.Entities;
+﻿using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Server.Sensors;
+using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.BlockLogic;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.BlockLogic.IffAggregator;
+using DetectionEquipment.Shared.BlockLogic.IffReflector;
+using DetectionEquipment.Shared.Structs;
+using DetectionEquipment.Shared.Utils;
+using Sandbox.Game.Entities;
+using Sandbox.ModAPI.Ingame;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Server.Sensors;
-using DetectionEquipment.Shared;
+using VRage.Scripting.MemorySafeTypes;
 using VRageMath;
-using DetectionEquipment.Shared.BlockLogic.Aggregator;
-
 using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
-using VRage.Scripting.MemorySafeTypes;
-using DetectionEquipment.Shared.Utils;
-using DetectionEquipment.Shared.BlockLogic;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
-using DetectionEquipment.Shared.Structs;
-using Sandbox.ModAPI.Ingame;
 
 namespace DetectionEquipment.Server.PBApi
 {
@@ -186,7 +186,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static bool HasAggregator(IMyCubeBlock block)
         {
-            return ((MyCubeBlock)block).GameLogic.GetAs<AggregatorBlock>() != null;
+            return ControlBlockManager.GetLogic<AggregatorBlock>((MyCubeBlock)block) != null;
         }
         private static float GetAggregatorTime(IMyCubeBlock block)
         {
@@ -309,7 +309,7 @@ namespace DetectionEquipment.Server.PBApi
 
         private static bool HasReflector(IMyCubeBlock block)
         {
-            return ((MyCubeBlock)block).GameLogic.GetAs<IffReflectorBlock>() != null;
+            return ControlBlockManager.GetLogic<IffReflectorBlock>((MyCubeBlock)block) != null;
         }
         private static string GetIffCode(IMyCubeBlock block)
         {

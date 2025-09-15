@@ -68,6 +68,7 @@ namespace DetectionEquipment.Shared
                     GlobalData.UpdatePlayers();
                 }
 
+                ControlBlockManager.I.Update();
                 IffHelper.Update();
                 GlobalObjectPools.Update();
                 Log.Update();

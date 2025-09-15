@@ -1,7 +1,6 @@
 ﻿using DetectionEquipment.Shared.Utils;
 using System;
 using System.Collections.Generic;
-using VRage;
 using VRageMath;
 using static DetectionEquipment.Shared.Definitions.SensorDefinition;
 
@@ -351,6 +350,58 @@ namespace DetectionEquipment.Shared.Definitions
             }
         };
 
+        private static readonly Dictionary<string, ControlBlockDefinition> ControlBlockDefinitions = new Dictionary<string, ControlBlockDefinition>
+        {
+            ["DetEq_Aggregator"] = new ControlBlockDefinition
+            {
+                SubtypeIds = new[]
+                {
+                    "DetectionAggregatorBlock", "DetectionAggregatorBlock_Small"
+                },
+                Type = ControlBlockDefinition.LogicType.Aggregator
+            },
+            ["DetEq_IffAggregator"] = new ControlBlockDefinition
+            {
+                SubtypeIds = new[]
+                {
+                    "DetectionIffAggregatorBlock", "DetectionIffAggregatorBlock_Small"
+                },
+                Type = ControlBlockDefinition.LogicType.IffAggregator
+            },
+            ["DetEq_HudController"] = new ControlBlockDefinition
+            {
+                SubtypeIds = new[]
+                {
+                    "DetectionHudControllerBlock", "DetectionHudControllerBlock_Small"
+                },
+                Type = ControlBlockDefinition.LogicType.HudController
+            },
+            ["DetEq_IffReflector"] = new ControlBlockDefinition
+            {
+                SubtypeIds = new[]
+                {
+                    "IffReflector", "IffReflector_Small", "TorpIFF"
+                },
+                Type = ControlBlockDefinition.LogicType.IffReflector
+            },
+            ["DetEq_Searcher"] = new ControlBlockDefinition
+            {
+                SubtypeIds = new[]
+                {
+                    "DetectionSearchBlock", "DetectionSearchBlock_Small"
+                },
+                Type = ControlBlockDefinition.LogicType.Searcher
+            },
+            ["DetEq_Tracker"] = new ControlBlockDefinition
+            {
+                SubtypeIds = new[]
+                {
+                    "DetectionTrackerBlock", "DetectionTrackerBlock_Small"
+                },
+                Type = ControlBlockDefinition.LogicType.Tracker
+            },
+        };
+
         public static void Register()
         {
             Log.Info("InternalDefinitions", "Registering...");
@@ -387,6 +438,17 @@ namespace DetectionEquipment.Shared.Definitions
                 var delegates = definitionKvp.Value.GenerateDelegates();
                 if (delegates != null)
                     DefinitionManager.DefinitionApi.RegisterDelegates<CountermeasureEmitterDefinition>(definitionKvp.Key, delegates);
+            }
+
+            foreach (var definitionKvp in ControlBlockDefinitions)
+            {
+                if (DefinitionManager.DefinitionApi.HasDefinition<ControlBlockDefinition>(definitionKvp.Key))
+                    continue;
+
+                DefinitionManager.DefinitionApi.RegisterDefinition(definitionKvp.Key, definitionKvp.Value);
+                var delegates = definitionKvp.Value.GenerateDelegates();
+                if (delegates != null)
+                    DefinitionManager.DefinitionApi.RegisterDelegates<ControlBlockDefinition>(definitionKvp.Key, delegates);
             }
 
             Log.DecreaseIndent();

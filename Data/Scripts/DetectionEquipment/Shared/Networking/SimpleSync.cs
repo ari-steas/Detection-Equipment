@@ -2,11 +2,10 @@
 using System.Collections.Generic;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.ModAPI;
-using VRage.Game.Components;
-using VRage.Game.Components.Interfaces;
 
 namespace DetectionEquipment.Shared.Networking
 {
@@ -14,7 +13,7 @@ namespace DetectionEquipment.Shared.Networking
     /// Simple automatic sync class. Similar to MySync, but works with any serializable type.
     /// </summary>
     /// <typeparam name="TValue"></typeparam>
-    public class SimpleSync<TValue> : ISimpleSync
+    internal class SimpleSync<TValue> : ISimpleSync
     {
         /// <summary>
         /// Unique SyncId for this SimpleSync
@@ -27,8 +26,8 @@ namespace DetectionEquipment.Shared.Networking
 
         public Func<TValue, TValue> Validate = null;
 
-        private MyGameLogicComponent _component;
-        public MyGameLogicComponent Component
+        private IControlBlockBase _component;
+        public IControlBlockBase Component
         {
             get
             {
@@ -42,19 +41,19 @@ namespace DetectionEquipment.Shared.Networking
                 if (_component != null)
                 {
                     SimpleSyncManager.UnregisterSync(this);
-                    _component.BeforeRemovedFromContainer -= OnComponentOnBeforeRemovedFromContainer;
+                    _component.OnClose -= OnComponentClosed;
                 }
 
                 _component = value;
-                SimpleSyncManager.RegisterSync(this, _component.Entity.EntityId);
-                _component.BeforeRemovedFromContainer += OnComponentOnBeforeRemovedFromContainer;
+                SimpleSyncManager.RegisterSync(this, _component.CubeBlock.EntityId);
+                _component.OnClose += OnComponentClosed;
 
                 if (MyAPIGateway.Session.IsServer)
                     SendUpdate();
             }
         }
 
-        private void OnComponentOnBeforeRemovedFromContainer(IMyEntityComponentBase comp) => SimpleSyncManager.UnregisterSync(this);
+        private void OnComponentClosed() => SimpleSyncManager.UnregisterSync(this);
 
         private TValue _value;
 
@@ -106,7 +105,7 @@ namespace DetectionEquipment.Shared.Networking
                 Contents = MyAPIGateway.Utilities.SerializeToBinary(_value)
             };
             if (MyAPIGateway.Session.IsServer)
-                ServerNetwork.SendToEveryoneInSync(packet, Component.Entity.GetPosition());
+                ServerNetwork.SendToEveryoneInSync(packet, Component.CubeBlock.GetPosition());
             else
                 ClientNetwork.SendToServer(packet);
         }
@@ -191,7 +190,7 @@ namespace DetectionEquipment.Shared.Networking
     internal interface ISimpleSync
     {
         long SyncId { get; set; }
-        MyGameLogicComponent Component { get; }
+        IControlBlockBase Component { get; }
         void UpdateFromNetwork(byte[] data);
     }
 }

@@ -40,9 +40,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Interval over which detections should be aggregated.",
                 1/60f,
                 15,
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.AggregationTime,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().AggregationTime.Value = (float) Math.Round(v*60)/60,
-                (b, sb) => sb.Append(b.GameLogic.GetAs<AggregatorBlock>().AggregationTime.Value.ToString("F1") + "s")
+                b => ControlBlockManager.GetLogic<AggregatorBlock>(b)?.AggregationTime,
+                (b, v) => ControlBlockManager.GetLogic<AggregatorBlock>(b).AggregationTime.Value = (float) Math.Round(v*60)/60,
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<AggregatorBlock>(b).AggregationTime.Value.ToString("F1") + "s")
                 );
             CreateSlider(
                 "VelocityError",
@@ -50,18 +50,18 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Maximum velocity variation at which to incorporate into position estimate.",
                 0,
                 100,
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.VelocityErrorThreshold,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().VelocityErrorThreshold.Value = v,
-                (b, sb) => sb.Append("R^2 = " + b.GameLogic.GetAs<AggregatorBlock>().VelocityErrorThreshold.Value.ToString("F1"))
+                b => ControlBlockManager.GetLogic<AggregatorBlock>(b)?.VelocityErrorThreshold,
+                (b, v) => ControlBlockManager.GetLogic<AggregatorBlock>(b).VelocityErrorThreshold.Value = v,
+                (b, sb) => sb.Append("R^2 = " + ControlBlockManager.GetLogic<AggregatorBlock>(b).VelocityErrorThreshold.Value.ToString("F1"))
                 );
             CreateToggle(
                 "UseAllSensors",
                 "Use All Grid Sensors",
                 "Whether the aggregator should use data from all sensors on the grid.",
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.UseAllSensors,
+                b => ControlBlockManager.GetLogic<AggregatorBlock>(b)?.UseAllSensors,
                 (b, v) =>
                 {
-                    b.GameLogic.GetAs<AggregatorBlock>().UseAllSensors.Value = v;
+                    ControlBlockManager.GetLogic<AggregatorBlock>(b).UseAllSensors.Value = v;
                     ActiveSensorSelect.ListBox.UpdateVisual();
                 });
 
@@ -114,7 +114,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     }
                 }
                 );
-            ActiveSensorSelect.ListBox.Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllSensors ?? true);
+            ActiveSensorSelect.ListBox.Enabled = b => !(ControlBlockManager.GetLogic<AggregatorBlock>(b)?.UseAllSensors ?? true);
 
             CreateSeperator("DatalinkSeparator");
             CreateLabel(
@@ -127,9 +127,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Relations to read DataLink input from.",
                 0,
                 3,
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.DatalinkInShareType,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().DatalinkInShareType.Value = (int)Math.Round(v),
-                (b, sb) => sb.Append((AggregatorBlock.ShareType)b.GameLogic.GetAs<AggregatorBlock>().DatalinkInShareType.Value)
+                b => ControlBlockManager.GetLogic<AggregatorBlock>(b)?.DatalinkInShareType,
+                (b, v) => ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkInShareType.Value = (int)Math.Round(v),
+                (b, sb) => sb.Append((AggregatorBlock.ShareType)ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkInShareType.Value)
                 );
             CreateSlider(
                 "DatalinkChannel",
@@ -137,9 +137,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "Datalink channel ID this aggregator should broadcast on. Set to -1 to disable.",
                 -1,
                 8,
-                b => b.GameLogic.GetAs<AggregatorBlock>()?.DatalinkOutChannel,
-                (b, v) => b.GameLogic.GetAs<AggregatorBlock>().DatalinkOutChannel.Value = (int)v,
-                (b, sb) => sb.Append("ID: " + b.GameLogic.GetAs<AggregatorBlock>().DatalinkOutChannel.Value.ToString("N0"))
+                b => ControlBlockManager.GetLogic<AggregatorBlock>(b)?.DatalinkOutChannel,
+                (b, v) => ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkOutChannel.Value = (int)v,
+                (b, sb) => sb.Append("ID: " + ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkOutChannel.Value.ToString("N0"))
                 );
 
             CreateListbox(
@@ -149,7 +149,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 true,
                 (block, content, selected) =>
                 {
-                    var logic = block.GameLogic.GetAs<AggregatorBlock>();
+                    var logic = ControlBlockManager.GetLogic<AggregatorBlock>(block);
                     var activeChannels = DatalinkManager.GetActiveDatalinkChannels(block.CubeGrid, block.OwnerId);
 
                     var nullItem = new MyTerminalControlListBoxItem(MyStringId.NullOrEmpty, MyStringId.NullOrEmpty, null);
@@ -174,7 +174,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 },
                 (block, selected) =>
                 {
-                    var logic = block.GameLogic.GetAs<AggregatorBlock>();
+                    var logic = ControlBlockManager.GetLogic<AggregatorBlock>(block);
 
                     logic.DatalinkInChannels = selected.Where(item => item.UserData != null).Select(item => (int)item.UserData).ToArray();
                 }
@@ -200,17 +200,17 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 "WcDoTargetingToggle",
                 "Contribute Targeting Data",
                 "Whether this aggregator should give targeting data to weapons. Pulls from datalink.",
-                block => block.GameLogic.GetAs<AggregatorBlock>().DoWcTargeting.Value,
-                (block, value) => block.GameLogic.GetAs<AggregatorBlock>().DoWcTargeting.Value = value
+                block => ControlBlockManager.GetLogic<AggregatorBlock>(block).DoWcTargeting.Value,
+                (block, value) => ControlBlockManager.GetLogic<AggregatorBlock>(block).DoWcTargeting.Value = value
                 );
             CreateToggle(
                 "WcUseAllWeapons",
                 "Contribute to All Weapons",
                 "Whether this aggregator should give targeting data to all grid weapons, or only selected.",
-                block => block.GameLogic.GetAs<AggregatorBlock>().UseAllWeapons.Value,
+                block => ControlBlockManager.GetLogic<AggregatorBlock>(block).UseAllWeapons.Value,
                 (block, value) =>
                 {
-                    block.GameLogic.GetAs<AggregatorBlock>().UseAllWeapons.Value = value;
+                    ControlBlockManager.GetLogic<AggregatorBlock>(block).UseAllWeapons.Value = value;
                     ActiveWeaponSelect.ListBox.UpdateVisual();
                 });
             ActiveWeaponSelect = new BlockSelectControl<AggregatorBlock, IMyConveyorSorter>(
@@ -242,7 +242,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                         ActiveWeapons[logic].Add((IMyTerminalBlock) block);
                 }
             );
-            ActiveWeaponSelect.ListBox.Enabled = b => !(b.GameLogic.GetAs<AggregatorBlock>()?.UseAllWeapons.Value ?? true);
+            ActiveWeaponSelect.ListBox.Enabled = b => !(ControlBlockManager.GetLogic<AggregatorBlock>(b)?.UseAllWeapons.Value ?? true);
         }
     }
 }

@@ -1,6 +1,5 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.Structs;
-using Sandbox.Common.ObjectBuilders;
 using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
@@ -10,26 +9,22 @@ using DetectionEquipment.Client.BlockLogic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
-using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using VRage.Game;
-using VRage.Game.Components;
 using VRage.Game.Entity;
 using VRage.ModAPI;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using Sandbox.ModAPI.Ingame;
 using VRage.Game.ModAPI;
-using VRage.Scripting;
-using VRageMath;
 using IMyConveyorSorter = Sandbox.ModAPI.IMyConveyorSorter;
+using IMyFunctionalBlock = Sandbox.ModAPI.IMyFunctionalBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionAggregatorBlock", "DetectionAggregatorBlock_Small")]
     internal partial class AggregatorBlock : ControlBlockBase<IMyConveyorSorter>
     {
         public readonly SimpleSync<float> AggregationTime = new SimpleSync<float>(1);
@@ -190,9 +185,13 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             }
         }
 
-        public override void UpdateOnceBeforeFrame()
+        public AggregatorBlock(IMyFunctionalBlock block) : base(block)
         {
-            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
+        }
+
+        public override void Init()
+        {
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
             AggregationTime.Component = this;
@@ -208,18 +207,15 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             DoWcTargeting.Component = this;
             UseAllWeapons.Component = this;
 
-            base.UpdateOnceBeforeFrame();
-            NeedsUpdate |= MyEntityUpdateEnum.EACH_10TH_FRAME;
+            base.Init();
 
             DatalinkManager.RegisterAggregator(this, DatalinkOutChannel.Value, _prevDatalinkOutChannel);
             _prevDatalinkOutChannel = DatalinkOutChannel.Value;
         }
 
-        public override void MarkForClose()
+        public override void MarkForClose(IMyEntity entity)
         {
-            if (GlobalData.Killswitch)
-                return;
-            base.MarkForClose();
+            base.MarkForClose(entity);
             DetectionCache.Clear();
             _parallelCache.Clear();
 
@@ -230,7 +226,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         private readonly List<WorldDetectionInfo[]> _parallelCache = new List<WorldDetectionInfo[]>();
         public override void UpdateAfterSimulation()
         {
-            if (!MyAPIGateway.Session.IsServer || GlobalData.Killswitch)
+            if (!MyAPIGateway.Session.IsServer)
                 return;
 
             if (!Block.IsWorking)
@@ -295,8 +291,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         public override void UpdateAfterSimulation10()
         {
-            if (GlobalData.Killswitch)
-                return;
             // This method is pretty slow, let's not call it often.
             _bufferVisibleAggregators = DatalinkManager.GetActiveDatalinkChannels(Block.CubeGrid, Block.OwnerId);
         }
@@ -329,7 +323,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 if (fromServer && MyAPIGateway.Session.IsServer)
                     return;
 
-                var block = MyAPIGateway.Entities.GetEntityById(_blockId)?.GameLogic?.GetAs<AggregatorBlock>();
+                var block = ControlBlockManager.GetLogic<AggregatorBlock>(MyAPIGateway.Entities.GetEntityById(_blockId) as IMyCubeBlock);
                 if (block == null)
                     return;
                 block._datalinkInChannels = _datalinkInChannels;

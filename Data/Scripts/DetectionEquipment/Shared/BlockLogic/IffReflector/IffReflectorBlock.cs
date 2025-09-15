@@ -1,15 +1,13 @@
-﻿using Sandbox.Common.ObjectBuilders;
-using Sandbox.ModAPI;
+﻿using Sandbox.ModAPI;
 using DetectionEquipment.Shared.Networking;
-using VRage.Game.Components;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Utils;
+using VRage.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "IffReflector", "IffReflector_Small", "TorpIFF")]
     internal class IffReflectorBlock : ControlBlockBase<IMyFunctionalBlock>
     {
         public readonly SimpleSync<string> IffCode = new SimpleSync<string>("NOCODE");
@@ -23,9 +21,13 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
         protected override ControlBlockSettingsBase GetSettings => new IffReflectorSettings(this);
         protected override ITerminalControlAdder GetControls => new IffControls();
 
-        public override void UpdateOnceBeforeFrame()
+        public IffReflectorBlock(IMyFunctionalBlock block) : base(block)
         {
-            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
+        }
+
+        public override void Init()
+        {
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
             IffCode.Value = DefaultCode;
@@ -46,16 +48,14 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             };
 
             IffCode.OnValueChanged.Invoke(IffCode.Value, false);
-            base.UpdateOnceBeforeFrame();
+            base.Init();
 
             IffHelper.RegisterComponent(Block.CubeGrid, this);
         }
 
-        public override void MarkForClose()
+        public override void MarkForClose(IMyEntity entity)
         {
-            base.MarkForClose();
-            if (GlobalData.Killswitch)
-                return;
+            base.MarkForClose(entity);
 
             IffHelper.RemoveComponent(Block.CubeGrid, this);
         }

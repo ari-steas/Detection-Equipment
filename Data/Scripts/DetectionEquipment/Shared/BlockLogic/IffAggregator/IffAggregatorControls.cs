@@ -22,15 +22,15 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
                 "AutoSelfIff",
                 "Auto-add Grid IFF",
                 "Should IFF codes in reflectors on this grid be marked as friendly?",
-                b => b.GameLogic.GetAs<IffAggregatorBlock>()?.AutoSelfIff.Value ?? false,
-                (b, v) => b.GameLogic.GetAs<IffAggregatorBlock>().AutoSelfIff.Value = v
+                b => ControlBlockManager.GetLogic<IffAggregatorBlock>(b)?.AutoSelfIff.Value ?? false,
+                (b, v) => ControlBlockManager.GetLogic<IffAggregatorBlock>(b).AutoSelfIff.Value = v
             );
             CreateTextbox(
                 "FriendlyIffCodes",
                 "Friendly IFF Codes",
                 "Known friendly IFF codes, comma-separated.",
-                b => new StringBuilder(string.Join(",", b.GameLogic.GetAs<IffAggregatorBlock>()?.FriendlyIffCodes.Value ?? Array.Empty<string>())),
-                (b, v) => b.GameLogic.GetAs<IffAggregatorBlock>().FriendlyIffCodes.Value = v.ToString().Split(',').Select(code => code.Trim()).ToArray()
+                b => new StringBuilder(string.Join(",", ControlBlockManager.GetLogic<IffAggregatorBlock>(b)?.FriendlyIffCodes.Value ?? Array.Empty<string>())),
+                (b, v) => ControlBlockManager.GetLogic<IffAggregatorBlock>(b).FriendlyIffCodes.Value = v.ToString().Split(',').Select(code => code.Trim()).ToArray()
             );
         }
 

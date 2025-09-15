@@ -2,16 +2,13 @@
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
-using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using VRage.Game.Components;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Search
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionSearchBlock", "DetectionSearchBlock_Small")]
     internal class SearchBlock : ControlBlockBase<IMyConveyorSorter>
     {
         internal HashSet<BlockSensor> ControlledSensors => SearchControls.ActiveSensors[this];
@@ -24,20 +21,24 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
         protected override ITerminalControlAdder GetControls => new SearchControls();
         private static readonly Vector2 InvMainAxis = new Vector2(-1, 1), InvOffAxis = new Vector2(1, -1);
 
-        public override void UpdateOnceBeforeFrame()
+        public SearchBlock(IMyFunctionalBlock block) : base(block)
         {
-            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
+        }
+
+        public override void Init()
+        {
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
             SearchMode.Component = this;
             InvertAllowControl.Component = this;
 
-            base.UpdateOnceBeforeFrame();
+            base.Init();
         }
 
         public override void UpdateAfterSimulation()
         {
-            if (!MyAPIGateway.Session.IsServer || !Block.IsWorking || GlobalData.Killswitch)
+            if (!MyAPIGateway.Session.IsServer || !Block.IsWorking)
                 return;
 
             foreach (var sensor in ControlledSensors)

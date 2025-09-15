@@ -1,10 +1,8 @@
-﻿using Sandbox.Common.ObjectBuilders;
-using Sandbox.ModAPI;
+﻿using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
-using VRage.Game.Components;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
@@ -14,11 +12,10 @@ using VRageMath;
 using MyAPIGateway = Sandbox.ModAPI.MyAPIGateway;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 
 namespace DetectionEquipment.Shared.BlockLogic.HudController
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionHudControllerBlock", "DetectionHudControllerBlock_Small")]
-    // ReSharper disable once ClassNeverInstantiated.Global
     internal class HudControllerBlock : ControlBlockBase<IMyConveyorSorter>
     {
         // DisplayNearby?
@@ -34,20 +31,24 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         protected override ControlBlockSettingsBase GetSettings => new HudControllerSettings(this);
         protected override ITerminalControlAdder GetControls => new HudControllerControls();
 
-        public override void UpdateOnceBeforeFrame()
+        public HudControllerBlock(IMyFunctionalBlock block) : base(block)
         {
-            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
+        }
+
+        public override void Init()
+        {
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
             AlwaysDisplay.Component = this;
             CombineAngle.Component = this;
 
-            base.UpdateOnceBeforeFrame();
+            base.Init();
         }
 
         public override void UpdateAfterSimulation()
         {
-            if (!Block.IsWorking || GlobalData.Killswitch)
+            if (!Block.IsWorking)
                 return;
 
             try
@@ -132,11 +133,9 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
             }
         }
 
-        public override void MarkForClose()
+        public override void MarkForClose(IMyEntity entity)
         {
-            if (GlobalData.Killswitch)
-                return;
-            base.MarkForClose();
+            base.MarkForClose(entity);
             HudControllerControls.ActiveAggregators.Remove(this);
         }
 
@@ -160,7 +159,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
             {
                 if (MyAPIGateway.Session.IsServer && fromServer)
                     return;
-                var controller = MyAPIGateway.Entities.GetEntityById(_thisBlockId)?.GameLogic?.GetAs<HudControllerBlock>();
+                var controller = ControlBlockManager.GetLogic<HudControllerBlock>((IMyCubeBlock) MyAPIGateway.Entities.GetEntityById(_thisBlockId));
                 if (controller == null)
                     return;
 

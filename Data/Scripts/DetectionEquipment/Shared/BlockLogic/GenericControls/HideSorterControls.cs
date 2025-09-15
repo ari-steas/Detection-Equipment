@@ -26,8 +26,8 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             Log.Info("HideSorterControls", "Removed sorter controls.");
         }
 
-        static bool HasNoLogic(IMyTerminalBlock block) => block == null || (block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic());
-        static bool HasNoLogicOrInventory(IMyTerminalBlock block) => block == null || ((block.GameLogic?.GetAs<IControlBlockBase>() == null && !block.HasLogic()) || block.GetInventory()?.MaxVolume > 0);
+        static bool HasNoLogic(IMyTerminalBlock block) => block == null || (ControlBlockManager.GetLogic<IControlBlockBase>(block) == null && !block.HasLogic());
+        static bool HasNoLogicOrInventory(IMyTerminalBlock block) => block == null || ((ControlBlockManager.GetLogic<IControlBlockBase>(block) == null && !block.HasLogic()) || block.GetInventory()?.MaxVolume > 0);
 
         static void EditControls()
         {

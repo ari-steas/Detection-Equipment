@@ -32,12 +32,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 "Search Mode",
                 b =>
                 {
-                    var mode = b.GameLogic.GetAs<SearchBlock>().SearchMode;
+                    var mode = ControlBlockManager.GetLogic<SearchBlock>(b).SearchMode;
                     mode.Value = (int)mode.Value == Enum.GetNames(typeof(SearchBlock.SearchModes)).Length - 1
                         ? 0
                         : mode.Value + 1;
                 },
-                (b, sb) => sb.Append(b.GameLogic.GetAs<SearchBlock>().SearchMode.Value.ToString()),
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<SearchBlock>(b).SearchMode.Value.ToString()),
                 @"Textures\GUI\Icons\Actions\SubsystemTargeting_Cycle.dds"
             );
         }
@@ -60,8 +60,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                         });
                     }
                 },
-                b => (long) b.GameLogic.GetAs<SearchBlock>().SearchMode.Value,
-                (b, selected) => b.GameLogic.GetAs<SearchBlock>().SearchMode.Value = (SearchBlock.SearchModes) selected
+                b => (long) ControlBlockManager.GetLogic<SearchBlock>(b).SearchMode.Value,
+                (b, selected) => ControlBlockManager.GetLogic<SearchBlock>(b).SearchMode.Value = (SearchBlock.SearchModes) selected
             );
 
             ActiveSensorSelect = new BlockSelectControl<SearchBlock, IMyConveyorSorter>(
@@ -99,8 +99,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 "InvertAllowControl",
                 "Invert Allow Control",
                 "If enabled, this block inverts \"Allow Mechanical Control\" on sensors.",
-                b => b.GameLogic.GetAs<SearchBlock>().InvertAllowControl.Value,
-                (b, selected) => b.GameLogic.GetAs<SearchBlock>().InvertAllowControl.Value = selected
+                b => ControlBlockManager.GetLogic<SearchBlock>(b).InvertAllowControl.Value,
+                (b, selected) => ControlBlockManager.GetLogic<SearchBlock>(b).InvertAllowControl.Value = selected
             );
         }
 

@@ -2,19 +2,15 @@
 using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.Structs;
-using Sandbox.Common.ObjectBuilders;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Shared.Networking;
-using VRage.Game.Components;
-using VRageMath;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false, "DetectionTrackerBlock", "DetectionTrackerBlock_Small")]
     internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>
     {
         internal AggregatorBlock SourceAggregator
@@ -49,18 +45,22 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         protected override ControlBlockSettingsBase GetSettings => new TrackerSettings(this);
         protected override ITerminalControlAdder GetControls => new TrackerControls();
 
-        public override void UpdateOnceBeforeFrame()
+        public TrackerBlock(IMyFunctionalBlock block) : base(block)
         {
-            if (Block?.CubeGrid?.Physics == null || GlobalData.Killswitch) // ignore projected and other non-physical grids
+        }
+
+        public override void Init()
+        {
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
             ResetAngleTime.Component = this;
             InvertAllowControl.Component = this;
-            base.UpdateOnceBeforeFrame();
+            base.Init();
         }
 
         public override void UpdateAfterSimulation()
         {
-            if (!MyAPIGateway.Session.IsServer || GlobalData.Killswitch)
+            if (!MyAPIGateway.Session.IsServer)
                 return;
 
             try

@@ -13,6 +13,7 @@ using Sandbox.ModAPI;
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Shared.BlockLogic;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
@@ -251,7 +252,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     }
                 }
 
-                var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
+                var aggregator = ControlBlockManager.GetLogic<AggregatorBlock>(cubeBlock);
                 if (aggregator != null)
                 {
                     _aggregators.Add(aggregator);
@@ -275,7 +276,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
                     _hasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
 
-                    var aggregator = cubeBlock.GameLogic?.GetAs<AggregatorBlock>();
+                    var aggregator = ControlBlockManager.GetLogic<AggregatorBlock>(cubeBlock);
                     if (aggregator != null)
                     {
                         _aggregators.Remove(aggregator);

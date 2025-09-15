@@ -1,19 +1,17 @@
 ﻿using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Networking;
-using DetectionEquipment.Shared.Utils;
 using ProtoBuf;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using System;
 using System.Collections.Generic;
-using VRage.Game.Components;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
-using static DetectionEquipment.Client.BlockLogic.Sensors.SensorUpdatePacket;
 
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
@@ -28,7 +26,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
     /// <typeparam name="TLogicType"></typeparam>
     /// <typeparam name="TBlockType"></typeparam>
     internal class BlockSelectControl<TLogicType, TBlockType> : IBlockSelectControl
-        where TLogicType : MyGameLogicComponent, IControlBlockBase
+        where TLogicType : class, IControlBlockBase
         where TBlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
         public readonly Dictionary<TLogicType, long[]> SelectedBlocks = new Dictionary<TLogicType, long[]>();
@@ -148,7 +146,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
         private void GetContent(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> content, List<MyTerminalControlListBoxItem> selected)
         {
-            var logic = block.GameLogic.GetAs<TLogicType>();
+            var logic = ControlBlockManager.GetLogic<TLogicType>(block);
             if (logic == null)
                 return;
 
@@ -170,7 +168,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 
         private void OnSelect(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> selected)
         {
-            var logic = block.GameLogic.GetAs<TLogicType>();
+            var logic = ControlBlockManager.GetLogic<TLogicType>(block);
             if (logic == null)
                 return;
             var array = new long[selected.Count];

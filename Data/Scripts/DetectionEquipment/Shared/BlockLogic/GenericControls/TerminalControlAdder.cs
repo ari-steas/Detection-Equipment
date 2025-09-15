@@ -4,7 +4,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Text;
 using VRage.Utils;
-using VRage.Game.Components;
 using System.Collections.Generic;
 using VRage.ModAPI;
 using DetectionEquipment.Shared.Utils;
@@ -12,10 +11,10 @@ using DetectionEquipment.Shared.Utils;
 namespace DetectionEquipment.Shared.BlockLogic.GenericControls
 {
     internal abstract class TerminalControlAdder<TLogicType, TBlockType> : TerminalControlAdder<TBlockType>, ITerminalControlAdder
-        where TLogicType : MyGameLogicComponent, IControlBlockBase
+        where TLogicType : class, IControlBlockBase
         where TBlockType : IMyTerminalBlock, IMyFunctionalBlock
     {
-        protected override Func<IMyTerminalBlock, bool> VisibleFunc => block => block.GameLogic.GetAs<TLogicType>() != null;
+        protected override Func<IMyTerminalBlock, bool> VisibleFunc => block => ControlBlockManager.GetLogic<TLogicType>(block) != null;
         public override string IdPrefix => typeof(TLogicType).Name + "_";
 
         public virtual void DoOnce(IControlBlockBase thisLogic)

@@ -35,9 +35,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 "How long sensors should attempt to track a lost target.",
                 0,
                 10,
-                b => b.GameLogic.GetAs<TrackerBlock>()?.ResetAngleTime,
-                (b, v) => b.GameLogic.GetAs<TrackerBlock>().ResetAngleTime.Value = v,
-                (b, sb) => sb?.Append(b?.GameLogic?.GetAs<TrackerBlock>()?.ResetAngleTime?.Value.ToString("F1") + "s")
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b)?.ResetAngleTime,
+                (b, v) => ControlBlockManager.GetLogic<TrackerBlock>(b).ResetAngleTime.Value = v,
+                (b, sb) => sb?.Append(ControlBlockManager.GetLogic<TrackerBlock>(b)?.ResetAngleTime?.Value.ToString("F1") + "s")
                 );
 
             ActiveSensorSelect = new BlockSelectControl<TrackerBlock, IMyConveyorSorter>(
@@ -93,8 +93,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 "InvertAllowControl",
                 "Invert Allow Control",
                 "If enabled, this block inverts \"Allow Mechanical Control\" on sensors.",
-                b => b.GameLogic.GetAs<TrackerBlock>().InvertAllowControl.Value,
-                (b, selected) => b.GameLogic.GetAs<TrackerBlock>().InvertAllowControl.Value = selected
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b).InvertAllowControl.Value,
+                (b, selected) => ControlBlockManager.GetLogic<TrackerBlock>(b).InvertAllowControl.Value = selected
             );
         }
 

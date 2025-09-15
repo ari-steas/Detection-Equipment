@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Runtime.Serialization;
+﻿using System.Collections.Generic;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.Definitions;
-using Sandbox.Game.Gui;
-using Sandbox.ModAPI;
 using VRage.Game;
-using VRage.Utils;
 
 namespace DetectionEquipment.Client.Interface
 {
@@ -49,6 +44,12 @@ namespace DetectionEquipment.Client.Interface
         public static void RegisterFromDefinition(CountermeasureEmitterDefinition definition)
         {
             foreach (var subtype in definition.BlockSubtypes)
+                RegisterFromSubtype(subtype);
+        }
+
+        public static void RegisterFromDefinition(ControlBlockDefinition definition)
+        {
+            foreach (var subtype in definition.SubtypeIds)
                 RegisterFromSubtype(subtype);
         }
 

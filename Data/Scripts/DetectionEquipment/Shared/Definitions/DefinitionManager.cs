@@ -3,12 +3,18 @@ using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using DetectionEquipment.Server;
 using DetectionEquipment.Server.Countermeasures;
 using VRage.Game.ModAPI;
 using DetectionEquipment.Server.Networking;
-using VRageRender;
+using DetectionEquipment.Shared.BlockLogic;
+using DetectionEquipment.Shared.BlockLogic.Aggregator;
+using DetectionEquipment.Shared.BlockLogic.Antenna;
+using DetectionEquipment.Shared.BlockLogic.HudController;
+using DetectionEquipment.Shared.BlockLogic.IffAggregator;
+using DetectionEquipment.Shared.BlockLogic.IffReflector;
+using DetectionEquipment.Shared.BlockLogic.Search;
+using DetectionEquipment.Shared.BlockLogic.Tracker;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -19,6 +25,7 @@ namespace DetectionEquipment.Shared.Definitions
         private static readonly Dictionary<int, SensorDefinition> SensorDefinitions = new Dictionary<int, SensorDefinition>();
         private static readonly Dictionary<int, CountermeasureDefinition> CountermeasureDefinitions = new Dictionary<int, CountermeasureDefinition>();
         private static readonly Dictionary<int, CountermeasureEmitterDefinition> CountermeasureEmitterDefinitions = new Dictionary<int, CountermeasureEmitterDefinition>();
+        private static readonly Dictionary<int, ControlBlockDefinition> ControlBlockDefinitions = new Dictionary<int, ControlBlockDefinition>();
 
         private static bool _hasShownApiFailMsg = false;
         private static int _apiFailCheckCount = 0;
@@ -72,6 +79,10 @@ namespace DetectionEquipment.Shared.Definitions
             foreach (string definitionId in DefinitionApi.GetDefinitionsOfType<CountermeasureEmitterDefinition>())
                 OnCountermeasureEmitterDefinitionUpdate(definitionId, 0);
 
+            DefinitionApi.RegisterOnUpdate<ControlBlockDefinition>(OnControlBlockDefinitionUpdate);
+            foreach (string definitionId in DefinitionApi.GetDefinitionsOfType<ControlBlockDefinition>())
+                OnControlBlockDefinitionUpdate(definitionId, 0);
+
             InternalDefinitions.Register();
 
             Log.DecreaseIndent();
@@ -82,6 +93,7 @@ namespace DetectionEquipment.Shared.Definitions
             DefinitionApi.UnregisterOnUpdate<SensorDefinition>(OnSensorDefinitionUpdate);
             DefinitionApi.UnregisterOnUpdate<CountermeasureDefinition>(OnCountermeasureDefinitionUpdate);
             DefinitionApi.UnregisterOnUpdate<CountermeasureEmitterDefinition>(OnCountermeasureEmitterDefinitionUpdate);
+            DefinitionApi.UnregisterOnUpdate<ControlBlockDefinition>(OnControlBlockDefinitionUpdate);
 
             DefinitionApi.UnloadData();
             DefinitionApi = null;
@@ -191,6 +203,41 @@ namespace DetectionEquipment.Shared.Definitions
             }
         }
 
+        private static void OnControlBlockDefinitionUpdate(string definitionId, int updateType)
+        {
+            try
+            {
+                // We're caching data because getting it from the API is inefficient.
+                switch (updateType)
+                {
+                    case 0:
+                        ControlBlockDefinition definition;
+                        if (!InitAndVerify(definitionId, out definition))
+                            return;
+
+                        ControlBlockDefinitions[definition.Id] = definition;
+                        if (!MyAPIGateway.Utilities.IsDedicated)
+                            Client.Interface.BlockCategoryManager.RegisterFromDefinition(definition);
+
+                        Log.Info("DefinitionManager", $"Registered new control block definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new
+                        break;
+                    case 1:
+                        ControlBlockDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing
+                        Log.Info("DefinitionManager", "Unregistered control block definition " + definitionId);
+                        break;
+                    case 2:
+                        // Live methods
+                        ControlBlockDefinitions[definitionId.GetHashCode()].RetrieveDelegates<ControlBlockDefinition>();
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Exception("DefinitionManager", ex);
+            }
+        }
+
+
         private static bool InitAndVerify<TDefinition>(string definitionId, out TDefinition definition) where TDefinition : DefinitionBase
         {
             definition = DefinitionApi.GetDefinition<TDefinition>(definitionId);
@@ -290,6 +337,56 @@ namespace DetectionEquipment.Shared.Definitions
             }
 
             return emitters;
+        }
+
+        public static IControlBlockBase TryCreateControlBlock(IMyFunctionalBlock block)
+        {
+            IControlBlockBase logic = null;
+
+            if (block is IMyRadioAntenna)
+                logic = new AntennaBlock(block);
+            else if (block is IMyBeacon)
+                logic = new BeaconBlock(block);
+            else
+            {
+                foreach (var definition in ControlBlockDefinitions.Values)
+                {
+                    if (!definition.SubtypeIds.Contains(block.BlockDefinition.SubtypeName))
+                        continue;
+                    switch (definition.Type)
+                    {
+                        case ControlBlockDefinition.LogicType.Aggregator:
+                            logic = new AggregatorBlock(block);
+                            break;
+                        case ControlBlockDefinition.LogicType.IffAggregator:
+                            logic = new IffAggregatorBlock(block);
+                            break;
+                        case ControlBlockDefinition.LogicType.HudController:
+                            logic = new HudControllerBlock(block);
+                            break;
+                        case ControlBlockDefinition.LogicType.IffReflector:
+                            logic = new IffReflectorBlock(block);
+                            break;
+                        case ControlBlockDefinition.LogicType.Searcher:
+                            logic = new SearchBlock(block);
+                            break;
+                        case ControlBlockDefinition.LogicType.Tracker:
+                            logic = new TrackerBlock(block);
+                            break;
+                        default:
+                            Log.Info("DefinitionManager", $"Invalid control block type {definition.Type}");
+                            break;
+                    }
+
+                    break;
+                }
+            }
+
+            if (logic == null)
+                return null;
+
+            ControlBlockManager.I.Register(block, logic);
+            return logic;
         }
 
         public static List<SensorDefinition> GetSensorDefinitions(IMyCubeBlock block)
