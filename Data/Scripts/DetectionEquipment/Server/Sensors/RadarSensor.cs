@@ -45,13 +45,20 @@ namespace DetectionEquipment.Server.Sensors
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
         public double CountermeasureNoise { get; set; } = 0;
 
-        public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
+        public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
         {
             if (!Enabled)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             var track = visibilitySet.Track;
-            if (track == null) return null;
+            if (track == null)
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             Vector3D targetBearing = visibilitySet.Position - Position;
             double targetRange = targetBearing.Normalize();
@@ -61,7 +68,10 @@ namespace DetectionEquipment.Server.Sensors
                 targetAngle = Math.Acos(Vector3D.Dot(Direction, targetBearing));
 
             if (targetAngle > Aperture)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             double signalToNoiseRatio;
             {
@@ -109,8 +119,8 @@ namespace DetectionEquipment.Server.Sensors
 
             if (signalToNoiseRatio < 0)
             {
-                //DebugDraw.AddLine(Position, visibilitySet.Position, Color.Blue, 0);
-                return null;
+                detection = default(DetectionInfo);
+                return false;
             }
 
             double errorScalar = 1 - MathHelper.Clamp(signalToNoiseRatio / Definition.DetectionThreshold, 0, 1);
@@ -128,7 +138,7 @@ namespace DetectionEquipment.Server.Sensors
             trackBearing = MathUtils.RandomCone(trackBearing, maxBearingError);
             trackRange += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-            var detection = new DetectionInfo
+            detection = new DetectionInfo
             (
                 track,
                 this,
@@ -142,7 +152,7 @@ namespace DetectionEquipment.Server.Sensors
 
             OnDetection?.Invoke(ObjectPackager.Package(detection));
 
-            return detection;
+            return true;
         }
 
         public double SignalRatioAtTarget(Vector3D targetPos, double crossSection)

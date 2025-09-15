@@ -39,10 +39,13 @@ namespace DetectionEquipment.Server.Sensors
             ServerMain.I.SensorIdMap.Remove(Id);
         }
 
-        public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
+        public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
         {
             if (!Enabled)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             Vector3D targetBearing = visibilitySet.Position - Position;
             double targetRange = targetBearing.Normalize();
@@ -51,14 +54,20 @@ namespace DetectionEquipment.Server.Sensors
             if (visibilitySet.BoundingBox.Intersects(new RayD(Position, Direction)) == null)
                 targetAngle = Math.Acos(Vector3D.Dot(Direction, targetBearing));
             if (targetAngle > Aperture)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
             double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / targetRange) / Aperture;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
             if (targetSizeRatio < Definition.DetectionThreshold)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             double errorScalar = 1 - MathHelper.Clamp(targetSizeRatio, 0, 1);
 
@@ -76,7 +85,7 @@ namespace DetectionEquipment.Server.Sensors
             trackBearing = MathUtils.RandomCone(trackBearing, maxBearingError);
             trackRange += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-            var detection = new DetectionInfo
+            detection = new DetectionInfo
             (
                 visibilitySet.Track,
                 this,
@@ -90,7 +99,7 @@ namespace DetectionEquipment.Server.Sensors
 
             OnDetection?.Invoke(ObjectPackager.Package(detection));
 
-            return detection;
+            return true;
         }
     }
 }

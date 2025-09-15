@@ -50,27 +50,39 @@ namespace DetectionEquipment.Server.Sensors
 
         public double Aperture { get; set; } = Math.PI;
 
-        public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
+        public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
         {
             var track = visibilitySet.Track;
             if (!Enabled || track == null)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             RadarSensor sensor;
             if (!_queuedRadarHits.TryGetValue(track.EntityId, out sensor))
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
             _queuedRadarHits.Remove(track.EntityId);
 
             Vector3D targetBearing = sensor.Position - Position;
             double targetRange = targetBearing.Normalize();
             double targetAngle = Math.Acos(Vector3D.Dot(Direction, targetBearing));
             if (targetAngle > Aperture)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             double signalToNoiseRatio = sensor.SignalRatioAtTarget(Position, Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea);
 
             if (signalToNoiseRatio < 0)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             double trackCrossSection = signalToNoiseRatio;
             double trackRange = targetRange;
@@ -84,7 +96,7 @@ namespace DetectionEquipment.Server.Sensors
             trackBearing = MathUtils.RandomCone(trackBearing, maxBearingError);
             trackRange += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-            var data = new DetectionInfo
+            detection = new DetectionInfo
             (
                 track,
                 this,
@@ -96,9 +108,9 @@ namespace DetectionEquipment.Server.Sensors
                 iffCodes
             );
 
-            OnDetection?.Invoke(ObjectPackager.Package(data));
+            OnDetection?.Invoke(ObjectPackager.Package(detection));
 
-            return data;
+            return true;
         }
 
         private static readonly HashSet<PassiveRadarSensor> Sensors = new HashSet<PassiveRadarSensor>();

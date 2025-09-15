@@ -264,9 +264,9 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             foreach (var track in cachedVisibility)
             {
-                var detection = Sensor.GetDetectionInfo(track);
-                if (detection != null)
-                    Detections.Add(detection.Value);
+                DetectionInfo detection;
+                if (Sensor.GetDetectionInfo(track, out detection))
+                    Detections.Add(detection);
             }
 
             foreach (var drfmTrack in CountermeasureManager.GenerateDrfmTracks(Sensor, Block))

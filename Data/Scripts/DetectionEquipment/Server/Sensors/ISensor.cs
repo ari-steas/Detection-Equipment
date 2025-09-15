@@ -30,7 +30,7 @@ namespace DetectionEquipment.Server.Sensors
 
         Action<object[]> OnDetection { get; set; }
 
-        DetectionInfo? GetDetectionInfo(VisibilitySet visibility);
+        bool GetDetectionInfo(VisibilitySet visibility, out DetectionInfo detection);
         void Close();
     }
 }

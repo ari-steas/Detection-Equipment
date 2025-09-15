@@ -35,14 +35,20 @@ namespace DetectionEquipment.Server.Sensors
             ServerMain.I.SensorIdMap.Remove(Id);
         }
 
-        public DetectionInfo? GetDetectionInfo(VisibilitySet visibilitySet)
+        public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
         {
             if (!Enabled)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             var track = visibilitySet.Track as GridTrack;
             if (track == null)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             Vector3D targetBearing = track.Position - Position;
             double targetRange = targetBearing.Normalize();
@@ -52,7 +58,10 @@ namespace DetectionEquipment.Server.Sensors
                 targetAngle = Math.Acos(Vector3D.Dot(Direction, targetBearing));
 
             if (targetAngle > Aperture)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * targetAngle : Definition.RadarProperties.ReceiverArea;
 
@@ -64,7 +73,10 @@ namespace DetectionEquipment.Server.Sensors
                 );
 
             if (double.IsNegativeInfinity(sensorSignal) || sensorSignal < 15)
-                return null;
+            {
+                detection = default(DetectionInfo);
+                return false;
+            }
 
             double trackCrossSection = sensorSignal;
             double trackRange = targetRange;
@@ -78,7 +90,7 @@ namespace DetectionEquipment.Server.Sensors
             trackBearing = MathUtils.RandomCone(trackBearing, maxBearingError);
             trackRange += (2 * MathUtils.Random.NextDouble() - 1) * maxRangeError;
 
-            var data = new DetectionInfo
+            detection = new DetectionInfo
             (
                 track,
                 this,
@@ -90,9 +102,9 @@ namespace DetectionEquipment.Server.Sensors
                 iffCodes
             );
 
-            OnDetection?.Invoke(ObjectPackager.Package(data));
+            OnDetection?.Invoke(ObjectPackager.Package(detection));
 
-            return data;
+            return true;
         }
     }
 }
