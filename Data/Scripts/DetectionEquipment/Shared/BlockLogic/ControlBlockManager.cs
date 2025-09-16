@@ -1,4 +1,5 @@
-﻿using DetectionEquipment.Shared.Utils;
+﻿using System;
+using DetectionEquipment.Shared.Utils;
 using System.Collections.Generic;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
@@ -79,9 +80,27 @@ namespace DetectionEquipment.Shared.BlockLogic
             // delay a tick to give everything else time to init properly
             MyAPIGateway.Utilities.InvokeOnGameThread(() =>
             {
-                logic.Init();
-                Blocks.Add(block, logic);
-                block.OnMarkForClose += logic.MarkForClose;
+                try
+                {
+                    IControlBlockBase existing;
+                    if (Blocks.TryGetValue(block, out existing))
+                    {
+                        if (existing == logic) // how in the world would this happen
+                            return;
+
+                        Log.Exception("ControlBlockManager", new Exception($"Duplicate logic of types {existing.GetType().Name}/{logic.GetType().Name} on block {block.EntityId}!"));
+                        existing.MarkForClose(block);
+                        Blocks.Remove(block);
+                    }
+
+                    logic.Init();
+                    Blocks.Add(block, logic);
+                    block.OnMarkForClose += logic.MarkForClose;
+                }
+                catch (Exception ex)
+                {
+                    Log.Exception("ControlBlockManager", ex, true);
+                }
             });
         }
 

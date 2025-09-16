@@ -3,6 +3,8 @@ using Sandbox.Game.Components;
 using Sandbox.Game.Entities;
 using Sandbox.Game.EntityComponents;
 using System;
+using DetectionEquipment.Shared.Utils;
+using Sandbox.Common.ObjectBuilders;
 using VRage.Game;
 using VRage.Game.Components;
 using VRage.Game.ModAPI;
@@ -14,7 +16,7 @@ namespace DetectionEquipment.Shared.BlockLogic
     /// <summary>
     /// Only purpose is to notify on IsSerialized and fix LCD screens.
     /// </summary>
-    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_FunctionalBlock), false)]
+    [MyEntityComponentDescriptor(typeof(MyObjectBuilder_ConveyorSorter), false)]
     internal class SerializationNotifier : MyGameLogicComponent
     {
         public static Action<IMyEntity> OnSerialize;

@@ -53,7 +53,7 @@ namespace DetectionEquipment.Shared.BlockLogic
 
         public virtual void UpdateAfterSimulation() { }
 
-        public virtual void UpdateAfterSimulation10() { } // TODO remove try/catch spam?
+        public virtual void UpdateAfterSimulation10() { }
 
         public virtual void Serialize()
         {

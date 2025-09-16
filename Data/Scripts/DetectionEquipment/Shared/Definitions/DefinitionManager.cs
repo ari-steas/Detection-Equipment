@@ -353,6 +353,7 @@ namespace DetectionEquipment.Shared.Definitions
                 {
                     if (!definition.SubtypeIds.Contains(block.BlockDefinition.SubtypeName))
                         continue;
+
                     switch (definition.Type)
                     {
                         case ControlBlockDefinition.LogicType.Aggregator:
