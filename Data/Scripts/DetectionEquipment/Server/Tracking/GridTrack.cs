@@ -473,8 +473,18 @@ namespace DetectionEquipment.Server.Tracking
                         DebugDraw.AddLine(castLine, Color.Gray.SetAlphaPct(0.05f), 0);
 
                     MyCubeGrid.MyCubeGridHitInfo intersect = new MyCubeGrid.MyCubeGridHitInfo();
-                    if (!grid.GetIntersectionWithLine(ref castLine, ref intersect))
+                    try
+                    {
+                        if (!grid.GetIntersectionWithLine(ref castLine, ref intersect))
+                            continue;
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Info("GridTrack", "Handled exception in (MyCubeGrid).GetIntersectionWithLine:");
+                        Log.Exception("GridTrack", ex);
                         continue;
+                    }
+                    
 
                     if (GlobalData.DebugLevel > 2)
                         DebugDraw.AddLine(intersect.Triangle.IntersectionPointInWorldSpace, intersect.Triangle.IntersectionPointInWorldSpace + intersect.Triangle.NormalInWorldSpace, Color.LimeGreen, 0);

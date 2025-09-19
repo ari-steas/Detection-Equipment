@@ -182,7 +182,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 }
                 else
                 {
-                    internalVisibility.Add(new VisibilitySet(Grid, gT));
+                    internalVisibility.Add(new VisibilitySet(Grid, trackKvp.Value));
                 }
             }
 

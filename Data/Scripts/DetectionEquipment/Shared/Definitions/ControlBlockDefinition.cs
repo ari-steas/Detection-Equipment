@@ -10,6 +10,9 @@ namespace DetectionEquipment.Shared.Definitions
     [ProtoContract(UseProtoMembersOnly = true)]
     public class ControlBlockDefinition : DefinitionBase
     {
+        /// <summary>
+        /// These must be conveyor sorters. Do not put multiple logics on one block.
+        /// </summary>
         [ProtoMember(1)] public string[] SubtypeIds;
         [ProtoMember(2)] public LogicType Type;
 
