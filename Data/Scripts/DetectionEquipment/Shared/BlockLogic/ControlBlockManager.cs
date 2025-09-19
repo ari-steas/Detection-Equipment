@@ -53,16 +53,21 @@ namespace DetectionEquipment.Shared.BlockLogic
             if (grid?.Physics == null)
                 return;
             foreach (var block in grid.GetFatBlocks<IMyFunctionalBlock>())
-                DefinitionManager.TryCreateControlBlock(block);
+            {
+                if (!I.Blocks.ContainsKey(block))
+                {
+                    DefinitionManager.TryCreateControlBlock(block);
+                }
+            }
             grid.OnBlockAdded += OnBlockAdded;
         }
 
         private static void OnBlockAdded(IMySlimBlock block)
         {
-            var func = block.FatBlock as IMyFunctionalBlock;
-            if (func == null)
+            var fatBlock = block.FatBlock as IMyFunctionalBlock;
+            if (fatBlock == null || I.Blocks.ContainsKey(fatBlock))
                 return;
-            DefinitionManager.TryCreateControlBlock(func);
+            DefinitionManager.TryCreateControlBlock(fatBlock);
         }
 
 

@@ -475,6 +475,7 @@ namespace DetectionEquipment.Server.Tracking
                     MyCubeGrid.MyCubeGridHitInfo intersect = new MyCubeGrid.MyCubeGridHitInfo();
                     try
                     {
+                        // this just throws an exception sometimes and I don't have the whitelist access to fix it
                         if (!grid.GetIntersectionWithLine(ref castLine, ref intersect))
                             continue;
                     }
