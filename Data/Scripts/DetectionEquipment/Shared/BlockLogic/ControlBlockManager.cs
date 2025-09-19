@@ -90,6 +90,7 @@ namespace DetectionEquipment.Shared.BlockLogic
                     IControlBlockBase existing;
                     if (Blocks.TryGetValue(block, out existing))
                     {
+                        return;
                         if (existing == logic) // how in the world would this happen
                             return;
 
