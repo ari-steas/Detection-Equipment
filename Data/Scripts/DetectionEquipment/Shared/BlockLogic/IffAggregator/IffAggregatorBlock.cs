@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Definitions;
@@ -30,6 +31,8 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
             AutoSelfIff.Component = this;
             FriendlyIffCodes.Component = this;
             base.Init();
+
+            Block.AppendingCustomInfo += UpdateCustomInfo;
         }
 
         public override MyRelationsBetweenPlayers GetInfoRelations(WorldDetectionInfo info)
@@ -47,7 +50,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
 
             string[] ownIffCodes = null;
             if (AutoSelfIff.Value)
-                ownIffCodes = IffHelper.GetIffCodes(Block.CubeGrid, SensorDefinition.SensorType.None);
+                ownIffCodes = IffHelper.GetAllIffCodes(Block.CubeGrid);
 
             foreach (var code in info.IffCodes)
             {
@@ -58,6 +61,18 @@ namespace DetectionEquipment.Shared.BlockLogic.IffAggregator
             }
 
             return MyRelationsBetweenPlayers.Enemies;
+        }
+
+        private void UpdateCustomInfo(IMyTerminalBlock block, StringBuilder sb)
+        {
+            sb.Append("Friendly IFF Codes:");
+            foreach (var code in FriendlyIffCodes.Value)
+                sb.Append("\n- ").Append(code);
+            if (AutoSelfIff.Value)
+            {
+                foreach (var code in IffHelper.GetAllIffCodes(Block.CubeGrid))
+                    sb.Append("\n- ").Append(code);
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ using System.Linq;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Utils;
+using VRage.Game.Entity;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
@@ -37,6 +38,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             }
         }
         public readonly SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
+        public readonly SimpleSync<bool> TrackAllies = new SimpleSync<bool>(false);
+        public readonly SimpleSync<bool> TrackEnemies = new SimpleSync<bool>(true);
+        public readonly SimpleSync<bool> TrackNeutrals = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> InvertAllowControl = new SimpleSync<bool>(false);
 
         private readonly SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
@@ -126,15 +130,47 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                     hasValue = true;
                 }
 
-                if (hasValue && sensor.CanAimAt(prevTrack.Key.Position) && prevTrack.Value <= min)
+                bool isIffValid = true;
+                switch (prevTrack.Key.Relations)
+                {
+                    case MyRelationsBetweenPlayers.Allies:
+                        isIffValid = TrackAllies.Value;
+                        break;
+                    case MyRelationsBetweenPlayers.Neutral:
+                        isIffValid = TrackNeutrals.Value;
+                        break;
+                    case MyRelationsBetweenPlayers.Enemies:
+                        isIffValid = TrackEnemies.Value;
+                        break;
+                    // no check by default
+                }
+
+                if (hasValue && isIffValid && sensor.CanAimAt(prevTrack.Key.Position) && prevTrack.Value <= min)
                     return prevTrack.Key;
             }
 
             int numLocks = int.MaxValue;
             WorldDetectionInfo? bestTarget = null;
-            var sensorGridSize = sensor.Block.CubeGrid.LocalAABB.Size.Length();
+            //var sensorGridSize = sensor.Block.CubeGrid.LocalAABB.Size.Length();
             foreach (var target in _detectionTrackDict.Reverse())
             {
+                switch (target.Key.Relations)
+                {
+                    case MyRelationsBetweenPlayers.Allies:
+                        if (!TrackAllies.Value)
+                            continue;
+                        break;
+                    case MyRelationsBetweenPlayers.Neutral:
+                        if (!TrackNeutrals.Value)
+                            continue;
+                        break;
+                    case MyRelationsBetweenPlayers.Enemies:
+                        if (!TrackEnemies.Value)
+                            continue;
+                        break;
+                    // no check by default
+                }
+
                 if (!sensor.CanAimAt(target.Key.Position))
                     continue;
 

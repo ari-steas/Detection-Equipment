@@ -58,6 +58,12 @@ namespace DetectionEquipment.Shared.Helpers
                 _iffMap.Remove(grid);
         }
 
+        public static string[] GetAllIffCodes(IMyCubeGrid grid)
+        {
+            IffInfo info;
+            return _iffMap.TryGetValue(grid, out info) ? info.GetAllCodes() : Array.Empty<string>();
+        }
+
         public static string[] GetIffCodes(IMyCubeGrid grid, SensorDefinition.SensorType sensorType)
         {
             IffInfo info;
@@ -255,6 +261,19 @@ namespace DetectionEquipment.Shared.Helpers
                     _codeCache[i] = Array.Empty<string>();
             }
 
+            public string[] GetAllCodes()
+            {
+                var codes = GlobalObjectPools.StringPool.Pop();
+                foreach (var reflector in Blocks)
+                    if (reflector.Enabled)
+                        codes.Add(reflector.IffCodeCache);
+
+                string[] ret = codes.ToArray();
+                codes.Clear();
+                GlobalObjectPools.StringPool.Push(codes);
+                return ret;
+            }
+
             public string[] GetCodes(SensorDefinition.SensorType sensorType)
             {
                 if (sensorType == SensorDefinition.SensorType.None)
@@ -265,7 +284,7 @@ namespace DetectionEquipment.Shared.Helpers
                 if (MyAPIGateway.Session.GameplayFrameCounter == LastUpdate)
                     return _codeCache[sType];
 
-                var codes = new HashSet<string>();
+                var codes = GlobalObjectPools.StringPool.Pop();
                 foreach (var reflector in Blocks)
                     if (reflector.Enabled && reflector.SensorType == sensorType)
                         codes.Add(reflector.IffCodeCache);
@@ -283,6 +302,8 @@ namespace DetectionEquipment.Shared.Helpers
                     i++;
                 }
 
+                codes.Clear();
+                GlobalObjectPools.StringPool.Push(codes);
                 _codeCache[sType] = array;
                 LastUpdate = MyAPIGateway.Session.GameplayFrameCounter;
 

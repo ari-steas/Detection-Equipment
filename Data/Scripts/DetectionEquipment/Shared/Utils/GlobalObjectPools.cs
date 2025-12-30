@@ -28,7 +28,9 @@ namespace DetectionEquipment.Shared.Utils
         /// </summary>
         public static AsyncSharedObjectPool<Dictionary<IMyEntity, ITrack>> TrackSharedPool;
         public static ObjectPool<HashSet<IMyPlayer>> PlayerPool;
+
         public static ObjectPool<HashSet<int>> IntPool;
+        public static ObjectPool<HashSet<string>> StringPool;
 
         public static void Init()
         {
@@ -54,6 +56,10 @@ namespace DetectionEquipment.Shared.Utils
             );
             IntPool = new ObjectPool<HashSet<int>>(
                 () => new HashSet<int>(),
+                startSize: 10
+            );
+            StringPool = new ObjectPool<HashSet<string>>(
+                () => new HashSet<string>(),
                 startSize: 10
             );
 
@@ -90,6 +96,7 @@ namespace DetectionEquipment.Shared.Utils
             DataReceiverPool = null;
             PlayerPool = null;
             IntPool = null;
+            StringPool = null;
         }
     }
 }

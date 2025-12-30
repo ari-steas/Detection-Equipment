@@ -90,6 +90,28 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             ActiveAggregatorSelect.ListBox.VisibleRowsCount = 5;
 
             CreateToggle(
+                "TrackAllies",
+                "Track Allies",
+                "If enabled, this block can direct sensors to track allies.",
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b).TrackAllies.Value,
+                (b, selected) => ControlBlockManager.GetLogic<TrackerBlock>(b).TrackAllies.Value = selected
+            );
+            CreateToggle(
+                "TrackEnemies",
+                "Track Enemies",
+                "If enabled, this block can direct sensors to track enemies.",
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b).TrackEnemies.Value,
+                (b, selected) => ControlBlockManager.GetLogic<TrackerBlock>(b).TrackEnemies.Value = selected
+            );
+            CreateToggle(
+                "TrackNeutrals",
+                "Track Neutrals",
+                "If enabled, this block can direct sensors to track neutrals.",
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b).TrackNeutrals.Value,
+                (b, selected) => ControlBlockManager.GetLogic<TrackerBlock>(b).TrackNeutrals.Value = selected
+            );
+
+            CreateToggle(
                 "InvertAllowControl",
                 "Invert Allow Control",
                 "If enabled, this block inverts \"Allow Mechanical Control\" on sensors.",
