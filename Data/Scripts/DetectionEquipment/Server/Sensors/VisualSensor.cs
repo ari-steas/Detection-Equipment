@@ -41,7 +41,7 @@ namespace DetectionEquipment.Server.Sensors
 
         public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
         {
-            if (!Enabled)
+            if (!Enabled || visibilitySet.Track == null)
             {
                 detection = default(DetectionInfo);
                 return false;
