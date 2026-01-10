@@ -43,7 +43,7 @@ namespace DetectionEquipment.Shared.Utils
                     oldLogWriter.Close();
                 }
 
-                _writer = MyAPIGateway.Utilities.WriteFileInGlobalStorage(logName + ".log");
+                _writer = TextWriter.Synchronized(MyAPIGateway.Utilities.WriteFileInGlobalStorage(logName + ".log"));
 
                 int utcOffset = (DateTime.Now - DateTime.UtcNow).Hours;
 
