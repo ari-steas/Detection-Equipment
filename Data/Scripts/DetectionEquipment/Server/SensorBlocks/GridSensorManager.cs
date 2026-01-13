@@ -26,7 +26,7 @@ namespace DetectionEquipment.Server.SensorBlocks
         public readonly IMyCubeGrid Grid;
         public HashSet<BlockSensor> Sensors = new HashSet<BlockSensor>();
         public Dictionary<IMyCubeBlock, List<BlockSensor>> BlockSensorMap = new Dictionary<IMyCubeBlock, List<BlockSensor>>();
-        private readonly HashSet<AggregatorBlock> _aggregators = new HashSet<AggregatorBlock>();
+        public readonly HashSet<AggregatorBlock> Aggregators = new HashSet<AggregatorBlock>();
         private HashSet<VisibilitySet> _trackVisibility = new HashSet<VisibilitySet>();
         private bool _hasRadar = false;
 
@@ -52,7 +52,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
                 {
                     var gridPos = grid.WorldMatrix.Translation;
-                    foreach (var aggregator in gridSensors._aggregators)
+                    foreach (var aggregator in gridSensors.Aggregators)
                     {
                         if (!aggregator.DoWcTargeting.Value)
                             continue;
@@ -73,8 +73,12 @@ namespace DetectionEquipment.Server.SensorBlocks
                                 targets.Add(target.Entity);
                         }
                     }
-                    //MyAPIGateway.Utilities.ShowNotification($"Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.", 100000/60);
-                    //Log.Info("GridSensorManager", $"Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.");
+
+                    if (GlobalData.DebugLevel >= 2)
+                    {
+                        MyAPIGateway.Utilities.ShowNotification($"WC TGT Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.", 100000/60);
+                        Log.Info("GridSensorManager", $"WC TGT Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.");
+                    }
                 }
             }
 
@@ -251,12 +255,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                         cubeBlock.EnabledChanged += b => resourceSink.Update();
                     }
                 }
-
-                var aggregator = ControlBlockManager.GetLogic<AggregatorBlock>(cubeBlock);
-                if (aggregator != null)
-                {
-                    _aggregators.Add(aggregator);
-                }
             }
             catch (Exception ex)
             {
@@ -275,12 +273,6 @@ namespace DetectionEquipment.Server.SensorBlocks
                     BlockSensorMap.Remove(cubeBlock);
 
                     _hasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
-
-                    var aggregator = ControlBlockManager.GetLogic<AggregatorBlock>(cubeBlock);
-                    if (aggregator != null)
-                    {
-                        _aggregators.Remove(aggregator);
-                    }
                 }
             }
             catch (Exception ex)

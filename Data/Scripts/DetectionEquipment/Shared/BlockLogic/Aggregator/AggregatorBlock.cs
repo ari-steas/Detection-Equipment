@@ -8,6 +8,7 @@ using System.Linq;
 using DetectionEquipment.Client.BlockLogic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Client.Networking;
+using DetectionEquipment.Server;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
@@ -210,6 +211,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             base.Init();
 
             DatalinkManager.RegisterAggregator(this, DatalinkOutChannel.Value, _prevDatalinkOutChannel);
+            GridSensors?.Aggregators.Add(this);
             _prevDatalinkOutChannel = DatalinkOutChannel.Value;
         }
 
@@ -218,6 +220,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             base.MarkForClose(entity);
             DetectionCache.Clear();
             _parallelCache.Clear();
+            GridSensors?.Aggregators.Remove(this);
 
             DatalinkManager.UnregisterAggregator(this);
         }

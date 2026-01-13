@@ -207,13 +207,13 @@ namespace DetectionEquipment.Server
                 {
                     ApiManager.WcApi.AddScanTargetsAction(GridSensorManager.ScanTargetsAction);
                     ApiManager.WcApi.SetValidateWeaponTargetFunc(GridSensorManager.ValidateWeaponTarget);
-                    Log.Info("ServerMain", "WeaponCore targeting overridden.");
+                    Log.Info("ServerMain", "WeaponCore targeting (server) overridden.");
                 }
                 else
                 {
                     ApiManager.WcApi.RemoveScanTargetsAction(GridSensorManager.ScanTargetsAction);
                     ApiManager.WcApi.SetValidateWeaponTargetFunc(null);
-                    Log.Info("ServerMain", "WeaponCore targeting override disabled.");
+                    Log.Info("ServerMain", "WeaponCore targeting (server) override disabled.");
                 }
             });
         }

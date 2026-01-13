@@ -7,7 +7,6 @@ using Sandbox.Game.EntityComponents;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
-using System.Security.Cryptography;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;

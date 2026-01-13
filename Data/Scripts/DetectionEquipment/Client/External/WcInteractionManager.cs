@@ -2,7 +2,6 @@
 using DetectionEquipment.Shared.Utils;
 using System.Collections.Generic;
 using DetectionEquipment.Shared;
-using DetectionEquipment.Shared.ExternalApis.WcApi;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
@@ -31,7 +30,7 @@ namespace DetectionEquipment.Client.External
         {
             if (MyAPIGateway.Session.IsServer)
             {
-                Log.Info("WcInteractionManager", "WeaponCore targeting not overridden (is server).");
+                Log.Info("WcInteractionManager", "WeaponCore targeting (client) not overridden (is server).");
                 return;
             }
 
@@ -45,12 +44,12 @@ namespace DetectionEquipment.Client.External
                 if (contributeTargeting)
                 {
                     ApiManager.WcApi.AddScanTargetsAction(ScanTargetsAction);
-                    Log.Info("WcInteractionManager", "WeaponCore targeting overridden.");
+                    Log.Info("WcInteractionManager", "WeaponCore targeting (client) overridden.");
                 }
                 else
                 {
                     ApiManager.WcApi.RemoveScanTargetsAction(ScanTargetsAction);
-                    Log.Info("WcInteractionManager", "WeaponCore targeting not overridden.");
+                    Log.Info("WcInteractionManager", "WeaponCore targeting (client) not overridden.");
                 }
             });
         }
