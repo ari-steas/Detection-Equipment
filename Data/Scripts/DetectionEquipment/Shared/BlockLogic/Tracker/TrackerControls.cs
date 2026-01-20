@@ -1,9 +1,11 @@
 ﻿using DetectionEquipment.Client.BlockLogic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Search;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
@@ -56,12 +58,18 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                     ActiveSensors[logic].Clear();
                     logic.LockDecay.Clear();
 
-                    foreach (var sensor in logic.GridSensors.Sensors)
+                    foreach (var block in selected)
                     {
-                        if (sensor.Definition.Movement == null || !selected.Contains(sensor.Block))
-                            continue;
-                        ActiveSensors[logic].Add(sensor);
-                        break;
+                        List<BlockSensor> sensors;
+                        if (logic.GridSensors.BlockSensorMap.TryGetValue(block, out sensors))
+                        {
+                            foreach (var sensor in sensors)
+                            {
+                                if (sensor.Definition.Movement == null)
+                                    continue;
+                                ActiveSensors[logic].Add(sensor);
+                            }
+                        }
                     }
                 }
                 );
