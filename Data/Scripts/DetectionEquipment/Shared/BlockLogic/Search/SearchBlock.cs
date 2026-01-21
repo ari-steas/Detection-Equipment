@@ -16,6 +16,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
         public SimpleSync<SearchModes> SearchMode = new SimpleSync<SearchModes>(SearchModes.Auto);
         public SimpleSync<bool> InvertAllowControl = new SimpleSync<bool>(false);
+        public SimpleSync<int> ControlPriority = new SimpleSync<int>(0);
 
         protected override ControlBlockSettingsBase GetSettings => new SearchSettings(this);
         protected override ITerminalControlAdder GetControls => new SearchControls();
@@ -32,6 +33,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
             SearchMode.Component = this;
             InvertAllowControl.Component = this;
+            ControlPriority.Component = this;
 
             base.Init();
         }

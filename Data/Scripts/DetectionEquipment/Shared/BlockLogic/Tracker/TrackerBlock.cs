@@ -42,6 +42,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         public readonly SimpleSync<bool> TrackEnemies = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> TrackNeutrals = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> InvertAllowControl = new SimpleSync<bool>(false);
+        public readonly SimpleSync<int> ControlPriority = new SimpleSync<int>(0);
 
         private readonly SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
         public readonly Dictionary<BlockSensor, LockSet> LockDecay = new Dictionary<BlockSensor, LockSet>();
@@ -58,7 +59,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
             ResetAngleTime.Component = this;
+            TrackAllies.Component = this;
+            TrackEnemies.Component = this;
+            TrackNeutrals.Component = this;
             InvertAllowControl.Component = this;
+            ControlPriority.Component = this;
             base.Init();
         }
 
