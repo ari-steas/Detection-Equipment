@@ -1,7 +1,11 @@
 name: "Upload to Workshop"
 
 on:
-  - push
+  push:
+    paths-ignore:
+      - '.github/**'
+    branches:
+      - master
 
 jobs:
   upload:
