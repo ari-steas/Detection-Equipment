@@ -56,57 +56,18 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             // sensors
             foreach (var controller in _controllers)
             {
-                if (controller.SourceAggregator == null)
+                if (controller?.SourceAggregator == null)
                 {
-                    sb.Append("[NOSRC] ").AppendLine(controller.Block.CustomName);
+                    sb.Append("[NOSRC] ").AppendLine(controller?.Block.CustomName ?? "NULL CTRL");
                     continue;
                 }
                 sb.AppendLine(controller.SourceAggregator.Block.CustomName);
 
-                var aggregatorSensors = new Dictionary<SensorDefinition.SensorType, List<ClientSensorData>>();
-                var damagedSensors = new Dictionary<SensorDefinition.SensorType, List<ClientSensorData>>();
-                foreach (var sensorLogic in controller.SourceAggregator.ClientActiveSensors)
-                {
-                    foreach (var sensor in sensorLogic.Sensors.Values)
-                    {
-                        if (!aggregatorSensors.ContainsKey(sensor.Definition.Type))
-                        {
-                            aggregatorSensors.Add(sensor.Definition.Type, new List<ClientSensorData> { sensor });
-                            damagedSensors.Add(sensor.Definition.Type, new List<ClientSensorData>());
-                        }
-                        else
-                            aggregatorSensors[sensor.Definition.Type].Add(sensor);
-
-                        if (!sensorLogic.Block.IsWorking)
-                            damagedSensors[sensor.Definition.Type].Add(sensor);
-                    }
-
-                    if (((IMyFunctionalBlock)sensorLogic.Block).Enabled && sensorLogic.Block.IsFunctional)
-                        totalPowerDraw += sensorLogic.Block.ResourceSink.MaxRequiredInputByType(GlobalData.ElectricityId);
-                }
-
-                int typeCount = aggregatorSensors.Count;
-                foreach (var sensorType in aggregatorSensors)
-                {
-                    typeCount--;
-                    sb.Append("x").Append(sensorType.Value.Count.ToString()).Append(' ').Append(SensorTypeName(sensorType.Key));
-                    sb.AppendLine(typeCount == 0 ? @"─┘" : @"─┤");
-
-                    for (var i = 0; i < damagedSensors[sensorType.Key].Count; i++)
-                    {
-                        var dmgedSensor = damagedSensors[sensorType.Key][i];
-                        // sensor name, trimmed to 10 characters
-                        string sName = dmgedSensor.Block.CustomName;
-                        sb.Append(sName.Length > 10 ? sName.Substring(0, 4) + ".." + sName.Substring(sName.Length-4, 4) : sName);
-
-                        // alert symbol; delta for not enabled, x-in-circle for damaged, i-in-triangle otherwise (i.e. no power)
-                        sb.Append($" {GetAlertSymbol(dmgedSensor.Block)} ──");
-
-                        // right-aligned text tree
-                        sb.Append(i == damagedSensors[sensorType.Key].Count - 1 ? @"┘" : @"┤");
-                        sb.AppendLine(typeCount == 0 ? @"  " : @" │");
-                    }
-                }
+                // get active sensors from hud controllers -> aggregators
+                Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> aggregatorSensors, damagedSensors;
+                PopulateSensorData(controller, ref totalPowerDraw, out aggregatorSensors, out damagedSensors);
+                
+                GenerateSensorString(sb, aggregatorSensors, damagedSensors);
 
                 sb.AppendLine();
             }
@@ -138,6 +99,57 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         {
             _controllers.Remove(controller);
             _needsTextUpdate = true;
+        }
+
+        private static void PopulateSensorData(HudControllerBlock controller, ref float totalPowerDraw, out Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> aggregatorSensors, out Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> damagedSensors)
+        {
+            aggregatorSensors = new Dictionary<SensorDefinition.SensorType, List<ClientSensorData>>();
+            damagedSensors = new Dictionary<SensorDefinition.SensorType, List<ClientSensorData>>();
+            foreach (var sensorLogic in controller.SourceAggregator.ClientActiveSensors)
+            {
+                foreach (var sensor in sensorLogic.Sensors.Values)
+                {
+                    if (!aggregatorSensors.ContainsKey(sensor.Definition.Type))
+                    {
+                        aggregatorSensors.Add(sensor.Definition.Type, new List<ClientSensorData> { sensor });
+                        damagedSensors.Add(sensor.Definition.Type, new List<ClientSensorData>());
+                    }
+                    else
+                        aggregatorSensors[sensor.Definition.Type].Add(sensor);
+
+                    if (!sensorLogic.Block.IsWorking)
+                        damagedSensors[sensor.Definition.Type].Add(sensor);
+                }
+
+                if (((IMyFunctionalBlock)sensorLogic.Block).Enabled && sensorLogic.Block.IsFunctional)
+                    totalPowerDraw += sensorLogic.Block.ResourceSink.MaxRequiredInputByType(GlobalData.ElectricityId);
+            }
+        }
+
+        private static void GenerateSensorString(StringBuilder sb, Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> aggregatorSensors, Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> damagedSensors)
+        {
+            int typeCount = aggregatorSensors.Count;
+            foreach (var sensorType in aggregatorSensors)
+            {
+                typeCount--;
+                sb.Append("x").Append(sensorType.Value.Count.ToString()).Append(' ').Append(SensorTypeName(sensorType.Key));
+                sb.AppendLine(typeCount == 0 ? @"─┘" : @"─┤");
+
+                for (var i = 0; i < damagedSensors[sensorType.Key].Count; i++)
+                {
+                    var dmgedSensor = damagedSensors[sensorType.Key][i];
+                    // sensor name, trimmed to 10 characters
+                    string sName = dmgedSensor.Block.CustomName;
+                    sb.Append(sName.Length > 10 ? sName.Substring(0, 4) + ".." + sName.Substring(sName.Length-4, 4) : sName);
+
+                    // alert symbol; delta for not enabled, x-in-circle for damaged, i-in-triangle otherwise (i.e. no power)
+                    sb.Append($" {GetAlertSymbol(dmgedSensor.Block)} ──");
+
+                    // right-aligned text tree
+                    sb.Append(i == damagedSensors[sensorType.Key].Count - 1 ? @"┘" : @"┤");
+                    sb.AppendLine(typeCount == 0 ? @"  " : @" │");
+                }
+            }
         }
 
         private static string SensorTypeName(SensorDefinition.SensorType type)
