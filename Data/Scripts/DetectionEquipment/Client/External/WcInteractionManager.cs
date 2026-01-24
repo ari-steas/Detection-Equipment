@@ -1,10 +1,13 @@
-﻿using DetectionEquipment.Shared.ExternalApis;
-using DetectionEquipment.Shared.Utils;
-using System.Collections.Generic;
+﻿using DetectionEquipment.Server;
+using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared;
+using DetectionEquipment.Shared.ExternalApis;
+using DetectionEquipment.Shared.Utils;
 using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
+using System.Collections.Generic;
 using VRage.Game.Entity;
+using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRageMath;
 
@@ -56,16 +59,53 @@ namespace DetectionEquipment.Client.External
 
         private static void ScanTargetsAction(MyCubeGrid grid, BoundingSphereD sphere, List<MyEntity> targets)
         {
-            List<MyEntity> valid;
-            if (!VisibleTargets.TryGetValue(grid, out valid))
-                return;
-            foreach (var target in valid)
+            HashSet<MyEntity> trackedEntitySet = GlobalObjectPools.EntityPool.Pop();
+
+            // Check all aggregators on this grid and subgrids
+            HashSet<IMyCubeGrid> allAttachedGrids = grid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(GlobalObjectPools.GridPool.Pop());
+            foreach (var subGrid in allAttachedGrids)
             {
-                targets.Add(target);
-                if (GlobalData.DebugLevel > 1)
-                    DebugDraw.AddLine(grid.WorldMatrix.Translation, target.WorldMatrix.Translation, Color.Maroon, 10/6f);
+                List<MyEntity> valid;
+                if (!VisibleTargets.TryGetValue((MyCubeGrid) subGrid, out valid))
+                    continue;
+
+                foreach (var target in valid)
+                {
+                    if (target == null || trackedEntitySet.Contains(target))
+                        continue;
+
+                    IMyCubeGrid targetGrid = target as IMyCubeGrid;
+                    if (targetGrid != null) // Add all subgrids so that weaponcore doesn't lose track
+                    {
+                        HashSet<IMyCubeGrid> allTargetAttachedGrids = targetGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(GlobalObjectPools.GridPool.Pop());
+
+                        foreach (var tgtSubgrid in allTargetAttachedGrids)
+                        {
+                            trackedEntitySet.Add((MyEntity) tgtSubgrid);
+                            if (GlobalData.DebugLevel > 1)
+                                DebugDraw.AddLine(grid.WorldMatrix.Translation, tgtSubgrid.WorldMatrix.Translation, Color.Maroon, 10/6f);
+                        }
+
+                        allTargetAttachedGrids.Clear();
+                        GlobalObjectPools.GridPool.Push(allTargetAttachedGrids);
+                    }
+                    else
+                    {
+                        trackedEntitySet.Add(target);
+
+                        if (GlobalData.DebugLevel > 1)
+                            DebugDraw.AddLine(grid.WorldMatrix.Translation, target.WorldMatrix.Translation, Color.Maroon, 10/6f);
+                    }
+                }
             }
-            
+
+            targets.AddRange(trackedEntitySet);
+
+            // return collections to pools, saves on alloc time
+            trackedEntitySet.Clear();
+            GlobalObjectPools.EntityPool.Push(trackedEntitySet);
+            allAttachedGrids.Clear();
+            GlobalObjectPools.GridPool.Push(allAttachedGrids);
         }
 
         private static void OnEntityRemove(IMyEntity ent)
