@@ -74,21 +74,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                             if (err > GlobalData.MinLockForWcTarget)
                                 continue;
                             
-                            IMyCubeGrid targetGrid = target.Entity as IMyCubeGrid;
-                            if (targetGrid != null) // Add all subgrids so that weaponcore doesn't lose track
-                            {
-                                HashSet<IMyCubeGrid> allTargetAttachedGrids = targetGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(GlobalObjectPools.GridPool.Pop());
-
-                                foreach (var tgtSubgrid in allTargetAttachedGrids)
-                                    trackedEntitySet.Add((MyEntity) tgtSubgrid);
-
-                                allTargetAttachedGrids.Clear();
-                                GlobalObjectPools.GridPool.Push(allTargetAttachedGrids);
-                            }
-                            else
-                            {
-                                trackedEntitySet.Add(target.Entity);
-                            }
+                            trackedEntitySet.Add(target.Entity.GetTopMostParent());
                         }
                     }
 

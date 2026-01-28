@@ -71,31 +71,13 @@ namespace DetectionEquipment.Client.External
 
                 foreach (var target in valid)
                 {
-                    if (target == null || trackedEntitySet.Contains(target))
+                    if (target == null)
                         continue;
 
-                    IMyCubeGrid targetGrid = target as IMyCubeGrid;
-                    if (targetGrid != null) // Add all subgrids so that weaponcore doesn't lose track
-                    {
-                        HashSet<IMyCubeGrid> allTargetAttachedGrids = targetGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(GlobalObjectPools.GridPool.Pop());
+                    trackedEntitySet.Add(target.GetTopMostParent());
 
-                        foreach (var tgtSubgrid in allTargetAttachedGrids)
-                        {
-                            trackedEntitySet.Add((MyEntity) tgtSubgrid);
-                            if (GlobalData.DebugLevel > 1)
-                                DebugDraw.AddLine(grid.WorldMatrix.Translation, tgtSubgrid.WorldMatrix.Translation, Color.Maroon, 10/6f);
-                        }
-
-                        allTargetAttachedGrids.Clear();
-                        GlobalObjectPools.GridPool.Push(allTargetAttachedGrids);
-                    }
-                    else
-                    {
-                        trackedEntitySet.Add(target);
-
-                        if (GlobalData.DebugLevel > 1)
-                            DebugDraw.AddLine(grid.WorldMatrix.Translation, target.WorldMatrix.Translation, Color.Maroon, 10/6f);
-                    }
+                    if (GlobalData.DebugLevel > 1)
+                        DebugDraw.AddLine(grid.WorldMatrix.Translation, target.WorldMatrix.Translation, Color.Maroon, 10/6f);
                 }
             }
 
