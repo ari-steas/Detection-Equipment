@@ -96,6 +96,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 );
             ActiveAggregatorSelect.ListBox.VisibleRowsCount = 5;
 
+            CreateSlider(
+                "MaxSensorsPerLock",
+                "Maximum Sensors Per Target",
+                "Maximum number of sensors that can track a single target. Any extra sensors will go idle. 0 to disable.",
+                0,
+                10,
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b).MaxSensorsPerLock.Value,
+                (b, v) => ControlBlockManager.GetLogic<TrackerBlock>(b).MaxSensorsPerLock.Value = (int)Math.Round(v),
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<TrackerBlock>(b).MaxSensorsPerLock.Value)
+            );
             CreateToggle(
                 "TrackAllies",
                 "Track Allies",

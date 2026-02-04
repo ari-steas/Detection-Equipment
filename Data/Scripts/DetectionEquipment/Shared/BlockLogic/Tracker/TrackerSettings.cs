@@ -15,6 +15,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         [ProtoMember(6)] private bool _trackEnemies = true;
         [ProtoMember(7)] private bool _trackNeutrals = true;
         [ProtoMember(8)] private int _controlPriority = 0;
+        [ProtoMember(9)] private int _maxSensorsPerLock = 0;
 
         [ProtoIgnore] private new TrackerBlock AttachedLogic => (TrackerBlock)base.AttachedLogic;
 
@@ -34,6 +35,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             AttachedLogic.TrackEnemies.Value = _trackEnemies;
             AttachedLogic.TrackNeutrals.Value = _trackNeutrals;
             AttachedLogic.ControlPriority.Value = _controlPriority;
+            AttachedLogic.MaxSensorsPerLock.Value = _maxSensorsPerLock;
         }
 
         protected override void RetrieveData()
@@ -48,6 +50,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             _trackEnemies = AttachedLogic.TrackEnemies.Value;
             _trackNeutrals = AttachedLogic.TrackNeutrals.Value;
             _controlPriority = AttachedLogic.ControlPriority.Value;
+            _maxSensorsPerLock = AttachedLogic.MaxSensorsPerLock.Value;
         }
     }
 }

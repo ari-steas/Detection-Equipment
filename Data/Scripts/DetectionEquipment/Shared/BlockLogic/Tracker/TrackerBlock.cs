@@ -38,6 +38,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             }
         }
         public readonly SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
+        public readonly SimpleSync<int> MaxSensorsPerLock  = new SimpleSync<int>(0);
         public readonly SimpleSync<bool> TrackAllies = new SimpleSync<bool>(false);
         public readonly SimpleSync<bool> TrackEnemies = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> TrackNeutrals = new SimpleSync<bool>(true);
@@ -59,6 +60,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
             ResetAngleTime.Component = this;
+            MaxSensorsPerLock.Component = this;
             TrackAllies.Component = this;
             TrackEnemies.Component = this;
             TrackNeutrals.Component = this;
@@ -129,13 +131,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             LockSet prevLockSet;
             if (LockDecay.TryGetValue(sensor, out prevLockSet))
             {
-                int min = int.MaxValue;
+                int minLockCt = int.MaxValue;
                 bool hasValue = false;
                 var prevTrack = new KeyValuePair<WorldDetectionInfo, int>();
                 foreach (var info in _detectionTrackDict)
                 {
-                    if (info.Value < min)
-                        min = info.Value;
+                    if (MaxSensorsPerLock.Value > 0 && info.Value >= MaxSensorsPerLock.Value)
+                        continue;
+
+                    if (info.Value < minLockCt)
+                        minLockCt = info.Value;
                     if (info.Key.EntityId != prevLockSet.TrackId)
                         continue;
                     prevTrack = info;
@@ -157,7 +162,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                     // no check by default
                 }
 
-                if (hasValue && isIffValid && sensor.CanAimAt(prevTrack.Key.Position) && prevTrack.Value <= min)
+                if (hasValue && isIffValid && sensor.CanAimAt(prevTrack.Key.Position) && prevTrack.Value <= minLockCt)
                     return prevTrack.Key;
             }
 
@@ -182,6 +187,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                         break;
                     // no check by default
                 }
+
+                if (MaxSensorsPerLock.Value > 0 && target.Value >= MaxSensorsPerLock.Value)
+                    continue;
 
                 if (!sensor.CanAimAt(target.Key.Position))
                     continue;
