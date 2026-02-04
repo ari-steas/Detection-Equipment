@@ -31,6 +31,8 @@ namespace DetectionEquipment.Shared.Utils
 
         public static ObjectPool<HashSet<int>> IntPool;
         public static ObjectPool<HashSet<string>> StringPool;
+        public static ObjectPool<HashSet<MyEntity>> EntityPool;
+        public static ObjectPool<HashSet<IMyCubeGrid>> GridPool;
 
         public static void Init()
         {
@@ -60,6 +62,14 @@ namespace DetectionEquipment.Shared.Utils
             );
             StringPool = new ObjectPool<HashSet<string>>(
                 () => new HashSet<string>(),
+                startSize: 10
+            );
+            EntityPool = new ObjectPool<HashSet<MyEntity>>(
+                () => new HashSet<MyEntity>(),
+                startSize: 10
+            );
+            GridPool = new ObjectPool<HashSet<IMyCubeGrid>>(
+                () => new HashSet<IMyCubeGrid>(),
                 startSize: 10
             );
 
@@ -97,6 +107,8 @@ namespace DetectionEquipment.Shared.Utils
             PlayerPool = null;
             IntPool = null;
             StringPool = null;
+            EntityPool = null;
+            GridPool = null;
         }
     }
 }

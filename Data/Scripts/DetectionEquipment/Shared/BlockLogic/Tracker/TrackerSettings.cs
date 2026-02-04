@@ -11,6 +11,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         [ProtoMember(2)] private long[] _selectedSensors = Array.Empty<long>();
         [ProtoMember(3)] private float _resetAngleTime = 4;
         [ProtoMember(4)] private bool _invertAllowControl = false;
+        [ProtoMember(5)] private bool _trackAllies = false;
+        [ProtoMember(6)] private bool _trackEnemies = true;
+        [ProtoMember(7)] private bool _trackNeutrals = true;
 
         [ProtoIgnore] private new TrackerBlock AttachedLogic => (TrackerBlock)base.AttachedLogic;
 
@@ -26,6 +29,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             TrackerControls.ActiveSensorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedSensors ?? Array.Empty<long>());
             AttachedLogic.ResetAngleTime.Value = _resetAngleTime;
             AttachedLogic.InvertAllowControl.Value = _invertAllowControl;
+            AttachedLogic.TrackAllies.Value = _trackAllies;
+            AttachedLogic.TrackEnemies.Value = _trackEnemies;
+            AttachedLogic.TrackNeutrals.Value = _trackNeutrals;
         }
 
         protected override void RetrieveData()
@@ -36,6 +42,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 _selectedSensors = Array.Empty<long>();
             _resetAngleTime = AttachedLogic.ResetAngleTime.Value;
             _invertAllowControl = AttachedLogic.InvertAllowControl.Value;
+            _trackAllies = AttachedLogic.TrackAllies.Value;
+            _trackEnemies = AttachedLogic.TrackEnemies.Value;
+            _trackNeutrals = AttachedLogic.TrackNeutrals.Value;
         }
     }
 }

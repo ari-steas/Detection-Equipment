@@ -43,11 +43,12 @@ namespace DetectionEquipment.Server.SensorBlocks
                 MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref sphere, targets);
             }
 
+            HashSet<MyEntity> trackedEntitySet = GlobalObjectPools.EntityPool.Pop();
+
             // Check all aggregators on this grid and subgrids
             GridSensorManager gridSensors;
-            var allGrids = new List<IMyCubeGrid>();
-            mainGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(allGrids);
-            foreach (var grid in allGrids)
+            HashSet<IMyCubeGrid> allAttachedGrids = mainGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(GlobalObjectPools.GridPool.Pop());
+            foreach (var grid in allAttachedGrids)
             {
                 if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
                 {
@@ -59,6 +60,9 @@ namespace DetectionEquipment.Server.SensorBlocks
 
                         foreach (var target in aggregator.DetectionSet)
                         {
+                            if (target.Entity == null || trackedEntitySet.Contains(target.Entity))
+                                continue;
+
                             var err = target.SumError / Vector3D.Distance(gridPos, target.Position);
 
                             if (GlobalData.DebugLevel > 1)
@@ -69,8 +73,8 @@ namespace DetectionEquipment.Server.SensorBlocks
 
                             if (err > GlobalData.MinLockForWcTarget)
                                 continue;
-                            if (target.Entity != null && !targets.Contains(target.Entity))
-                                targets.Add(target.Entity);
+                            
+                            trackedEntitySet.Add(target.Entity.GetTopMostParent());
                         }
                     }
 
@@ -82,6 +86,14 @@ namespace DetectionEquipment.Server.SensorBlocks
                 }
             }
 
+            targets.AddRange(trackedEntitySet);
+
+            // return collections to pools, saves on alloc time
+            trackedEntitySet.Clear();
+            GlobalObjectPools.EntityPool.Push(trackedEntitySet);
+            allAttachedGrids.Clear();
+            GlobalObjectPools.GridPool.Push(allAttachedGrids);
+
             ServerNetwork.SendToEveryoneInSync(new WcTargetingPacket(mainGrid, targets), mainGrid.WorldMatrix.Translation);
         }
 
@@ -90,6 +102,7 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (!GlobalData.OverrideWcTargeting)
                 return true;
 
+            IMyCubeGrid targetGrid = target as IMyCubeGrid;
             foreach (var aggregatorSet in AggregatorControls.ActiveWeapons)
             {
                 if (!aggregatorSet.Key.UseAllWeapons && !aggregatorSet.Value.Contains(weapon))
@@ -98,8 +111,18 @@ namespace DetectionEquipment.Server.SensorBlocks
                 lock (detSet)
                 {
                     foreach (var item in detSet)
+                    {
                         if (item.Entity == target)
                             return true;
+
+                        // check subgrids
+                        if (targetGrid != null)
+                        {
+                            IMyCubeGrid itemGrid = item.Entity as IMyCubeGrid;
+                            if (itemGrid != null && targetGrid.IsInSameLogicalGroupAs(itemGrid))
+                                return true;
+                        }
+                    }
                 }
             }
             return false;
