@@ -249,8 +249,6 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public virtual void Update(ICollection<VisibilitySet> cachedVisibility)
         {
-            MyAPIGateway.Utilities.ShowNotification($"{Block.CustomName}: Ctrl {_lastActiveController?.ControlPriority.Value.ToString() ?? "NONE"}, delta {MyAPIGateway.Session.GameplayFrameCounter - _lastControlTick}", 1000/60);
-
             Sensor.Enabled = Block.IsWorking || (Block.IsFunctional && Block.Enabled && Definition.MaxPowerDraw <= 0);
             Detections.Clear();
 
