@@ -102,6 +102,17 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
                 b => ControlBlockManager.GetLogic<SearchBlock>(b).InvertAllowControl.Value,
                 (b, selected) => ControlBlockManager.GetLogic<SearchBlock>(b).InvertAllowControl.Value = selected
             );
+
+            CreateSlider(
+                "Priority",
+                "Control Priority",
+                "Higher priority control blocks will take precedence over lower priority.",
+                -10,
+                10,
+                b => ControlBlockManager.GetLogic<SearchBlock>(b).ControlPriority.Value,
+                (b, v) => ControlBlockManager.GetLogic<SearchBlock>(b).ControlPriority.Value = (int) Math.Round(v),
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<SearchBlock>(b).ControlPriority.Value)
+            );
         }
 
         private IEnumerable<IMyCubeBlock> AvailableSensors(SearchBlock logic)

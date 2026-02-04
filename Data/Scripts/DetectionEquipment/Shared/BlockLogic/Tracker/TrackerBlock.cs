@@ -12,7 +12,7 @@ using VRage.Game.Entity;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
-    internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>
+    internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>, ISensorControlBlock
     {
         internal AggregatorBlock SourceAggregator
         {
@@ -38,10 +38,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             }
         }
         public readonly SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
+        public readonly SimpleSync<int> MaxSensorsPerLock  = new SimpleSync<int>(0);
         public readonly SimpleSync<bool> TrackAllies = new SimpleSync<bool>(false);
         public readonly SimpleSync<bool> TrackEnemies = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> TrackNeutrals = new SimpleSync<bool>(true);
-        public readonly SimpleSync<bool> InvertAllowControl = new SimpleSync<bool>(false);
+        public SimpleSync<bool> InvertAllowControl { get; } = new SimpleSync<bool>(false);
+        public SimpleSync<int> ControlPriority { get; }  = new SimpleSync<int>(0);
 
         private readonly SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
         public readonly Dictionary<BlockSensor, LockSet> LockDecay = new Dictionary<BlockSensor, LockSet>();
@@ -58,7 +60,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
             ResetAngleTime.Component = this;
+            MaxSensorsPerLock.Component = this;
+            TrackAllies.Component = this;
+            TrackEnemies.Component = this;
+            TrackNeutrals.Component = this;
             InvertAllowControl.Component = this;
+            ControlPriority.Component = this;
             base.Init();
         }
 
@@ -81,26 +88,33 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
                 foreach (var sensor in ControlledSensors)
                 {
-                    if (!(sensor.AllowMechanicalControl ^ InvertAllowControl.Value))
+                    // Peek control; idle behavior should not take control.
+                    if (!(sensor.AllowMechanicalControl ^ InvertAllowControl.Value) || !sensor.PeekTakeControl(this))
                         continue;
 
                     var target = GetFirstTarget(sensor);
                     if (target == null)
                     {
+                        // idle behavior should not take control
                         if (!LockDecay.ContainsKey(sensor) || LockDecay[sensor].RemainingDecayTime <= 0)
                         {
-                            sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
-                            sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
+                            if (!sensor.IsBeingControlled())
+                            {
+                                sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
+                                sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
+                            }
                             LockDecay.Remove(sensor);
                         }
                         else
                         {
+                            sensor.TryTakeControl(this);
                             LockDecay[sensor].RemainingDecayTime -= 1 / 60f;
                         }
 
                         continue;
                     }
 
+                    sensor.TryTakeControl(this);
                     _detectionTrackDict[target.Value]++;
                     sensor.AimAt(target.Value.Position);
                     LockDecay[sensor] = new LockSet(target.Value.EntityId, ResetAngleTime);
@@ -117,13 +131,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             LockSet prevLockSet;
             if (LockDecay.TryGetValue(sensor, out prevLockSet))
             {
-                int min = int.MaxValue;
+                int minLockCt = int.MaxValue;
                 bool hasValue = false;
                 var prevTrack = new KeyValuePair<WorldDetectionInfo, int>();
                 foreach (var info in _detectionTrackDict)
                 {
-                    if (info.Value < min)
-                        min = info.Value;
+                    if (MaxSensorsPerLock.Value > 0 && info.Value >= MaxSensorsPerLock.Value)
+                        continue;
+
+                    if (info.Value < minLockCt)
+                        minLockCt = info.Value;
                     if (info.Key.EntityId != prevLockSet.TrackId)
                         continue;
                     prevTrack = info;
@@ -145,7 +162,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                     // no check by default
                 }
 
-                if (hasValue && isIffValid && sensor.CanAimAt(prevTrack.Key.Position) && prevTrack.Value <= min)
+                if (hasValue && isIffValid && sensor.CanAimAt(prevTrack.Key.Position) && prevTrack.Value <= minLockCt)
                     return prevTrack.Key;
             }
 
@@ -170,6 +187,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                         break;
                     // no check by default
                 }
+
+                if (MaxSensorsPerLock.Value > 0 && target.Value >= MaxSensorsPerLock.Value)
+                    continue;
 
                 if (!sensor.CanAimAt(target.Key.Position))
                     continue;

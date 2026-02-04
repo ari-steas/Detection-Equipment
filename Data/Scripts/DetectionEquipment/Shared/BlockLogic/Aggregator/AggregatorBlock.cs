@@ -8,7 +8,6 @@ using System.Linq;
 using DetectionEquipment.Client.BlockLogic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Client.Networking;
-using DetectionEquipment.Server;
 using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
@@ -31,7 +30,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public readonly SimpleSync<float> AggregationTime = new SimpleSync<float>(1);
         public readonly SimpleSync<float> VelocityErrorThreshold = new SimpleSync<float>(32); // Standard Deviation at which to ignore velocity estimation
         public readonly SimpleSync<bool> UseAllSensors = new SimpleSync<bool>(true);
-        public readonly SimpleSync<int> DatalinkOutChannel = new SimpleSync<int>(0);
+        public readonly SimpleSync<int> DatalinkOutChannel = new SimpleSync<int>(-1);
         public readonly SimpleSync<int> DatalinkInShareType = new SimpleSync<int>(1);
         public readonly SimpleSync<bool> DoWcTargeting = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> UseAllWeapons = new SimpleSync<bool>(true);
@@ -53,7 +52,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         internal IEnumerable<ClientSensorLogic> ClientActiveSensors => (UseAllSensors.Value ? SensorBlockManager.SensorBlocks.GetValueOrDefault(Block.CubeGrid) : AggregatorControls.ClientActiveSensors.GetValueOrDefault(this))?.Select(b => b.GetLogic<ClientSensorLogic>()) ?? Array.Empty<ClientSensorLogic>();
         internal HashSet<IMyTerminalBlock> ActiveWeapons => AggregatorControls.ActiveWeapons[this];
 
-        private int[] _datalinkInChannels = new[] { 0 };
+        private int[] _datalinkInChannels = { };
         public int[] DatalinkInChannels
         {
             get
@@ -69,6 +68,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     ClientNetwork.SendToServer(new AggregatorUpdatePacket(this));
             }
         }
+        /// <summary>
+        /// DO NOT USE!!!!!!!!!!!!!!!!
+        /// </summary>
+        /// <param name="newVal"></param>
+        public void QuietSetDatalinkInChannels(int[] newVal) => _datalinkInChannels = newVal;
 
         public HashSet<WorldDetectionInfo> DetectionSet
         {

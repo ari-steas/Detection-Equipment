@@ -67,7 +67,7 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
                 Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> aggregatorSensors, damagedSensors;
                 PopulateSensorData(controller, ref totalPowerDraw, out aggregatorSensors, out damagedSensors);
                 
-                GenerateSensorString(sb, aggregatorSensors, damagedSensors);
+                GenerateSensorString(sb, controller, aggregatorSensors, damagedSensors);
 
                 sb.AppendLine();
             }
@@ -126,8 +126,19 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             }
         }
 
-        private static void GenerateSensorString(StringBuilder sb, Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> aggregatorSensors, Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> damagedSensors)
+        private static void GenerateSensorString(StringBuilder sb, HudControllerBlock controller, Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> aggregatorSensors, Dictionary<SensorDefinition.SensorType, List<ClientSensorData>> damagedSensors)
         {
+            if (controller.SourceAggregator == null)
+                return;
+
+            // DATALINK
+            sb.Append("D-LINK [Ch.");
+            sb.Append(string.Join(",", controller.SourceAggregator.DatalinkInChannels));
+            sb.Append(@"] → [Ch.");
+            sb.Append(controller.SourceAggregator.DatalinkOutChannel.Value == -1 ? "X" : controller.SourceAggregator.DatalinkOutChannel.Value.ToString());
+            sb.AppendLine(aggregatorSensors.Count == 0 ? @"]─┘" : @"]─┤");
+
+            // SENSORS
             int typeCount = aggregatorSensors.Count;
             foreach (var sensorType in aggregatorSensors)
             {

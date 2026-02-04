@@ -9,13 +9,14 @@ using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Search
 {
-    internal class SearchBlock : ControlBlockBase<IMyConveyorSorter>
+    internal class SearchBlock : ControlBlockBase<IMyConveyorSorter>, ISensorControlBlock
     {
         internal HashSet<BlockSensor> ControlledSensors => SearchControls.ActiveSensors[this];
         internal Dictionary<BlockSensor, Vector2> DirectionSigns = new Dictionary<BlockSensor, Vector2>();
 
         public SimpleSync<SearchModes> SearchMode = new SimpleSync<SearchModes>(SearchModes.Auto);
-        public SimpleSync<bool> InvertAllowControl = new SimpleSync<bool>(false);
+        public SimpleSync<bool> InvertAllowControl { get; } = new SimpleSync<bool>(false);
+        public SimpleSync<int> ControlPriority { get; } = new SimpleSync<int>(0);
 
         protected override ControlBlockSettingsBase GetSettings => new SearchSettings(this);
         protected override ITerminalControlAdder GetControls => new SearchControls();
@@ -32,6 +33,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
             SearchMode.Component = this;
             InvertAllowControl.Component = this;
+            ControlPriority.Component = this;
 
             base.Init();
         }
@@ -43,7 +45,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
 
             foreach (var sensor in ControlledSensors)
             {
-                if (!(sensor.AllowMechanicalControl ^ InvertAllowControl.Value))
+                if (!(sensor.AllowMechanicalControl ^ InvertAllowControl.Value) || !sensor.TryTakeControl(this))
                     continue;
 
                 var autoMode = sensor.Definition.Movement.AzimuthRate > sensor.Definition.Movement.ElevationRate ? SearchModes.AziFirst : SearchModes.ElevFirst;

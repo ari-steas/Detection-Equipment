@@ -10,6 +10,7 @@ using Sandbox.ModAPI;
 using System.Collections.Generic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.Countermeasures;
+using DetectionEquipment.Shared.BlockLogic;
 using Sandbox.Game.EntityComponents;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -26,6 +27,9 @@ namespace DetectionEquipment.Server.SensorBlocks
         public ISensor Sensor;
         public SubpartManager SubpartManager;
         public readonly SensorDefinition Definition;
+
+        private ISensorControlBlock _lastActiveController = null;
+        private int _lastControlTick = -1;
 
         public HashSet<DetectionInfo> Detections = new HashSet<DetectionInfo>();
 
@@ -275,6 +279,34 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (Block.ShowOnHUD && !MyAPIGateway.Utilities.IsDedicated && Block.HasLocalPlayerAccess())
                 foreach (var detection in Detections)
                     DebugDraw.AddLine(Sensor.Position, detection.Position, Color.Red, 0);
+        }
+
+        public bool TryTakeControl(ISensorControlBlock thisController)
+        {
+            if (thisController == _lastActiveController || // if already being controlled
+                thisController.ControlPriority.Value > (_lastActiveController?.ControlPriority.Value ?? int.MinValue) || // or new controller has higher priority
+                _lastControlTick + 2 < MyAPIGateway.Session.GameplayFrameCounter // or last controller inactive
+                )
+            {
+                _lastActiveController = thisController;
+                _lastControlTick = MyAPIGateway.Session.GameplayFrameCounter;
+                return true;
+            }
+
+            return false;
+        }
+
+        public bool IsBeingControlled()
+        {
+            return _lastActiveController != null || // if already being controlled
+                   _lastControlTick + 2 < MyAPIGateway.Session.GameplayFrameCounter; // or last controller inactive
+        }
+
+        public bool PeekTakeControl(ISensorControlBlock thisController)
+        {
+            return thisController == _lastActiveController || // if already being controlled
+                   thisController.ControlPriority.Value > (_lastActiveController?.ControlPriority.Value ?? int.MinValue) || // or new controller has higher priority
+                   _lastControlTick + 2 < MyAPIGateway.Session.GameplayFrameCounter; // or last controller inactive
         }
 
         private void UpdateSensorMatrix()

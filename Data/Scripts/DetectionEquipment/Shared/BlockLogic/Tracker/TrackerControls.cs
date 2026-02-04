@@ -1,12 +1,11 @@
 ﻿using DetectionEquipment.Client.BlockLogic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Server.Sensors;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.BlockLogic.Search;
-using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using VRage.Game.ModAPI;
@@ -97,6 +96,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 );
             ActiveAggregatorSelect.ListBox.VisibleRowsCount = 5;
 
+            CreateSlider(
+                "MaxSensorsPerLock",
+                "Maximum Sensors Per Target",
+                "Maximum number of sensors that can track a single target. Any extra sensors will go idle. 0 to disable.",
+                0,
+                10,
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b).MaxSensorsPerLock.Value,
+                (b, v) => ControlBlockManager.GetLogic<TrackerBlock>(b).MaxSensorsPerLock.Value = (int)Math.Round(v),
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<TrackerBlock>(b).MaxSensorsPerLock.Value)
+            );
             CreateToggle(
                 "TrackAllies",
                 "Track Allies",
@@ -125,6 +134,17 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 "If enabled, this block inverts \"Allow Mechanical Control\" on sensors.",
                 b => ControlBlockManager.GetLogic<TrackerBlock>(b).InvertAllowControl.Value,
                 (b, selected) => ControlBlockManager.GetLogic<TrackerBlock>(b).InvertAllowControl.Value = selected
+            );
+
+            CreateSlider(
+                "Priority",
+                "Control Priority",
+                "Higher priority control blocks will take precedence over lower priority.",
+                -10,
+                10,
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b).ControlPriority.Value,
+                (b, v) => ControlBlockManager.GetLogic<TrackerBlock>(b).ControlPriority.Value = (int)Math.Round(v),
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<TrackerBlock>(b).ControlPriority.Value)
             );
         }
 
