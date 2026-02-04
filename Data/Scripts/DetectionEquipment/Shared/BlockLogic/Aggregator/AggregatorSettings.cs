@@ -14,8 +14,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         [ProtoMember(3)] private float _velocityErrorThreshold = 32f;
         [ProtoMember(6)] private bool _useAllSensors = true;
         [ProtoMember(7)] private long[] _selectedSensors = Array.Empty<long>();
-        [ProtoMember(8)] private int _datalinkOutChannel = 0;
-        [ProtoMember(9)] private int[] _datalinkInChannels = { 0 };
+        [ProtoMember(8)] private int _datalinkOutChannel = -1;
+        [ProtoMember(9)] private int[] _datalinkInChannels = {};
         [ProtoMember(10)] private int _datalinkInShareType = 1;
         [ProtoMember(11)] private bool _doWcTargeting = true;
         [ProtoMember(12)] private bool _useAllWeapons = true;
@@ -39,7 +39,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AggregatorControls.ActiveWeaponSelect?.UpdateSelectedFromPersistent(AttachedLogic, _selectedWeapons ?? Array.Empty<long>()); // this might be null if WC isn't loaded
 
             AttachedLogic.DatalinkOutChannel.Value = _datalinkOutChannel;
-            AttachedLogic.DatalinkInChannels = _datalinkInChannels;
+            AttachedLogic.QuietSetDatalinkInChannels(_datalinkInChannels);
             AttachedLogic.DatalinkInShareType.Value = _datalinkInShareType;
             AttachedLogic.DoWcTargeting.Value = _doWcTargeting;
             AttachedLogic.UseAllWeapons.Value = _useAllWeapons;
