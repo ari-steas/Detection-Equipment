@@ -99,9 +99,9 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
         private string DistanceStr()
         {
             if (MyAPIGateway.Session.Player?.Character == null)
-                return "";
+                return $"{(Detection.EntityId%4096):X3}: NODIST";
             var dist = Vector3D.Distance(MyAPIGateway.Session.Player.Character.GetPosition(), Detection.Position);
-            return $"{(dist > 1000 ? dist / 1000 : dist):N1}{(dist > 1000 ? "km" : "m")} \u00b1{(Detection.Error > 1000 ? Detection.Error / 1000 : Detection.Error):N1}{(Detection.Error > 1000 ? "km" : "m")}\n";
+            return $"{(Detection.EntityId%4096):X3}: {(dist > 1000 ? dist / 1000 : dist):N1}{(dist > 1000 ? "km" : "m")} \u00b1{(Detection.Error > 1000 ? Detection.Error / 1000 : Detection.Error):N1}{(Detection.Error > 1000 ? "km" : "m")}\n";
         }
 
         private string IffStr =>
