@@ -12,7 +12,7 @@ using VRage.Game.Entity;
 
 namespace DetectionEquipment.Shared.BlockLogic.Tracker
 {
-    internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>
+    internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>, ISensorControlBlock
     {
         internal AggregatorBlock SourceAggregator
         {
@@ -41,8 +41,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         public readonly SimpleSync<bool> TrackAllies = new SimpleSync<bool>(false);
         public readonly SimpleSync<bool> TrackEnemies = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> TrackNeutrals = new SimpleSync<bool>(true);
-        public readonly SimpleSync<bool> InvertAllowControl = new SimpleSync<bool>(false);
-        public readonly SimpleSync<int> ControlPriority = new SimpleSync<int>(0);
+        public SimpleSync<bool> InvertAllowControl { get; } = new SimpleSync<bool>(false);
+        public SimpleSync<int> ControlPriority { get; }  = new SimpleSync<int>(0);
 
         private readonly SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
         public readonly Dictionary<BlockSensor, LockSet> LockDecay = new Dictionary<BlockSensor, LockSet>();
@@ -86,26 +86,33 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
 
                 foreach (var sensor in ControlledSensors)
                 {
-                    if (!(sensor.AllowMechanicalControl ^ InvertAllowControl.Value))
+                    // Peek control; idle behavior should not take control.
+                    if (!(sensor.AllowMechanicalControl ^ InvertAllowControl.Value) || !sensor.PeekTakeControl(this))
                         continue;
 
                     var target = GetFirstTarget(sensor);
                     if (target == null)
                     {
+                        // idle behavior should not take control
                         if (!LockDecay.ContainsKey(sensor) || LockDecay[sensor].RemainingDecayTime <= 0)
                         {
-                            sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
-                            sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
+                            if (!sensor.IsBeingControlled())
+                            {
+                                sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
+                                sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
+                            }
                             LockDecay.Remove(sensor);
                         }
                         else
                         {
+                            sensor.TryTakeControl(this);
                             LockDecay[sensor].RemainingDecayTime -= 1 / 60f;
                         }
 
                         continue;
                     }
 
+                    sensor.TryTakeControl(this);
                     _detectionTrackDict[target.Value]++;
                     sensor.AimAt(target.Value.Position);
                     LockDecay[sensor] = new LockSet(target.Value.EntityId, ResetAngleTime);
