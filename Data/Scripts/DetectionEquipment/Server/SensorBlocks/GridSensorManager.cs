@@ -13,10 +13,8 @@ using Sandbox.ModAPI;
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using DetectionEquipment.Shared.BlockLogic;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
-using VRage.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Server.SensorBlocks
@@ -65,28 +63,44 @@ namespace DetectionEquipment.Server.SensorBlocks
 
                             var err = target.SumError / Vector3D.Distance(gridPos, target.Position);
 
-                            if (GlobalData.DebugLevel > 1)
+                            if (GlobalData.DebugLevel >= 2)
                             {
                                 DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
-                                //MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId} | {err * 100:F}/{GlobalData.MinLockForWcTarget*100:F}% err", 100000/60);
+                                //MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId % 1000} ({target.Entity?.DisplayName}) | {err * 100:F}/{GlobalData.MinLockForWcTarget*100:F}% err", 1500);
                             }
 
                             if (err > GlobalData.MinLockForWcTarget)
                                 continue;
-                            
-                            trackedEntitySet.Add(target.Entity.GetTopMostParent());
-                        }
-                    }
 
-                    if (GlobalData.DebugLevel >= 2)
-                    {
-                        MyAPIGateway.Utilities.ShowNotification($"WC TGT Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.", 100000/60);
-                        Log.Info("GridSensorManager", $"WC TGT Check Target {((IMyCubeGrid)grid).CustomName} - {targets.Count} found.");
+                            // WC gets pissy if all subgrids aren't added to the list
+                            MyCubeGrid targetGrid = target.Entity as MyCubeGrid;
+                            if (targetGrid != null)
+                            {
+                                var targetSubgrids = targetGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(GlobalObjectPools.GridPool.Pop());
+                                foreach (var targetSubgrid in targetSubgrids)
+                                {
+                                    trackedEntitySet.Add((MyEntity) targetSubgrid);
+                                }
+                                targetSubgrids.Clear();
+                                GlobalObjectPools.GridPool.Push(targetSubgrids);
+                            }
+                            else
+                            {
+                                trackedEntitySet.Add(target.Entity);
+                            }
+                        }
                     }
                 }
             }
 
             targets.AddRange(trackedEntitySet);
+
+            if (GlobalData.DebugLevel >= 2)
+            {
+                // LET ME SEEEEE
+                MyAPIGateway.Utilities.ShowNotification($"WC Check Targets {mainGrid.DisplayName} - {targets.Count} found.", 1500);
+                Log.Info("GridSensorManager", $"WC Check Targets {mainGrid.DisplayName} - {targets.Count} found.");
+            }
 
             // return collections to pools, saves on alloc time
             trackedEntitySet.Clear();
