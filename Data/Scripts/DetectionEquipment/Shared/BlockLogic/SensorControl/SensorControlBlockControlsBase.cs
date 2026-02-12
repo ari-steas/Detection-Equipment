@@ -98,7 +98,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl
         {
             if (MyAPIGateway.Session.IsServer)
             {
-                return logic.GridSensors.BlockSensorMap.Keys;
+                return logic.GridSensors.BlockSensorMap.Where(kvp => kvp.Value.Any(s => s.Definition.Movement != null)).Select(kvp => kvp.Key);
             }
 
             return SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid].Where(sb =>
