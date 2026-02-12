@@ -10,7 +10,7 @@ using Sandbox.ModAPI;
 using System.Collections.Generic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.Countermeasures;
-using DetectionEquipment.Shared.BlockLogic;
+using DetectionEquipment.Shared.BlockLogic.SensorControl;
 using Sandbox.Game.EntityComponents;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;

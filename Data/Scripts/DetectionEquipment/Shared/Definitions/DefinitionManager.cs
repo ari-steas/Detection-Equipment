@@ -13,8 +13,8 @@ using DetectionEquipment.Shared.BlockLogic.Antenna;
 using DetectionEquipment.Shared.BlockLogic.HudController;
 using DetectionEquipment.Shared.BlockLogic.IffAggregator;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
-using DetectionEquipment.Shared.BlockLogic.Search;
-using DetectionEquipment.Shared.BlockLogic.Tracker;
+using DetectionEquipment.Shared.BlockLogic.SensorControl.Search;
+using DetectionEquipment.Shared.BlockLogic.SensorControl.Tracker;
 
 namespace DetectionEquipment.Shared.Definitions
 {

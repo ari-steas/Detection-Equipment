@@ -10,9 +10,9 @@ using DetectionEquipment.Shared.BlockLogic.GenericControls;
 using DetectionEquipment.Shared.Utils;
 using VRage.Game.Entity;
 
-namespace DetectionEquipment.Shared.BlockLogic.Tracker
+namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Tracker
 {
-    internal class TrackerBlock : ControlBlockBase<IMyConveyorSorter>, ISensorControlBlock
+    internal class TrackerBlock : SensorControlBlockBase<IMyConveyorSorter>
     {
         internal AggregatorBlock SourceAggregator
         {
@@ -42,8 +42,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
         public readonly SimpleSync<bool> TrackAllies = new SimpleSync<bool>(false);
         public readonly SimpleSync<bool> TrackEnemies = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> TrackNeutrals = new SimpleSync<bool>(true);
-        public SimpleSync<bool> InvertAllowControl { get; } = new SimpleSync<bool>(false);
-        public SimpleSync<int> ControlPriority { get; }  = new SimpleSync<int>(0);
 
         private readonly SortedDictionary<WorldDetectionInfo, int> _detectionTrackDict = new SortedDictionary<WorldDetectionInfo, int>();
         public readonly Dictionary<BlockSensor, LockSet> LockDecay = new Dictionary<BlockSensor, LockSet>();

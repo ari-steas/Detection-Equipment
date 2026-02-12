@@ -2,7 +2,7 @@
 using Sandbox.ModAPI;
 using System;
 
-namespace DetectionEquipment.Shared.BlockLogic.Tracker
+namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Tracker
 {
     [ProtoContract]
     internal class TrackerSettings : ControlBlockSettingsBase

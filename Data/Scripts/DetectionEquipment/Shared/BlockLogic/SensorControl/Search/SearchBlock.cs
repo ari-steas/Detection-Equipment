@@ -1,5 +1,7 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.BlockLogic.SensorControl.Search;
+using DetectionEquipment.Shared.BlockLogic.SensorControl;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Utils;
 using Sandbox.ModAPI;
@@ -7,16 +9,14 @@ using System;
 using System.Collections.Generic;
 using VRageMath;
 
-namespace DetectionEquipment.Shared.BlockLogic.Search
+namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Search
 {
-    internal class SearchBlock : ControlBlockBase<IMyConveyorSorter>, ISensorControlBlock
+    internal class SearchBlock : SensorControlBlockBase<IMyConveyorSorter>
     {
         internal HashSet<BlockSensor> ControlledSensors => SearchControls.ActiveSensors[this];
         internal Dictionary<BlockSensor, Vector2> DirectionSigns = new Dictionary<BlockSensor, Vector2>();
 
         public SimpleSync<SearchModes> SearchMode = new SimpleSync<SearchModes>(SearchModes.Auto);
-        public SimpleSync<bool> InvertAllowControl { get; } = new SimpleSync<bool>(false);
-        public SimpleSync<int> ControlPriority { get; } = new SimpleSync<int>(0);
 
         protected override ControlBlockSettingsBase GetSettings => new SearchSettings(this);
         protected override ITerminalControlAdder GetControls => new SearchControls();
@@ -122,7 +122,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Search
             if (!mainCanRotateFull && (mainAxisDesired <= mainAxisMin || mainAxisDesired >= mainAxisMax))
                 DirectionSigns[sensor] *= InvMainAxis;
 
-            if (mainCanRotateFull || (mainAxisDesired <= mainAxisMin || mainAxisDesired >= mainAxisMax))
+            if (mainCanRotateFull || mainAxisDesired <= mainAxisMin || mainAxisDesired >= mainAxisMax)
             {
                 offAxisDesired = MathUtils.Clamp(offOffset + offAxisCurrent, offAxisMin, offAxisMax);
                 // can't rotate full and outside of bounds
