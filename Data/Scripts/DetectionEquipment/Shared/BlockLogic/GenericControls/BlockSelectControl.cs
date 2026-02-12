@@ -1,6 +1,5 @@
 ﻿using DetectionEquipment.Client.Networking;
 using DetectionEquipment.Server.Networking;
-using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Networking;
 using ProtoBuf;

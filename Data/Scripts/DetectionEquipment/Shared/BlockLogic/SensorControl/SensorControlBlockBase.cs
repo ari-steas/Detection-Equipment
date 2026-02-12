@@ -15,8 +15,16 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl
 
         protected SensorControlBlockBase(IMyFunctionalBlock block) : base(block)
         {
+            
+        }
+
+        public override void Init()
+        {
+            if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
+                return;
             InvertAllowControl.Component = this;
             ControlPriority.Component = this;
+            base.Init();
         }
     }
 }
