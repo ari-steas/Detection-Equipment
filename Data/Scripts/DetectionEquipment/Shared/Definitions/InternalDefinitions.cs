@@ -400,6 +400,14 @@ namespace DetectionEquipment.Shared.Definitions
                 },
                 Type = ControlBlockDefinition.LogicType.Tracker
             },
+            ["DetEq_Manual"] = new ControlBlockDefinition
+            {
+                SubtypeIds = new[]
+                {
+                    "DetectionManualBlock", "DetectionManualBlock_Small"
+                },
+                Type = ControlBlockDefinition.LogicType.Manual
+            },
         };
 
         public static void Register()

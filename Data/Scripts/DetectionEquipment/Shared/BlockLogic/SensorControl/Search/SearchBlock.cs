@@ -13,7 +13,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Search
 {
     internal class SearchBlock : SensorControlBlockBase<IMyConveyorSorter>
     {
-        internal HashSet<BlockSensor> ControlledSensors => SearchControls.ActiveSensors[this];
+        internal override HashSet<BlockSensor> ControlledSensors => SearchControls.ActiveSensors[this];
         internal Dictionary<BlockSensor, Vector2> DirectionSigns = new Dictionary<BlockSensor, Vector2>();
 
         public SimpleSync<SearchModes> SearchMode = new SimpleSync<SearchModes>(SearchModes.Auto);
@@ -32,8 +32,6 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Search
                 return;
 
             SearchMode.Component = this;
-            InvertAllowControl.Component = this;
-            ControlPriority.Component = this;
 
             base.Init();
         }

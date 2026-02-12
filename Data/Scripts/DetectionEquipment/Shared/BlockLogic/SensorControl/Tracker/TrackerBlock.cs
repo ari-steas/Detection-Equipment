@@ -26,16 +26,16 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Tracker
             }
         }
 
-        internal HashSet<BlockSensor> ControlledSensors
+        internal override HashSet<BlockSensor> ControlledSensors
         {
             get
             {
                 return TrackerControls.ActiveSensors[this];
             }
-            set
-            {
-                TrackerControls.ActiveSensorSelect.UpdateSelected(this, value.Select(sensor => sensor.Block.EntityId).ToArray());
-            }
+            //set
+            //{
+            //    TrackerControls.ActiveSensorSelect.UpdateSelected(this, value.Select(sensor => sensor.Block.EntityId).ToArray());
+            //}
         }
         public readonly SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
         public readonly SimpleSync<int> MaxSensorsPerLock  = new SimpleSync<int>(0);
@@ -62,8 +62,6 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Tracker
             TrackAllies.Component = this;
             TrackEnemies.Component = this;
             TrackNeutrals.Component = this;
-            InvertAllowControl.Component = this;
-            ControlPriority.Component = this;
             base.Init();
         }
 

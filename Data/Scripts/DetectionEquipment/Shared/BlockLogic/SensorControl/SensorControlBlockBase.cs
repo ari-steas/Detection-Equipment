@@ -11,7 +11,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl
         public SimpleSync<bool> InvertAllowControl { get; } = new SimpleSync<bool>(false);
         public SimpleSync<int> ControlPriority { get; } = new SimpleSync<int>(0);
 
-        internal HashSet<BlockSensor> ControlledSensors { get; } // TODO
+        internal abstract HashSet<BlockSensor> ControlledSensors { get; }
 
         protected SensorControlBlockBase(IMyFunctionalBlock block) : base(block)
         {

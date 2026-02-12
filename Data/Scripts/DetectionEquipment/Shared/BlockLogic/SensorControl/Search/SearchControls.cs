@@ -69,8 +69,8 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Search
                 ActiveSensors[logic].Add(sensor);
                 if (sensor.AllowMechanicalControl ^ logic.InvertAllowControl.Value)
                 {
-                    sensor.DesiredAzimuth = 0;
-                    sensor.DesiredElevation = 0;
+                    sensor.DesiredAzimuth = sensor.Definition.Movement.HomeAzimuth;
+                    sensor.DesiredElevation = sensor.Definition.Movement.HomeElevation;
                 }
                 logic.DirectionSigns[sensor] = Vector2I.One;
             }
