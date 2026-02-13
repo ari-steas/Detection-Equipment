@@ -13,8 +13,9 @@ using DetectionEquipment.Shared.BlockLogic.Antenna;
 using DetectionEquipment.Shared.BlockLogic.HudController;
 using DetectionEquipment.Shared.BlockLogic.IffAggregator;
 using DetectionEquipment.Shared.BlockLogic.IffReflector;
-using DetectionEquipment.Shared.BlockLogic.Search;
-using DetectionEquipment.Shared.BlockLogic.Tracker;
+using DetectionEquipment.Shared.BlockLogic.SensorControl.Manual;
+using DetectionEquipment.Shared.BlockLogic.SensorControl.Search;
+using DetectionEquipment.Shared.BlockLogic.SensorControl.Tracker;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -373,6 +374,9 @@ namespace DetectionEquipment.Shared.Definitions
                             break;
                         case ControlBlockDefinition.LogicType.Tracker:
                             logic = new TrackerBlock(block);
+                            break;
+                        case ControlBlockDefinition.LogicType.Manual:
+                            logic = new ManualBlock(block);
                             break;
                         default:
                             Log.Info("DefinitionManager", $"Invalid control block type {definition.Type}");

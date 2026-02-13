@@ -2,7 +2,7 @@
 using Sandbox.ModAPI;
 using System;
 
-namespace DetectionEquipment.Shared.BlockLogic.Search
+namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Search
 {
     [ProtoContract]
     internal class SearchSettings : ControlBlockSettingsBase

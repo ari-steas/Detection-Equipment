@@ -27,6 +27,7 @@ namespace DetectionEquipment.Shared.Definitions
             IffReflector = 4,
             Searcher = 5,
             Tracker = 6,
+            Manual = 7,
         }
 
         public override bool Verify(out string reason)

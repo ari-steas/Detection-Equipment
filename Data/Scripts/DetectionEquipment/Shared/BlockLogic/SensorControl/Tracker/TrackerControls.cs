@@ -1,22 +1,16 @@
-﻿using DetectionEquipment.Client.BlockLogic;
-using DetectionEquipment.Client.BlockLogic.Sensors;
-using DetectionEquipment.Server.SensorBlocks;
+﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.Search;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using VRage.Game.ModAPI;
 
-namespace DetectionEquipment.Shared.BlockLogic.Tracker
+namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Tracker
 {
-    internal class TrackerControls : TerminalControlAdder<TrackerBlock, IMyConveyorSorter>
+    internal class TrackerControls : SensorControlBlockControlsBase<TrackerBlock>
     {
-        public static BlockSelectControl<TrackerBlock, IMyConveyorSorter> ActiveSensorSelect;
-        public static Dictionary<TrackerBlock, HashSet<BlockSensor>> ActiveSensors = new Dictionary<TrackerBlock, HashSet<BlockSensor>>();
-
         public static BlockSelectControl<TrackerBlock, IMyConveyorSorter> ActiveAggregatorSelect;
         public static Dictionary<TrackerBlock, AggregatorBlock> ActiveAggregators = new Dictionary<TrackerBlock, AggregatorBlock>();
 
@@ -25,53 +19,51 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
             base.DoOnce(thisLogic);
 
             ActiveAggregators[(TrackerBlock)thisLogic] = (AggregatorBlock)ControlBlockManager.I.Blocks.Values.FirstOrDefault(b => b is AggregatorBlock && b.CubeBlock.CubeGrid == thisLogic.CubeBlock.CubeGrid);
-            ActiveSensors[(TrackerBlock)thisLogic] = new HashSet<BlockSensor>();
         }
 
         protected override void CreateTerminalActions()
         {
-            CreateSlider(
-                "ResetAngleTime",
-                "Tracking Reset Time",
-                "How long sensors should attempt to track a lost target.",
-                0,
-                10,
-                b => ControlBlockManager.GetLogic<TrackerBlock>(b)?.ResetAngleTime,
-                (b, v) => ControlBlockManager.GetLogic<TrackerBlock>(b).ResetAngleTime.Value = v,
-                (b, sb) => sb?.Append(ControlBlockManager.GetLogic<TrackerBlock>(b)?.ResetAngleTime?.Value.ToString("F1") + "s")
-                );
+            base.CreateTerminalActions();
 
-            ActiveSensorSelect = new BlockSelectControl<TrackerBlock, IMyConveyorSorter>(
-                this,
-                "ActiveSensors",
-                "Active Sensors",
-                "Sensors this block should direct. Ctrl+Click to select multiple.",
-                true,
-                false,
-                AvailableSensors,
-                (logic, selected) =>
+            CreateAction(
+                "TargetAllies",
+                "Target Allies",
+                b =>
                 {
-                    if (!MyAPIGateway.Session.IsServer)
-                        return;
+                    var sync = ControlBlockManager.GetLogic<TrackerBlock>(b).TrackAllies;
+                    sync.Value = !sync.Value;
+                },
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<TrackerBlock>(b).TrackAllies.Value.ToString()),
+                @"Textures\GUI\Icons\Actions\CharacterToggle.dds"
+            );
+            CreateAction(
+                "TargetNeutrals",
+                "Target Neutrals",
+                b =>
+                {
+                    var sync = ControlBlockManager.GetLogic<TrackerBlock>(b).TrackNeutrals;
+                    sync.Value = !sync.Value;
+                },
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<TrackerBlock>(b).TrackNeutrals.Value.ToString()),
+                @"Textures\GUI\Icons\Actions\NeutralToggle.dds"
+            );
+            CreateAction(
+                "TargetEnemies",
+                "Target Enemies",
+                b =>
+                {
+                    var sync = ControlBlockManager.GetLogic<TrackerBlock>(b).TrackEnemies;
+                    sync.Value = !sync.Value;
+                },
+                (b, sb) => sb.Append(ControlBlockManager.GetLogic<TrackerBlock>(b).TrackEnemies.Value.ToString()),
+                @"Textures\GUI\Icons\Actions\MovingObjectToggle.dds"
+            );
+        }
 
-                    ActiveSensors[logic].Clear();
-                    logic.LockDecay.Clear();
+        protected override void CreateTerminalProperties()
+        {
+            base.CreateTerminalProperties();
 
-                    foreach (var block in selected)
-                    {
-                        List<BlockSensor> sensors;
-                        if (logic.GridSensors.BlockSensorMap.TryGetValue(block, out sensors))
-                        {
-                            foreach (var sensor in sensors)
-                            {
-                                if (sensor.Definition.Movement == null)
-                                    continue;
-                                ActiveSensors[logic].Add(sensor);
-                            }
-                        }
-                    }
-                }
-                );
             ActiveAggregatorSelect = new BlockSelectControl<TrackerBlock, IMyConveyorSorter>(
                 this,
                 "SourceAggregator",
@@ -93,8 +85,19 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                         ActiveAggregators[logic] = (AggregatorBlock)control;
                     }
                 }
-                );
+            );
             ActiveAggregatorSelect.ListBox.VisibleRowsCount = 5;
+
+            CreateSlider(
+                "ResetAngleTime",
+                "Tracking Reset Time",
+                "How long sensors should attempt to track a lost target.",
+                0,
+                10,
+                b => ControlBlockManager.GetLogic<TrackerBlock>(b)?.ResetAngleTime,
+                (b, v) => ControlBlockManager.GetLogic<TrackerBlock>(b).ResetAngleTime.Value = v,
+                (b, sb) => sb?.Append(ControlBlockManager.GetLogic<TrackerBlock>(b)?.ResetAngleTime?.Value.ToString("F1") + "s")
+                );
 
             CreateSlider(
                 "MaxSensorsPerLock",
@@ -127,41 +130,29 @@ namespace DetectionEquipment.Shared.BlockLogic.Tracker
                 b => ControlBlockManager.GetLogic<TrackerBlock>(b).TrackNeutrals.Value,
                 (b, selected) => ControlBlockManager.GetLogic<TrackerBlock>(b).TrackNeutrals.Value = selected
             );
-
-            CreateToggle(
-                "InvertAllowControl",
-                "Invert Allow Control",
-                "If enabled, this block inverts \"Allow Mechanical Control\" on sensors.",
-                b => ControlBlockManager.GetLogic<TrackerBlock>(b).InvertAllowControl.Value,
-                (b, selected) => ControlBlockManager.GetLogic<TrackerBlock>(b).InvertAllowControl.Value = selected
-            );
-
-            CreateSlider(
-                "Priority",
-                "Control Priority",
-                "Higher priority control blocks will take precedence over lower priority.",
-                -10,
-                10,
-                b => ControlBlockManager.GetLogic<TrackerBlock>(b).ControlPriority.Value,
-                (b, v) => ControlBlockManager.GetLogic<TrackerBlock>(b).ControlPriority.Value = (int)Math.Round(v),
-                (b, sb) => sb.Append(ControlBlockManager.GetLogic<TrackerBlock>(b).ControlPriority.Value)
-            );
         }
 
-        protected override void CreateTerminalProperties()
+        protected override void OnSensorsSelected(TrackerBlock logic, List<IMyCubeBlock> selected)
         {
+            if (!MyAPIGateway.Session.IsServer)
+                return;
 
-        }
+            ActiveSensors[logic].Clear();
+            logic.LockDecay.Clear();
 
-        private IEnumerable<IMyCubeBlock> AvailableSensors(TrackerBlock logic)
-        {
-            if (MyAPIGateway.Session.IsServer)
+            foreach (var block in selected)
             {
-                return logic.GridSensors.BlockSensorMap.Keys;
+                List<BlockSensor> sensors;
+                if (logic.GridSensors.BlockSensorMap.TryGetValue(block, out sensors))
+                {
+                    foreach (var sensor in sensors)
+                    {
+                        if (sensor.Definition.Movement == null)
+                            continue;
+                        ActiveSensors[logic].Add(sensor);
+                    }
+                }
             }
-
-            return SensorBlockManager.SensorBlocks[logic.CubeBlock.CubeGrid].Where(sb =>
-                sb.GetLogic<ClientSensorLogic>()?.Sensors.Values.Any(s => s.Definition.Movement != null) ?? false);
         }
     }
 }
