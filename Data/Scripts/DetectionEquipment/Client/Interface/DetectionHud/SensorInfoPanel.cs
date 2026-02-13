@@ -5,6 +5,7 @@ using System.Text;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.BlockLogic.HudController;
+using DetectionEquipment.Shared.BlockLogic.SensorControl.Manual;
 using DetectionEquipment.Shared.Definitions;
 using RichHudFramework.UI;
 using Sandbox.Game.EntityComponents;
@@ -79,6 +80,18 @@ namespace DetectionEquipment.Client.Interface.DetectionHud
             {
                 int a = 5 * 500;
                 sb.AppendLine($"\uE056 POWER OVERDRAW \uE056\n{totalPowerDraw:N1}/{availablePower:N1}MW ");
+            }
+
+            sb.AppendLine();
+            foreach (var sensorCtrl in ManualControls.ShipControllers.Keys)
+            {
+                IMyShipController shipCtrl;
+                if (!sensorCtrl.GetController(out shipCtrl) || shipCtrl.Pilot != MyAPIGateway.Session.Player.Character)
+                    continue;
+
+                sb.AppendLine($"{sensorCtrl.Block.CustomName}");
+                sb.AppendLine($"({sensorCtrl.Aggregator?.Block.CustomName ?? "NOSRC"})─┤");
+                sb.AppendLine($"[CTRL {sensorCtrl.ControlledSensors.Count:D2}] [PRIO {sensorCtrl.ControlPriority.Value:D2}] [TGT {(sensorCtrl.LockedTarget.Value%4096):X3}]─┘");
             }
 
             _mainLabel.Text = sb;
