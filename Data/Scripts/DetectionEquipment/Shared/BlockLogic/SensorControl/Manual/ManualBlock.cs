@@ -21,10 +21,14 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
         public AggregatorBlock Aggregator => ManualControls.ActiveAggregators[this];
 
 
-        public SimpleSync<bool> ParallaxAccount = new SimpleSync<bool>(false);
-        public SimpleSync<Vector3D> RelativeAimpoint = new SimpleSync<Vector3D>(Vector3D.Zero);
-        public SimpleSync<long> LockedTarget = new SimpleSync<long>(long.MinValue);
-        public SimpleSync<long> Controller = new SimpleSync<long>(long.MinValue);
+        public readonly SimpleSync<bool> ParallaxAccount = new SimpleSync<bool>(false);
+        public readonly SimpleSync<Vector3D> RelativeAimpoint = new SimpleSync<Vector3D>(Vector3D.Zero);
+        public readonly SimpleSync<long> LockedTarget = new SimpleSync<long>(long.MinValue);
+        public readonly SimpleSync<long> Controller = new SimpleSync<long>(long.MinValue);
+        public readonly SimpleSync<float> ResetAngleTime = new SimpleSync<float>(4);
+
+        private int _currentResetTime = 4 * 60;
+        private Vector3D _globalTargetAimpoint = Vector3D.Zero;
 
         protected override ControlBlockSettingsBase GetSettings => new ManualSettings(this);
         protected override ITerminalControlAdder GetControls => new ManualControls();
@@ -43,6 +47,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
             if (MyAPIGateway.Session.IsServer)
                 LockedTarget.Validate = OnLockedTargetChanged;
             Controller.Component = this;
+            ResetAngleTime.Component = this;
             base.Init();
         }
 
@@ -137,6 +142,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
             }
 
             LockedTarget.Value = closest.Value.EntityId;
+            _currentResetTime = (int) (ResetAngleTime.Value * 60);
         }
 
         public void UnlockTarget()
@@ -181,26 +187,34 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
             }
             else
             {
-                Vector3D globalAimpoint = Vector3D.Zero;
+                // target locked
                 bool anySet = false;
-                foreach (var target in Aggregator.DetectionSet)
+                foreach (var target in Aggregator.DetectionSet) // find old target
                 {
                     if (target.EntityId != LockedTarget.Value)
                         continue;
-                    globalAimpoint = target.Position;
+                    _globalTargetAimpoint = target.Position;
                     anySet = true;
                     break;
                 }
 
-                if (!anySet)
-                    return;
+                if (!anySet) // if couldn't find, wait [n] seconds until releasing control
+                {
+                    if (_currentResetTime <= 0)
+                        return;
+                    _currentResetTime--;
+                }
+                else
+                {
+                    _currentResetTime = (int) (ResetAngleTime.Value * 60);
+                }
 
-                foreach (var sensor in ControlledSensors)
+                foreach (var sensor in ControlledSensors) // direct sensors
                 {
                     if (!(sensor.AllowMechanicalControl ^ InvertAllowControl.Value) || !sensor.TryTakeControl(this))
                         continue;
 
-                    sensor.AimAt(globalAimpoint);
+                    sensor.AimAt(_globalTargetAimpoint);
                 }
             }
         }
