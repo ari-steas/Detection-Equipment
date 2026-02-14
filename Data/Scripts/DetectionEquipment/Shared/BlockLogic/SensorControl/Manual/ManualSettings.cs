@@ -12,6 +12,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
         [ProtoMember(4)] private int _controlPriority = 0;
         [ProtoMember(5)] private long[] _selectedControllers = Array.Empty<long>();
         [ProtoMember(6)] private long[] _selectedAggregators = Array.Empty<long>();
+        [ProtoMember(7)] private float _resetAngleTime = 4;
 
         [ProtoIgnore] private new ManualBlock AttachedLogic => (ManualBlock)base.AttachedLogic;
 
@@ -28,6 +29,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
             AttachedLogic.ControlPriority.Value = _controlPriority;
             ManualControls.ShipControllersSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedControllers ?? Array.Empty<long>());
             ManualControls.ActiveAggregatorSelect.UpdateSelectedFromPersistent(AttachedLogic, _selectedAggregators ?? Array.Empty<long>());
+            AttachedLogic.ResetAngleTime.Value = _resetAngleTime;
         }
 
         protected override void RetrieveData()
@@ -40,6 +42,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
                 _selectedControllers = Array.Empty<long>();
             if (!ManualControls.ActiveAggregatorSelect.SelectedBlocks.TryGetValue(AttachedLogic, out _selectedAggregators))
                 _selectedAggregators = Array.Empty<long>();
+            _resetAngleTime = AttachedLogic.ResetAngleTime.Value;
         }
     }
 }

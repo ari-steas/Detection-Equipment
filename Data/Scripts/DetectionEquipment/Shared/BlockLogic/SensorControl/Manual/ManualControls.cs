@@ -140,6 +140,17 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
             );
             ActiveAggregatorSelect.ListBox.VisibleRowsCount = 5;
 
+            CreateSlider(
+                "ResetAngleTime",
+                "Tracking Reset Time",
+                "How long sensors should attempt to track a lost target.",
+                0,
+                10,
+                b => ControlBlockManager.GetLogic<ManualBlock>(b)?.ResetAngleTime,
+                (b, v) => ControlBlockManager.GetLogic<ManualBlock>(b).ResetAngleTime.Value = v,
+                (b, sb) => sb?.Append(ControlBlockManager.GetLogic<ManualBlock>(b)?.ResetAngleTime?.Value.ToString("F1") + "s")
+            );
+
             CreateToggle(
                 "ParallaxAccount",
                 "Parallax Account",
