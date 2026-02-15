@@ -221,7 +221,7 @@ namespace DetectionEquipment.Shared.BlockLogic.SensorControl.Manual
 
         private void UpdateClient(IMyShipController controller)
         {
-            Log.Info("ManualBlock", $"Pilot: {controller.Pilot != MyAPIGateway.Session.Player.Character} {controller.Pilot.DisplayName}, {MyAPIGateway.Session.Player.Character.DisplayName}\n{LockedTarget.Value}");
+            //Log.Info("ManualBlock", $"Pilot: {controller.Pilot != MyAPIGateway.Session.Player.Character} {controller.Pilot.DisplayName}, {MyAPIGateway.Session.Player.Character.DisplayName}\n{LockedTarget.Value}");
             if (controller.Pilot != MyAPIGateway.Session.Player.Character || LockedTarget.Value != long.MinValue)
                 return;
 
