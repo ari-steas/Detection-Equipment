@@ -322,7 +322,7 @@ namespace DetectionEquipment.Server.SensorBlocks
         /// <summary>
         /// Buffer class for ITrack data.
         /// </summary>
-        public struct VisibilitySet
+        public struct VisibilitySet : IEquatable<VisibilitySet>
         {
             public ITrack Track;
             public double RadarVisibility;
@@ -392,6 +392,25 @@ namespace DetectionEquipment.Server.SensorBlocks
                 ClosestCorner = BoundingBox.ClosestCorner(gridPosition);
                 Position = BoundingBox.Center;
                 _lastUpdate = MyAPIGateway.Session.GameplayFrameCounter;
+            }
+
+            public bool Equals(VisibilitySet other)
+            {
+                return Position.Equals(other.Position) && _lastUpdate == other._lastUpdate;
+            }
+
+            public override bool Equals(object obj)
+            {
+                if (ReferenceEquals(null, obj)) return false;
+                return obj is VisibilitySet && Equals((VisibilitySet)obj);
+            }
+
+            public override int GetHashCode()
+            {
+                unchecked
+                {
+                    return (Position.GetHashCode() * 397) ^ _lastUpdate;
+                }
             }
         }
     }
