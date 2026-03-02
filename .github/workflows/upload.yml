@@ -21,6 +21,8 @@ jobs:
           rm -rf Properties
           find . -type f -name '*.blend*' -delete
           find . -type f -name '.git*' -delete
+          find . -type f -name '*.sln' -delete
+          find . -type f -name '*.csproj' -delete
           
       - uses: AnarkisGaming/workshop@v1
         with:
