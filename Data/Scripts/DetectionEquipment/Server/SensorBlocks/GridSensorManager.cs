@@ -183,8 +183,9 @@ namespace DetectionEquipment.Server.SensorBlocks
             var internalVisibility = new HashSet<VisibilitySet>(_trackVisibility.Count);
             foreach (var trackKvp in tracksBuffer)
             {
+                // skip closed entities
                 // 500km max track range if radar is present, 50km otherwise
-                if (Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
+                if ((trackKvp.Key?.Closed ?? true) || Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
                     continue;
 
                 // move this before LOS check to save a few more raycasts
