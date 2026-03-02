@@ -1,6 +1,7 @@
 name: "Upload to Workshop"
 
 on:
+  workflow_dispatch:
   push:
     paths-ignore:
       - '.github/**'
