@@ -91,9 +91,9 @@ namespace DetectionEquipment.Shared.Utils
                 MyAPIGateway.Utilities.InvokeOnGameThread(() =>
                 {
                     MyAPIGateway.Utilities.ShowNotification(
-                        "[Detection Equipment] Log exceeded file size limit - something has gone horribly wrong.",
+                        $"[{ModName}] Log exceeded file size limit - something has gone horribly wrong.",
                         20000, "Red");
-                    MyLog.Default.WriteLineAndConsole($"[Detection Equipment] Log exceeded file size limit {MaxFileSize/1024:N0}kB - truncating all further info messages.");
+                    MyLog.Default.WriteLineAndConsole($"[{ModName}] Log exceeded file size limit {MaxFileSize/1024:N0}kB - truncating all further info messages.");
                 });
             }
             _writer?.Flush();

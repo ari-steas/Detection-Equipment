@@ -176,7 +176,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 {
                     var logic = ControlBlockManager.GetLogic<AggregatorBlock>(block);
 
-                    logic.DatalinkInChannels = selected.Where(item => item.UserData != null).Select(item => (int)item.UserData).ToArray();
+                    logic.DatalinkInChannels = selected.Where(item => item.UserData != null).Select(item => (int)item.UserData).Distinct().ToArray();
                 }
                 );
 

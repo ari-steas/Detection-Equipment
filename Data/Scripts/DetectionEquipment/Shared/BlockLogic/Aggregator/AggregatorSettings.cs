@@ -1,6 +1,7 @@
 ﻿using ProtoBuf;
 using Sandbox.ModAPI;
 using System;
+using System.Linq;
 using DetectionEquipment.Shared.BlockLogic.IffAggregator;
 using DetectionEquipment.Shared.Utils;
 
@@ -39,7 +40,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AggregatorControls.ActiveWeaponSelect?.UpdateSelectedFromPersistent(AttachedLogic, _selectedWeapons ?? Array.Empty<long>()); // this might be null if WC isn't loaded
 
             AttachedLogic.DatalinkOutChannel.Value = _datalinkOutChannel;
-            AttachedLogic.QuietSetDatalinkInChannels(_datalinkInChannels);
+            AttachedLogic.QuietSetDatalinkInChannels(_datalinkInChannels.Distinct().ToArray());
             AttachedLogic.DatalinkInShareType.Value = _datalinkInShareType;
             AttachedLogic.DoWcTargeting.Value = _doWcTargeting;
             AttachedLogic.UseAllWeapons.Value = _useAllWeapons;
