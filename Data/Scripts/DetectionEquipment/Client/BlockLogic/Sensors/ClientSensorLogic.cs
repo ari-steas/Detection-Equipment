@@ -180,7 +180,7 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             _sensorIds = null;
             _definitionIds = null;
 
-            if (!MyAPIGateway.Session.IsServer && Block is IMyCameraBlock)
+            if (!MyAPIGateway.Session.IsServer && !(Block is IMyRadioAntenna))
             {
                 var resourceSink = (MyResourceSinkComponent)Block.ResourceSink;
                 resourceSink.SetRequiredInputFuncByType(GlobalData.ElectricityId, () =>
