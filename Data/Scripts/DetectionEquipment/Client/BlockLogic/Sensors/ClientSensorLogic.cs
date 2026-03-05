@@ -170,6 +170,8 @@ namespace DetectionEquipment.Client.BlockLogic.Sensors
             // can't add terminal controls to imyfunctional/imyterminalblock so this is the least messy workaround
             if (block is IMyCameraBlock)
                 new SensorControls<IMyCameraBlock>().DoOnce();
+            if (block is IMyConveyorSorter)
+                new SensorControls<IMyConveyorSorter>().DoOnce();
             if (block is IMyRadioAntenna)
                 new SensorControls<IMyRadioAntenna>().DoOnce();
 
