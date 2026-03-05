@@ -53,7 +53,7 @@ namespace DetectionEquipment.Server.SensorBlocks
                     var gridPos = grid.WorldMatrix.Translation;
                     foreach (var aggregator in gridSensors.Aggregators)
                     {
-                        if (!aggregator.DoWcTargeting.Value)
+                        if (!aggregator.Block.IsWorking || !aggregator.DoWcTargeting.Value)
                             continue;
 
                         foreach (var target in aggregator.DetectionSet)
