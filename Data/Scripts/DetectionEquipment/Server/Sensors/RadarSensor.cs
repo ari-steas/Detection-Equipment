@@ -9,7 +9,6 @@ using VRage.ModAPI;
 using VRageMath;
 using static DetectionEquipment.Server.SensorBlocks.GridSensorManager;
 using DetectionEquipment.Shared.Helpers;
-using Sandbox.ModAPI;
 
 namespace DetectionEquipment.Server.Sensors
 {
@@ -20,6 +19,8 @@ namespace DetectionEquipment.Server.Sensors
         public readonly IMyEntity AttachedEntity;
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
+
+        public float WaterPenetration { get; } = 0.005f;
 
 
         public RadarSensor(IMyEntity entity, SensorDefinition definition)
@@ -45,7 +46,7 @@ namespace DetectionEquipment.Server.Sensors
         public double Aperture { get; set; } = MathHelper.ToRadians(15);
         public double CountermeasureNoise { get; set; } = 0;
 
-        public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
+        public bool GetDetectionInfo(VisibilitySet visibilitySet, double extraDistance, out DetectionInfo detection)
         {
             if (!Enabled)
             {
@@ -80,6 +81,7 @@ namespace DetectionEquipment.Server.Sensors
                 const double bmConstant = 1.38E-23;
                 const double inherentNoise = 950;
 
+                double effectiveRange = targetRange + extraDistance;
                 double lambdaSq = c / Definition.RadarProperties.Frequency;
                 lambdaSq *= lambdaSq;
                 double outputDensity = 2 * Math.PI / Aperture; // Inverse output density
@@ -107,7 +109,7 @@ namespace DetectionEquipment.Server.Sensors
                 signalToNoiseRatio = MathUtils.ToDecibels(
                     Definition.MaxPowerDraw * Definition.RadarProperties.PowerEfficiencyModifier * gain * gain * lambdaSq * visibilitySet.RadarVisibility
                     /
-                    (fourPi3 * targetRange * targetRange * targetRange * targetRange * bmConstant * (inherentNoise + CountermeasureNoise) * Definition.RadarProperties.Bandwidth)
+                    (fourPi3 * effectiveRange * effectiveRange * effectiveRange * effectiveRange * bmConstant * (inherentNoise + CountermeasureNoise) * Definition.RadarProperties.Bandwidth)
                     );
             }
 
@@ -153,19 +155,6 @@ namespace DetectionEquipment.Server.Sensors
             OnDetection?.Invoke(ObjectPackager.Package(detection));
 
             return true;
-        }
-
-        public double SignalRatioAtTarget(Vector3D targetPos, double crossSection)
-        {
-            double targetDistanceSq = Vector3D.DistanceSquared(Position, targetPos);
-            double targetAngle = Vector3D.Angle(Direction, targetPos - Position);
-
-            double lambda = 299792458 / Definition.RadarProperties.Frequency;
-            double outputDensity = (2 * Math.PI) / Aperture; // Inverse output density
-            double gain = 4 * Math.PI * Definition.RadarProperties.ReceiverArea / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
-
-            // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
-            return MathUtils.ToDecibels((Definition.MaxPowerDraw * Definition.RadarProperties.PowerEfficiencyModifier * gain * crossSection) / (4 * Math.PI * targetDistanceSq * 1.38E-23 * 950 * Definition.RadarProperties.Bandwidth));
         }
     }
 }

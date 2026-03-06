@@ -268,9 +268,15 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             foreach (var track in cachedVisibility)
             {
+                double waterDist = 0;
+                if (Sensor.WaterPenetration < 1)
+                    waterDist = TrackingUtils.GetWaterDistance(Sensor.Position, track.Position);
+
                 DetectionInfo detection;
-                if (Sensor.GetDetectionInfo(track, out detection))
+                if (Sensor.GetDetectionInfo(track, waterDist / Sensor.WaterPenetration, out detection))
+                {
                     Detections.Add(detection);
+                }
             }
 
             foreach (var drfmTrack in CountermeasureManager.GenerateDrfmTracks(Sensor, Block))

@@ -26,6 +26,7 @@ namespace DetectionEquipment.Server.Sensors
 
         private ConcurrentDictionary<long, RadarSensor> _queuedRadarHits = new ConcurrentDictionary<long, RadarSensor>();
         public double CountermeasureNoise { get; set; } = 0;
+        public float WaterPenetration { get; } = 0.005f;
 
 
         public PassiveRadarSensor(IMyEntity attachedEntity, SensorDefinition definition)
@@ -50,7 +51,7 @@ namespace DetectionEquipment.Server.Sensors
 
         public double Aperture { get; set; } = Math.PI;
 
-        public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
+        public bool GetDetectionInfo(VisibilitySet visibilitySet, double extraDistance, out DetectionInfo detection)
         {
             var track = visibilitySet.Track;
             if (!Enabled || track == null)
@@ -76,7 +77,20 @@ namespace DetectionEquipment.Server.Sensors
                 return false;
             }
 
-            double signalToNoiseRatio = sensor.SignalRatioAtTarget(Position, Aperture < Math.PI ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea);
+
+            double signalToNoiseRatio;
+            {
+                double effectiveRange = targetRange + extraDistance;
+                double lambda = 299792458 / Definition.RadarProperties.Frequency;
+                double outputDensity = (2 * Math.PI) / Aperture; // Inverse output density
+                double gain = 4 * Math.PI * Definition.RadarProperties.ReceiverArea / (lambda * lambda) * MathHelper.Clamp(1 - targetAngle / Aperture, 0, 1) * outputDensity * outputDensity * outputDensity;
+                double crossSection = Aperture < Math.PI
+                    ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle)
+                    : Definition.RadarProperties.ReceiverArea;
+
+                // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
+                signalToNoiseRatio = MathUtils.ToDecibels((Definition.MaxPowerDraw * Definition.RadarProperties.PowerEfficiencyModifier * gain * crossSection) / (4 * Math.PI * effectiveRange*effectiveRange * 1.38E-23 * 950 * Definition.RadarProperties.Bandwidth));
+            }
 
             if (signalToNoiseRatio < 0)
             {

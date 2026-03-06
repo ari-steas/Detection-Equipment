@@ -27,10 +27,12 @@ namespace DetectionEquipment.Server.Sensors
         SensorDefinition Definition { get; }
 
         double CountermeasureNoise { get; set; }
+        float WaterPenetration { get; }
+
 
         Action<object[]> OnDetection { get; set; }
 
-        bool GetDetectionInfo(VisibilitySet visibility, out DetectionInfo detection);
+        bool GetDetectionInfo(VisibilitySet visibility, double extraDistance, out DetectionInfo detection);
         void Close();
     }
 }

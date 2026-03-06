@@ -20,6 +20,7 @@ namespace DetectionEquipment.Server.Sensors
         public Vector3D Direction { get; set; } = Vector3D.Forward;
         public double Aperture { get; set; }
         public double CountermeasureNoise { get; set; } = 0;
+        public float WaterPenetration { get; } = 1;
 
         public AntennaSensor(SensorDefinition definition)
         {
@@ -35,7 +36,7 @@ namespace DetectionEquipment.Server.Sensors
             ServerMain.I.SensorIdMap.Remove(Id);
         }
 
-        public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
+        public bool GetDetectionInfo(VisibilitySet visibilitySet, double extraDistance, out DetectionInfo detection)
         {
             if (!Enabled)
             {
@@ -69,7 +70,7 @@ namespace DetectionEquipment.Server.Sensors
             var sensorSignal = MathUtils.ToDecibels(
                 4 * Math.PI * receiverAreaAtAngle * track.CommsVisibility(Position) // antenna range is linearly proportional to power draw and that's silly.
                 /
-                targetRange * (inherentNoise + CountermeasureNoise)
+                (targetRange + extraDistance) * (inherentNoise + CountermeasureNoise)
                 );
 
             if (double.IsNegativeInfinity(sensorSignal) || sensorSignal < 15)

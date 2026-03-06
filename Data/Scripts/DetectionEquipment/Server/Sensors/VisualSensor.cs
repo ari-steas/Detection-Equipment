@@ -24,6 +24,8 @@ namespace DetectionEquipment.Server.Sensors
         public bool IsInfrared = false;
         public double CountermeasureNoise { get; set; } = 0;
 
+        public float WaterPenetration { get; } = 0.5f;
+
         public VisualSensor(SensorDefinition definition)
         {
             Id = ServerMain.I.HighestSensorId++;
@@ -39,7 +41,7 @@ namespace DetectionEquipment.Server.Sensors
             ServerMain.I.SensorIdMap.Remove(Id);
         }
 
-        public bool GetDetectionInfo(VisibilitySet visibilitySet, out DetectionInfo detection)
+        public bool GetDetectionInfo(VisibilitySet visibilitySet, double extraDistance, out DetectionInfo detection)
         {
             if (!Enabled || visibilitySet.Track == null)
             {
@@ -60,7 +62,7 @@ namespace DetectionEquipment.Server.Sensors
             }
 
             var visibility = IsInfrared ? visibilitySet.InfraredVisibility : visibilitySet.OpticalVisibility;
-            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / targetRange) / Aperture;
+            double targetSizeRatio = Math.Tan(Math.Sqrt(visibility/Math.PI) / (targetRange + extraDistance)) / Aperture;
 
             //MyAPIGateway.Utilities.ShowNotification($"{targetSizeRatio*100:F1}% ({MathHelper.ToDegrees(Aperture):N0}° aperture)", 1000/60);
             if (targetSizeRatio < Definition.DetectionThreshold)

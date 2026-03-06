@@ -1,4 +1,5 @@
 ﻿using System;
+using DetectionEquipment.Shared.ExternalApis.WaterMod;
 using DetectionEquipment.Shared.Utils;
 using RichHudFramework.Client;
 
@@ -9,6 +10,7 @@ namespace DetectionEquipment.Shared.ExternalApis
         public static WcApi.WcApi WcApi;
         private static Action _onWcReady = () => Log.Info("WcApi", "Ready.");
         private static Action _onRichHudReady = () => Log.Info("RichHud", "Ready.");
+        private static Action _onWaterModReady = () => Log.Info("WaterMod", "Ready.");
 
         public static void Init()
         {
@@ -32,6 +34,8 @@ namespace DetectionEquipment.Shared.ExternalApis
             {
                 Log.Exception("ApiManager", new Exception("Failed to load RichHudClient!", ex));
             }
+
+            WaterModApi.OnReady += _onWaterModReady;
 
             Log.DecreaseIndent();
             Log.Info("ApiManager", "Ready.");
@@ -72,6 +76,18 @@ namespace DetectionEquipment.Shared.ExternalApis
                 action.Invoke();
             else
                 _onRichHudReady += action;
+        }
+
+        /// <summary>
+        /// Registers an action to invoke when the API is ready, or calls it immediately if ready.
+        /// </summary>
+        /// <param name="action"></param>
+        public static void WaterModOnLoadRegisterOrInvoke(Action action)
+        {
+            if (WaterModApi.Registered)
+                action.Invoke();
+            else
+                _onWaterModReady += action;
         }
     }
 }
