@@ -68,6 +68,10 @@ namespace DetectionEquipment.Shared.Definitions
         /// If true, this sensor ONLY works when underwater. If false, this sensor ONLY works above water. If null, this sensor works in both cases.
         /// </summary>
         [ProtoMember(14)] public bool? SubmergedRequirement = null;
+        /// <summary>
+        /// If true, this sensor ONLY detects munitions (weaponcore and vanilla). If false, this sensor cannot detect munitions. If null, this sensor can detect both.
+        /// </summary>
+        [ProtoMember(15)] public bool? MunitionDetection = false;
 
         /// <summary>
         /// Defines properties for subpart-based movement.
@@ -182,7 +186,6 @@ namespace DetectionEquipment.Shared.Definitions
             Optical = 3,
             Infrared = 4,
             Antenna = 5,
-            Munition = 6,
         }
 
         public int FieldCount => 10;

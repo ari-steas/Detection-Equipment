@@ -3,6 +3,7 @@ using DetectionEquipment.Server;
 using DetectionEquipment.Server.Tracking;
 using Sandbox.Game.Entities;
 using System.Collections.Generic;
+using DetectionEquipment.Server.SensorBlocks;
 using Sandbox.ModAPI;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -33,6 +34,7 @@ namespace DetectionEquipment.Shared.Utils
         public static ObjectPool<HashSet<string>> StringPool;
         public static ObjectPool<HashSet<MyEntity>> EntityPool;
         public static ObjectPool<HashSet<IMyCubeGrid>> GridPool;
+        public static ObjectPool<HashSet<GridSensorManager.VisibilitySet>> VisibilitySetPool;
 
         public static void Init()
         {
@@ -72,6 +74,10 @@ namespace DetectionEquipment.Shared.Utils
                 () => new HashSet<IMyCubeGrid>(),
                 startSize: 10
             );
+            VisibilitySetPool = new ObjectPool<HashSet<GridSensorManager.VisibilitySet>>(
+                () => new HashSet<GridSensorManager.VisibilitySet>(),
+                startSize: 10
+            );
 
             if (MyAPIGateway.Session.IsServer)
             {
@@ -109,6 +115,7 @@ namespace DetectionEquipment.Shared.Utils
             StringPool = null;
             EntityPool = null;
             GridPool = null;
+            VisibilitySetPool = null;
         }
     }
 }

@@ -13,6 +13,8 @@ using Sandbox.ModAPI;
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DetectionEquipment.Shared.ExternalApis;
+using DetectionEquipment.Shared.ExternalApis.WcApi;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -27,6 +29,8 @@ namespace DetectionEquipment.Server.SensorBlocks
         public readonly HashSet<AggregatorBlock> Aggregators = new HashSet<AggregatorBlock>();
         private HashSet<VisibilitySet> _trackVisibility = new HashSet<VisibilitySet>();
         private bool _hasRadar = false;
+        private bool _hasStandardDetection = false;
+        private bool _hasMunitionDetection = false;
 
         private readonly Dictionary<IMyGridGroupData, List<VisibilitySet>> _combineBuffer = new Dictionary<IMyGridGroupData, List<VisibilitySet>>();
         private bool _isUpdateComplete = true;
@@ -168,80 +172,106 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
 
             var gridPos = Grid.WorldAABB.Center;
-            foreach (var track in _trackVisibility)
-                track.Update(gridPos);
-
-            MyAPIGateway.Parallel.ForEach(Sensors, sensor =>
+            
+            lock (_trackVisibility)
             {
-                sensor.Update(_trackVisibility);
-            });
+                foreach (var track in _trackVisibility)
+                    track.Update(gridPos);
+
+                MyAPIGateway.Parallel.ForEach(Sensors, sensor =>
+                {
+                    sensor.Update(_trackVisibility); // doesn't need to be locked here, sensors are read-only
+                });
+            }
         }
 
         private void UpdateTracks()
         {
-            var tracksBuffer = GlobalObjectPools.TrackSharedPool.Pop();
-            var internalVisibility = new HashSet<VisibilitySet>(_trackVisibility.Count);
-            foreach (var trackKvp in tracksBuffer)
+            var trackVisBuffer = GlobalObjectPools.VisibilitySetPool.Pop();
+
+            // Standard grid/entity detection
+            if (_hasStandardDetection)
             {
-                // skip closed entities
-                // 500km max track range if radar is present, 50km otherwise
-                if ((trackKvp.Key?.Closed ?? true) || Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
-                    continue;
-
-                // move this before LOS check to save a few more raycasts
-                var gT = trackKvp.Value as GridTrack;
-                if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
-                    continue;
-
-                // check sensor visibility before registering tracks
-                bool cont = false;
-                foreach (var sensor in Sensors)
+                var tracksBuffer = GlobalObjectPools.TrackSharedPool.Pop();
+                foreach (var trackKvp in tracksBuffer)
                 {
-                    if (sensor.Block == null || sensor.Sensor == null || !sensor.Sensor.Enabled)
+                    // skip closed entities
+                    // 500km max track range if radar is present, 50km otherwise
+                    if ((trackKvp.Key?.Closed ?? true) || Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
                         continue;
 
-                    double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, trackKvp.Value.Position - sensor.Sensor.Position);
-                    if (targetAngle <= sensor.Sensor.Aperture || trackKvp.Value.BoundingBox.Intersects(new RayD(sensor.Sensor.Position, sensor.Sensor.Direction)) != null)
+                    // move this before LOS check to save a few more raycasts
+                    var gT = trackKvp.Value as GridTrack;
+                    if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
+                        continue;
+
+                    // check sensor visibility before registering tracks
+                    bool cont = false;
+                    foreach (var sensor in Sensors)
                     {
-                        cont = true;
-                        break;
+                        if (sensor.Block == null || sensor.Sensor == null || !sensor.Sensor.Enabled)
+                            continue;
+
+                        double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, trackKvp.Value.Position - sensor.Sensor.Position);
+                        if (targetAngle <= sensor.Sensor.Aperture || trackKvp.Value.BoundingBox.Intersects(new RayD(sensor.Sensor.Position, sensor.Sensor.Direction)) != null)
+                        {
+                            cont = true;
+                            break;
+                        }
+                    }
+                    if (!cont)
+                    {
+                        continue;
+                    }
+
+                    if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
+                        continue;
+
+                    if (gT != null)
+                    {
+                        var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
+                        if (!_combineBuffer.ContainsKey(topmost))
+                            _combineBuffer[topmost] = new List<VisibilitySet>();
+                        _combineBuffer[topmost].Add(new VisibilitySet(Grid, gT));
+                    }
+                    else
+                    {
+                        trackVisBuffer.Add(new VisibilitySet(Grid, trackKvp.Value));
                     }
                 }
-                if (!cont)
-                {
-                    continue;
-                }
 
-                if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
-                    continue;
+                GlobalObjectPools.TrackSharedPool.Push(tracksBuffer);
+            }
 
-                if (gT != null)
+            // Munition detection
+            if (_hasMunitionDetection || true)
+            {
+                if (ApiManager.WcApi.IsReady)
                 {
-                    var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
-                    if (!_combineBuffer.ContainsKey(topmost))
-                        _combineBuffer[topmost] = new List<VisibilitySet>();
-                    _combineBuffer[topmost].Add(new VisibilitySet(Grid, gT));
+                    // WC, ignore vanilla
+
+                    //ApiManager.WcApi.GetProjectilesLockedOnPos();
                 }
                 else
                 {
-                    internalVisibility.Add(new VisibilitySet(Grid, trackKvp.Value));
+
                 }
             }
-
-            GlobalObjectPools.TrackSharedPool.Push(tracksBuffer);
 
             foreach (var combineKvp in _combineBuffer)
             {
                 if (combineKvp.Value.Count > 1)
-                    internalVisibility.Add(new VisibilitySet(combineKvp.Value));
+                    trackVisBuffer.Add(new VisibilitySet(combineKvp.Value));
                 else
-                    internalVisibility.Add(combineKvp.Value[0]);
+                    trackVisBuffer.Add(combineKvp.Value[0]);
             }
             _combineBuffer.Clear();
 
             lock (_trackVisibility)
             {
-                _trackVisibility = internalVisibility;
+                _trackVisibility.Clear();
+                GlobalObjectPools.VisibilitySetPool.Push(_trackVisibility);
+                _trackVisibility = trackVisBuffer;
             }
             _isUpdateComplete = true;
         }
@@ -278,6 +308,8 @@ namespace DetectionEquipment.Server.SensorBlocks
                         BlockSensorMap[cubeBlock].Add(newSensor);
 
                     _hasRadar |= newSensor.Sensor is RadarSensor || newSensor.Sensor is PassiveRadarSensor;
+                    _hasStandardDetection |= (!newSensor.Definition.MunitionDetection) ?? true;
+                    _hasMunitionDetection |= newSensor.Definition.MunitionDetection ?? true;
                 }
 
                 if (ids.Count > 0)
@@ -311,6 +343,8 @@ namespace DetectionEquipment.Server.SensorBlocks
                     BlockSensorMap.Remove(cubeBlock);
 
                     _hasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
+                    _hasStandardDetection = Sensors.Any(s => s.Definition.MunitionDetection ?? true);
+                    _hasMunitionDetection = Sensors.Any(s => (!s.Definition.MunitionDetection) ?? true);
                 }
             }
             catch (Exception ex)
