@@ -1,12 +1,16 @@
-﻿using System;
-using DetectionEquipment.Shared.BlockLogic;
+﻿using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.ExternalApis;
 using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Structs;
 using DetectionEquipment.Shared.Utils;
+using System;
+using DetectionEquipment.Shared.ExternalApis.WaterMod;
+using Sandbox.ModAPI;
+using VRage.Game;
 using VRage.Game.Components;
+using VRageMath;
 
 namespace DetectionEquipment.Shared
 {
@@ -65,7 +69,7 @@ namespace DetectionEquipment.Shared
                 if (Ticks % 10 == 0)
                 {
                     DefinitionManager.Update();
-                    GlobalData.UpdatePlayers();
+                    GlobalData.UpdateData10(Ticks);
                 }
 
                 ControlBlockManager.I.Update();

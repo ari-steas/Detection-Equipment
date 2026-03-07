@@ -4,6 +4,8 @@ using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using DetectionEquipment.Shared.ExternalApis.WaterMod;
+using DetectionEquipment.Shared.Structs;
 using VRage.Game;
 using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Ingame.Utilities;
@@ -34,6 +36,7 @@ namespace DetectionEquipment.Shared
         public static HashSet<string> LowRcsSubtypes;
         public static int DebugLevel = 0;
         public static List<MyPlanet> Planets = new List<MyPlanet>();
+        public static List<WaterSphere> WaterSpheres = new List<WaterSphere>();
 
         public static readonly MyDefinitionId ElectricityId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Electricity");
         public static readonly MyDefinitionId HydrogenId = new MyDefinitionId(typeof(MyObjectBuilder_GasProperties), "Hydrogen");
@@ -393,10 +396,34 @@ namespace DetectionEquipment.Shared
             }
         }
 
-        internal static void UpdatePlayers()
+        internal static void UpdateData10(int ticks)
         {
+            // Player update
             Players.Clear();
             MyAPIGateway.Multiplayer.Players.GetPlayers(Players);
+
+            // Water mod planet update
+            if (WaterModApi.Registered)
+            {
+                if (ticks % 120 == 0) // update water once per 2 minutes
+                {
+                    WaterSpheres.Clear();
+                    foreach (var planet in Planets)
+                    {
+                        if (!WaterModApi.HasWater(planet))
+                            continue;
+
+                        WaterSpheres.Add(new WaterSphere(planet));
+                    }
+                }
+                else if (ticks % 60 == 0) // update tide once per second
+                {
+                    foreach (var sphere in WaterSpheres)
+                    {
+                        sphere.UpdateCurrentSphere();
+                    }
+                }
+            }
         }
 
         internal static void Unload()

@@ -407,40 +407,34 @@ namespace DetectionEquipment.Shared.Utils
             if (!WaterModApi.Registered)
                 return 0;
 
-            //DebugDraw.AddLine(from, to, Color.Brown, 0);
-    
-            // find closest intersecting planet
-            MyPlanet planet = WaterModApi.GetClosestWater(from);
-
-            if (planet == null)
-                return 0;
-    
             Vector3D dir = to - from;
             double len = dir.Normalize();
 
-            var waterStats = WaterModApi.GetPhysical(planet);
-            BoundingSphereD waterSphere = new BoundingSphereD(waterStats.Item1, waterStats.Item2);
+            foreach (var waterSphere in GlobalData.WaterSpheres)
+            {
+                // check completely contained
+                bool fromInside = Vector3D.DistanceSquared(from, waterSphere.CurrentSphere.Center) <= waterSphere.CurrentSphere.Radius * waterSphere.CurrentSphere.Radius;
+                if (fromInside && Vector3D.DistanceSquared(to, waterSphere.CurrentSphere.Center) <= waterSphere.CurrentSphere.Radius * waterSphere.CurrentSphere.Radius)
+                    return len;
 
-            // check completely contained
-            bool fromInside = Vector3D.DistanceSquared(from, waterSphere.Center) <= waterSphere.Radius * waterSphere.Radius;
-            if (fromInside && Vector3D.DistanceSquared(to, waterSphere.Center) <= waterSphere.Radius * waterSphere.Radius)
-                return len;
+                // flip direction so always casting from outside sphere
+                RayD ray = fromInside ? new RayD(to, -dir) : new RayD(from, dir);
+                double tmin, tmax;
 
-            // flip direction so always casting from outside sphere
-            RayD ray = fromInside ? new RayD(to, -dir) : new RayD(from, dir);
-            double tmin, tmax;
+                // apparently it casts backwards too lol lmao
+                if (!waterSphere.CurrentSphere.IntersectRaySphere(ray, out tmin, out tmax) || tmin < 0)
+                    continue;
 
-            // apparently it casts backwards too lol lmao
-            if (!waterSphere.IntersectRaySphere(ray, out tmin, out tmax) || tmin < 0)
-                return 0;
+                tmin = Math.Min(tmin, len);
+                tmax = Math.Min(tmax, len);
 
-            tmin = Math.Min(tmin, len);
-            tmax = Math.Min(tmax, len);
+                //DebugDraw.AddPoint(ray.Position + ray.Direction * tmin, Color.Pink, 0);
+                //DebugDraw.AddPoint(ray.Position + ray.Direction * tmax, Color.Pink, 0);
 
-            //DebugDraw.AddPoint(ray.Position + ray.Direction * tmin, Color.Pink, 0);
-            //DebugDraw.AddPoint(ray.Position + ray.Direction * tmax, Color.Pink, 0);
+                return tmax - tmin;
+            }
 
-            return tmax - tmin;
+            return 0;
         }
     }
 }
