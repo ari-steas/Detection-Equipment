@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using DetectionEquipment.Client.BlockLogic.Sensors;
 using DetectionEquipment.Server.Countermeasures;
 using DetectionEquipment.Shared.BlockLogic.SensorControl;
+using DetectionEquipment.Shared.ExternalApis.WaterMod;
 using Sandbox.Game.EntityComponents;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
@@ -264,16 +265,20 @@ namespace DetectionEquipment.Server.SensorBlocks
             if (!Sensor.Enabled)
                 return;
 
+            // check underwater status early
+            if (Definition.SubmergedRequirement != null && Definition.SubmergedRequirement.Value == TrackingUtils.IsSubmerged(Sensor.Position))
+                return;
+
             Sensor.CountermeasureNoise = CountermeasureManager.GetNoise(Sensor);
 
             foreach (var track in cachedVisibility)
             {
                 double waterDist = 0;
-                if (Sensor.WaterPenetration < 1)
+                if (Definition.WaterPenetration < 1)
                     waterDist = TrackingUtils.GetWaterDistance(Sensor.Position, track.Position);
 
                 DetectionInfo detection;
-                if (Sensor.GetDetectionInfo(track, waterDist / Sensor.WaterPenetration, out detection))
+                if (Sensor.GetDetectionInfo(track, waterDist / Definition.WaterPenetration, out detection))
                 {
                     Detections.Add(detection);
                 }

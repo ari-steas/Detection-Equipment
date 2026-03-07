@@ -27,8 +27,6 @@ namespace DetectionEquipment.Server.Sensors
         SensorDefinition Definition { get; }
 
         double CountermeasureNoise { get; set; }
-        float WaterPenetration { get; }
-
 
         Action<object[]> OnDetection { get; set; }
 

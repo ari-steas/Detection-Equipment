@@ -436,5 +436,19 @@ namespace DetectionEquipment.Shared.Utils
 
             return 0;
         }
+
+        public static bool IsSubmerged(Vector3D pos)
+        {
+            if (!WaterModApi.Registered)
+                return false;
+
+            foreach (var waterSphere in GlobalData.WaterSpheres)
+            {
+                if (Vector3D.DistanceSquared(pos, waterSphere.CurrentSphere.Center) <= waterSphere.CurrentSphere.Radius * waterSphere.CurrentSphere.Radius)
+                    return true;
+            }
+
+            return false;
+        }
     }
 }

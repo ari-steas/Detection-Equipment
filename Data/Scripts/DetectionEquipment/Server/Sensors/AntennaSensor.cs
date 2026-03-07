@@ -20,7 +20,6 @@ namespace DetectionEquipment.Server.Sensors
         public Vector3D Direction { get; set; } = Vector3D.Forward;
         public double Aperture { get; set; }
         public double CountermeasureNoise { get; set; } = 0;
-        public float WaterPenetration { get; } = 1;
 
         public AntennaSensor(SensorDefinition definition)
         {

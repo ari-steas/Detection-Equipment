@@ -20,9 +20,6 @@ namespace DetectionEquipment.Server.Sensors
         public Vector3D Position { get; set; } = Vector3D.Zero;
         public Vector3D Direction { get; set; } = Vector3D.Forward;
 
-        public float WaterPenetration { get; } = 0.005f;
-
-
         public RadarSensor(IMyEntity entity, SensorDefinition definition)
         {
             Id = ServerMain.I.HighestSensorId++;

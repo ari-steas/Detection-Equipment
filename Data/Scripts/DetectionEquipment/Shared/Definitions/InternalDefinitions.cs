@@ -28,6 +28,7 @@ namespace DetectionEquipment.Shared.Definitions
                 RangeErrorModifier = 0.05,
                 MaxPowerDraw = -1,
                 Movement = null,
+                WaterPenetration = 0.5f,
             },
 
             // Gimbal Camera
@@ -45,6 +46,7 @@ namespace DetectionEquipment.Shared.Definitions
                 BearingErrorModifier = 0.05,
                 RangeErrorModifier = 1,
                 MaxPowerDraw = -1,
+                WaterPenetration = 0.5f,
                 Movement = new SensorMovementDefinition
                 {
                     AzimuthPart = "gimbalcam_azimuth",
@@ -73,6 +75,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxPowerDraw = 14000000,
                 BearingErrorModifier = 0.1,
                 RangeErrorModifier = 0.0001,
+                WaterPenetration = 0.005f,
                 Movement = new SensorMovementDefinition
                 {
                     AzimuthPart = "azimuth",
@@ -108,6 +111,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxPowerDraw = 1000000,
                 BearingErrorModifier = 0.1,
                 RangeErrorModifier = 0.0001,
+                WaterPenetration = 0.005f,
                 Movement = new SensorMovementDefinition
                 {
                     AzimuthPart = "smallfixedradar_azimuth",
@@ -143,6 +147,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxPowerDraw = -1,
                 BearingErrorModifier = 0.1,
                 RangeErrorModifier = 0.0001,
+                WaterPenetration = 0.005f,
                 Movement = null,
                 RadarProperties = new RadarPropertiesDefinition
                 {
@@ -166,6 +171,7 @@ namespace DetectionEquipment.Shared.Definitions
                 MaxPowerDraw = -1,
                 BearingErrorModifier = 0.1,
                 RangeErrorModifier = 0.0001,
+                WaterPenetration = 1f,
                 Movement = null,
                 RadarProperties = new RadarPropertiesDefinition
                 {

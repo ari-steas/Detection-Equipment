@@ -24,8 +24,6 @@ namespace DetectionEquipment.Server.Sensors
         public bool IsInfrared = false;
         public double CountermeasureNoise { get; set; } = 0;
 
-        public float WaterPenetration { get; } = 0.5f;
-
         public VisualSensor(SensorDefinition definition)
         {
             Id = ServerMain.I.HighestSensorId++;

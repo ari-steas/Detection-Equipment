@@ -26,8 +26,6 @@ namespace DetectionEquipment.Server.Sensors
 
         private ConcurrentDictionary<long, RadarSensor> _queuedRadarHits = new ConcurrentDictionary<long, RadarSensor>();
         public double CountermeasureNoise { get; set; } = 0;
-        public float WaterPenetration { get; } = 0.005f;
-
 
         public PassiveRadarSensor(IMyEntity attachedEntity, SensorDefinition definition)
         {

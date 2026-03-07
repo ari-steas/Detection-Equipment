@@ -60,6 +60,14 @@ namespace DetectionEquipment.Shared.Definitions
         /// Name that shows in the sensor's terminal.
         /// </summary>
         [ProtoMember(12)] public string TerminalName;
+        /// <summary>
+        /// Ability for this sensor to penetrate water. Effective distance through water distance is multiplied by this amount; strongly recommend having this above zero.
+        /// </summary>
+        [ProtoMember(13)] public float WaterPenetration = -1;
+        /// <summary>
+        /// If true, this sensor ONLY works when underwater. If false, this sensor ONLY works above water. If null, this sensor works in both cases.
+        /// </summary>
+        [ProtoMember(14)] public bool? SubmergedRequirement = null;
 
         /// <summary>
         /// Defines properties for subpart-based movement.
@@ -174,6 +182,7 @@ namespace DetectionEquipment.Shared.Definitions
             Optical = 3,
             Infrared = 4,
             Antenna = 5,
+            Munition = 6,
         }
 
         public int FieldCount => 10;
@@ -224,6 +233,28 @@ namespace DetectionEquipment.Shared.Definitions
                     reason += "Elevation subpart starts with \"subpart_\" - this will likely result in part location failure.\n";
                     isValid = false;
                 }
+            }
+
+            if (WaterPenetration < 0)
+            {
+                switch (Type)
+                {
+                    case SensorType.Radar:
+                    case SensorType.PassiveRadar:
+                        WaterPenetration = 0.005f;
+                        break;
+                    case SensorType.Optical:
+                        WaterPenetration = 0.5f;
+                        break;
+                    case SensorType.Infrared:
+                        WaterPenetration = 0.0025f;
+                        break;
+                    case SensorType.Antenna:
+                    default:
+                        WaterPenetration = 1;
+                        break;
+                }
+                reason += $"Water penetration unset or invalid - defaulting to {WaterPenetration} (sensor type {Type})\n";
             }
 
             if (MaxPowerDraw <= 0)
