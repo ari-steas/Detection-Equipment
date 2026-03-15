@@ -3,7 +3,6 @@ using Sandbox.ModAPI;
 using System;
 using System.Linq;
 using DetectionEquipment.Shared.BlockLogic.IffAggregator;
-using DetectionEquipment.Shared.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -21,6 +20,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         [ProtoMember(11)] private bool _doWcTargeting = true;
         [ProtoMember(12)] private bool _useAllWeapons = true;
         [ProtoMember(13)] private long[] _selectedWeapons = Array.Empty<long>();
+        [ProtoMember(14)] private ushort _datalinkInNetwork = 1;
+        [ProtoMember(15)] private ushort _datalinkOutNetwork = 1;
 
         [ProtoIgnore] private new AggregatorBlock AttachedLogic => (AggregatorBlock)base.AttachedLogic;
 
@@ -44,6 +45,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             AttachedLogic.DatalinkInShareType.Value = _datalinkInShareType;
             AttachedLogic.DoWcTargeting.Value = _doWcTargeting;
             AttachedLogic.UseAllWeapons.Value = _useAllWeapons;
+            AttachedLogic.DatalinkInNetwork.Value = _datalinkInNetwork;
+            AttachedLogic.DatalinkOutNetwork.Value = _datalinkOutNetwork;
         }
 
         protected override void RetrieveData()
@@ -62,6 +65,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             _datalinkInShareType = AttachedLogic.DatalinkInShareType.Value;
             _doWcTargeting = AttachedLogic.DoWcTargeting.Value;
             _useAllWeapons = AttachedLogic.UseAllWeapons.Value;
+            _datalinkInNetwork = AttachedLogic.DatalinkInNetwork.Value;
+            _datalinkOutNetwork = AttachedLogic.DatalinkOutNetwork.Value;
         }
     }
 }

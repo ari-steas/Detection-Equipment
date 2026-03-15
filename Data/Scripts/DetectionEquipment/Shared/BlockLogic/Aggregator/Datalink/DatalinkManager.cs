@@ -77,29 +77,50 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
             _antennaCache.Remove((IMyCubeGrid)e);
         }
 
-        public static Dictionary<int, HashSet<AggregatorBlock>> GetActiveDatalinkChannels(IMyCubeGrid grid, long ownerIdentityId)
+        public static Dictionary<int, HashSet<AggregatorBlock>> GetActiveDatalinkChannels(IMyCubeGrid grid, long ownerIdentityId, AggregatorBlock.NetworkType networkType)
         {
+            bool useGridNetwork = (networkType & AggregatorBlock.NetworkType.Grid) == AggregatorBlock.NetworkType.Grid;
+            bool useIgcNetwork = (networkType & AggregatorBlock.NetworkType.IGC) == AggregatorBlock.NetworkType.IGC;
+
             var receivers = new List<MyDataReceiver>();
       
             var connectedGrids = new HashSet<IMyCubeGrid>();
             grid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(connectedGrids);
-            foreach (var cGrid in connectedGrids)
+
+            // get antennas if needed
+            if (useIgcNetwork)
             {
-                HashSet<IMyFunctionalBlock> antennaSet;
-                if (!_antennaCache.TryGetValue(cGrid, out antennaSet) || antennaSet.Count == 0)
-                    continue;
-                foreach (var block in antennaSet)
+                foreach (var cGrid in connectedGrids)
                 {
-                    if (block.Enabled)
-                        receivers.Add(block.Components.Get<MyDataReceiver>());
+                    HashSet<IMyFunctionalBlock> antennaSet;
+                    if (!_antennaCache.TryGetValue(cGrid, out antennaSet) || antennaSet.Count == 0)
+                        continue;
+                    foreach (var block in antennaSet)
+                    {
+                        if (block.Enabled)
+                            receivers.Add(block.Components.Get<MyDataReceiver>());
+                    }
                 }
             }
 
-            foreach (var receiver in TrackingUtils.GetAllRelayedBroadcasters(receivers, ownerIdentityId, false))
-                if (receiver.Entity is IMyCubeBlock)
-                    connectedGrids.Add(((IMyCubeBlock)receiver.Entity).CubeGrid);
+            // remove attached grids if needed
+            if (!useGridNetwork)
+            {
+                connectedGrids.Clear();
+            }
 
-            var fullSet = new Dictionary<int, HashSet<AggregatorBlock>>();
+            // get IGC grids if needed
+            if (useIgcNetwork)
+            {
+                foreach (var receiver in TrackingUtils.GetAllRelayedBroadcasters(receivers, ownerIdentityId, false))
+                {
+                    var rBlock = receiver.Entity as IMyCubeBlock;
+                    if (rBlock != null && (useGridNetwork || !rBlock.CubeGrid.IsInSameLogicalGroupAs(grid)))
+                        connectedGrids.Add(rBlock.CubeGrid);
+                }
+            }
+            
+            var fullAggregatorSet = new Dictionary<int, HashSet<AggregatorBlock>>();
 
             //Log.Info("DatalinkManager", "CHK " + grid.CustomName);
             //Log.IncreaseIndent();
@@ -112,19 +133,37 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
                     continue;
                 foreach (var channel in gridSet)
                 {
-                    if (fullSet.ContainsKey(channel.Key))
+                    HashSet<AggregatorBlock> channelSet;
+                    if (!fullAggregatorSet.TryGetValue(channel.Key, out channelSet))
                     {
-                        foreach (var setItem in channel.Value)
-                            fullSet[channel.Key].Add(setItem);
+                        channelSet = new HashSet<AggregatorBlock>(channel.Value.Count);
+                        fullAggregatorSet[channel.Key] = channelSet;
                     }
-                    else
-                        fullSet[channel.Key] = channel.Value;
+
+                    foreach (var setItem in channel.Value)
+                    {
+                        AggregatorBlock.NetworkType itemOutNetwork = (AggregatorBlock.NetworkType) setItem.DatalinkOutNetwork.Value;
+                        
+                        // check out network group for item
+                        // skip if all types allowed
+                        if (itemOutNetwork != AggregatorBlock.NetworkType.All)
+                        {
+                            bool iUseGridNetwork = (itemOutNetwork & AggregatorBlock.NetworkType.Grid) == AggregatorBlock.NetworkType.Grid;
+                            bool iUseIgcNetwork = (itemOutNetwork & AggregatorBlock.NetworkType.IGC) == AggregatorBlock.NetworkType.IGC;
+                            bool onSameGridGroup = setItem.Block.CubeGrid.IsInSameLogicalGroupAs(grid);
+                        
+                            if ((iUseIgcNetwork && onSameGridGroup) || (iUseGridNetwork && !onSameGridGroup))
+                                continue;
+                        }
+
+                        channelSet.Add(setItem);
+                    }
                 }
             }
 
             //Log.DecreaseIndent();
 
-            return fullSet;
+            return fullAggregatorSet;
         }
 
         public static void RegisterAggregator(AggregatorBlock logic, int id, int prevId = -1)

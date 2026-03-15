@@ -1,8 +1,6 @@
 ﻿using DetectionEquipment.Shared.Structs;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using DetectionEquipment.Shared.Utils;
 using VRageMath;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator

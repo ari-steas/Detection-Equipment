@@ -1,6 +1,5 @@
 ﻿using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.Structs;
-using Sandbox.Definitions;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
@@ -21,7 +20,6 @@ using Sandbox.ModAPI.Ingame;
 using VRage.Game.ModAPI;
 using IMyConveyorSorter = Sandbox.ModAPI.IMyConveyorSorter;
 using IMyFunctionalBlock = Sandbox.ModAPI.IMyFunctionalBlock;
-using IMyTerminalBlock = Sandbox.ModAPI.IMyTerminalBlock;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -34,9 +32,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public readonly SimpleSync<int> DatalinkInShareType = new SimpleSync<int>(1);
         public readonly SimpleSync<bool> DoWcTargeting = new SimpleSync<bool>(true);
         public readonly SimpleSync<bool> UseAllWeapons = new SimpleSync<bool>(true);
+        public readonly SimpleSync<ushort> DatalinkInNetwork = new SimpleSync<ushort>((ushort) NetworkType.Grid);
+        public readonly SimpleSync<ushort> DatalinkOutNetwork = new SimpleSync<ushort>((ushort) NetworkType.Grid);
         private int _prevDatalinkOutChannel = -1;
-
-        public float MaxVelocity = Math.Max(MyDefinitionManager.Static.EnvironmentDefinition.LargeShipMaxSpeed, MyDefinitionManager.Static.EnvironmentDefinition.SmallShipMaxSpeed) + 10;
 
         internal Queue<WorldDetectionInfo[]> DetectionCache = new Queue<WorldDetectionInfo[]>();
 
@@ -50,7 +48,6 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 
         internal HashSet<BlockSensor> ActiveSensors => UseAllSensors.Value ? GridSensors.Sensors : AggregatorControls.ActiveSensors[this];
         internal IEnumerable<ClientSensorLogic> ClientActiveSensors => (UseAllSensors.Value ? SensorBlockManager.SensorBlocks.GetValueOrDefault(Block.CubeGrid) : AggregatorControls.ClientActiveSensors.GetValueOrDefault(this))?.Select(b => b.GetLogic<ClientSensorLogic>()) ?? Array.Empty<ClientSensorLogic>();
-        internal HashSet<IMyTerminalBlock> ActiveWeapons => AggregatorControls.ActiveWeapons[this];
 
         private int[] _datalinkInChannels = { };
         public int[] DatalinkInChannels
@@ -299,7 +296,14 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public override void UpdateAfterSimulation10()
         {
             // This method is pretty slow, let's not call it often.
-            _bufferVisibleAggregators = DatalinkManager.GetActiveDatalinkChannels(Block.CubeGrid, Block.OwnerId);
+            if (_datalinkInChannels.Length > 0)
+            {
+                _bufferVisibleAggregators = DatalinkManager.GetActiveDatalinkChannels(Block.CubeGrid, Block.OwnerId, (NetworkType) DatalinkInNetwork.Value);
+            }
+            else if (_bufferVisibleAggregators.Count > 0)
+            {
+                _bufferVisibleAggregators.Clear();
+            }
         }
 
         public enum ShareType
@@ -309,6 +313,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             FactionOnly = 2,
             OwnerOnly = 3,
         }
+
+        [Flags]
+        public enum NetworkType
+        {
+            None = 0,
+            Grid = 1,
+            IGC = 2,
+            All = 3,
+        }
+
 
         internal class AggregatorUpdatePacket : PacketBase
         {

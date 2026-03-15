@@ -1,16 +1,17 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
+﻿using DetectionEquipment.Client.BlockLogic.Sensors;
+using DetectionEquipment.Server.SensorBlocks;
+using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
+using DetectionEquipment.Shared.BlockLogic.GenericControls;
+using DetectionEquipment.Shared.ExternalApis;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using DetectionEquipment.Client.BlockLogic.Sensors;
-using DetectionEquipment.Shared.ExternalApis;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
-using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink;
+using static DetectionEquipment.Shared.BlockLogic.Aggregator.AggregatorBlock;
 
 namespace DetectionEquipment.Shared.BlockLogic.Aggregator
 {
@@ -123,7 +124,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 );
             CreateSlider(
                 "DatalinkInShareType",
-                "Datalink Source Type",
+                "Datalink Source Relation",
                 "Relations to read DataLink input from.",
                 0,
                 3,
@@ -132,8 +133,28 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 (b, sb) => sb.Append((AggregatorBlock.ShareType)ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkInShareType.Value)
                 );
             CreateSlider(
+                "DatalinkInNetwork",
+                "Datalink Source Network",
+                "Network to read DataLink input from.",
+                1,
+                3,
+                b => ControlBlockManager.GetLogic<AggregatorBlock>(b)?.DatalinkInNetwork,
+                (b, v) => ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkInNetwork.Value = (ushort)Math.Round(v),
+                (b, sb) => sb.Append((AggregatorBlock.NetworkType)ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkInNetwork.Value)
+            );
+            CreateSlider(
+                "DatalinkOutNetwork",
+                "Datalink Output Network",
+                "Network to push DataLink info to.",
+                1,
+                3,
+                b => ControlBlockManager.GetLogic<AggregatorBlock>(b)?.DatalinkOutNetwork,
+                (b, v) => ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkOutNetwork.Value = (ushort)Math.Round(v),
+                (b, sb) => sb.Append((AggregatorBlock.NetworkType)ControlBlockManager.GetLogic<AggregatorBlock>(b).DatalinkOutNetwork.Value)
+            );
+            CreateSlider(
                 "DatalinkChannel",
-                "Datalink Channel",
+                "Datalink Output Channel",
                 "Datalink channel ID this aggregator should broadcast on. Set to -1 to disable.",
                 -1,
                 8,
@@ -150,7 +171,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                 (block, content, selected) =>
                 {
                     var logic = ControlBlockManager.GetLogic<AggregatorBlock>(block);
-                    var activeChannels = DatalinkManager.GetActiveDatalinkChannels(block.CubeGrid, block.OwnerId);
+                    var activeChannels = DatalinkManager.GetActiveDatalinkChannels(block.CubeGrid, block.OwnerId, (NetworkType) logic.DatalinkInNetwork.Value);
 
                     var nullItem = new MyTerminalControlListBoxItem(MyStringId.NullOrEmpty, MyStringId.NullOrEmpty, null);
                     content.Add(nullItem);
