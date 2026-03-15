@@ -110,18 +110,19 @@ namespace DetectionEquipment.Shared.Utils
         /// <param name="fatal"></param>
         public static void Exception(string source, Exception exception, bool fatal = false)
         {
-            // WHY DON'T YOU CHECK CONTROL.VISIBLE???
-            if (fatal && source.StartsWith("TerminalControlAdder"))
-            {
-                //Log.Info("Log.Exception", $"Intercepted possible Build Vision exception in {source}...");
-                throw CustomCrashModContext.GenerateException(source, exception);
-            }
-
             var toWrite = $"{DateTime.UtcNow:HH:mm:ss}\t{_indent}[{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}";
             _writer?.WriteLine(toWrite);
             _writer?.Flush();
             MyLog.Default.WriteLineAndConsole($"[DetectionEquipment] [{(fatal ? "FATAL " : "")}EXCEPTION]\t{source}\n{exception}");
             _currentFileSize += toWrite.Length;
+
+            // WHY DON'T YOU CHECK CONTROL.VISIBLE???
+            if (fatal && source.StartsWith("TerminalControlAdder"))
+            {
+                //Log.Info("Log.Exception", $"Intercepted possible Build Vision exception in {source}...");
+                Log.Close();
+                throw CustomCrashModContext.GenerateException(source, exception);
+            }
 
             if (fatal)
             {

@@ -8,6 +8,7 @@ using Sandbox.ModAPI;
 using Sandbox.ModAPI.Interfaces.Terminal;
 using System;
 using System.Collections.Generic;
+using DetectionEquipment.Shared.Utils;
 using VRage.Game.ModAPI;
 using VRage.ModAPI;
 using VRage.Utils;
@@ -71,6 +72,10 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 logic.CubeBlock.CubeGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(_gridBuffer);
             foreach (var id in selectedPersistent)
             {
+                // skip empty item
+                if (id == -1)
+                    continue;
+
                 var block = logic.CubeBlock.CubeGrid.GetBlockByPersistentId(id);
                 if (block == null && _useSubgrids)
                 {
@@ -104,6 +109,10 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             List<long> persistentIds = new List<long>(selected.Length);
             foreach (var id in selected)
             {
+                // skip empty item
+                if (id == -1)
+                    continue;
+
                 var block = MyAPIGateway.Entities.GetEntityById(id) as IMyCubeBlock;
                 if (block != null)
                 {
@@ -155,6 +164,9 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 _onListChanged?.Invoke(logic, _selectedBuffer);
                 logic.OnClose += () => SelectedBlocks.Remove(logic);
             }
+
+            var emptyItem = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute("[NONE]"), MyStringId.NullOrEmpty, -1L);
+            content.Add(emptyItem);
 
             foreach (var available in _availableBlocks.Invoke(logic))
             {
