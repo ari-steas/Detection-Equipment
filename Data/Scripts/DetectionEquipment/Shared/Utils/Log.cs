@@ -11,7 +11,7 @@ namespace DetectionEquipment.Shared.Utils
     public static class Log
     {
         // non-fatal exception checker
-        private const int MaxExceptionsOverInterval = 10;
+        private const int MaxExceptionsOverInterval = 20;
         private const int MaxExceptionIntervalTicks = 60;
         private static Queue<int> _exceptions;
         private static int _lastTickExceptions = 0;
