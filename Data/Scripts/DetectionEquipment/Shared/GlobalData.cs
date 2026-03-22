@@ -4,6 +4,7 @@ using Sandbox.Game.Entities;
 using Sandbox.ModAPI;
 using System;
 using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using DetectionEquipment.Shared.ExternalApis.WaterMod;
 using DetectionEquipment.Shared.Structs;
 using VRage.Game;
@@ -131,6 +132,15 @@ namespace DetectionEquipment.Shared
             "VcsModifier",
             "Multiplier on all visual cross-sections for all entities.",
             1f);
+
+        /// <summary>
+        /// Regex pattern for radar-absorbent blocks' display names.
+        /// </summary>
+        public static IniSetting<string> RadarAbsorbentBlocks = new IniSetting<string>(
+            _sensorConfig,
+            "RadarAbsorbentBlocks",
+            "Regex pattern for radar-absorbent blocks' display names (see LightRcsModifier). Ex: \"(Light|Plane) Armor\" matches any block with \"Light Armor\" or \"Plane Armor\" in its name.",
+            "Light Armor");
 
         /// <summary>
         /// Multiplier on light armor RCS for all grids.
@@ -310,13 +320,15 @@ namespace DetectionEquipment.Shared
                 MainThreadId = Environment.CurrentManagedThreadId;
                 Log.Info("GlobalData", $"Main thread ID: {MainThreadId}");
             }
-            
+
             {
+                Regex r = new Regex(RadarAbsorbentBlocks.Value);
+
                 LowRcsSubtypes = new HashSet<string>();
                 foreach (var definition in MyDefinitionManager.Static.GetAllDefinitions())
                 {
                     MyCubeBlockDefinition block = definition as MyCubeBlockDefinition;
-                    if (block == null || !block.DisplayNameText.Contains("Light Armor"))
+                    if (block == null || !r.IsMatch(block.DisplayNameText))
                         continue;
                     LowRcsSubtypes.Add(block.Id.SubtypeName);
                 }
