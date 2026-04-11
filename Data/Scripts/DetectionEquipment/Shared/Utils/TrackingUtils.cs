@@ -256,7 +256,7 @@ namespace DetectionEquipment.Shared.Utils
 
             return false;
         }
-        private static bool IsBlocked(IMyEntity thisEnt, IMyEntity toCheck, Vector3D from, Vector3D to)
+        public static bool IsBlocked(IMyEntity thisEnt, IMyEntity toCheck, Vector3D from, Vector3D to)
         {
             var entityList = GlobalObjectPools.EntityLineOverlapPool.Pop();
             bool isValid = true;

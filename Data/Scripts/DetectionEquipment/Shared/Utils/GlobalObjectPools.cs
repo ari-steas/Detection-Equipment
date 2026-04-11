@@ -35,6 +35,7 @@ namespace DetectionEquipment.Shared.Utils
         public static ObjectPool<HashSet<MyEntity>> EntityPool;
         public static ObjectPool<HashSet<IMyCubeGrid>> GridPool;
         public static ObjectPool<HashSet<GridSensorManager.VisibilitySet>> VisibilitySetPool;
+        public static ObjectPool<List<Vector3D>> VectorPool;
 
         public static void Init()
         {
@@ -78,6 +79,11 @@ namespace DetectionEquipment.Shared.Utils
                 () => new HashSet<GridSensorManager.VisibilitySet>(),
                 startSize: 10
             );
+            VectorPool = new ObjectPool<List<Vector3D>>(
+                () => new List<Vector3D>(),
+                startSize: 10
+            );
+
 
             if (MyAPIGateway.Session.IsServer)
             {

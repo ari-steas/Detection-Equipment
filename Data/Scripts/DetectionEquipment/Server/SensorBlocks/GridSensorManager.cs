@@ -14,9 +14,9 @@ using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Shared.ExternalApis;
-using DetectionEquipment.Shared.ExternalApis.WcApi;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
+using VRage.ModAPI;
 using VRageMath;
 
 namespace DetectionEquipment.Server.SensorBlocks
@@ -196,48 +196,10 @@ namespace DetectionEquipment.Server.SensorBlocks
                 foreach (var trackKvp in tracksBuffer)
                 {
                     // skip closed entities
-                    // 500km max track range if radar is present, 50km otherwise
-                    if ((trackKvp.Key?.Closed ?? true) || Vector3D.DistanceSquared(trackKvp.Value.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
+                    if (trackKvp.Key?.Closed ?? true)
                         continue;
 
-                    // move this before LOS check to save a few more raycasts
-                    var gT = trackKvp.Value as GridTrack;
-                    if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
-                        continue;
-
-                    // check sensor visibility before registering tracks
-                    bool cont = false;
-                    foreach (var sensor in Sensors)
-                    {
-                        if (sensor.Block == null || sensor.Sensor == null || !sensor.Sensor.Enabled)
-                            continue;
-
-                        double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, trackKvp.Value.Position - sensor.Sensor.Position);
-                        if (targetAngle <= sensor.Sensor.Aperture || trackKvp.Value.BoundingBox.Intersects(new RayD(sensor.Sensor.Position, sensor.Sensor.Direction)) != null)
-                        {
-                            cont = true;
-                            break;
-                        }
-                    }
-                    if (!cont)
-                    {
-                        continue;
-                    }
-
-                    if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(trackKvp.Key.PositionComp.WorldAABB.Center), Grid, trackKvp.Key))
-                        continue;
-
-                    if (gT != null)
-                    {
-                        var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
-                        if (!_combineBuffer.ContainsKey(topmost))
-                            _combineBuffer[topmost] = new List<VisibilitySet>();
-                        _combineBuffer[topmost].Add(new VisibilitySet(Grid, gT));
-                    }
-                    else
-                    {
-                        trackVisBuffer.Add(new VisibilitySet(Grid, trackKvp.Value));
-                    }
+                    ScanTarget(trackKvp.Value, ref trackVisBuffer, trackKvp.Key);
                 }
 
                 GlobalObjectPools.TrackSharedPool.Push(tracksBuffer);
@@ -249,8 +211,20 @@ namespace DetectionEquipment.Server.SensorBlocks
                 if (ApiManager.WcApi.IsReady)
                 {
                     // WC, ignore vanilla
+                    List<Vector3D> projectilePositions = GlobalObjectPools.VectorPool.Pop();
+                    ApiManager.WcApi.GetProjectilesLockedOnPos((MyEntity) Grid, projectilePositions);
 
-                    //ApiManager.WcApi.GetProjectilesLockedOnPos();
+                    var t = ApiManager.WcApi.GetProjectilesLockedOn((MyEntity)Grid);
+                    MyAPIGateway.Utilities.ShowNotification($"Projectiles: {projectilePositions.Count} {t.Item1} {t.Item2} {t.Item3}", 1000/60);
+
+                    foreach (var track in projectilePositions)
+                    {
+                        DebugDraw.AddLine(Grid.GetPosition(), track, Color.Red, 0);
+                        ScanTarget(new MunitionTrack(track), ref trackVisBuffer);
+                    }
+
+                    projectilePositions.Clear();
+                    GlobalObjectPools.VectorPool.Push(projectilePositions);
                 }
                 else
                 {
@@ -274,6 +248,61 @@ namespace DetectionEquipment.Server.SensorBlocks
                 _trackVisibility = trackVisBuffer;
             }
             _isUpdateComplete = true;
+        }
+
+        private void ScanTarget(ITrack track, ref HashSet<VisibilitySet> trackVisBuffer, IMyEntity attachedEntity = null)
+        {
+            // skip closed entities
+            // 500km max track range if radar is present, 50km otherwise
+            if (Vector3D.DistanceSquared(track.Position, Grid.WorldAABB.Center) > (_hasRadar ? GlobalData.MaxSensorRange * GlobalData.MaxSensorRange : GlobalData.MaxVisualSensorRange * GlobalData.MaxVisualSensorRange))
+                return;
+
+            // move this before LOS check to save a few more raycasts
+            var gT = track as GridTrack;
+            if (gT?.Grid.IsInSameLogicalGroupAs(Grid) ?? false) // skip grids attached to self
+                return;
+
+            // check sensor visibility before registering tracks
+            bool cont = false;
+            foreach (var sensor in Sensors)
+            {
+                if (sensor.Block == null || sensor.Sensor == null || !sensor.Sensor.Enabled)
+                    continue;
+
+                double targetAngle = Vector3D.Angle(sensor.Sensor.Direction, track.Position - sensor.Sensor.Position);
+                if (targetAngle <= sensor.Sensor.Aperture || track.BoundingBox.Intersects(new RayD(sensor.Sensor.Position, sensor.Sensor.Direction)) != null)
+                {
+                    cont = true;
+                    break;
+                }
+            }
+            if (!cont)
+            {
+                return;
+            }
+
+            if (attachedEntity == null)
+            {
+                if (TrackingUtils.IsBlocked(Grid, null, Grid.WorldAABB.ClosestCorner(track.Position), track.Position))
+                    return;
+            }
+            else
+            {
+                if (!TrackingUtils.HasLoS(Grid.WorldAABB.ClosestCorner(attachedEntity.PositionComp.WorldAABB.Center), Grid, attachedEntity))
+                    return;
+            }
+
+            if (gT != null)
+            {
+                var topmost = gT.Grid.GetGridGroup(GridLinkTypeEnum.Physical);
+                if (!_combineBuffer.ContainsKey(topmost))
+                    _combineBuffer[topmost] = new List<VisibilitySet>();
+                _combineBuffer[topmost].Add(new VisibilitySet(Grid, gT));
+            }
+            else
+            {
+                trackVisBuffer.Add(new VisibilitySet(Grid, track));
+            }
         }
 
         public void Close()
