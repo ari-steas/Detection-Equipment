@@ -1,11 +1,11 @@
-﻿using System;
+﻿using Sandbox.ModAPI.Ingame;
+using Sandbox.ModAPI.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Sandbox.ModAPI.Ingame;
-using Sandbox.ModAPI.Interfaces;
 using VRage.Scripting.MemorySafeTypes;
+using VRage.Utils;
 using VRageMath;
-
 using IMyCubeBlock = VRage.Game.ModAPI.Ingame.IMyCubeBlock;
 using IMyTerminalBlock = Sandbox.ModAPI.Ingame.IMyTerminalBlock;
 
@@ -834,7 +834,7 @@ namespace IngameScript
                 }
             }
 
-            public string GetActualIffString() => ReturnHash ? "H" + IffCode.GetHashCode() : "S" + IffCode;
+            public string GetActualIffString() => ReturnHash ? "H" + IffCode.GetUniversalHashCode() : "S" + IffCode;
         }
 
         #endregion

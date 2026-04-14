@@ -5,6 +5,7 @@ using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Utils;
 using VRage.ModAPI;
+using VRage.Utils;
 
 namespace DetectionEquipment.Shared.BlockLogic.IffReflector
 {
@@ -44,7 +45,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             ReturnHash.Component = this;
             ReturnHash.OnValueChanged = (value, fromNetwork) =>
             {
-                IffCodeCache = ReturnHash.Value ? "#" + IffCode.Value.GetHashCode() : "&" + IffCode.Value;
+                IffCodeCache = ReturnHash.Value ? "#" + IffCode.Value.GetUniversalHashCode() : "&" + IffCode.Value;
             };
 
             IffCode.OnValueChanged.Invoke(IffCode.Value, false);

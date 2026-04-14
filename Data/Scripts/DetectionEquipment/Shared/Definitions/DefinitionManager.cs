@@ -1,12 +1,7 @@
-﻿using DetectionEquipment.Server.SensorBlocks;
-using DetectionEquipment.Shared.Utils;
-using Sandbox.ModAPI;
-using System;
-using System.Collections.Generic;
-using DetectionEquipment.Server;
+﻿using DetectionEquipment.Server;
 using DetectionEquipment.Server.Countermeasures;
-using VRage.Game.ModAPI;
 using DetectionEquipment.Server.Networking;
+using DetectionEquipment.Server.SensorBlocks;
 using DetectionEquipment.Shared.BlockLogic;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.Antenna;
@@ -16,6 +11,12 @@ using DetectionEquipment.Shared.BlockLogic.IffReflector;
 using DetectionEquipment.Shared.BlockLogic.SensorControl.Manual;
 using DetectionEquipment.Shared.BlockLogic.SensorControl.Search;
 using DetectionEquipment.Shared.BlockLogic.SensorControl.Tracker;
+using DetectionEquipment.Shared.Utils;
+using Sandbox.ModAPI;
+using System;
+using System.Collections.Generic;
+using VRage.Game.ModAPI;
+using VRage.Utils;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -68,6 +69,8 @@ namespace DetectionEquipment.Shared.Definitions
         {
             Log.IncreaseIndent();
 
+            InternalDefinitions.Register();
+
             DefinitionApi.RegisterOnUpdate<SensorDefinition>(OnSensorDefinitionUpdate);
             foreach (string definitionId in DefinitionApi.GetDefinitionsOfType<SensorDefinition>())
                 OnSensorDefinitionUpdate(definitionId, 0);
@@ -83,8 +86,6 @@ namespace DetectionEquipment.Shared.Definitions
             DefinitionApi.RegisterOnUpdate<ControlBlockDefinition>(OnControlBlockDefinitionUpdate);
             foreach (string definitionId in DefinitionApi.GetDefinitionsOfType<ControlBlockDefinition>())
                 OnControlBlockDefinitionUpdate(definitionId, 0);
-
-            InternalDefinitions.Register();
 
             Log.DecreaseIndent();
         }
@@ -123,12 +124,12 @@ namespace DetectionEquipment.Shared.Definitions
                             $"Registered new sensor definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
                         break;
                     case 1:
-                        SensorDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
+                        SensorDefinitions.Remove(definitionId.GetUniversalHashCode()); // TODO cleanup existing sensors
                         Log.Info("DefinitionManager", "Unregistered sensor definition " + definitionId);
                         break;
                     case 2:
                         // Live methods
-                        SensorDefinitions[definitionId.GetHashCode()].RetrieveDelegates<SensorDefinition>();
+                        SensorDefinitions[definitionId.GetUniversalHashCode()].RetrieveDelegates<SensorDefinition>();
                         break;
                 }
             }
@@ -155,12 +156,12 @@ namespace DetectionEquipment.Shared.Definitions
                         Log.Info("DefinitionManager", $"Registered new CM definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new sensors
                         break;
                     case 1:
-                        CountermeasureDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing sensors
+                        CountermeasureDefinitions.Remove(definitionId.GetUniversalHashCode()); // TODO cleanup existing sensors
                         Log.Info("DefinitionManager", "Unregistered CM definition " + definitionId);
                         break;
                     case 2:
                         // Live methods
-                        CountermeasureDefinitions[definitionId.GetHashCode()].RetrieveDelegates<CountermeasureDefinition>();
+                        CountermeasureDefinitions[definitionId.GetUniversalHashCode()].RetrieveDelegates<CountermeasureDefinition>();
                         break;
                 }
             }
@@ -189,12 +190,12 @@ namespace DetectionEquipment.Shared.Definitions
                         Log.Info("DefinitionManager", $"Registered new CM Emitter definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new
                         break;
                     case 1:
-                        CountermeasureEmitterDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing
+                        CountermeasureEmitterDefinitions.Remove(definitionId.GetUniversalHashCode()); // TODO cleanup existing
                         Log.Info("DefinitionManager", "Unregistered CM Emitter definition " + definitionId);
                         break;
                     case 2:
                         // Live methods
-                        CountermeasureEmitterDefinitions[definitionId.GetHashCode()].RetrieveDelegates<CountermeasureEmitterDefinition>();
+                        CountermeasureEmitterDefinitions[definitionId.GetUniversalHashCode()].RetrieveDelegates<CountermeasureEmitterDefinition>();
                         break;
                 }
             }
@@ -223,12 +224,12 @@ namespace DetectionEquipment.Shared.Definitions
                         Log.Info("DefinitionManager", $"Registered new control block definition {definitionId} (internal ID {definition.Id})"); // TODO spawn new
                         break;
                     case 1:
-                        ControlBlockDefinitions.Remove(definitionId.GetHashCode()); // TODO cleanup existing
+                        ControlBlockDefinitions.Remove(definitionId.GetUniversalHashCode()); // TODO cleanup existing
                         Log.Info("DefinitionManager", "Unregistered control block definition " + definitionId);
                         break;
                     case 2:
                         // Live methods
-                        ControlBlockDefinitions[definitionId.GetHashCode()].RetrieveDelegates<ControlBlockDefinition>();
+                        ControlBlockDefinitions[definitionId.GetUniversalHashCode()].RetrieveDelegates<ControlBlockDefinition>();
                         break;
                 }
             }

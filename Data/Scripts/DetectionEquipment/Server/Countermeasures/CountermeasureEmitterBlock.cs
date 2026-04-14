@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using DetectionEquipment.Server.Networking;
+﻿using DetectionEquipment.Server.Networking;
 using DetectionEquipment.Shared;
 using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Networking;
@@ -9,11 +7,14 @@ using Sandbox.Game;
 using Sandbox.Game.EntityComponents;
 using Sandbox.Game.Weapons;
 using Sandbox.ModAPI;
+using System;
+using System.Collections.Generic;
 using VRage.Collections;
 using VRage.Game;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRage.Game.ModAPI.Ingame;
+using VRage.Utils;
 using VRageMath;
 using IMyCubeBlock = VRage.Game.ModAPI.IMyCubeBlock;
 using IMyEntity = VRage.ModAPI.IMyEntity;
@@ -198,7 +199,7 @@ namespace DetectionEquipment.Server.Countermeasures
             {
                 var counterDefName = Definition.CountermeasureIds[_currentSequenceIdx++];
                 var counterDef =
-                    DefinitionManager.GetCountermeasureDefinition(counterDefName.GetHashCode());
+                    DefinitionManager.GetCountermeasureDefinition(counterDefName.GetUniversalHashCode());
                 if (counterDef == null)
                     throw new Exception($"Invalid countermeasure definition {counterDefName}");
                 if (_currentSequenceIdx >= Definition.CountermeasureIds.Length)

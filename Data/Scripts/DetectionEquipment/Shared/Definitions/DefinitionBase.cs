@@ -1,6 +1,7 @@
 ﻿using ProtoBuf;
 using System;
 using System.Collections.Generic;
+using VRage.Utils;
 
 namespace DetectionEquipment.Shared.Definitions
 {
@@ -19,7 +20,7 @@ namespace DetectionEquipment.Shared.Definitions
         public void Init<TDefinition>(string defName) where TDefinition : DefinitionBase
         {
             Name = defName;
-            Id = Name.GetHashCode();
+            Id = Name.GetUniversalHashCode();
             RetrieveDelegates<TDefinition>();
         }
 
