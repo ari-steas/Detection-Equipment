@@ -40,7 +40,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator.Datalink
         private static void OnEntityAdd(IMyEntity e)
         {
             var grid = e as IMyCubeGrid;
-            if (grid == null)
+            if (grid == null || _antennaCache.ContainsKey(grid))
                 return;
             _antennaCache.Add(grid, new HashSet<IMyFunctionalBlock>());
             grid.OnClosing += OnGridClose;
