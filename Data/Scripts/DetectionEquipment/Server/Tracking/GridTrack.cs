@@ -480,8 +480,8 @@ namespace DetectionEquipment.Server.Tracking
                     }
                     catch (Exception ex)
                     {
-                        Log.Info("GridTrack", "Handled exception in (MyCubeGrid).GetIntersectionWithLine:");
-                        Log.Exception("GridTrack", ex);
+                        //Log.Info("GridTrack", "Handled exception in (MyCubeGrid).GetIntersectionWithLine:");
+                        //Log.Exception("GridTrack", ex);
                         continue;
                     }
                     
