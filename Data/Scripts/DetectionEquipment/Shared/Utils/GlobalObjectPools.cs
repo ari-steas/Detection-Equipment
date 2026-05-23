@@ -35,6 +35,7 @@ namespace DetectionEquipment.Shared.Utils
         public static ObjectPool<HashSet<MyEntity>> EntityPool;
         public static ObjectPool<HashSet<IMyCubeGrid>> GridPool;
         public static ObjectPool<HashSet<GridSensorManager.VisibilitySet>> VisibilitySetPool;
+        public static ObjectPool<HashSet<IMyCubeBlock>> BlockPool;
 
         public static void Init()
         {
@@ -78,6 +79,11 @@ namespace DetectionEquipment.Shared.Utils
                 () => new HashSet<GridSensorManager.VisibilitySet>(),
                 startSize: 10
             );
+            BlockPool = new ObjectPool<HashSet<IMyCubeBlock>>(
+                () => new HashSet<IMyCubeBlock>(),
+                cleanObj: pool => pool.Clear(),
+                startSize: 10
+            );
 
             if (MyAPIGateway.Session.IsServer)
             {
@@ -116,6 +122,7 @@ namespace DetectionEquipment.Shared.Utils
             EntityPool = null;
             GridPool = null;
             VisibilitySetPool = null;
+            BlockPool = null;
         }
     }
 }

@@ -40,6 +40,9 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
         private readonly List<IMyCubeBlock> _selectedBuffer = new List<IMyCubeBlock>();
         private readonly List<IMyCubeGrid> _gridBuffer = new List<IMyCubeGrid>();
 
+        private readonly Dictionary<TLogicType, HashSet<IMyCubeBlock>> _prevSelectedBlocks = new Dictionary<TLogicType, HashSet<IMyCubeBlock>>();
+        private readonly Dictionary<TLogicType, LogicContainerHelper> _containers = new Dictionary<TLogicType, LogicContainerHelper>();
+
         public BlockSelectControl(TerminalControlAdder<TLogicType, TBlockType> controlAdder, string id, string tooltip, string description, bool multiSelect, bool useSubgrids, Func<TLogicType, IEnumerable<IMyCubeBlock>> availableBlocks, Action<TLogicType, List<IMyCubeBlock>> onListChanged = null)
         {
             ListBox = controlAdder.CreateListbox(
@@ -121,6 +124,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 }
             }
             SelectedBlocks[thisLogic] = persistentIds.ToArray();
+            OnUpdateClearAction(thisLogic);
 
             if (_onListChanged != null)
             {
@@ -152,6 +156,23 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             }
         }
 
+        public void UpdateSelectedPersistent(IControlBlockBase logic, long[] selectedPersistent)
+        {
+            var thisLogic = logic as TLogicType;
+            if (thisLogic == null)
+                return;
+
+            SelectedBlocks[thisLogic] = selectedPersistent;
+            OnUpdateClearAction(thisLogic);
+
+            if (_onListChanged != null)
+            {
+                _onListChanged?.Invoke(thisLogic, _selectedBuffer);
+                _selectedBuffer.Clear();
+                _gridBuffer.Clear();
+            }
+        }
+
         private void GetContent(IMyTerminalBlock block, List<MyTerminalControlListBoxItem> content, List<MyTerminalControlListBoxItem> selected)
         {
             var logic = ControlBlockManager.GetLogic<TLogicType>(block);
@@ -162,7 +183,22 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             {
                 SelectedBlocks[logic] = Array.Empty<long>();
                 _onListChanged?.Invoke(logic, _selectedBuffer);
-                logic.OnClose += () => SelectedBlocks.Remove(logic);
+                logic.OnClose += () =>
+                {
+                    long[] closeSelected;
+                    if (SelectedBlocks.TryGetValue(logic, out closeSelected))
+                    {
+                        foreach (var blockId in closeSelected)
+                        {
+                            IMyCubeBlock extBlock = MyAPIGateway.Entities.GetEntityById(blockId) as IMyCubeBlock;
+                            if (extBlock == null)
+                                continue;
+                            extBlock.OnClosing += GetContainer(logic).OnBlockClosing;
+                        }
+
+                        SelectedBlocks.Remove(logic);
+                    }
+                };
             }
 
             var emptyItem = new MyTerminalControlListBoxItem(MyStringId.GetOrCompute("[NONE]"), MyStringId.NullOrEmpty, -1L);
@@ -187,6 +223,97 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
                 array[i] = (long)selected[i].UserData;
 
             UpdateSelected(logic, array);
+        }
+
+        // absolute nonsense meant to help with very annoying oversight on my part, forgot to remove closed blocks from the blockselect terminal control's internal buffer
+        // - 1am ari
+        private void OnUpdateClearAction(TLogicType logic)
+        {
+            long[] newSelected = SelectedBlocks[logic];
+            HashSet<long> checkedSelected = new HashSet<long>(newSelected);
+            HashSet<IMyCubeBlock> oldSelected;
+            if (!_prevSelectedBlocks.TryGetValue(logic, out oldSelected))
+            {
+                oldSelected = new HashSet<IMyCubeBlock>();
+                _prevSelectedBlocks.Add(logic, oldSelected);
+            }
+
+
+            var toRemove = GlobalObjectPools.BlockPool.Pop();
+            foreach (var block in oldSelected)
+            {
+                long pId = block.GetOrCreatePersistentId();
+
+                // ignore blocks already with onclose
+                if (checkedSelected.Contains(pId))
+                {
+                    checkedSelected.Remove(pId);
+                    continue;
+                }
+
+                // remove onclose from deselected blocks
+                block.OnClosing -= GetContainer(logic).OnBlockClosing;
+                toRemove.Add(block);
+            }
+
+            foreach (var bTR in toRemove) // she modify on my collection till i exception???
+                oldSelected.Remove(bTR);
+
+            GlobalObjectPools.BlockPool.Push(toRemove);
+
+            // add close action for new selections
+            foreach (var blockId in checkedSelected)
+            {
+                IMyCubeBlock block = logic.CubeBlock.CubeGrid.GetBlockByPersistentId(blockId);
+                if (block == null)
+                    continue;
+                block.OnClosing += GetContainer(logic).OnBlockClosing;
+                oldSelected.Add(block);
+            }
+        }
+
+        private LogicContainerHelper GetContainer(TLogicType logic)
+        {
+            LogicContainerHelper container;
+            if (!_containers.TryGetValue(logic, out container))
+            {
+                container = new LogicContainerHelper(logic, this);
+                _containers.Add(logic, container);
+            }
+
+            return container;
+        }
+
+        private struct LogicContainerHelper
+        {
+            public TLogicType Logic;
+            public BlockSelectControl<TLogicType, TBlockType> Parent;
+
+            public LogicContainerHelper(TLogicType logic, BlockSelectControl<TLogicType, TBlockType> parent)
+            {
+                Logic = logic;
+                Parent = parent;
+            }
+
+            public void OnBlockClosing(IMyEntity entity)
+            {
+                long pId = ((IMyCubeBlock)entity).GetOrCreatePersistentId();
+
+                long[] prevSelected;
+                if (!Parent.SelectedBlocks.TryGetValue(Logic, out prevSelected) || !prevSelected.Contains(pId))
+                    return;
+
+                long[] newSelected = new long[prevSelected.Length - 1];
+                int j = 0;
+                for (int i = 0; i < prevSelected.Length; i++)
+                {
+                    if (pId == prevSelected[i])
+                        continue;
+                    newSelected[j++] = prevSelected[i];
+                }
+
+                Parent.UpdateSelectedPersistent(Logic, newSelected); // treated as network update to stop propagation
+            }
         }
     }
 
