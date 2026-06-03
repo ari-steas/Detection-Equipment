@@ -38,7 +38,7 @@ namespace DetectionEquipment.Server.SensorBlocks
         public static void ScanTargetsAction(MyCubeGrid mainGrid, BoundingSphereD sphere, List<MyEntity> targets)
         {
             // Vanilla WC targeting
-            if (!GlobalData.OverrideWcTargeting)
+            if (!GlobalData.OverrideWcTargeting || mainGrid.IsNpcSpawnedGrid)
             {
                 if (GlobalData.MaxWcMagicTargetingRange > 0 && sphere.Radius > GlobalData.MaxWcMagicTargetingRange)
                     sphere.Radius = GlobalData.MaxWcMagicTargetingRange;
@@ -117,7 +117,7 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public static bool ValidateWeaponTarget(IMyTerminalBlock weapon, int weaponId, MyEntity target)
         {
-            if (!GlobalData.OverrideWcTargeting)
+            if (!GlobalData.OverrideWcTargeting || weapon.CubeGrid.IsNpcSpawnedGrid)
                 return true;
 
             IMyCubeGrid targetGrid = target as IMyCubeGrid;
