@@ -26,7 +26,11 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         public override void DoOnce(IControlBlockBase thisLogic)
         {
             if (!IsDone)
+            {
                 ActiveSensors.Clear();
+                ActiveWeapons.Clear();
+                ClientActiveSensors.Clear();
+            }
             base.DoOnce(thisLogic);
             ActiveSensors[(AggregatorBlock)thisLogic] = new HashSet<BlockSensor>();
             ActiveWeapons[(AggregatorBlock)thisLogic] = new HashSet<IMyTerminalBlock>();

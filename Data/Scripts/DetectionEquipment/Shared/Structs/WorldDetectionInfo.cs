@@ -22,6 +22,13 @@ namespace DetectionEquipment.Shared.Structs
         public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
 
+        /// <summary>
+        /// Absolute world position captured at the moment this detection was created. Unlike <see cref="Position"/>
+        /// (which reads the live entity center every access), this is frozen, so velocity can be estimated from the
+        /// delta between snapshots taken on different ticks.
+        /// </summary>
+        public Vector3D SnapshotPosition;
+
         public Vector3D Position => Entity == null ? PositionOffset : PositionOffset + Entity.PositionComp.WorldAABB.Center;
         public double SumError => MaxRangeError + MaxBearingError;
 
@@ -46,6 +53,7 @@ namespace DetectionEquipment.Shared.Structs
             //wInfo.Error += info.MaxRangeError * info.MaxRangeError; // normal error
             //wInfo.Error = Math.Sqrt(wInfo.Error);
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
+            wInfo.SnapshotPosition = wInfo.Position; // freeze the absolute position at detection time for velocity estimation
 
             return wInfo;
         }
@@ -65,6 +73,7 @@ namespace DetectionEquipment.Shared.Structs
                 IffCodes = info.IffCodes,
                 Relations = info.Relations,
                 Entity = info.Entity,
+                SnapshotPosition = info.SnapshotPosition,
             };
         }
 
@@ -92,6 +101,9 @@ namespace DetectionEquipment.Shared.Structs
             MyEntity entity = null;
             long entId = -1;
             var allCodes = new List<string>();
+            Vector3D velocitySum = Vector3D.Zero;
+            double varianceSum = 0;
+            int velocityCount = 0;
             foreach (var info in args)
             {
                 if (info.Entity != null)
@@ -102,6 +114,14 @@ namespace DetectionEquipment.Shared.Structs
                     if (!allCodes.Contains(code))
                         allCodes.Add(code);
                 proposedType |= info.DetectionType;
+
+                // Carry velocity estimates through aggregation; otherwise multi-sensor/datalink tracks lose velocity (display NOLOC).
+                if (info.Velocity != null)
+                {
+                    velocitySum += info.Velocity.Value;
+                    varianceSum += info.VelocityVariance ?? 0;
+                    velocityCount++;
+                }
             }
 
             double minRangeError, minBearingError, averageCrossSection;
@@ -117,8 +137,11 @@ namespace DetectionEquipment.Shared.Structs
                 MaxBearingError = minBearingError,
                 DetectionType = proposedType,
                 IffCodes = allCodes.ToArray(),
+                Velocity = velocityCount > 0 ? velocitySum / velocityCount : (Vector3D?)null,
+                VelocityVariance = velocityCount > 0 ? varianceSum / velocityCount : (double?)null,
             };
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
+            wInfo.SnapshotPosition = wInfo.Position; // freeze the absolute position at detection time for velocity estimation
 
             return wInfo;
         }

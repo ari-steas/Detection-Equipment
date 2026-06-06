@@ -63,13 +63,13 @@ namespace DetectionEquipment.Server.Sensors
                 return false;
             }
 
-            double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * targetAngle : Definition.RadarProperties.ReceiverArea;
+            double receiverAreaAtAngle = Aperture <= Math.PI && Definition.RadarProperties.AccountForRadarAngle ? Definition.RadarProperties.ReceiverArea * Math.Cos(targetAngle) : Definition.RadarProperties.ReceiverArea;
 
             const double inherentNoise = 3;
             var sensorSignal = MathUtils.ToDecibels(
                 4 * Math.PI * receiverAreaAtAngle * track.CommsVisibility(Position) // antenna range is linearly proportional to power draw and that's silly.
                 /
-                (targetRange + extraDistance) * (inherentNoise + CountermeasureNoise)
+                ((targetRange + extraDistance) * (inherentNoise + CountermeasureNoise))
                 );
 
             if (double.IsNegativeInfinity(sensorSignal) || sensorSignal < 15)

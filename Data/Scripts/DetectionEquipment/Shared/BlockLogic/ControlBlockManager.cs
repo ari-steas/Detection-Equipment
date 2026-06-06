@@ -15,7 +15,9 @@ namespace DetectionEquipment.Shared.BlockLogic
     {
         public static ControlBlockManager I;
         public Dictionary<IMyCubeBlock, IControlBlockBase> Blocks = new Dictionary<IMyCubeBlock, IControlBlockBase>(); // assume only one IControlBlockBase is ever present on a given block.
-        public Dictionary<string, IBlockSelectControl> BlockControls = new Dictionary<string, IBlockSelectControl>();
+        // Static so control registrations survive a same-session world reload, matching the lifetime of the terminal
+        // controls themselves (which are only created once per process via TerminalControlAdder._doneIds).
+        public static Dictionary<string, IBlockSelectControl> BlockControls = new Dictionary<string, IBlockSelectControl>();
 
         public long TerminalSelectedBlock = 0;
 
@@ -123,6 +125,26 @@ namespace DetectionEquipment.Shared.BlockLogic
         internal static void Unload()
         {
             SerializationNotifier.OnSerialize -= I.OnSerialize;
+            MyAPIGateway.Entities.OnEntityAdd -= OnEntityAdd;
+
+            // Close every block logic so its MarkForClose cleanup runs (datalink unregister, GridSensors removal,
+            // static control-registry removal). Otherwise dead logics leak across a same-session reload and poison
+            // things like WC targeting. Iterate a copy because MarkForClose removes from Blocks.
+            if (I.Blocks != null)
+            {
+                foreach (var logic in new List<IControlBlockBase>(I.Blocks.Values))
+                {
+                    try
+                    {
+                        logic.MarkForClose(logic.CubeBlock);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Exception("ControlBlockManager", ex);
+                    }
+                }
+            }
+
             I.Blocks = null;
             if (!MyAPIGateway.Utilities.IsDedicated)
                 MyAPIGateway.TerminalControls.CustomControlGetter -= CustomControlGetter;

@@ -26,6 +26,8 @@ namespace DetectionEquipment.Client.External
 
         public static void Close()
         {
+            // Must unsubscribe, otherwise OnEntityRemove keeps firing after unload and hits a null VisibleTargets (NRE).
+            MyAPIGateway.Entities.OnEntityRemove -= OnEntityRemove;
             VisibleTargets = null;
         }
 
