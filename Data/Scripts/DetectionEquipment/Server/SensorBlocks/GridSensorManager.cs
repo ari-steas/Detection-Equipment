@@ -213,6 +213,9 @@ namespace DetectionEquipment.Server.SensorBlocks
         private void UpdateTracks()
         {
             var trackVisBuffer = GlobalObjectPools.VisibilitySetPool.Pop();
+            bool swapped = false;
+            try
+            {
 
             // Standard grid/entity detection
             if (_hasStandardDetection)
@@ -297,8 +300,27 @@ namespace DetectionEquipment.Server.SensorBlocks
                 _trackVisibility.Clear();
                 GlobalObjectPools.VisibilitySetPool.Push(_trackVisibility);
                 _trackVisibility = trackVisBuffer;
+                swapped = true;
             }
-            _isUpdateComplete = true;
+            }
+            catch (Exception ex)
+            {
+                // A tracked entity can be closed mid-scan (e.g. the player deletes a contact), throwing here.
+                // This runs on a parallel thread with no caller catch, so an escaping exception aborts it before
+                // _isUpdateComplete is reset - Update() then never restarts the scan and _trackVisibility freezes
+                // with the now-dead contact still in it, leaving a ghost on the HUD indefinitely.
+                Log.Exception("GridSensorManager", ex);
+                if (!swapped) // never swapped in: return the unused buffer instead of leaking it
+                {
+                    trackVisBuffer.Clear();
+                    GlobalObjectPools.VisibilitySetPool.Push(trackVisBuffer);
+                }
+                _combineBuffer.Clear(); // drop partial combine state so the next cycle starts clean
+            }
+            finally
+            {
+                _isUpdateComplete = true; // always allow the next update cycle to run
+            }
         }
 
         public void Close()
