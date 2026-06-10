@@ -22,13 +22,6 @@ namespace DetectionEquipment.Shared.Structs
         public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
 
-        /// <summary>
-        /// Absolute world position captured at the moment this detection was created. Unlike <see cref="Position"/>
-        /// (which reads the live entity center every access), this is frozen, so velocity can be estimated from the
-        /// delta between snapshots taken on different ticks.
-        /// </summary>
-        public Vector3D SnapshotPosition;
-
         public Vector3D Position => Entity == null ? PositionOffset : PositionOffset + Entity.PositionComp.WorldAABB.Center;
         public double SumError => MaxRangeError + MaxBearingError;
 
@@ -53,7 +46,6 @@ namespace DetectionEquipment.Shared.Structs
             //wInfo.Error += info.MaxRangeError * info.MaxRangeError; // normal error
             //wInfo.Error = Math.Sqrt(wInfo.Error);
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
-            wInfo.SnapshotPosition = wInfo.Position; // freeze the absolute position at detection time for velocity estimation
 
             return wInfo;
         }
@@ -73,7 +65,6 @@ namespace DetectionEquipment.Shared.Structs
                 IffCodes = info.IffCodes,
                 Relations = info.Relations,
                 Entity = info.Entity,
-                SnapshotPosition = info.SnapshotPosition,
             };
         }
 
@@ -141,7 +132,6 @@ namespace DetectionEquipment.Shared.Structs
                 VelocityVariance = velocityCount > 0 ? varianceSum / velocityCount : (double?)null,
             };
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
-            wInfo.SnapshotPosition = wInfo.Position; // freeze the absolute position at detection time for velocity estimation
 
             return wInfo;
         }
