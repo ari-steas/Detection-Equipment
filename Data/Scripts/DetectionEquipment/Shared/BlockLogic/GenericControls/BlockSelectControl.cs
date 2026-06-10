@@ -57,7 +57,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             _onListChanged = onListChanged;
             _useSubgrids = useSubgrids;
             _id = controlAdder.IdPrefix + id;
-            ControlBlockManager.I.BlockControls[_id] = this;
+            ControlBlockManager.BlockControls[_id] = this;
         }
 
         public void UpdateSelectedFromPersistent(IControlBlockBase logic, long[] selectedPersistent)
@@ -331,7 +331,7 @@ namespace DetectionEquipment.Shared.BlockLogic.GenericControls
             IBlockSelectControl control;
             //Log.Info("BlockSelectControl", $"Packet received {BlockId} {Selected?.Length ?? -1}\n" +
             //                               $"{block != null}, {block != null && ControlBlockManager.I.Blocks.ContainsKey((MyCubeBlock)block)}, {ControlBlockManager.I.BlockControls.ContainsKey(ControlId)}");
-            if (block == null || !ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock)block, out controller) || !ControlBlockManager.I.BlockControls.TryGetValue(ControlId, out control))
+            if (block == null || !ControlBlockManager.I.Blocks.TryGetValue((MyCubeBlock)block, out controller) || !ControlBlockManager.BlockControls.TryGetValue(ControlId, out control))
                 return;
             control.UpdateSelected(controller, Selected, true);
 

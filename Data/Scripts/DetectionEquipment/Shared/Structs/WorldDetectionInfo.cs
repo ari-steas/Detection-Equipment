@@ -92,6 +92,9 @@ namespace DetectionEquipment.Shared.Structs
             MyEntity entity = null;
             long entId = -1;
             var allCodes = new List<string>();
+            Vector3D velocitySum = Vector3D.Zero;
+            double varianceSum = 0;
+            int velocityCount = 0;
             foreach (var info in args)
             {
                 if (info.Entity != null)
@@ -102,6 +105,14 @@ namespace DetectionEquipment.Shared.Structs
                     if (!allCodes.Contains(code))
                         allCodes.Add(code);
                 proposedType |= info.DetectionType;
+
+                // Carry velocity estimates through aggregation; otherwise multi-sensor/datalink tracks lose velocity (display NOLOC).
+                if (info.Velocity != null)
+                {
+                    velocitySum += info.Velocity.Value;
+                    varianceSum += info.VelocityVariance ?? 0;
+                    velocityCount++;
+                }
             }
 
             double minRangeError, minBearingError, averageCrossSection;
@@ -117,6 +128,8 @@ namespace DetectionEquipment.Shared.Structs
                 MaxBearingError = minBearingError,
                 DetectionType = proposedType,
                 IffCodes = allCodes.ToArray(),
+                Velocity = velocityCount > 0 ? velocitySum / velocityCount : (Vector3D?)null,
+                VelocityVariance = velocityCount > 0 ? varianceSum / velocityCount : (double?)null,
             };
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
 

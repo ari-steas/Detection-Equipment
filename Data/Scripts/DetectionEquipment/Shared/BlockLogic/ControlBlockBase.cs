@@ -62,7 +62,8 @@ namespace DetectionEquipment.Shared.BlockLogic
 
         public virtual void MarkForClose(IMyEntity entity)
         {
-            ControlBlockManager.I.Blocks.Remove(Block as MyCubeBlock);
+            // Null-guard: MarkForClose can fire from the engine after ControlBlockManager has already unloaded.
+            ControlBlockManager.I?.Blocks?.Remove(Block as MyCubeBlock);
             OnClose?.Invoke();
         }
     }

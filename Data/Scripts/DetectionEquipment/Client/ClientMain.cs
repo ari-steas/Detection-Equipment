@@ -94,6 +94,7 @@ namespace DetectionEquipment.Client
                 Log.IncreaseIndent();
 
                 CommandHandler.Close();
+                ModderNotification.Close();
                 DetectionHud.Close();
                 WcInteractionManager.Close();
                 RcsTool.Close();

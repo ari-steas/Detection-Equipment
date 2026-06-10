@@ -87,7 +87,8 @@ namespace DetectionEquipment.Server.Sensors
                     : Definition.RadarProperties.ReceiverArea;
 
                 // https://www.ll.mit.edu/sites/default/files/outreach/doc/2018-07/lecture%202.pdf
-                signalToNoiseRatio = MathUtils.ToDecibels((Definition.MaxPowerDraw * Definition.RadarProperties.PowerEfficiencyModifier * gain * crossSection) / (4 * Math.PI * effectiveRange*effectiveRange * 1.38E-23 * 950 * Definition.RadarProperties.Bandwidth));
+                // Received signal depends on the EMITTER's radiated power, not this passive receiver's (whose MaxPowerDraw is -1, the "no transmit" sentinel).
+                signalToNoiseRatio = MathUtils.ToDecibels((sensor.Definition.MaxPowerDraw * sensor.Definition.RadarProperties.PowerEfficiencyModifier * gain * crossSection) / (4 * Math.PI * effectiveRange*effectiveRange * 1.38E-23 * 950 * Definition.RadarProperties.Bandwidth));
             }
 
             if (signalToNoiseRatio < 0)

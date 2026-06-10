@@ -97,8 +97,8 @@ namespace DetectionEquipment.Shared
                 ApiManager.Unload();
                 TrackingUtils.Unload();
                 IffHelper.Unload();
+                ControlBlockManager.Unload(); // closes block logics; must run before DatalinkManager (aggregator close unregisters from it)
                 DatalinkManager.Unload();
-                ControlBlockManager.Unload();
                 DefinitionManager.Unload();
                 PersistentBlockIdHelper.Unload();
                 ObjectPackager.Unload();

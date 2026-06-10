@@ -37,6 +37,13 @@ namespace DetectionEquipment.Server.SensorBlocks
 
         public static void ScanTargetsAction(MyCubeGrid mainGrid, BoundingSphereD sphere, List<MyEntity> targets)
         {
+            // Handheld / grid-less weapons (e.g. man-portable WC launchers) can't mount DetEq sensors; give them unfiltered vanilla targeting.
+            if (mainGrid == null)
+            {
+                MyGamePruningStructure.GetAllTopMostEntitiesInSphere(ref sphere, targets);
+                return;
+            }
+
             // Vanilla WC targeting
             if (!GlobalData.OverrideWcTargeting || mainGrid.IsNpcSpawnedGrid)
             {
@@ -46,10 +53,13 @@ namespace DetectionEquipment.Server.SensorBlocks
             }
 
             HashSet<MyEntity> trackedEntitySet = GlobalObjectPools.EntityPool.Pop();
-
+            HashSet<IMyCubeGrid> allAttachedGrids = null;
+            try
+            {
             // Check all aggregators on this grid and subgrids
             GridSensorManager gridSensors;
-            HashSet<IMyCubeGrid> allAttachedGrids = mainGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(GlobalObjectPools.GridPool.Pop());
+            allAttachedGrids = GlobalObjectPools.GridPool.Pop();
+            mainGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(allAttachedGrids);
             foreach (var grid in allAttachedGrids)
             {
                 if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
@@ -106,23 +116,38 @@ namespace DetectionEquipment.Server.SensorBlocks
                 Log.Info("GridSensorManager", $"WC Check Targets {mainGrid.DisplayName} - {targets.Count} found.");
             }
 
-            // return collections to pools, saves on alloc time
-            trackedEntitySet.Clear();
-            GlobalObjectPools.EntityPool.Push(trackedEntitySet);
-            allAttachedGrids.Clear();
-            GlobalObjectPools.GridPool.Push(allAttachedGrids);
-
             ServerNetwork.SendToEveryoneInSync(new WcTargetingPacket(mainGrid, targets), mainGrid.WorldMatrix.Translation);
+            }
+            catch (Exception ex)
+            {
+                // Isolate WC's targeting thread from any exception thrown here.
+                Log.Exception("GridSensorManager", ex);
+            }
+            finally
+            {
+                // Always return pooled collections, even on exception, so they don't leak out of the pool.
+                trackedEntitySet.Clear();
+                GlobalObjectPools.EntityPool.Push(trackedEntitySet);
+                if (allAttachedGrids != null)
+                {
+                    allAttachedGrids.Clear();
+                    GlobalObjectPools.GridPool.Push(allAttachedGrids);
+                }
+            }
         }
 
         public static bool ValidateWeaponTarget(IMyTerminalBlock weapon, int weaponId, MyEntity target)
         {
-            if (!GlobalData.OverrideWcTargeting || weapon.CubeGrid.IsNpcSpawnedGrid)
+            // Handheld / grid-less weapons (e.g. man-portable WC launchers) can't mount DetEq sensors; don't gate them.
+            if (!GlobalData.OverrideWcTargeting || weapon?.CubeGrid == null || weapon.CubeGrid.IsNpcSpawnedGrid)
                 return true;
 
             IMyCubeGrid targetGrid = target as IMyCubeGrid;
             foreach (var aggregatorSet in AggregatorControls.ActiveWeapons)
             {
+                // Skip closed/non-working aggregators (incl. stale entries leaked across reloads) before touching DetectionSet.
+                if (!(aggregatorSet.Key.Block?.IsWorking ?? false))
+                    continue;
                 if (!aggregatorSet.Key.UseAllWeapons && !aggregatorSet.Value.Contains(weapon))
                     continue;
                 var detSet = aggregatorSet.Key.DetectionSet;
@@ -188,6 +213,9 @@ namespace DetectionEquipment.Server.SensorBlocks
         private void UpdateTracks()
         {
             var trackVisBuffer = GlobalObjectPools.VisibilitySetPool.Pop();
+            bool swapped = false;
+            try
+            {
 
             // Standard grid/entity detection
             if (_hasStandardDetection)
@@ -272,8 +300,27 @@ namespace DetectionEquipment.Server.SensorBlocks
                 _trackVisibility.Clear();
                 GlobalObjectPools.VisibilitySetPool.Push(_trackVisibility);
                 _trackVisibility = trackVisBuffer;
+                swapped = true;
             }
-            _isUpdateComplete = true;
+            }
+            catch (Exception ex)
+            {
+                // A tracked entity can be closed mid-scan (e.g. the player deletes a contact), throwing here.
+                // This runs on a parallel thread with no caller catch, so an escaping exception aborts it before
+                // _isUpdateComplete is reset - Update() then never restarts the scan and _trackVisibility freezes
+                // with the now-dead contact still in it, leaving a ghost on the HUD indefinitely.
+                Log.Exception("GridSensorManager", ex);
+                if (!swapped) // never swapped in: return the unused buffer instead of leaking it
+                {
+                    trackVisBuffer.Clear();
+                    GlobalObjectPools.VisibilitySetPool.Push(trackVisBuffer);
+                }
+                _combineBuffer.Clear(); // drop partial combine state so the next cycle starts clean
+            }
+            finally
+            {
+                _isUpdateComplete = true; // always allow the next update cycle to run
+            }
         }
 
         public void Close()
@@ -337,14 +384,13 @@ namespace DetectionEquipment.Server.SensorBlocks
             try
             {
                 var cubeBlock = obj.FatBlock;
-                if (cubeBlock != null)
+                if (cubeBlock != null && BlockSensorMap.Remove(cubeBlock)) // only recompute if the removed block was actually a sensor
                 {
                     Sensors.RemoveWhere(sensor => sensor.Block == cubeBlock);
-                    BlockSensorMap.Remove(cubeBlock);
 
                     _hasRadar = Sensors.Any(s => s.Sensor is RadarSensor || s.Sensor is PassiveRadarSensor);
-                    _hasStandardDetection = Sensors.Any(s => s.Definition.MunitionDetection ?? true);
-                    _hasMunitionDetection = Sensors.Any(s => (!s.Definition.MunitionDetection) ?? true);
+                    _hasStandardDetection = Sensors.Any(s => (!s.Definition.MunitionDetection) ?? true);
+                    _hasMunitionDetection = Sensors.Any(s => s.Definition.MunitionDetection ?? true);
                 }
             }
             catch (Exception ex)

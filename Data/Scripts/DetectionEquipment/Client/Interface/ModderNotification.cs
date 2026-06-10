@@ -31,6 +31,15 @@ namespace DetectionEquipment.Client.Interface
             _displayTime = 0;
         }
 
+        public static void Close()
+        {
+            // Reset static state and clear any lingering questlog so it doesn't bleed into the menu or the next world load.
+            if (_isDisplaying)
+                MyVisualScriptLogicProvider.SetQuestlogLocal(false, "Detection Equipment - Modder Info");
+            _isDisplaying = false;
+            _displayTime = 1500;
+        }
+
         public static void Update()
         {
             if (!_isDisplaying) return;

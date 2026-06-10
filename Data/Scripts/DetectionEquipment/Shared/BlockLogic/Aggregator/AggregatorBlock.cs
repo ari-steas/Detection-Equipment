@@ -119,6 +119,7 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             return false;
         }
 
+        private readonly object _detectionSetLock = new object();
         private int _lastDetectionSetUpdate = -1;
         private HashSet<WorldDetectionInfo> _lastDetectionSet = new HashSet<WorldDetectionInfo>(0);
         /// <summary>
@@ -127,6 +128,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
         /// <returns></returns>
         private HashSet<WorldDetectionInfo> UpdateAggregatedDetections()
         {
+            lock (_detectionSetLock)
+            {
+            // Another thread may have already rebuilt this frame while we waited on the lock.
+            if (_lastDetectionSetUpdate + 1 > MyAPIGateway.Session.GameplayFrameCounter)
+                return _lastDetectionSet;
+
             var infosCache = ControlBlockManager.I.GroupInfoBuffer.Pop();
 
             lock (_bufferDetections)
@@ -171,19 +178,16 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     
             }
 
-            lock (_lastDetectionSet)
-            {
-                _lastDetectionSetUpdate = MyAPIGateway.Session.GameplayFrameCounter;
-                _lastDetectionSet.Clear();
-                foreach (var info in AggregateInfos(infosCache))
-                {
-                    var item = info;
-                    _lastDetectionSet.Add(item);
-                }
+            // Build a fresh set and swap it in, so readers holding the previous reference never observe a half-cleared set.
+            var newSet = new HashSet<WorldDetectionInfo>();
+            foreach (var info in AggregateInfos(infosCache))
+                newSet.Add(info);
 
-                ControlBlockManager.I.GroupInfoBuffer.Push(infosCache);
+            ControlBlockManager.I.GroupInfoBuffer.Push(infosCache);
 
-                return _lastDetectionSet;
+            _lastDetectionSet = newSet;
+            _lastDetectionSetUpdate = MyAPIGateway.Session.GameplayFrameCounter;
+            return _lastDetectionSet;
             }
         }
 
@@ -222,6 +226,12 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             DetectionCache.Clear();
             _parallelCache.Clear();
             GridSensors?.Aggregators.Remove(this);
+
+            // Remove from the static control registries, otherwise dead aggregators leak across block close and world reload
+            // and poison WC targeting (ValidateWeaponTarget iterates ActiveWeapons).
+            AggregatorControls.ActiveWeapons.Remove(this);
+            AggregatorControls.ActiveSensors.Remove(this);
+            AggregatorControls.ClientActiveSensors.Remove(this);
 
             DatalinkManager.UnregisterAggregator(this);
         }
