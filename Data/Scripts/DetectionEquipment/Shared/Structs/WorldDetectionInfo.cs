@@ -22,6 +22,11 @@ namespace DetectionEquipment.Shared.Structs
         public MyRelationsBetweenPlayers? Relations;
         public MyEntity Entity;
 
+        /// <summary>
+        /// Used for estimating velocity, the time-independent PositionOffset breaks velocity estimation otherwise
+        /// </summary>
+        internal Vector3D FirstPosition { get; private set; }
+
         public Vector3D Position => Entity == null ? PositionOffset : PositionOffset + Entity.PositionComp.WorldAABB.Center;
         public double SumError => MaxRangeError + MaxBearingError;
 
@@ -39,6 +44,7 @@ namespace DetectionEquipment.Shared.Structs
                 Velocity = null,
                 VelocityVariance = null,
                 IffCodes = info.IffCodes ?? Array.Empty<string>(),
+                FirstPosition = info.Position
             };
 
             //wInfo.Error = Math.Tan(info.MaxBearingError) * info.Range; // planar error; base width of right triangle
@@ -65,6 +71,7 @@ namespace DetectionEquipment.Shared.Structs
                 IffCodes = info.IffCodes,
                 Relations = info.Relations,
                 Entity = info.Entity,
+                FirstPosition = info.FirstPosition
             };
         }
 
@@ -119,6 +126,7 @@ namespace DetectionEquipment.Shared.Structs
                 IffCodes = allCodes.ToArray(),
             };
             wInfo.Relations = aggregator?.GetInfoRelations(wInfo);
+            wInfo.FirstPosition = wInfo.Position;
 
             return wInfo;
         }

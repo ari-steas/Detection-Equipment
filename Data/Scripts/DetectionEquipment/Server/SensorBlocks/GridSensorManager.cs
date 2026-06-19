@@ -99,12 +99,12 @@ namespace DetectionEquipment.Server.SensorBlocks
 
             targets.AddRange(trackedEntitySet);
 
-            if (GlobalData.DebugLevel >= 2)
-            {
-                // LET ME SEEEEE
-                MyAPIGateway.Utilities.ShowNotification($"WC Check Targets {mainGrid.DisplayName} - {targets.Count} found.", 1500);
-                Log.Info("GridSensorManager", $"WC Check Targets {mainGrid.DisplayName} - {targets.Count} found.");
-            }
+            //if (GlobalData.DebugLevel >= 2)
+            //{
+            //    // LET ME SEEEEE
+            //    MyAPIGateway.Utilities.ShowNotification($"WC Check Targets {mainGrid.DisplayName} - {targets.Count} found.", 1500);
+            //    Log.Info("GridSensorManager", $"WC Check Targets {mainGrid.DisplayName} - {targets.Count} found.");
+            //}
 
             // return collections to pools, saves on alloc time
             trackedEntitySet.Clear();

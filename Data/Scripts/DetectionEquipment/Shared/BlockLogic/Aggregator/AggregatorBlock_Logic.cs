@@ -61,8 +61,8 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
                     for (int i = 0; i < velocities.Length; i++)
                     {
                         if (GlobalData.DebugLevel > 1)
-                            DebugDraw.AddLine(toCombine[i].Position, toCombine[i+1].Position, Color.White * ((float)i/velocities.Length), 0); // Position delta indicator
-                        velocities[i] = (toCombine[i + 1].Position - toCombine[i].Position) * 60;
+                            DebugDraw.AddLine(toCombine[i].FirstPosition, toCombine[i+1].FirstPosition, Color.White * ((float)i/velocities.Length), 0); // Position delta indicator
+                        velocities[i] = (toCombine[i + 1].FirstPosition - toCombine[i].FirstPosition) * 60;
                         averageVelocity += velocities[i];
                     }
                     averageVelocity /= velocities.Length;
