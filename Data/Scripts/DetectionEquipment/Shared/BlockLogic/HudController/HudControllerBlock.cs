@@ -72,10 +72,9 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
             Detections.Clear();
 
-            var topmostParent = Block.GetTopMostParent();
             var activePlayers = GlobalObjectPools.PlayerPool.Pop();
             foreach (var player in GlobalData.Players)
-                if (player.Controller.ControlledEntity?.Entity.GetTopMostParent() == topmostParent)
+                if (player.IsControlling(Block.CubeGrid))
                     activePlayers.Add(player);
 
             if (activePlayers.Count == 0)
@@ -117,8 +116,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
         protected void UpdateClient()
         {
             // Only show HUD blocks on controlled grid.
-            if (MyAPIGateway.Session.Player?.Controller.ControlledEntity?.Entity.GetTopMostParent() ==
-                Block.GetTopMostParent())
+            if (MyAPIGateway.Session.Player.IsControlling(Block.CubeGrid))
             {
                 DetectionHud.AlwaysShow = AlwaysDisplay.Value;
                 DetectionHud.CombineAngle = CombineAngle.Value;

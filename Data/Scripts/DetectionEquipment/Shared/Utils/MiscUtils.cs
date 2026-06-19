@@ -71,5 +71,17 @@ namespace DetectionEquipment.Shared.Utils
 
             return 0;
         }
+
+        /// <summary>
+        /// Is player controlling this grid or a subgrid?
+        /// </summary>
+        /// <param name="player"></param>
+        /// <param name="grid"></param>
+        /// <returns></returns>
+        public static bool IsControlling(this IMyPlayer player, IMyCubeGrid grid)
+        {
+            var ctrlBlock = player.Controller.ControlledEntity?.Entity as IMyCubeBlock;
+            return ctrlBlock != null && ctrlBlock.CubeGrid.IsInSameLogicalGroupAs(grid);
+        }
     }
 }
