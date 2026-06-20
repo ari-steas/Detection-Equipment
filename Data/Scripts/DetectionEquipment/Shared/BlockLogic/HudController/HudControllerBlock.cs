@@ -42,6 +42,7 @@ namespace DetectionEquipment.Shared.BlockLogic.HudController
 
             AlwaysDisplay.Component = this;
             CombineAngle.Component = this;
+            ShowSelf.Component = this;
 
             base.Init();
         }

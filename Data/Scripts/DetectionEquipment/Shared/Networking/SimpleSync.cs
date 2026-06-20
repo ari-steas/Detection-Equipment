@@ -26,7 +26,7 @@ namespace DetectionEquipment.Shared.Networking
 
         public Func<TValue, TValue> Validate = null;
 
-        private IControlBlockBase _component;
+        private IControlBlockBase _component = null;
         public IControlBlockBase Component
         {
             get
@@ -67,6 +67,10 @@ namespace DetectionEquipment.Shared.Networking
             {
                 if (value.Equals(_value))
                     return;
+
+                if (_component == null)
+                    throw new Exception("Missing sync component!");
+
                 _value = Validate != null ? Validate.Invoke(value) : value;
 
                 SendUpdate();
