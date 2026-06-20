@@ -2,7 +2,6 @@
 using System.Text;
 using DetectionEquipment.Shared.BlockLogic.Aggregator;
 using DetectionEquipment.Shared.BlockLogic.GenericControls;
-using DetectionEquipment.Shared.Definitions;
 using DetectionEquipment.Shared.Helpers;
 using DetectionEquipment.Shared.Networking;
 using DetectionEquipment.Shared.Structs;

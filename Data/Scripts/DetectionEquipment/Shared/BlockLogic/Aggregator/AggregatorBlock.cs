@@ -208,6 +208,9 @@ namespace DetectionEquipment.Shared.BlockLogic.Aggregator
             DatalinkInShareType.Component = this;
             DoWcTargeting.Component = this;
             UseAllWeapons.Component = this;
+            DatalinkInNetwork.Component = this;
+            DatalinkOutNetwork.Component = this;
+
 
             base.Init();
 

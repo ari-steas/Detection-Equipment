@@ -69,7 +69,7 @@ namespace DetectionEquipment.Shared.Networking
                     return;
 
                 if (_component == null)
-                    throw new Exception("Missing sync component!");
+                    throw new Exception($"Missing sync component! This type: {typeof(TValue).Name}");
 
                 _value = Validate != null ? Validate.Invoke(value) : value;
 
