@@ -31,7 +31,7 @@ namespace DetectionEquipment.Shared.BlockLogic.IffReflector
             if (Block?.CubeGrid?.Physics == null) // ignore projected and other non-physical grids
                 return;
 
-            IffCode.Value = DefaultCode;
+            IffCode.UnsafeSet(DefaultCode);
             IffCode.Component = this;
             IffCode.Validate = value => value.RemoveChars(',', '#', '&').Trim();
             IffCode.OnValueChanged = (value, fromNetwork) =>

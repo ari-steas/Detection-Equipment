@@ -98,6 +98,15 @@ namespace DetectionEquipment.Shared.Networking
             OnValueChanged?.Invoke(_value, true);
         }
 
+        /// <summary>
+        /// Sets value without notifying network. Avoid using unless absolutely necessary.
+        /// </summary>
+        /// <param name="value"></param>
+        public void UnsafeSet(TValue value)
+        {
+            _value = Value;
+        }
+
         private void SendUpdate()
         {
             if (!MyAPIGateway.Multiplayer.MultiplayerActive || Component == null)
