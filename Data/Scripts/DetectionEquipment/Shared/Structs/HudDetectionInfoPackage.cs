@@ -95,17 +95,30 @@ namespace DetectionEquipment.Shared.Structs
             VelocityVariance = info.VelocityVariance;
             DetectionType = info.DetectionType;
 
-            IffCodes = new string[info.IffCodes.Length];
-            for (int i = 0; i < IffCodes.Length; i++)
+            if (info.IffCodes == null || info.IffCodes.Length == 0)
             {
-                int hashCode;
-                if (info.IffCodes[i].Length > 0 && info.IffCodes[i][0] == '#' &&
-                    int.TryParse(info.IffCodes[i].Substring(1), out hashCode))
-                    IffCodes[i] = $"#{hashCode:X}";
-                else
-                    IffCodes[i] = info.IffCodes[i];
+                IffCodes = Array.Empty<string>();
             }
+            else
+            {
+                IffCodes = new string[info.IffCodes.Length];
+                for (int i = 0; i < IffCodes.Length; i++)
+                {
+                    if (info.IffCodes[i] == null)
+                    {
+                        IffCodes[i] = "NULL/ERR";
+                        continue;
+                    }
 
+                    int hashCode;
+                    if (info.IffCodes[i].Length > 0 && info.IffCodes[i][0] == '#' &&
+                        int.TryParse(info.IffCodes[i].Substring(1), out hashCode))
+                        IffCodes[i] = $"#{hashCode:X}";
+                    else
+                        IffCodes[i] = info.IffCodes[i];
+                }
+            }
+            
             Relations = info.Relations;
         }
     }
