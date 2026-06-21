@@ -14,7 +14,7 @@ using Sandbox.ModAPI;
 using System.Collections.Generic;
 using System.Linq;
 using DetectionEquipment.Shared.ExternalApis;
-using DetectionEquipment.Shared.ExternalApis.WcApi;
+using DetectionEquipment.Shared.Structs;
 using VRage.Game.Entity;
 using VRage.Game.ModAPI;
 using VRageMath;
@@ -48,53 +48,10 @@ namespace DetectionEquipment.Server.SensorBlocks
             HashSet<MyEntity> trackedEntitySet = GlobalObjectPools.EntityPool.Pop();
 
             // Check all aggregators on this grid and subgrids
-            GridSensorManager gridSensors;
             HashSet<IMyCubeGrid> allAttachedGrids = mainGrid.GetGridGroup(GridLinkTypeEnum.Logical).GetGrids(GlobalObjectPools.GridPool.Pop());
             foreach (var grid in allAttachedGrids)
             {
-                if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
-                {
-                    var gridPos = grid.WorldMatrix.Translation;
-                    foreach (var aggregator in gridSensors.Aggregators)
-                    {
-                        if (!aggregator.Block.IsWorking || !aggregator.DoWcTargeting.Value)
-                            continue;
-
-                        foreach (var target in aggregator.DetectionSet)
-                        {
-                            if (target.Entity == null || trackedEntitySet.Contains(target.Entity))
-                                continue;
-
-                            var err = target.SumError / Vector3D.Distance(gridPos, target.Position);
-
-                            if (GlobalData.DebugLevel >= 2)
-                            {
-                                DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
-                                //MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId % 1000} ({target.Entity?.DisplayName}) | {err * 100:F}/{GlobalData.MinLockForWcTarget*100:F}% err", 1500);
-                            }
-
-                            if (err > GlobalData.MinLockForWcTarget)
-                                continue;
-
-                            // WC gets pissy if all subgrids aren't added to the list
-                            MyCubeGrid targetGrid = target.Entity as MyCubeGrid;
-                            if (targetGrid != null)
-                            {
-                                var targetSubgrids = targetGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(GlobalObjectPools.GridPool.Pop());
-                                foreach (var targetSubgrid in targetSubgrids)
-                                {
-                                    trackedEntitySet.Add((MyEntity) targetSubgrid);
-                                }
-                                targetSubgrids.Clear();
-                                GlobalObjectPools.GridPool.Push(targetSubgrids);
-                            }
-                            else
-                            {
-                                trackedEntitySet.Add(target.Entity);
-                            }
-                        }
-                    }
-                }
+                STAPerSubgrid(grid, ref trackedEntitySet);
             }
 
             targets.AddRange(trackedEntitySet);
@@ -113,6 +70,59 @@ namespace DetectionEquipment.Server.SensorBlocks
             GlobalObjectPools.GridPool.Push(allAttachedGrids);
 
             ServerNetwork.SendToEveryoneInSync(new WcTargetingPacket(mainGrid, targets), mainGrid.WorldMatrix.Translation);
+        }
+
+        private static void STAPerSubgrid(IMyCubeGrid grid, ref HashSet<MyEntity> trackedEntitySet)
+        {
+            GridSensorManager gridSensors;
+            if (ServerMain.I.GridSensorMangers.TryGetValue(grid, out gridSensors))
+            {
+                var gridPos = grid.WorldMatrix.Translation;
+                foreach (var aggregator in gridSensors.Aggregators)
+                {
+                    if (!aggregator.Block.IsWorking || !aggregator.DoWcTargeting.Value)
+                        continue;
+
+                    foreach (var target in aggregator.DetectionSet)
+                    {
+                        STASingleTarget(target, ref trackedEntitySet, gridPos);
+                    }
+                }
+            }
+        }
+
+        private static void STASingleTarget(WorldDetectionInfo target, ref HashSet<MyEntity> trackedEntitySet, Vector3D gridPos)
+        {
+            if (target.Entity == null || trackedEntitySet.Contains(target.Entity))
+                return;
+
+            var err = target.SumError / Vector3D.Distance(gridPos, target.Position);
+
+            if (GlobalData.DebugLevel >= 2)
+            {
+                DebugDraw.AddLine(gridPos, target.Position, Color.Maroon, 10/6f);
+                //MyAPIGateway.Utilities.ShowNotification($"CHK {target.EntityId % 1000} ({target.Entity?.DisplayName}) | {err * 100:F}/{GlobalData.MinLockForWcTarget*100:F}% err", 1500);
+            }
+
+            if (err > GlobalData.MinLockForWcTarget)
+                return;
+
+            // WC gets pissy if all subgrids aren't added to the list
+            MyCubeGrid targetGrid = target.Entity as MyCubeGrid;
+            if (targetGrid != null)
+            {
+                var targetSubgrids = targetGrid.GetGridGroup(GridLinkTypeEnum.Physical).GetGrids(GlobalObjectPools.GridPool.Pop());
+                foreach (var targetSubgrid in targetSubgrids)
+                {
+                    trackedEntitySet.Add((MyEntity) targetSubgrid);
+                }
+                targetSubgrids.Clear();
+                GlobalObjectPools.GridPool.Push(targetSubgrids);
+            }
+            else
+            {
+                trackedEntitySet.Add(target.Entity);
+            }
         }
 
         public static bool ValidateWeaponTarget(IMyTerminalBlock weapon, int weaponId, MyEntity target)
